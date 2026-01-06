@@ -1,0 +1,28 @@
+# Campus RAG Chatbot Dependencies - Updated for Python 3.13
+
+# LangChain core and community packages for RAG
+langchain>=0.3.0
+langchain-community>=0.3.0
+langchain-openai>=0.2.0
+
+# OpenAI API client
+openai>=1.50.0
+
+# Vector store - FAISS for local embedding storage
+faiss-cpu>=1.9.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# Text processing
+tiktoken>=0.7.0
+
+# Document format support (Phase 3)
+pypdf>=5.0.0            # PDF document loading
+python-docx>=1.1.0       # DOCX document loading
+tabulate>=0.9.0          # Pretty table formatting for admin CLI
+
+# Web API and server (Phase 5)
+fastapi>=0.115.0         # Web framework for API
+uvicorn[standard]>=0.30.0  # ASGI server
+pydantic>=2.9.0          # Data validation

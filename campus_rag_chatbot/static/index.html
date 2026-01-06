@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Information Kiosk</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="kiosk-container">
+        <!-- Header -->
+        <header class="kiosk-header">
+            <h1>Springfield University</h1>
+            <h2>Campus Information Kiosk</h2>
+            <button id="resetBtn" class="reset-btn">Start New Conversation</button>
+        </header>
+
+        <!-- Chat Container -->
+        <main class="chat-container" id="chatContainer">
+            <!-- Welcome message -->
+            <div class="message system-message">
+                <div class="message-content">
+                    <p class="large-text">Welcome! I can help you with information about:</p>
+                    <ul class="examples-list">
+                        <li>Library hours and services</li>
+                        <li>Dining options and meal plans</li>
+                        <li>Parking and transportation</li>
+                        <li>IT services and Wi-Fi</li>
+                        <li>Student employment</li>
+                        <li>Campus events and activities</li>
+                    </ul>
+                    <p class="large-text">What would you like to know?</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Input Container -->
+        <div class="input-container">
+            <form id="chatForm">
+                <input
+                    type="text"
+                    id="userInput"
+                    placeholder="Type your question here..."
+                    autocomplete="off"
+                    autofocus
+                >
+                <button type="submit" id="sendBtn">Send</button>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <footer class="kiosk-footer">
+            <p>Powered by AI • Information current as of January 2025</p>
+        </footer>
+    </div>
+
+    <!-- Loading indicator (hidden by default) -->
+    <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+        <div class="spinner"></div>
+        <p>Searching campus information...</p>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

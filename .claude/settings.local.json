@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(dir /b /s)",
+      "Bash(pip install:*)",
+      "Bash(dir:*)",
+      "Bash(python admin.py:*)",
+      "Bash(python app.py:*)",
+      "Bash(curl -X POST http://localhost:8000/chat -H \"Content-Type: application/json\" -d \"{\"\"message\"\": \"\"What are the library hours?\"\"}\")",
+      "Bash(curl:*)",
+      "Bash(timeout /t 5 /nobreak)",
+      "Bash(ping:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
