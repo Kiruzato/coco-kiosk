@@ -156,7 +156,9 @@ class QueryLogger:
         confidence_level: str,
         confidence_metrics: Dict,
         sources_used: List[str],
-        generation_params: Optional[Dict] = None
+        generation_params: Optional[Dict] = None,
+        intent: Optional[str] = None,
+        mode_used: Optional[str] = None
     ):
         """
         Log the final response to a query.
@@ -181,7 +183,10 @@ class QueryLogger:
             "confidence_metrics": confidence_metrics,
             "sources_used": sources_used,
             "answer_length": len(answer),
-            "generation_params": generation_params or {}
+            "generation_params": generation_params or {},
+            "intent": intent,
+            "mode_used": mode_used,
+            "retrieval_performed": True
         }
 
         self._append_to_log(self.response_log_path, log_entry)
@@ -197,7 +202,9 @@ class QueryLogger:
         confidence_metrics: Dict,
         session_id: Optional[str] = None,
         retrieval_params: Optional[Dict] = None,
-        generation_params: Optional[Dict] = None
+        generation_params: Optional[Dict] = None,
+        intent: Optional[str] = None,
+        mode_used: Optional[str] = None
     ) -> str:
         """
         Log a complete query-retrieval-response interaction.
@@ -244,8 +251,87 @@ class QueryLogger:
             confidence_level=confidence_level,
             confidence_metrics=confidence_metrics,
             sources_used=sources_used,
-            generation_params=generation_params
+            generation_params=generation_params,
+            intent=intent,
+            mode_used=mode_used
         )
+
+        return query_id
+
+    def log_general_interaction(
+        self,
+        query: str,
+        answer: str,
+        session_id: Optional[str] = None,
+        intent: Optional[str] = None,
+        mode_used: str = "general"
+    ) -> str:
+        """
+        Log a general knowledge interaction (no retrieval).
+
+        Args:
+            query: User query
+            answer: Generated answer
+            session_id: Optional session identifier
+            intent: Classified intent
+            mode_used: Mode used (should be "general")
+
+        Returns:
+            Query ID
+        """
+        query_id = self.log_query(query, session_id=session_id)
+        timestamp = datetime.now().isoformat()
+
+        log_entry = {
+            "query_id": query_id,
+            "timestamp": timestamp,
+            "query": query,
+            "answer": answer,
+            "intent": intent,
+            "mode_used": mode_used,
+            "retrieval_performed": False,
+            "answer_length": len(answer)
+        }
+
+        self._append_to_log(self.response_log_path, log_entry)
+        logger.info(f"Logged general knowledge query: {query_id}")
+
+        return query_id
+
+    def log_ambiguous_interaction(
+        self,
+        query: str,
+        clarification: str,
+        session_id: Optional[str] = None,
+        intent: Optional[str] = None
+    ) -> str:
+        """
+        Log an ambiguous query interaction.
+
+        Args:
+            query: User query
+            clarification: Clarification message shown to user
+            session_id: Optional session identifier
+            intent: Classified intent (should be "ambiguous")
+
+        Returns:
+            Query ID
+        """
+        query_id = self.log_query(query, session_id=session_id)
+        timestamp = datetime.now().isoformat()
+
+        log_entry = {
+            "query_id": query_id,
+            "timestamp": timestamp,
+            "query": query,
+            "clarification": clarification,
+            "intent": intent,
+            "mode_used": "clarification",
+            "retrieval_performed": False
+        }
+
+        self._append_to_log(self.response_log_path, log_entry)
+        logger.info(f"Logged ambiguous query: {query_id}")
 
         return query_id
 

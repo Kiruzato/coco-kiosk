@@ -412,3 +412,32 @@ body {
         font-size: 20px;
     }
 }
+
+/* Phase 6: Mode transparency badges */
+.mode-badge {
+    display: inline-block;
+    margin: 12px 0;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.mode-campus {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border: 2px solid #1976d2;
+}
+
+.mode-general {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+    border: 2px solid #7b1fa2;
+}
+
+.mode-clarification {
+    background-color: #fff3e0;
+    color: #f57c00;
+    border: 2px solid #f57c00;
+}

@@ -79,6 +79,15 @@ function addAssistantMessage(data) {
         </div>
     `;
 
+    // Mode transparency badge (Phase 6)
+    if (data.mode === 'campus') {
+        html += `<div class="mode-badge mode-campus">📚 Based on campus documents</div>`;
+    } else if (data.mode === 'general') {
+        html += `<div class="mode-badge mode-general">🤖 Based on general AI knowledge</div>`;
+    } else if (data.mode === 'clarification') {
+        html += `<div class="mode-badge mode-clarification">❓ Needs clarification</div>`;
+    }
+
     // Sources
     if (data.sources && data.sources.length > 0) {
         html += `

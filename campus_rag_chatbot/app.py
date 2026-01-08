@@ -37,6 +37,12 @@ from confidence_scorer import (
     should_answer_confidently
 )
 from query_logger import QueryLogger
+from intent_classifier import (
+    classify_intent,
+    QueryIntent,
+    safety_check_general_mode,
+    CAMPUS_KEYWORDS
+)
 
 # ==============================================================================
 # CONFIGURATION
@@ -131,6 +137,7 @@ class ChatResponse(BaseModel):
     confidence_score: float
     rejected: bool
     timestamp: str
+    mode: str  # "campus" | "general" | "clarification"
 
 
 class FeedbackRequest(BaseModel):
@@ -234,27 +241,25 @@ async def health_check():
     }
 
 
-@app.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
+# ==============================================================================
+# QUERY HANDLERS - Phase 6
+# ==============================================================================
+
+async def handle_campus_query(
+    query: str,
+    session_id: str,
+    memory: ConversationBufferWindowMemory,
+    intent_metadata: Dict
+) -> ChatResponse:
     """
-    Handle a chat message.
+    Handle campus query using existing RAG pipeline.
 
-    Args:
-        request: Chat request with message and optional session_id
-
-    Returns:
-        Chat response with answer, sources, and confidence
+    This function implements the original campus RAG logic with:
+    - Vector retrieval
+    - Confidence scoring
+    - Grounding validation
+    - Source citation
     """
-    # Get or create session
-    session_id, session = get_or_create_session(request.session_id)
-    memory = session["memory"]
-    session["query_count"] += 1
-
-    query = request.message.strip()
-
-    if not query:
-        raise HTTPException(status_code=400, detail="Message cannot be empty")
-
     # Retrieve with similarity scores
     retrieval_results = doc_manager.vector_store.similarity_search_with_relevance_scores(
         query,
@@ -336,7 +341,7 @@ Context from campus documents:
                 ))
                 seen.add(key)
 
-    # Log the interaction
+    # Log the interaction with intent and mode
     query_id = query_logger.log_full_interaction(
         query=query,
         retrieved_chunks=retrieved_docs,
@@ -344,13 +349,10 @@ Context from campus documents:
         answer=answer,
         confidence_level=confidence_level.value,
         confidence_metrics=confidence_metrics,
-        session_id=session_id
+        session_id=session_id,
+        intent=intent_metadata["intent"],
+        mode_used="campus"
     )
-
-    # Store query_id in session for feedback
-    if "last_query_id" not in session:
-        session["last_query_ids"] = []
-    session["last_query_ids"].append(query_id)
 
     return ChatResponse(
         session_id=session_id,
@@ -359,8 +361,152 @@ Context from campus documents:
         confidence_level=confidence_level.value,
         confidence_score=round(confidence_metrics["confidence_score"], 1),
         rejected=rejected,
-        timestamp=datetime.now().isoformat()
+        timestamp=datetime.now().isoformat(),
+        mode="campus"
     )
+
+
+async def handle_general_query(
+    query: str,
+    session_id: str,
+    memory: ConversationBufferWindowMemory,
+    intent_metadata: Dict
+) -> ChatResponse:
+    """
+    Handle general knowledge query without retrieval.
+
+    Supports: math calculations, general facts, definitions, greetings.
+    Includes safety check to prevent answering campus questions.
+    """
+    # Safety check: Double-check this isn't actually a campus question
+    safety = safety_check_general_mode(query)
+    if not safety["is_safe"]:
+        # Redirect to campus mode - campus keywords detected
+        return await handle_campus_query(query, session_id, memory, intent_metadata)
+
+    # General knowledge prompt (no campus context)
+    general_prompt = f"""You are a helpful assistant. Answer the following question concisely and accurately.
+
+IMPORTANT SAFETY RULE:
+If this question is actually about Springfield University campus, respond with:
+"I should answer campus-specific questions using verified documents. Please ask me about campus information."
+
+Supported queries: math, general facts, definitions, greetings, conversational questions.
+
+Question: {query}
+
+Answer:"""
+
+    # Generate answer using LLM directly (no retrieval)
+    response = llm.invoke(general_prompt)
+    answer = response.content
+
+    # Update conversation memory
+    memory.save_context({"question": query}, {"answer": answer})
+
+    # Add transparency label
+    answer_with_label = f"{answer}\n\n[Based on general AI knowledge]"
+
+    # Log general interaction
+    query_id = query_logger.log_general_interaction(
+        query=query,
+        answer=answer,
+        session_id=session_id,
+        intent=intent_metadata["intent"],
+        mode_used="general"
+    )
+
+    return ChatResponse(
+        session_id=session_id,
+        answer=answer_with_label,
+        sources=[],
+        confidence_level="N/A",
+        confidence_score=0.0,
+        rejected=False,
+        timestamp=datetime.now().isoformat(),
+        mode="general"
+    )
+
+
+async def handle_ambiguous_query(
+    query: str,
+    session_id: str,
+    intent_metadata: Dict
+) -> ChatResponse:
+    """
+    Handle ambiguous query by asking for clarification.
+
+    Shows a helpful message explaining the two modes and asking
+    the user to clarify their intent.
+    """
+    clarification = """I'm not sure if you're asking about:
+1. **Springfield University campus information** (library, dining, parking, campus services, etc.)
+2. **General knowledge** (math, facts, definitions)
+
+Could you please clarify? For example:
+- "What are the library hours?" → Campus information
+- "What is 15 + 27?" → General knowledge"""
+
+    # Log ambiguous interaction
+    query_id = query_logger.log_ambiguous_interaction(
+        query=query,
+        clarification=clarification,
+        session_id=session_id,
+        intent=intent_metadata["intent"]
+    )
+
+    return ChatResponse(
+        session_id=session_id,
+        answer=clarification,
+        sources=[],
+        confidence_level="N/A",
+        confidence_score=0.0,
+        rejected=False,
+        timestamp=datetime.now().isoformat(),
+        mode="clarification"
+    )
+
+
+# ==============================================================================
+# API ENDPOINTS
+# ==============================================================================
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    """
+    Handle a chat message with dual-mode routing (Phase 6).
+
+    Routes queries based on intent classification:
+    - Campus queries → RAG pipeline with document grounding
+    - General queries → Direct LLM without retrieval
+    - Ambiguous queries → Ask for clarification
+
+    Args:
+        request: Chat request with message and optional session_id
+
+    Returns:
+        Chat response with answer, sources, confidence, and mode
+    """
+    # Get or create session
+    session_id, session = get_or_create_session(request.session_id)
+    memory = session["memory"]
+    session["query_count"] += 1
+
+    query = request.message.strip()
+
+    if not query:
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    # === PHASE 6: INTENT CLASSIFICATION ===
+    intent, intent_metadata = classify_intent(query=query, llm=llm)
+
+    # === PHASE 6: ROUTE BASED ON INTENT ===
+    if intent == QueryIntent.GENERAL:
+        return await handle_general_query(query, session_id, memory, intent_metadata)
+    elif intent == QueryIntent.AMBIGUOUS:
+        return await handle_ambiguous_query(query, session_id, intent_metadata)
+    else:  # QueryIntent.CAMPUS
+        return await handle_campus_query(query, session_id, memory, intent_metadata)
 
 
 @app.post("/feedback")
