@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Document Management</title>
+    <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Document Management System</h1>
+            <p class="subtitle">Upload, view, and manage knowledge base documents</p>
+        </header>
+
+        <!-- Notification Area -->
+        <div id="notification" class="notification hidden"></div>
+
+        <!-- API Key Section -->
+        <section class="card">
+            <h2>API Authentication</h2>
+            <div class="api-key-section">
+                <div class="input-group">
+                    <input
+                        type="password"
+                        id="apiKeyInput"
+                        placeholder="Enter admin API key"
+                        class="api-key-input"
+                    >
+                    <button id="toggleApiKey" class="btn-secondary" title="Show/Hide API key">
+                        <span id="toggleIcon">👁️</span>
+                    </button>
+                    <button id="saveApiKey" class="btn-primary">Save API Key</button>
+                </div>
+                <div id="apiKeyStatus" class="api-key-status"></div>
+            </div>
+        </section>
+
+        <!-- File Upload Section -->
+        <section class="card">
+            <h2>Upload Document</h2>
+            <form id="uploadForm">
+                <div class="upload-area">
+                    <input
+                        type="file"
+                        id="fileInput"
+                        accept=".pdf,.docx,.txt"
+                        class="file-input"
+                    >
+                    <label for="fileInput" class="file-label">
+                        <span id="fileName">Choose a file or drag here</span>
+                        <span class="file-types">Supported: PDF, DOCX, TXT</span>
+                    </label>
+                    <button type="submit" id="uploadBtn" class="btn-primary" disabled>
+                        Upload Document
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Documents Table Section -->
+        <section class="card">
+            <div class="table-header">
+                <h2>Ingested Documents</h2>
+                <button id="refreshBtn" class="btn-secondary">🔄 Refresh</button>
+            </div>
+
+            <div id="loadingIndicator" class="loading hidden">Loading documents...</div>
+
+            <div class="table-container">
+                <table id="documentsTable">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Type</th>
+                            <th>Chunks</th>
+                            <th>Ingested Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="documentsBody">
+                        <tr>
+                            <td colspan="5" class="empty-state">No documents loaded. Upload a document to get started.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer>
+            <p>Campus RAG Chatbot - Admin Panel | Phase 7</p>
+        </footer>
+    </div>
+
+    <script src="/static/admin.js"></script>
+</body>
+</html>

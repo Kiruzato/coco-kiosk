@@ -15,10 +15,11 @@ import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Optional, List
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, File, UploadFile, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+import shutil
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
@@ -51,6 +52,10 @@ from intent_classifier import (
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable not set")
+
+ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
+if not ADMIN_API_KEY:
+    raise ValueError("ADMIN_API_KEY environment variable not set. Please add it to .env file.")
 
 PROJECT_ROOT = Path(__file__).parent
 REGISTRY_PATH = PROJECT_ROOT / "document_registry.json"
@@ -215,6 +220,30 @@ def cleanup_expired_sessions():
 
     for sid in expired:
         del sessions[sid]
+
+
+# ==============================================================================
+# ADMIN AUTHENTICATION
+# ==============================================================================
+
+async def verify_admin_api_key(x_api_key: str = Header(None)):
+    """
+    Verify admin API key for protected endpoints.
+
+    Args:
+        x_api_key: API key from X-API-Key header
+
+    Raises:
+        HTTPException: If API key is missing or invalid
+
+    Returns:
+        True if authenticated
+    """
+    if x_api_key is None:
+        raise HTTPException(status_code=401, detail="Missing X-API-Key header")
+    if x_api_key != ADMIN_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return True
 
 
 # ==============================================================================
@@ -554,6 +583,140 @@ async def reset_session(request: ResetRequest):
         del sessions[request.session_id]
 
     return {"status": "success", "message": "Session reset"}
+
+
+# ==============================================================================
+# ADMIN ENDPOINTS - Phase 7
+# ==============================================================================
+
+@app.post("/admin/upload", dependencies=[Depends(verify_admin_api_key)])
+async def upload_document(file: UploadFile = File(...)):
+    """
+    Upload and ingest a document into the knowledge base.
+
+    Args:
+        file: Uploaded file (PDF, DOCX, or TXT)
+
+    Returns:
+        Success response with document metadata
+
+    Raises:
+        400: Unsupported file type
+        500: Ingestion failed
+    """
+    # Validate file type
+    allowed_extensions = ['.pdf', '.docx', '.txt']
+    file_ext = Path(file.filename).suffix.lower()
+
+    if file_ext not in allowed_extensions:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type '{file_ext}'. Allowed: {', '.join(allowed_extensions)}"
+        )
+
+    # Create upload directory if needed
+    upload_dir = PROJECT_ROOT / "data" / "uploaded"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    # Save file to disk
+    file_path = upload_dir / file.filename
+    try:
+        with open(file_path, "wb") as f:
+            shutil.copyfileobj(file.file, f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
+
+    # Ingest into vector store
+    success, message = doc_manager.ingest_document(file_path)
+
+    if not success:
+        # Clean up file on failure
+        file_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=500, detail=f"Ingestion failed: {message}")
+
+    # Extract document ID from success message (format: "Document <id> ingested successfully...")
+    # The message format from document_manager is: "Document {doc_id} ingested successfully with {num_chunks} chunks."
+    import re
+    match = re.search(r'Document ([a-f0-9]+) ingested', message)
+    if match:
+        doc_id = match.group(1)
+        doc_info = doc_manager.registry.get_document(doc_id)
+    else:
+        # Fallback: get the most recently added document
+        docs = doc_manager.list_documents()
+        doc_info = docs[-1] if docs else {}
+
+    return {
+        "status": "success",
+        "message": "Document uploaded and ingested successfully",
+        "document": doc_info
+    }
+
+
+@app.get("/admin/documents", dependencies=[Depends(verify_admin_api_key)])
+async def list_documents():
+    """
+    List all ingested documents with metadata.
+
+    Returns:
+        List of documents with metadata (id, name, type, chunks, timestamp)
+    """
+    documents = doc_manager.list_documents()
+    return {
+        "documents": documents,
+        "total": len(documents)
+    }
+
+
+@app.delete("/admin/documents/{document_id}", dependencies=[Depends(verify_admin_api_key)])
+async def delete_document(document_id: str):
+    """
+    Delete a document from the knowledge base.
+
+    Removes the document from the vector store and deletes the file from disk.
+
+    Args:
+        document_id: ID of the document to delete
+
+    Returns:
+        Success message with document name
+
+    Raises:
+        404: Document not found
+        500: Deletion failed
+    """
+    # Get document info before deletion
+    doc_info = doc_manager.registry.get_document(document_id)
+    if not doc_info:
+        raise HTTPException(status_code=404, detail=f"Document '{document_id}' not found")
+
+    document_name = doc_info.get("document_name", "unknown")
+    file_path = Path(doc_info.get("file_path", ""))
+
+    # Delete from vector store and registry
+    success, message = doc_manager.delete_document(document_id)
+    if not success:
+        raise HTTPException(status_code=500, detail=f"Deletion failed: {message}")
+
+    # Delete physical file if it exists
+    if file_path.exists():
+        try:
+            file_path.unlink()
+        except Exception as e:
+            # Log warning but don't fail the request
+            print(f"Warning: Could not delete file {file_path}: {e}")
+
+    return {
+        "status": "success",
+        "message": "Document deleted successfully",
+        "document_name": document_name
+    }
+
+
+@app.get("/admin")
+async def serve_admin_ui():
+    """Serve the admin interface."""
+    return FileResponse(PROJECT_ROOT / "static" / "admin.html")
 
 
 # ==============================================================================

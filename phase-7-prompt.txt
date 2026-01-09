@@ -1,0 +1,48 @@
+We are extending an existing FastAPI-based RAG chatbot web app running on a Raspberry Pi 5 (Raspberry Pi OS).
+The user-facing chatbot already exists and answers questions using RAG with a local vector store.
+Goal of Phase 7:
+Add a remote, web-based Admin Document Management System (DMS) that allows an administrator on a separate PC (same WiFi network) to upload, view, and delete documents that power the chatbot’s knowledge base.
+Architecture constraints:
+•	The Raspberry Pi is the single source of truth
+•	Vector store and documents live only on the Pi
+•	The admin PC runs no backend, only a web browser
+•	Admin access happens over LAN via HTTP
+Security model:
+•	Use a static API key for admin authentication
+•	API key is stored as an environment variable on the Pi
+•	Admin endpoints require an X-API-Key header
+What to implement (minimal, bare-bones):
+1.	Admin API endpoints (FastAPI):
+o	POST /admin/upload
+	Accept PDF, DOCX, and TXT files
+	Save files locally (e.g., /data/documents/)
+	Ingest the document into the existing vector store
+	Assign a document_id (UUID) to all chunks
+o	GET /admin/documents
+	Return a list of ingested documents with metadata
+(document_id, filename, file type, ingestion timestamp, chunk count)
+o	DELETE /admin/documents/{document_id}
+	Remove all vector store entries associated with the document_id
+	Remove the stored file
+2.	Admin authentication middleware:
+o	Reject requests without a valid X-API-Key
+o	Apply middleware only to /admin/* routes
+3.	Simple Admin Web UI (served by FastAPI):
+o	Accessible at /admin
+o	File upload form
+o	Table listing ingested documents
+o	Delete button with confirmation
+o	UI calls admin endpoints using fetch with API key header
+Non-goals for this phase (do NOT implement):
+•	User authentication systems
+•	Role management
+•	Versioning or document editing
+•	Cloud services
+•	Background job queues
+Assumptions:
+•	Single admin operator
+•	LAN-only access
+•	Low document volume
+Focus on correctness, safety, and clarity over features.
+Keep the implementation simple, modular, and Raspberry Pi–friendly.
+

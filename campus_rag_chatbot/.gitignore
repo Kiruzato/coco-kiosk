@@ -21,6 +21,9 @@ document_registry.json
 logs/
 *.jsonl
 
+# Admin uploaded documents (Phase 7 - user uploaded files)
+data/uploaded/
+
 # IDE
 .vscode/
 .idea/
