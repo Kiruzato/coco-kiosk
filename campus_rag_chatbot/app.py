@@ -45,7 +45,7 @@ from intent_classifier import (
     CAMPUS_KEYWORDS,
     is_directory_query  # Phase 8
 )
-from text_normalizer import normalize_text  # Text normalization for consistent retrieval
+from text_normalizer import normalize_text, canonicalize_directory_query  # Text normalization for consistent retrieval
 
 # ==============================================================================
 # CONFIGURATION
@@ -533,9 +533,13 @@ async def handle_directory_query(
     # Normalize query for consistent retrieval (case-insensitive matching)
     normalized_query = normalize_text(query)
 
-    # Retrieve with similarity scores using normalized query
+    # Canonicalize directory query for better semantic alignment
+    # e.g., "where is canteen" -> "canteen location"
+    canonical_query = canonicalize_directory_query(normalized_query)
+
+    # Retrieve with similarity scores using canonical query
     retrieval_results = doc_manager.vector_store.similarity_search_with_relevance_scores(
-        normalized_query,
+        canonical_query,
         k=RETRIEVAL_TOP_K,
         score_threshold=RELEVANCE_SCORE_THRESHOLD
     )
