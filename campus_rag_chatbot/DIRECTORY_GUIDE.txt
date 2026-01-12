@@ -1,0 +1,258 @@
+================================================================================
+CAMPUS DIRECTORY - DATA ENTRY GUIDE
+================================================================================
+CoCo - Columban College, Inc. Campus Information Assistant
+Phase 8: Directory/Location Answering System
+================================================================================
+
+This guide explains how to add, edit, and format location entries in the
+campus directory file (data/campus_directory.txt) for the CoCo kiosk system.
+
+
+================================================================================
+FILE LOCATION
+================================================================================
+
+The directory data file is located at:
+    campus_rag_chatbot/data/campus_directory.txt
+
+After making changes, you must re-ingest the document:
+    python admin.py ingest data/campus_directory.txt --allow-duplicates
+
+Or delete and re-ingest:
+    python admin.py delete [document_id]
+    python admin.py ingest data/campus_directory.txt
+
+
+================================================================================
+ENTRY FORMAT
+================================================================================
+
+Each location entry should follow this exact format:
+
+    === LOCATION: [Location Name] ===
+    Building: [Building Name]
+    Floor: [Floor Level]
+    Room: [Room Number(s)]
+    Nearby Landmarks: [Helpful navigation references]
+    Description: [What this location is used for]
+
+IMPORTANT:
+- Use "===" markers to clearly separate each location entry
+- Keep field names exactly as shown (Building:, Floor:, Room:, etc.)
+- Each field should be on its own line
+- Leave a blank line between entries
+
+
+================================================================================
+FIELD DESCRIPTIONS
+================================================================================
+
+LOCATION NAME
+-------------
+The primary name people use to refer to this place.
+- Use official names when possible
+- Include common alternative names in the Description field
+- Examples:
+    - Main Library
+    - Registrar's Office
+    - Room SP-303
+    - Canteen
+
+BUILDING
+--------
+The official building name where this location is found.
+- Use consistent building names throughout the directory
+- Examples:
+    - Saint Peter Building
+    - Administration Building
+    - Student Center Building
+    - Gymnasium Building
+    - Standalone Building (for separate structures)
+    - Outdoor Facility (for open areas)
+
+FLOOR
+-----
+The floor level where this location is found.
+- Use consistent terminology:
+    - Ground Floor (for 1st level)
+    - 2nd Floor, 3rd Floor, 4th Floor, etc.
+    - Basement (if applicable)
+    - Ground Level (for outdoor facilities)
+- Examples:
+    - Ground Floor
+    - 2nd Floor
+    - 3rd Floor
+    - Ground Level
+
+ROOM
+----
+The specific room number or range.
+- Use the official room numbering system
+- For ranges, use "to" or hyphen
+- For non-room locations, use "Not applicable"
+- Examples:
+    - SP-101
+    - AD-201 to AD-210
+    - SP-301, SP-302, SP-303
+    - Not applicable
+
+NEARBY LANDMARKS
+----------------
+Reference points to help people find the location.
+- Mention things people can easily identify
+- Include directional hints (left, right, beside, across from)
+- Reference well-known locations
+- Examples:
+    - Main entrance of the Administration Building, to the left of the lobby
+    - Located above the Main Lobby, accessible via the main staircase or elevator
+    - Adjacent to the Canteen, across from the Chapel
+    - Take the stairs to the 3rd floor, first door on the right
+
+DESCRIPTION
+-----------
+What this location is used for and any helpful details.
+- Explain the primary purpose/function
+- Include services offered (for offices)
+- Mention any requirements or rules (for labs, facilities)
+- Add helpful tips for visitors
+- Examples:
+    - The Registrar's Office handles student enrollment, academic records,
+      transcript requests, and grade inquiries. Students should bring their
+      ID when requesting documents.
+    - General purpose classroom with capacity for 40 students. Equipped with
+      whiteboard, projector, and air conditioning.
+
+
+================================================================================
+EXAMPLE ENTRIES
+================================================================================
+
+OFFICE EXAMPLE:
+---------------
+=== LOCATION: Dean's Office ===
+Building: Administration Building
+Floor: 3rd Floor
+Room: AD-310
+Nearby Landmarks: Located at the end of the 3rd floor hallway, past the HR Office
+Description: The Dean's Office handles academic affairs, faculty concerns, and curriculum matters. Appointments are recommended for meetings with the Dean. The secretary can assist with scheduling and general inquiries.
+
+CLASSROOM EXAMPLE:
+------------------
+=== LOCATION: Room SP-401 ===
+Building: Saint Peter Building
+Floor: 4th Floor
+Room: SP-401
+Nearby Landmarks: Take the elevator or stairs to the 4th floor, first room on the left
+Description: Audio-Visual Room equipped with projectors, sound systems, and presentation equipment. Used for lectures, film showings, and multimedia presentations. Room reservations must be made through the Academic Affairs Office.
+
+FACILITY EXAMPLE:
+-----------------
+=== LOCATION: Basketball Court ===
+Building: Outdoor Facility
+Floor: Ground Level
+Room: Not applicable
+Nearby Landmarks: Located between the Gymnasium and the Covered Courts
+Description: Outdoor basketball court available for PE classes and recreational use. Open during school hours. Equipment can be borrowed from the PE Department office in the Gymnasium.
+
+LABORATORY EXAMPLE:
+-------------------
+=== LOCATION: Chemistry Laboratory ===
+Building: Saint Peter Building
+Floor: 3rd Floor
+Room: SP-312
+Nearby Landmarks: 3rd floor right wing, beside the Biology Laboratory
+Description: Fully equipped chemistry laboratory for conducting experiments. Students must wear lab gowns, safety goggles, and closed shoes. Chemicals and equipment are provided. Lab schedule is posted on the door.
+
+
+================================================================================
+BEST PRACTICES
+================================================================================
+
+1. BE SPECIFIC
+   - Use exact room numbers when available
+   - Specify exact floor levels
+   - Give precise landmark references
+
+2. BE CONSISTENT
+   - Use the same building names throughout
+   - Use consistent floor naming (Ground Floor vs 1st Floor)
+   - Follow the same format for all entries
+
+3. BE HELPFUL
+   - Think like a first-time visitor
+   - Include navigation hints
+   - Mention what to expect or bring
+
+4. AVOID VAGUE DESCRIPTIONS
+   Bad:  "Near the main area"
+   Good: "Located beside the main entrance lobby, to the right of the security desk"
+
+5. INCLUDE PRACTICAL INFO
+   - Operating hours (if limited)
+   - Requirements (ID, appointment, dress code)
+   - Contact method if applicable
+
+6. UPDATE REGULARLY
+   - Remove entries for closed/relocated offices
+   - Update room numbers if changed
+   - Add new facilities as they open
+
+
+================================================================================
+WHAT NOT TO INCLUDE
+================================================================================
+
+- Personal phone numbers or email addresses
+- Temporary or unofficial locations
+- Locations that change frequently
+- Private or restricted areas (unless publicly accessible)
+- Speculative or unconfirmed information
+
+
+================================================================================
+AFTER EDITING
+================================================================================
+
+After making changes to campus_directory.txt:
+
+1. Save the file
+
+2. Re-ingest the document into the system:
+
+   Option A - Allow duplicate (updates existing):
+       python admin.py ingest data/campus_directory.txt --allow-duplicates
+
+   Option B - Delete old and re-ingest:
+       python admin.py list                              (find document ID)
+       python admin.py delete [campus_directory_id]     (delete old version)
+       python admin.py ingest data/campus_directory.txt (ingest new version)
+
+3. Restart the application (if running):
+       Stop the current server (Ctrl+C)
+       python -m uvicorn app:app --port 8000
+
+4. Test the new entries:
+       Ask "Where is [new location]?" in the kiosk
+
+
+================================================================================
+QUESTIONS THE SYSTEM CAN ANSWER
+================================================================================
+
+The directory system is designed to answer questions like:
+
+- "Where is the library?"
+- "Where is the Registrar's Office?"
+- "Where can I find room SP-303?"
+- "What building is the canteen in?"
+- "Which floor is the Computer Lab on?"
+- "How do I get to the Guidance Office?"
+- "Where is the clinic located?"
+
+The system will ONLY answer if it has HIGH confidence in the location data.
+If the location is not in the directory, it will respond:
+"I don't have precise location information for that yet."
+
+
+================================================================================

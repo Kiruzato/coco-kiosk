@@ -1,6 +1,6 @@
 """
-Document Management System - Phase 3
-======================================
+Document Management System - Phase 3 + Text Normalization
+==========================================================
 This module handles document ingestion, metadata management, and indexing for the
 campus RAG chatbot. Supports PDF, DOCX, and TXT formats.
 
@@ -10,6 +10,7 @@ Key Features:
 - Duplicate detection
 - Incremental ingestion
 - Document registry management
+- Text normalization for consistent retrieval (case-insensitive matching)
 """
 
 import os
@@ -47,6 +48,9 @@ try:
     DOCX_LOADER = True
 except ImportError:
     DOCX_LOADER = False
+
+# Text normalization for consistent retrieval
+from text_normalizer import normalize_text
 
 
 # Configure logging
@@ -353,9 +357,13 @@ def chunk_document(
     chunks = text_splitter.split_text(text)
 
     # Create Document objects with rich metadata
+    # Text normalization: Store original text in metadata, use normalized for embedding
     documents = []
     for i, chunk in enumerate(chunks):
         section_name = extract_section_name(chunk)
+
+        # Normalize text for consistent embedding (case-insensitive matching)
+        normalized_chunk = normalize_text(chunk)
 
         metadata = {
             "document_id": document_id,
@@ -364,10 +372,12 @@ def chunk_document(
             "ingestion_timestamp": ingestion_timestamp,
             "chunk_id": i,
             "total_chunks": len(chunks),
-            "section": section_name
+            "section": section_name,
+            "original_text": chunk  # Preserve original text for display/citation
         }
 
-        doc = Document(page_content=chunk, metadata=metadata)
+        # Use normalized text for page_content (embedding), original stored in metadata
+        doc = Document(page_content=normalized_chunk, metadata=metadata)
         documents.append(doc)
 
     logger.info(f"Created {len(chunks)} chunks from {document_name}")

@@ -1,0 +1,185 @@
+Campus Directory - Columban College, Inc.
+
+This document contains the official directory of campus locations, buildings, offices, and facilities at Columban College, Inc. Use this information to help students and visitors find their way around campus.
+
+=== LOCATION: Main Library ===
+Building: Saint Peter Building
+Floor: 2nd Floor
+Room: SP-201 to SP-210
+Nearby Landmarks: Located above the Main Lobby, accessible via the main staircase or elevator
+Description: The Main Library houses the reference section, circulation desk, study areas, reading rooms, and computer stations for student research. Library staff can assist with book loans, research inquiries, and online database access.
+
+=== LOCATION: Registrar's Office ===
+Building: Administration Building
+Floor: Ground Floor
+Room: AD-101
+Nearby Landmarks: Main entrance of the Administration Building, to the left of the lobby, beside the Cashier's Window
+Description: The Registrar's Office handles student enrollment, academic records, transcript requests, grade inquiries, course registration, and certification issuance. Students should bring their ID when requesting documents.
+
+=== LOCATION: Cashier's Office ===
+Building: Administration Building
+Floor: Ground Floor
+Room: AD-102
+Nearby Landmarks: Main entrance of the Administration Building, to the right of the lobby, beside the Registrar's Office
+Description: The Cashier's Office processes tuition payments, miscellaneous fees, refunds, and financial clearances. Payment methods include cash, check, and bank transfer. Operating hours are posted at the window.
+
+=== LOCATION: Student Affairs Office ===
+Building: Administration Building
+Floor: 2nd Floor
+Room: AD-201
+Nearby Landmarks: Take the stairs or elevator to the 2nd floor, first office on the right
+Description: The Student Affairs Office coordinates student activities, organizations, events, ID processing, scholarship programs, and student discipline matters. Lost and found items are also managed here.
+
+=== LOCATION: Guidance and Counseling Office ===
+Building: Administration Building
+Floor: 2nd Floor
+Room: AD-205
+Nearby Landmarks: Located at the end of the 2nd floor hallway, past the Student Affairs Office
+Description: The Guidance Office provides academic counseling, career guidance, psychological support, and personal counseling services. Appointments are recommended but walk-ins are welcome during office hours.
+
+=== LOCATION: Computer Laboratory ===
+Building: Saint Peter Building
+Floor: 3rd Floor
+Room: SP-301 to SP-305
+Nearby Landmarks: Take the main staircase to the 3rd floor, laboratories are on the left wing
+Description: The Computer Laboratory provides desktop computers with internet access for student use, programming classes, and IT-related coursework. Lab assistants are available to help with technical issues.
+
+=== LOCATION: Science Laboratory ===
+Building: Saint Peter Building
+Floor: 3rd Floor
+Room: SP-310 to SP-315
+Nearby Landmarks: Take the main staircase to the 3rd floor, laboratories are on the right wing
+Description: The Science Laboratory is equipped for biology, chemistry, and physics experiments. Students must wear proper laboratory attire including lab gowns and closed shoes. Safety equipment is provided.
+
+=== LOCATION: Chapel ===
+Building: Standalone Building
+Floor: Ground Floor
+Room: Not applicable
+Nearby Landmarks: Located at the center of the campus quadrangle, facing the main flagpole
+Description: The Campus Chapel is open daily for prayer, reflection, and religious services. Mass schedules are posted on the chapel doors. The chapel can accommodate approximately 200 people.
+
+=== LOCATION: Canteen ===
+Building: Student Center Building
+Floor: Ground Floor
+Room: Not applicable
+Nearby Landmarks: Located behind the Saint Peter Building, accessible via the covered walkway
+Description: The Campus Canteen offers affordable meals, snacks, and beverages for students and staff. Multiple food stalls are available with varied menu options. Seating is available indoors and in the covered outdoor area.
+
+=== LOCATION: Gymnasium ===
+Building: Gymnasium Building
+Floor: Ground Floor
+Room: Not applicable
+Nearby Landmarks: Located at the far end of the campus, past the covered courts
+Description: The Gymnasium hosts physical education classes, sports events, and school programs. Facilities include a basketball court, volleyball court, stage area, and bleacher seating. Proper athletic attire and footwear are required.
+
+=== LOCATION: Covered Courts ===
+Building: Outdoor Facility
+Floor: Ground Level
+Room: Not applicable
+Nearby Landmarks: Located between the Gymnasium and the Saint Peter Building
+Description: The Covered Courts provide space for outdoor basketball, volleyball, and badminton. Available for PE classes and recreational use during free periods. Equipment can be borrowed from the PE Department.
+
+=== LOCATION: Audio-Visual Room ===
+Building: Saint Peter Building
+Floor: 4th Floor
+Room: SP-401
+Nearby Landmarks: Take the elevator or stairs to the 4th floor, first room on the left
+Description: The Audio-Visual Room is equipped with projectors, sound systems, and presentation equipment for lectures, film showings, and multimedia presentations. Room reservations must be made through the Academic Affairs Office.
+
+=== LOCATION: Faculty Room ===
+Building: Saint Peter Building
+Floor: 2nd Floor
+Room: SP-220
+Nearby Landmarks: Located at the end of the 2nd floor hallway, near the library
+Description: The Faculty Room is the workspace for professors and instructors. Students may visit during consultation hours to meet with their teachers. Knock before entering and wait to be acknowledged.
+
+=== LOCATION: Principal's Office ===
+Building: Administration Building
+Floor: 3rd Floor
+Room: AD-301
+Nearby Landmarks: Take the elevator to the 3rd floor, main office at the center of the hallway
+Description: The Principal's Office handles administrative matters, academic policies, and institutional concerns. Appointments are required for meetings with the Principal. The secretary can assist with scheduling.
+
+=== LOCATION: Clinic / Health Services ===
+Building: Administration Building
+Floor: Ground Floor
+Room: AD-105
+Nearby Landmarks: Located at the back of the Administration Building ground floor, near the emergency exit
+Description: The Campus Clinic provides first aid, basic medical consultations, and health assessments. A registered nurse is on duty during school hours. Students feeling unwell should report to the clinic immediately.
+
+=== LOCATION: IT Department ===
+Building: Saint Peter Building
+Floor: 4th Floor
+Room: SP-405
+Nearby Landmarks: Take the elevator to the 4th floor, office is at the end of the hallway
+Description: The IT Department manages campus network, Wi-Fi access, student email accounts, and technical support. Report computer issues, network problems, or request technical assistance here.
+
+=== LOCATION: Accounting Office ===
+Building: Administration Building
+Floor: 2nd Floor
+Room: AD-210
+Nearby Landmarks: Located on the 2nd floor of the Administration Building, near the Student Affairs Office
+Description: The Accounting Office handles financial records, budget matters, and employee payroll. Students with billing inquiries should visit the Cashier's Office instead.
+
+=== LOCATION: Human Resources Office ===
+Building: Administration Building
+Floor: 3rd Floor
+Room: AD-305
+Nearby Landmarks: Located on the 3rd floor of the Administration Building, past the Principal's Office
+Description: The Human Resources Office manages employee records, hiring, and personnel matters. Job applicants and employment-related inquiries should be directed here.
+
+=== LOCATION: Room SP-101 ===
+Building: Saint Peter Building
+Floor: 1st Floor (Ground Floor)
+Room: SP-101
+Nearby Landmarks: Ground floor of Saint Peter Building, first classroom on the left from the main entrance
+Description: General purpose classroom with capacity for 40 students. Equipped with whiteboard, projector, and air conditioning.
+
+=== LOCATION: Room SP-102 ===
+Building: Saint Peter Building
+Floor: 1st Floor (Ground Floor)
+Room: SP-102
+Nearby Landmarks: Ground floor of Saint Peter Building, second classroom on the left from the main entrance
+Description: General purpose classroom with capacity for 40 students. Equipped with whiteboard, projector, and air conditioning.
+
+=== LOCATION: Room SP-103 ===
+Building: Saint Peter Building
+Floor: 1st Floor (Ground Floor)
+Room: SP-103
+Nearby Landmarks: Ground floor of Saint Peter Building, third classroom on the left from the main entrance
+Description: General purpose classroom with capacity for 40 students. Equipped with whiteboard, projector, and air conditioning.
+
+=== LOCATION: Room SP-201 ===
+Building: Saint Peter Building
+Floor: 2nd Floor
+Room: SP-201
+Nearby Landmarks: 2nd floor of Saint Peter Building, first room after the staircase (Main Library entrance)
+Description: Part of the Main Library complex. Houses the reference and periodicals section.
+
+=== LOCATION: Room SP-303 ===
+Building: Saint Peter Building
+Floor: 3rd Floor
+Room: SP-303
+Nearby Landmarks: 3rd floor of Saint Peter Building, part of the Computer Laboratory complex
+Description: Computer Laboratory Room 3, equipped with 30 desktop computers for programming and IT classes.
+
+=== LOCATION: Parking Area ===
+Building: Outdoor Facility
+Floor: Ground Level
+Room: Not applicable
+Nearby Landmarks: Located at the front of the campus, before the main gate
+Description: The campus parking area is available for faculty, staff, and students with parking permits. Motorcycle parking is located in a separate designated area. Visitors must register at the guard house.
+
+=== LOCATION: Guard House / Security Office ===
+Building: Standalone Structure
+Floor: Ground Floor
+Room: Not applicable
+Nearby Landmarks: Located at the main entrance gate of the campus
+Description: The Guard House manages campus security, visitor registration, lost and found reports, and emergency response. Security personnel are on duty 24/7. Report any security concerns immediately.
+
+=== LOCATION: Bookstore ===
+Building: Student Center Building
+Floor: Ground Floor
+Room: SC-101
+Nearby Landmarks: Located in the Student Center Building, beside the entrance to the Canteen
+Description: The Campus Bookstore sells textbooks, school supplies, uniforms, and official school merchandise. Textbook reservations can be made at the start of each semester.

@@ -42,8 +42,10 @@ from intent_classifier import (
     classify_intent,
     QueryIntent,
     safety_check_general_mode,
-    CAMPUS_KEYWORDS
+    CAMPUS_KEYWORDS,
+    is_directory_query  # Phase 8
 )
+from text_normalizer import normalize_text  # Text normalization for consistent retrieval
 
 # ==============================================================================
 # CONFIGURATION
@@ -68,6 +70,7 @@ RETRIEVAL_TOP_K = 4
 RELEVANCE_SCORE_THRESHOLD = 0.5
 MEMORY_WINDOW_SIZE = 5
 MIN_CONFIDENCE_TO_ANSWER = ConfidenceLevel.MEDIUM
+MIN_CONFIDENCE_DIRECTORY = ConfidenceLevel.HIGH  # Phase 8: Stricter for location queries
 
 # Session settings
 SESSION_TIMEOUT_MINUTES = 30
@@ -289,9 +292,12 @@ async def handle_campus_query(
     - Grounding validation
     - Source citation
     """
-    # Retrieve with similarity scores
+    # Normalize query for consistent retrieval (case-insensitive matching)
+    normalized_query = normalize_text(query)
+
+    # Retrieve with similarity scores using normalized query
     retrieval_results = doc_manager.vector_store.similarity_search_with_relevance_scores(
-        query,
+        normalized_query,
         k=RETRIEVAL_TOP_K,
         score_threshold=RELEVANCE_SCORE_THRESHOLD
     )
@@ -497,15 +503,158 @@ Could you please clarify? For example:
 
 
 # ==============================================================================
+# DIRECTORY QUERY HANDLER - Phase 8
+# ==============================================================================
+
+async def handle_directory_query(
+    query: str,
+    session_id: str,
+    memory: ConversationBufferWindowMemory,
+    intent_metadata: Dict
+) -> ChatResponse:
+    """
+    Handle directory/location queries with strict grounding (Phase 8).
+
+    This function handles wayfinding questions like "Where is the library?"
+    with stricter requirements than general campus queries:
+    - Requires HIGH confidence (not MEDIUM)
+    - Uses specialized prompt that prevents location invention
+    - Provides clear rejection message if location not found
+
+    Args:
+        query: User's location query
+        session_id: Session identifier
+        memory: Conversation memory
+        intent_metadata: Intent classification metadata
+
+    Returns:
+        ChatResponse with location info or rejection message
+    """
+    # Normalize query for consistent retrieval (case-insensitive matching)
+    normalized_query = normalize_text(query)
+
+    # Retrieve with similarity scores using normalized query
+    retrieval_results = doc_manager.vector_store.similarity_search_with_relevance_scores(
+        normalized_query,
+        k=RETRIEVAL_TOP_K,
+        score_threshold=RELEVANCE_SCORE_THRESHOLD
+    )
+
+    retrieved_docs = [doc for doc, score in retrieval_results]
+    similarity_scores = [score for doc, score in retrieval_results]
+
+    # Compute confidence
+    confidence_level, confidence_metrics = compute_confidence_score(
+        similarity_scores=similarity_scores,
+        min_chunks_retrieved=1
+    )
+
+    # Phase 8: Stricter confidence check for directory queries (require HIGH)
+    if not should_answer_confidently(confidence_level, MIN_CONFIDENCE_DIRECTORY):
+        answer = "I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance."
+        rejected = True
+        sources = []
+    else:
+        # Generate answer with strict directory-focused prompt
+        system_template = """You are a campus directory assistant for Columban College, Inc. helping visitors find locations on campus.
+
+CRITICAL RULES FOR LOCATION QUESTIONS:
+1. ONLY provide location information that is EXPLICITLY stated in the context below
+2. You may ONLY mention: building names, floor numbers, room numbers, and landmarks that appear in the context
+3. If the exact location is not clearly stated in the context, respond: "I don't have precise location information for that yet."
+4. NEVER guess or invent:
+   - Building names
+   - Floor numbers
+   - Room numbers
+   - Directions or navigation steps
+5. Always mention the source (e.g., "According to the Campus Directory...")
+6. Keep responses concise and easy to follow
+
+Context from campus directory:
+{context}"""
+
+        human_template = "{question}"
+
+        messages = [
+            SystemMessagePromptTemplate.from_template(system_template),
+            HumanMessagePromptTemplate.from_template(human_template)
+        ]
+
+        qa_prompt = ChatPromptTemplate.from_messages(messages)
+
+        qa_chain = ConversationalRetrievalChain.from_llm(
+            llm=llm,
+            retriever=doc_manager.vector_store.as_retriever(
+                search_type="similarity_score_threshold",
+                search_kwargs={
+                    "k": RETRIEVAL_TOP_K,
+                    "score_threshold": RELEVANCE_SCORE_THRESHOLD
+                }
+            ),
+            memory=memory,
+            return_source_documents=True,
+            combine_docs_chain_kwargs={"prompt": qa_prompt},
+            verbose=False
+        )
+
+        result = qa_chain.invoke({"question": query})
+        answer = result['answer']
+        source_docs = result.get('source_documents', [])
+        rejected = False
+
+        # Extract sources
+        sources = []
+        seen = set()
+        for doc in source_docs:
+            doc_name = doc.metadata.get('document_name', 'Unknown')
+            section = doc.metadata.get('section', 'Unknown')
+            chunk_id = doc.metadata.get('chunk_id', 0)
+
+            key = f"{doc_name}:{section}:{chunk_id}"
+            if key not in seen:
+                sources.append(Source(
+                    document_name=doc_name,
+                    section=section,
+                    chunk_id=chunk_id
+                ))
+                seen.add(key)
+
+    # Log the interaction
+    query_id = query_logger.log_full_interaction(
+        query=query,
+        retrieved_chunks=retrieved_docs,
+        similarity_scores=similarity_scores,
+        answer=answer,
+        confidence_level=confidence_level.value,
+        confidence_metrics=confidence_metrics,
+        session_id=session_id,
+        intent=intent_metadata["intent"],
+        mode_used="directory"
+    )
+
+    return ChatResponse(
+        session_id=session_id,
+        answer=answer,
+        sources=sources,
+        confidence_level=confidence_level.value,
+        confidence_score=round(confidence_metrics["confidence_score"], 1),
+        rejected=rejected,
+        timestamp=datetime.now().isoformat(),
+        mode="directory"
+    )
+
+
+# ==============================================================================
 # API ENDPOINTS
 # ==============================================================================
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """
-    Handle a chat message with dual-mode routing (Phase 6).
+    Handle a chat message with multi-mode routing (Phase 6 + Phase 8).
 
     Routes queries based on intent classification:
+    - Directory queries → Strict location/wayfinding with HIGH confidence (Phase 8)
     - Campus queries → RAG pipeline with document grounding
     - General queries → Direct LLM without retrieval
     - Ambiguous queries → Ask for clarification
@@ -525,6 +674,17 @@ async def chat(request: ChatRequest):
 
     if not query:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    # === PHASE 8: CHECK FOR DIRECTORY QUERY FIRST ===
+    # Directory queries get stricter handling (HIGH confidence required)
+    if is_directory_query(query):
+        intent_metadata = {
+            "intent": "directory",
+            "reasoning": "Location/directory question detected via pattern matching",
+            "raw_classification": "DIRECTORY",
+            "query_length": len(query)
+        }
+        return await handle_directory_query(query, session_id, memory, intent_metadata)
 
     # === PHASE 6: INTENT CLASSIFICATION ===
     intent, intent_metadata = classify_intent(query=query, llm=llm)

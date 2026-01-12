@@ -1,14 +1,16 @@
 """
-Intent Classifier Module - Phase 6
-====================================
+Intent Classifier Module - Phase 6 + Phase 8
+=============================================
 This module classifies user query intent to enable dual-mode answering:
 - Campus queries → RAG pipeline with campus documents
 - General queries → Direct LLM without retrieval
 - Ambiguous queries → Ask for clarification
+- Directory queries → Strict location/wayfinding with high confidence (Phase 8)
 
 Intent classification uses the existing LLM (gpt-3.5-turbo) with a structured prompt.
 """
 
+import re
 from enum import Enum
 from typing import Tuple, Dict, Any, List
 from langchain_openai import ChatOpenAI
@@ -19,6 +21,7 @@ class QueryIntent(Enum):
     CAMPUS = "campus"
     GENERAL = "general"
     AMBIGUOUS = "ambiguous"
+    DIRECTORY = "directory"  # Phase 8: Location/wayfinding queries
 
 
 # ==============================================================================
@@ -34,6 +37,50 @@ CAMPUS_KEYWORDS = [
     "gym", "rec center", "academic", "advisor",
     "dorm", "residence", "tuition", "financial aid"
 ]
+
+
+# ==============================================================================
+# DIRECTORY QUERY DETECTION - Phase 8
+# ==============================================================================
+
+# Patterns that indicate a location/directory query
+DIRECTORY_PATTERNS = [
+    r"\bwhere is\b",
+    r"\bwhere's\b",
+    r"\bwhere can i find\b",
+    r"\blocation of\b",
+    r"\bhow do i get to\b",
+    r"\bhow to get to\b",
+    r"\bdirections to\b",
+    r"\bfind the\b",
+    r"\blooking for\b",
+    r"\bwhich building\b",
+    r"\bwhich floor\b",
+    r"\bwhat room\b",
+    r"\bwhat building\b",
+    r"\bwhere do i go\b",
+    r"\blocate the\b",
+    r"\broom number\b",
+    r"\bwhat floor\b",
+]
+
+
+def is_directory_query(query: str) -> bool:
+    """
+    Detect if query is asking for location/directory information.
+
+    Phase 8: Uses lightweight regex patterns to identify wayfinding questions
+    before LLM classification. This enables stricter answering policies for
+    location queries.
+
+    Args:
+        query: User query string
+
+    Returns:
+        True if the query matches directory/location patterns
+    """
+    query_lower = query.lower()
+    return any(re.search(pattern, query_lower) for pattern in DIRECTORY_PATTERNS)
 
 
 # ==============================================================================
