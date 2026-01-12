@@ -1,0 +1,59 @@
+We are extending an existing FastAPI-based campus information kiosk web app (“CoCo”) running on a Raspberry Pi 5 (Raspberry Pi OS).
+The app already supports:
+•	RAG-based question answering using local documents
+•	Source citation
+•	Confidence scoring
+•	Hallucination guardrails
+•	Admin-managed document ingestion
+Goal of Phase 8:
+Add reliable directory / location-aware answering for campus wayfinding questions (e.g., “Where is the library?”, “Where is room SP303?”) using an industry-standard hybrid approach.
+________________________________________
+Core Design Requirements
+•	Location answers must not be hallucinated
+•	Directory information must be explicitly grounded
+•	If precise information is unavailable, the system must say so clearly
+________________________________________
+What to Implement (Minimal & Correct)
+1. Campus Directory Documents
+•	Introduce dedicated Campus Directory documents (TXT or similar)
+•	Each entry should follow a consistent, structured format, for example:
+•	Location Name:
+•	Building:
+•	Floor:
+•	Nearby Landmarks:
+•	Description:
+•	Ingest these documents using the existing document pipeline
+•	Treat directory documents as authoritative for location data
+2. Directory Query Detection
+•	Add lightweight logic to detect directory / location questions
+(e.g., queries starting with “where is”, “location of”, “how do I get to”)
+•	Route detected queries through stricter retrieval and answering rules
+3. Stricter Answering Policy for Location Queries
+•	Require high retrieval confidence before answering
+•	Require source citation from directory documents
+•	If confidence is low or no directory entry is found, respond with:
+“I don’t have precise location information for that yet.”
+4. Response Behavior
+•	Use the LLM only to:
+o	Summarize retrieved directory data
+o	Present it clearly and concisely
+•	Do NOT invent:
+o	Floors
+o	Buildings
+o	Directions
+________________________________________
+Non-Goals for This Phase
+•	No maps or visual wayfinding
+•	No GIS or coordinate systems
+•	No database schema changes
+•	No admin UI changes
+•	No cloud services
+________________________________________
+Constraints
+•	Keep the implementation Raspberry Pi–friendly
+•	Do not refactor existing RAG architecture
+•	Prefer clarity and safety over conversational richness
+________________________________________
+Outcome:
+The kiosk should reliably answer campus location questions when authoritative directory information exists, and safely decline when it does not.
+

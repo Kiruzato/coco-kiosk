@@ -166,7 +166,7 @@ def ask_question_with_confidence(
 
     # HIGH or MEDIUM confidence - generate answer
     # Create temporary QA chain for this query
-    system_template = """You are a campus information assistant for Springfield University. Your role is to provide accurate information ONLY from the verified campus documents.
+    system_template = """You are a campus information assistant for Columban College, Inc. Your role is to provide accurate information ONLY from the verified campus documents.
 
 CRITICAL RULES:
 1. ONLY answer questions using the provided context below

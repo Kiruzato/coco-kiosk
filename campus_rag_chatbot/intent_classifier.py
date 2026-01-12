@@ -28,7 +28,7 @@ class QueryIntent(Enum):
 # Keywords for campus-related topics (used in safety checks)
 CAMPUS_KEYWORDS = [
     "library", "dining", "parking", "campus", "student",
-    "university", "springfield", "building", "hours",
+    "college", "columban", "building", "hours",
     "employment", "wifi", "it services", "meal plan",
     "registration", "housing", "event", "facility",
     "gym", "rec center", "academic", "advisor",
@@ -65,7 +65,7 @@ def classify_intent(
 
 Classify the user's query into ONE category:
 
-1. CAMPUS - Questions about Springfield University campus:
+1. CAMPUS - Questions about Columban College, Inc. campus:
    - Campus facilities, services, policies, hours, locations
    - Examples: "library hours?", "where is parking?", "dining hall menu?"
 

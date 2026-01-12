@@ -312,7 +312,7 @@ async def handle_campus_query(
         sources = []
     else:
         # Generate answer
-        system_template = """You are a campus information assistant for Springfield University. Provide accurate information ONLY from the verified campus documents.
+        system_template = """You are a campus information assistant for Columban College, Inc. Provide accurate information ONLY from the verified campus documents.
 
 CRITICAL RULES:
 1. ONLY answer using the provided context
@@ -417,7 +417,7 @@ async def handle_general_query(
     general_prompt = f"""You are a helpful assistant. Answer the following question concisely and accurately.
 
 IMPORTANT SAFETY RULE:
-If this question is actually about Springfield University campus, respond with:
+If this question is actually about Columban College, Inc. campus, respond with:
 "I should answer campus-specific questions using verified documents. Please ask me about campus information."
 
 Supported queries: math, general facts, definitions, greetings, conversational questions.
@@ -469,7 +469,7 @@ async def handle_ambiguous_query(
     the user to clarify their intent.
     """
     clarification = """I'm not sure if you're asking about:
-1. **Springfield University campus information** (library, dining, parking, campus services, etc.)
+1. **Columban College, Inc. campus information** (library, dining, parking, campus services, etc.)
 2. **General knowledge** (math, facts, definitions)
 
 Could you please clarify? For example:
