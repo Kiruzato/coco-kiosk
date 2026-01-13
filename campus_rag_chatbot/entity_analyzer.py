@@ -185,7 +185,8 @@ def check_entity_agreement(
 
 # Promotion thresholds (slightly relaxed from HIGH confidence requirements)
 PROMOTION_AVG_THRESHOLD = 0.70      # HIGH requires 0.75
-PROMOTION_MAX_THRESHOLD = 0.80      # Same as HIGH
+PROMOTION_MAX_THRESHOLD = 0.80      # Standard threshold (same as HIGH)
+PROMOTION_MAX_RELAXED_FLOOR = 0.77  # Relaxed floor (requires entity agreement)
 PROMOTION_MIN_CHUNKS = 2            # Same as HIGH
 PROMOTION_MAX_VARIANCE = 0.05       # Same as HIGH
 
@@ -220,8 +221,18 @@ def should_promote_confidence(
     if avg_similarity < PROMOTION_AVG_THRESHOLD:
         return False, f"Avg similarity {avg_similarity:.3f} below promotion threshold {PROMOTION_AVG_THRESHOLD}"
 
-    if max_similarity < PROMOTION_MAX_THRESHOLD:
-        return False, f"Max similarity {max_similarity:.3f} below threshold {PROMOTION_MAX_THRESHOLD}"
+    # Soft max-similarity gating for directory queries
+    # max >= 0.80: Always acceptable
+    # max >= 0.77: Acceptable ONLY with perfect entity agreement (soft gate)
+    # max < 0.77: Always rejected
+    if max_similarity < PROMOTION_MAX_THRESHOLD:  # Below 0.80
+        # Check against relaxed floor first
+        if max_similarity < PROMOTION_MAX_RELAXED_FLOOR:
+            return False, f"Max similarity {max_similarity:.3f} below relaxed floor {PROMOTION_MAX_RELAXED_FLOOR}"
+        # In soft gate zone (0.77-0.80): requires entity agreement
+        if not has_entity_agreement:
+            return False, f"Max similarity {max_similarity:.3f} below {PROMOTION_MAX_THRESHOLD} and no entity agreement for soft gating"
+        # Soft gate passed - will continue with other checks
 
     if num_chunks < PROMOTION_MIN_CHUNKS:
         return False, f"Chunk count {num_chunks} below minimum {PROMOTION_MIN_CHUNKS}"
@@ -233,4 +244,7 @@ def should_promote_confidence(
         return False, "No entity agreement across retrieved chunks"
 
     # All criteria met - safe to promote
+    # Differentiate message for soft-gated vs standard promotions
+    if max_similarity < PROMOTION_MAX_THRESHOLD:
+        return True, "Entity agreement confirmed with soft max-similarity gating"
     return True, "Entity agreement confirmed with strong similarity metrics"
