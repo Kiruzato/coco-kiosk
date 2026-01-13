@@ -46,6 +46,7 @@ from intent_classifier import (
     is_directory_query  # Phase 8
 )
 from text_normalizer import normalize_text, canonicalize_directory_query  # Text normalization for consistent retrieval
+from entity_analyzer import check_entity_agreement, should_promote_confidence  # Entity-aware confidence promotion
 
 # ==============================================================================
 # CONFIGURATION
@@ -552,6 +553,30 @@ async def handle_directory_query(
         similarity_scores=similarity_scores,
         min_chunks_retrieved=1
     )
+
+    # Entity-aware confidence promotion for directory queries
+    # If MEDIUM confidence but high-scoring chunks agree on the same entity, consider promotion
+    promoted = False
+    if confidence_level == ConfidenceLevel.MEDIUM and retrieved_docs:
+        has_agreement, common_entity, entities = check_entity_agreement(
+            retrieved_docs,
+            scores=[float(s) for s in similarity_scores]  # Pass scores for threshold filtering
+        )
+
+        should_promote, promotion_reason = should_promote_confidence(
+            avg_similarity=confidence_metrics["avg_similarity"],
+            max_similarity=confidence_metrics["max_similarity"],
+            num_chunks=confidence_metrics["num_chunks"],
+            variance=confidence_metrics["score_variance"],
+            has_entity_agreement=has_agreement
+        )
+
+        if should_promote:
+            confidence_level = ConfidenceLevel.HIGH
+            confidence_metrics["promoted"] = True
+            confidence_metrics["promotion_reason"] = promotion_reason
+            confidence_metrics["confirmed_entity"] = common_entity
+            promoted = True
 
     # Phase 8: Stricter confidence check for directory queries (require HIGH)
     if not should_answer_confidently(confidence_level, MIN_CONFIDENCE_DIRECTORY):
