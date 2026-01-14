@@ -1,0 +1,256 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-01-14",
+  "entities": [
+    {
+      "entity_id": "LIBRARY",
+      "canonical_name": "Main Library",
+      "aliases": ["library", "reading room", "study area", "reference section"],
+      "building": "Saint Peter Building",
+      "floor": "2nd Floor",
+      "room": "SP-201 to SP-210",
+      "landmarks": "Located above the Main Lobby, accessible via the main staircase or elevator",
+      "description": "The Main Library houses the reference section, circulation desk, study areas, reading rooms, and computer stations for student research."
+    },
+    {
+      "entity_id": "REGISTRAR",
+      "canonical_name": "Registrar's Office",
+      "aliases": ["registrar", "enrollment", "enrollment office", "records office"],
+      "building": "Administration Building",
+      "floor": "Ground Floor",
+      "room": "AD-101",
+      "landmarks": "Main entrance of the Administration Building, to the left of the lobby, beside the Cashier's Window",
+      "description": "The Registrar's Office handles student enrollment, academic records, transcript requests, grade inquiries, and course registration."
+    },
+    {
+      "entity_id": "CASHIER",
+      "canonical_name": "Cashier's Office",
+      "aliases": ["cashier", "payment", "fees", "tuition", "cashier's window"],
+      "building": "Administration Building",
+      "floor": "Ground Floor",
+      "room": "AD-102",
+      "landmarks": "Main entrance of the Administration Building, to the right of the lobby, beside the Registrar's Office",
+      "description": "The Cashier's Office processes tuition payments, miscellaneous fees, refunds, and financial clearances."
+    },
+    {
+      "entity_id": "STUDENT_AFFAIRS",
+      "canonical_name": "Student Affairs Office",
+      "aliases": ["student affairs", "osa", "student office", "student activities"],
+      "building": "Administration Building",
+      "floor": "2nd Floor",
+      "room": "AD-201",
+      "landmarks": "Take the stairs or elevator to the 2nd floor, first office on the right",
+      "description": "The Student Affairs Office coordinates student activities, organizations, events, ID processing, and scholarship programs."
+    },
+    {
+      "entity_id": "GUIDANCE",
+      "canonical_name": "Guidance and Counseling Office",
+      "aliases": ["guidance", "counseling", "guidance office", "counselor"],
+      "building": "Administration Building",
+      "floor": "2nd Floor",
+      "room": "AD-205",
+      "landmarks": "Located at the end of the 2nd floor hallway, past the Student Affairs Office",
+      "description": "The Guidance Office provides academic counseling, career guidance, psychological support, and personal counseling services."
+    },
+    {
+      "entity_id": "COMPUTER_LAB",
+      "canonical_name": "Computer Laboratory",
+      "aliases": ["computer lab", "comlab", "computer room", "it lab"],
+      "building": "Saint Peter Building",
+      "floor": "3rd Floor",
+      "room": "SP-301 to SP-305",
+      "landmarks": "Take the main staircase to the 3rd floor, laboratories are on the left wing",
+      "description": "The Computer Laboratory provides desktop computers with internet access for student use, programming classes, and IT-related coursework."
+    },
+    {
+      "entity_id": "SCIENCE_LAB",
+      "canonical_name": "Science Laboratory",
+      "aliases": ["science lab", "laboratory", "chem lab", "bio lab", "physics lab"],
+      "building": "Saint Peter Building",
+      "floor": "3rd Floor",
+      "room": "SP-310 to SP-315",
+      "landmarks": "Take the main staircase to the 3rd floor, laboratories are on the right wing",
+      "description": "The Science Laboratory is equipped for biology, chemistry, and physics experiments."
+    },
+    {
+      "entity_id": "CHAPEL",
+      "canonical_name": "Campus Chapel",
+      "aliases": ["chapel", "church", "prayer room"],
+      "building": "Standalone Building",
+      "floor": "Ground Floor",
+      "room": null,
+      "landmarks": "Located at the center of the campus quadrangle, facing the main flagpole",
+      "description": "The Campus Chapel is open daily for prayer, reflection, and religious services."
+    },
+    {
+      "entity_id": "CANTEEN",
+      "canonical_name": "Canteen",
+      "aliases": ["cafeteria", "food court", "dining area", "food stall"],
+      "building": "Student Center Building",
+      "floor": "Ground Floor",
+      "room": null,
+      "landmarks": "Located behind the Saint Peter Building, accessible via the covered walkway",
+      "description": "The Campus Canteen offers affordable meals, snacks, and beverages for students and staff."
+    },
+    {
+      "entity_id": "GYM",
+      "canonical_name": "Gymnasium",
+      "aliases": ["gym", "gymnasium", "sports hall", "basketball court"],
+      "building": "Gymnasium Building",
+      "floor": "Ground Floor",
+      "room": null,
+      "landmarks": "Located at the far end of the campus, past the covered courts",
+      "description": "The Gymnasium hosts physical education classes, sports events, and school programs."
+    },
+    {
+      "entity_id": "COVERED_COURTS",
+      "canonical_name": "Covered Courts",
+      "aliases": ["covered courts", "outdoor courts", "volleyball court", "badminton court"],
+      "building": "Outdoor Facility",
+      "floor": "Ground Level",
+      "room": null,
+      "landmarks": "Located between the Gymnasium and the Saint Peter Building",
+      "description": "The Covered Courts provide space for outdoor basketball, volleyball, and badminton."
+    },
+    {
+      "entity_id": "AV_ROOM",
+      "canonical_name": "Audio-Visual Room",
+      "aliases": ["av room", "audio visual", "av", "multimedia room"],
+      "building": "Saint Peter Building",
+      "floor": "4th Floor",
+      "room": "SP-401",
+      "landmarks": "Take the elevator or stairs to the 4th floor, first room on the left",
+      "description": "The Audio-Visual Room is equipped with projectors, sound systems, and presentation equipment."
+    },
+    {
+      "entity_id": "FACULTY_ROOM",
+      "canonical_name": "Faculty Room",
+      "aliases": ["faculty room", "faculty", "teachers room", "teachers lounge"],
+      "building": "Saint Peter Building",
+      "floor": "2nd Floor",
+      "room": "SP-220",
+      "landmarks": "Located at the end of the 2nd floor hallway, near the library",
+      "description": "The Faculty Room is the workspace for professors and instructors."
+    },
+    {
+      "entity_id": "PRINCIPAL",
+      "canonical_name": "Principal's Office",
+      "aliases": ["principal", "principal's office", "principal office", "head office"],
+      "building": "Administration Building",
+      "floor": "3rd Floor",
+      "room": "AD-301",
+      "landmarks": "Take the elevator to the 3rd floor, main office at the center of the hallway",
+      "description": "The Principal's Office handles administrative matters, academic policies, and institutional concerns."
+    },
+    {
+      "entity_id": "CLINIC",
+      "canonical_name": "Health Clinic",
+      "aliases": ["clinic", "health clinic", "nurse", "infirmary", "health services", "medical"],
+      "building": "Administration Building",
+      "floor": "Ground Floor",
+      "room": "AD-105",
+      "landmarks": "Located at the back of the Administration Building ground floor, near the emergency exit",
+      "description": "The Campus Clinic provides first aid, basic medical consultations, and health assessments."
+    },
+    {
+      "entity_id": "IT_DEPT",
+      "canonical_name": "IT Department",
+      "aliases": ["it department", "it", "tech support", "ict", "it office"],
+      "building": "Saint Peter Building",
+      "floor": "4th Floor",
+      "room": "SP-405",
+      "landmarks": "Take the elevator to the 4th floor, office is at the end of the hallway",
+      "description": "The IT Department manages campus network, Wi-Fi access, student email accounts, and technical support."
+    },
+    {
+      "entity_id": "ACCOUNTING",
+      "canonical_name": "Accounting Office",
+      "aliases": ["accounting", "accounting office", "finance office"],
+      "building": "Administration Building",
+      "floor": "2nd Floor",
+      "room": "AD-210",
+      "landmarks": "Located on the 2nd floor of the Administration Building, near the Student Affairs Office",
+      "description": "The Accounting Office handles financial records, budget matters, and employee payroll."
+    },
+    {
+      "entity_id": "HR",
+      "canonical_name": "Human Resources Office",
+      "aliases": ["hr", "human resources", "hr office", "personnel"],
+      "building": "Administration Building",
+      "floor": "3rd Floor",
+      "room": "AD-305",
+      "landmarks": "Located on the 3rd floor of the Administration Building, past the Principal's Office",
+      "description": "The Human Resources Office manages employee records, hiring, and personnel matters."
+    },
+    {
+      "entity_id": "CLASSROOM_SP101",
+      "canonical_name": "Classroom SP-101",
+      "aliases": ["sp101", "sp-101", "room 101", "room sp101", "room sp-101"],
+      "building": "Saint Peter Building",
+      "floor": "Ground Floor",
+      "room": "SP-101",
+      "landmarks": "Ground floor of Saint Peter Building, first classroom on the left from the main entrance",
+      "description": "General purpose classroom with capacity for 40 students."
+    },
+    {
+      "entity_id": "CLASSROOM_SP102",
+      "canonical_name": "Classroom SP-102",
+      "aliases": ["sp102", "sp-102", "room 102", "room sp102", "room sp-102"],
+      "building": "Saint Peter Building",
+      "floor": "Ground Floor",
+      "room": "SP-102",
+      "landmarks": "Ground floor of Saint Peter Building, second classroom on the left from the main entrance",
+      "description": "General purpose classroom with capacity for 40 students."
+    },
+    {
+      "entity_id": "CLASSROOM_SP103",
+      "canonical_name": "Classroom SP-103",
+      "aliases": ["sp103", "sp-103", "room 103", "room sp103", "room sp-103"],
+      "building": "Saint Peter Building",
+      "floor": "Ground Floor",
+      "room": "SP-103",
+      "landmarks": "Ground floor of Saint Peter Building, third classroom on the left from the main entrance",
+      "description": "General purpose classroom with capacity for 40 students."
+    },
+    {
+      "entity_id": "CLASSROOM_SP303",
+      "canonical_name": "Classroom SP-303",
+      "aliases": ["sp303", "sp-303", "room 303", "room sp303", "room sp-303", "computer lab 3"],
+      "building": "Saint Peter Building",
+      "floor": "3rd Floor",
+      "room": "SP-303",
+      "landmarks": "3rd floor of Saint Peter Building, part of the Computer Laboratory complex",
+      "description": "Computer Laboratory Room 3, equipped with 30 desktop computers for programming and IT classes."
+    },
+    {
+      "entity_id": "PARKING",
+      "canonical_name": "Parking Area",
+      "aliases": ["parking", "car park", "parking lot", "parking area", "motorcycle parking"],
+      "building": "Outdoor Facility",
+      "floor": "Ground Level",
+      "room": null,
+      "landmarks": "Located at the front of the campus, before the main gate",
+      "description": "The campus parking area is available for faculty, staff, and students with parking permits."
+    },
+    {
+      "entity_id": "GUARD_HOUSE",
+      "canonical_name": "Guard House",
+      "aliases": ["guard house", "security", "security office", "gate", "main gate"],
+      "building": "Standalone Structure",
+      "floor": "Ground Floor",
+      "room": null,
+      "landmarks": "Located at the main entrance gate of the campus",
+      "description": "The Guard House manages campus security, visitor registration, and emergency response. Security personnel are on duty 24/7."
+    },
+    {
+      "entity_id": "BOOKSTORE",
+      "canonical_name": "Bookstore",
+      "aliases": ["bookstore", "school supplies", "book store", "textbooks"],
+      "building": "Student Center Building",
+      "floor": "Ground Floor",
+      "room": "SC-101",
+      "landmarks": "Located in the Student Center Building, beside the entrance to the Canteen",
+      "description": "The Campus Bookstore sells textbooks, school supplies, uniforms, and official school merchandise."
+    }
+  ]
+}

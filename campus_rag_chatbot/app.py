@@ -47,6 +47,8 @@ from intent_classifier import (
 )
 from text_normalizer import normalize_text, canonicalize_directory_query  # Text normalization for consistent retrieval
 from entity_analyzer import check_entity_agreement, should_promote_confidence  # Entity-aware confidence promotion
+from entity_registry import EntityRegistry  # Phase 9: Structured directory entities
+from entity_resolver import extract_subject, resolve_entity, format_entity_response  # Phase 9: Entity resolution
 
 # ==============================================================================
 # CONFIGURATION
@@ -100,6 +102,10 @@ llm = ChatOpenAI(
 
 # Initialize query logger
 query_logger = QueryLogger(log_dir=LOG_DIR)
+
+# Initialize entity registry for directory queries (Phase 9)
+ENTITY_REGISTRY_PATH = PROJECT_ROOT / "data" / "directory_entities.json"
+entity_registry = EntityRegistry(str(ENTITY_REGISTRY_PATH))
 
 # ==============================================================================
 # FASTAPI APP
@@ -537,6 +543,49 @@ async def handle_directory_query(
     # Canonicalize directory query for better semantic alignment
     # e.g., "where is canteen" -> "canteen location"
     canonical_query = canonicalize_directory_query(normalized_query)
+
+    # ===========================================================================
+    # PHASE 9: Entity-Anchored Resolution (try before RAG fallback)
+    # ===========================================================================
+    subject = extract_subject(canonical_query)
+    resolved_entity, resolution_confidence, resolution_method = resolve_entity(
+        subject, entity_registry
+    )
+
+    if resolved_entity and resolution_confidence >= 0.95:
+        # Entity resolved with high confidence - return deterministic answer
+        answer = format_entity_response(resolved_entity)
+
+        # Log the successful entity resolution
+        query_logger.log_query(
+            query=query,
+            session_id=session_id,
+            metadata={
+                "intent": "directory",
+                "confidence_level": "High",
+                "confidence_score": 98.0,
+                "rejected": False,
+                "resolution_method": resolution_method,
+                "entity_id": resolved_entity.entity_id,
+                "canonical_name": resolved_entity.canonical_name,
+                "phase": "entity_resolution"
+            }
+        )
+
+        return ChatResponse(
+            session_id=session_id,
+            answer=answer,
+            sources=[],  # No RAG sources - entity-based answer
+            confidence_level="High",
+            confidence_score=98.0,
+            rejected=False,
+            timestamp=datetime.now().isoformat(),
+            mode="directory"
+        )
+
+    # ===========================================================================
+    # RAG Fallback: Entity not resolved, use similarity-based retrieval
+    # ===========================================================================
 
     # Retrieve with similarity scores using canonical query
     retrieval_results = doc_manager.vector_store.similarity_search_with_relevance_scores(
