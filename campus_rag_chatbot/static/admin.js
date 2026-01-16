@@ -9,6 +9,8 @@
 
 let isUploading = false;
 let isDeleting = false;
+let isSavingEntity = false;
+let editingEntityId = null;  // Track which entity is being edited
 
 // ==============================================================================
 // API KEY MANAGEMENT
@@ -267,6 +269,380 @@ function escapeHtml(text) {
 }
 
 // ==============================================================================
+// ENTITY MANAGEMENT (Phase 10)
+// ==============================================================================
+
+/**
+ * Load and display all directory entities
+ */
+async function loadEntities() {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+        return; // Silently return if no API key
+    }
+
+    const loadingIndicator = document.getElementById('entitiesLoadingIndicator');
+    const tableBody = document.getElementById('entitiesBody');
+    const statsDiv = document.getElementById('entitiesStats');
+
+    loadingIndicator.classList.remove('hidden');
+
+    try {
+        const data = await apiCall('/admin/entities');
+
+        tableBody.innerHTML = '';
+
+        if (data.entities.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6" class="empty-state">No entities found.</td></tr>';
+            statsDiv.textContent = '';
+        } else {
+            data.entities.forEach(entity => {
+                const row = createEntityRow(entity);
+                tableBody.appendChild(row);
+            });
+            statsDiv.textContent = `Total: ${data.total} entities (${data.active} active)`;
+        }
+
+    } catch (error) {
+        showNotification(`Failed to load entities: ${error.message}`, 'error');
+        tableBody.innerHTML = '<tr><td colspan="6" class="error-state">Failed to load entities. Please check your API key and try again.</td></tr>';
+        statsDiv.textContent = '';
+    } finally {
+        loadingIndicator.classList.add('hidden');
+    }
+}
+
+/**
+ * Create table row for an entity
+ */
+function createEntityRow(entity) {
+    const row = document.createElement('tr');
+    const isActive = entity.status === 'active';
+
+    row.className = isActive ? '' : 'inactive-row';
+    row.innerHTML = `
+        <td class="entity-id">${escapeHtml(entity.entity_id)}</td>
+        <td>${escapeHtml(entity.canonical_name)}</td>
+        <td>${escapeHtml(entity.building)}</td>
+        <td>${escapeHtml(entity.floor)}</td>
+        <td>
+            <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
+                ${isActive ? 'Active' : 'Inactive'}
+            </span>
+        </td>
+        <td class="action-buttons">
+            <button class="btn-secondary btn-small" onclick="editEntity('${entity.entity_id}')">
+                Edit
+            </button>
+            <button class="btn-${isActive ? 'warning' : 'success'} btn-small" onclick="toggleEntityStatus('${entity.entity_id}', ${isActive})">
+                ${isActive ? 'Deactivate' : 'Activate'}
+            </button>
+        </td>
+    `;
+
+    return row;
+}
+
+/**
+ * Show entity modal for adding or editing
+ */
+function showEntityModal(entity = null) {
+    const modal = document.getElementById('entityModal');
+    const title = document.getElementById('entityModalTitle');
+    const entityIdInput = document.getElementById('entityId');
+    const statusGroup = document.getElementById('statusGroup');
+
+    // Reset form
+    document.getElementById('entityForm').reset();
+
+    if (entity) {
+        // Edit mode
+        editingEntityId = entity.entity_id;
+        title.textContent = 'Edit Entity';
+        entityIdInput.value = entity.entity_id;
+        entityIdInput.disabled = true;  // Can't change entity ID
+        document.getElementById('canonicalName').value = entity.canonical_name || '';
+        document.getElementById('aliases').value = (entity.aliases || []).join(', ');
+        document.getElementById('building').value = entity.building || '';
+        document.getElementById('floor').value = entity.floor || '';
+        document.getElementById('room').value = entity.room || '';
+        document.getElementById('landmarks').value = entity.landmarks || '';
+        document.getElementById('description').value = entity.description || '';
+        document.getElementById('entityStatus').value = entity.status || 'active';
+        statusGroup.style.display = 'block';
+    } else {
+        // Add mode
+        editingEntityId = null;
+        title.textContent = 'Add Entity';
+        entityIdInput.disabled = false;
+        statusGroup.style.display = 'none';
+    }
+
+    modal.classList.remove('hidden');
+}
+
+/**
+ * Hide entity modal
+ */
+function hideEntityModal() {
+    const modal = document.getElementById('entityModal');
+    modal.classList.add('hidden');
+    editingEntityId = null;
+}
+
+/**
+ * Save entity (create or update)
+ */
+async function saveEntity(e) {
+    e.preventDefault();
+
+    if (isSavingEntity) return;
+
+    const entityId = document.getElementById('entityId').value.trim();
+    const canonicalName = document.getElementById('canonicalName').value.trim();
+    const aliasesInput = document.getElementById('aliases').value.trim();
+    const building = document.getElementById('building').value.trim();
+    const floor = document.getElementById('floor').value.trim();
+    const room = document.getElementById('room').value.trim();
+    const landmarks = document.getElementById('landmarks').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const status = document.getElementById('entityStatus').value;
+
+    // Parse aliases
+    const aliases = aliasesInput
+        ? aliasesInput.split(',').map(a => a.trim()).filter(a => a)
+        : [];
+
+    // Validation
+    if (!entityId || !canonicalName || !building || !floor) {
+        showNotification('Please fill in all required fields', 'error');
+        return;
+    }
+
+    isSavingEntity = true;
+    const saveBtn = document.getElementById('saveEntityBtn');
+    const originalText = saveBtn.textContent;
+    saveBtn.textContent = 'Saving...';
+    saveBtn.disabled = true;
+
+    try {
+        let data;
+
+        if (editingEntityId) {
+            // Update existing entity
+            const updateData = {
+                canonical_name: canonicalName,
+                aliases: aliases,
+                building: building,
+                floor: floor,
+                room: room || null,
+                landmarks: landmarks || null,
+                description: description || null,
+                status: status
+            };
+
+            data = await apiCall(`/admin/entities/${editingEntityId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateData)
+            });
+
+            showNotification(`Entity "${entityId}" updated successfully`, 'success');
+        } else {
+            // Create new entity
+            const createData = {
+                entity_id: entityId,
+                canonical_name: canonicalName,
+                aliases: aliases,
+                building: building,
+                floor: floor,
+                room: room || null,
+                landmarks: landmarks || null,
+                description: description || null
+            };
+
+            data = await apiCall('/admin/entities', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(createData)
+            });
+
+            showNotification(`Entity "${entityId}" created successfully`, 'success');
+        }
+
+        hideEntityModal();
+        await loadEntities();
+
+    } catch (error) {
+        showNotification(`Failed to save entity: ${error.message}`, 'error');
+    } finally {
+        isSavingEntity = false;
+        saveBtn.textContent = originalText;
+        saveBtn.disabled = false;
+    }
+}
+
+/**
+ * Edit an existing entity
+ */
+async function editEntity(entityId) {
+    try {
+        const data = await apiCall(`/admin/entities/${entityId}`);
+        showEntityModal(data.entity);
+    } catch (error) {
+        showNotification(`Failed to load entity: ${error.message}`, 'error');
+    }
+}
+
+/**
+ * Toggle entity status (active/inactive)
+ */
+async function toggleEntityStatus(entityId, currentlyActive) {
+    const newStatus = currentlyActive ? 'inactive' : 'active';
+    const action = currentlyActive ? 'deactivate' : 'activate';
+
+    // Confirmation for deactivation
+    if (currentlyActive) {
+        const confirmed = confirm(
+            `Are you sure you want to deactivate "${entityId}"?\n\nDeactivated entities will not appear in search results and the chatbot will not provide directions to this location.`
+        );
+        if (!confirmed) return;
+    }
+
+    try {
+        await apiCall(`/admin/entities/${entityId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        showNotification(`Entity "${entityId}" ${action}d successfully`, 'success');
+        await loadEntities();
+
+    } catch (error) {
+        showNotification(`Failed to ${action} entity: ${error.message}`, 'error');
+    }
+}
+
+// Make entity functions available globally for onclick handlers
+window.editEntity = editEntity;
+window.toggleEntityStatus = toggleEntityStatus;
+
+// ==============================================================================
+// CSV IMPORT/EXPORT (Phase 10 Extension)
+// ==============================================================================
+
+/**
+ * Export entities to CSV file
+ */
+async function exportEntities() {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+        showNotification('Please save your API key first', 'error');
+        return;
+    }
+
+    try {
+        showNotification('Exporting entities...', 'info');
+
+        const response = await fetch('/admin/entities/export', {
+            headers: { 'X-API-Key': apiKey }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || 'Export failed');
+        }
+
+        // Get filename from Content-Disposition header or use default
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = 'directory_entities.csv';
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename=(.+)/);
+            if (match) filename = match[1];
+        }
+
+        // Download the file
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        showNotification('Entities exported successfully', 'success');
+
+    } catch (error) {
+        showNotification(`Export failed: ${error.message}`, 'error');
+    }
+}
+
+/**
+ * Import entities from CSV file
+ */
+async function importEntities(file) {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+        showNotification('Please save your API key first', 'error');
+        return;
+    }
+
+    if (!file) {
+        showNotification('No file selected', 'error');
+        return;
+    }
+
+    const importBtn = document.getElementById('importEntitiesTrigger');
+    const originalText = importBtn.textContent;
+    importBtn.textContent = 'Importing...';
+    importBtn.disabled = true;
+
+    try {
+        showNotification('Importing entities...', 'info');
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/admin/entities/import', {
+            method: 'POST',
+            headers: { 'X-API-Key': apiKey },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'error') {
+            // Show validation errors
+            let errorMsg = data.message;
+            if (data.stats && data.stats.errors && data.stats.errors.length > 0) {
+                errorMsg += '\n' + data.stats.errors.slice(0, 5).join('\n');
+                if (data.stats.errors.length > 5) {
+                    errorMsg += `\n... and ${data.stats.errors.length - 5} more errors`;
+                }
+            }
+            showNotification(errorMsg, 'error');
+            return;
+        }
+
+        showNotification(data.message, 'success');
+
+        // Reload entities to show changes
+        await loadEntities();
+
+    } catch (error) {
+        showNotification(`Import failed: ${error.message}`, 'error');
+    } finally {
+        importBtn.textContent = originalText;
+        importBtn.disabled = false;
+        // Reset file input
+        document.getElementById('importEntitiesInput').value = '';
+    }
+}
+
+// ==============================================================================
 // EVENT LISTENERS
 // ==============================================================================
 
@@ -310,13 +686,60 @@ document.addEventListener('DOMContentLoaded', () => {
     // Refresh Button
     document.getElementById('refreshBtn').addEventListener('click', loadDocuments);
 
+    // ==============================================================================
+    // ENTITY MANAGEMENT EVENT LISTENERS (Phase 10)
+    // ==============================================================================
+
+    // Add Entity Button
+    document.getElementById('addEntityBtn').addEventListener('click', () => showEntityModal());
+
+    // Refresh Entities Button
+    document.getElementById('refreshEntitiesBtn').addEventListener('click', loadEntities);
+
+    // Export Entities Button
+    document.getElementById('exportEntitiesBtn').addEventListener('click', exportEntities);
+
+    // Import Entities Button (trigger file input)
+    document.getElementById('importEntitiesTrigger').addEventListener('click', () => {
+        document.getElementById('importEntitiesInput').click();
+    });
+
+    // Import Entities File Input
+    document.getElementById('importEntitiesInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            importEntities(file);
+        }
+    });
+
+    // Entity Modal Close Button
+    document.getElementById('closeEntityModal').addEventListener('click', hideEntityModal);
+
+    // Entity Modal Cancel Button
+    document.getElementById('cancelEntityBtn').addEventListener('click', hideEntityModal);
+
+    // Entity Form Submit
+    document.getElementById('entityForm').addEventListener('submit', saveEntity);
+
+    // Close modal when clicking outside
+    document.getElementById('entityModal').addEventListener('click', (e) => {
+        if (e.target.id === 'entityModal') {
+            hideEntityModal();
+        }
+    });
+
+    // ==============================================================================
+    // INITIALIZATION
+    // ==============================================================================
+
     // Check if API key is already saved
     const savedApiKey = getApiKey();
     if (savedApiKey) {
         updateApiKeyStatus(true);
         document.getElementById('apiKeyInput').value = savedApiKey;
-        // Auto-load documents if API key exists
+        // Auto-load documents and entities if API key exists
         loadDocuments();
+        loadEntities();
     } else {
         updateApiKeyStatus(false);
     }

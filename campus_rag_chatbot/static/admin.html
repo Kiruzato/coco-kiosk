@@ -87,6 +87,102 @@
             </div>
         </section>
 
+        <!-- Directory Entities Section (Phase 10) -->
+        <section class="card">
+            <div class="table-header">
+                <h2>Directory Entities</h2>
+                <div class="header-actions">
+                    <button id="addEntityBtn" class="btn-primary">+ Add Entity</button>
+                    <button id="exportEntitiesBtn" class="btn-secondary">📥 Export CSV</button>
+                    <button id="importEntitiesTrigger" class="btn-secondary">📤 Import CSV</button>
+                    <input type="file" id="importEntitiesInput" accept=".csv" class="hidden">
+                    <button id="refreshEntitiesBtn" class="btn-secondary">🔄 Refresh</button>
+                </div>
+            </div>
+
+            <div id="entitiesLoadingIndicator" class="loading hidden">Loading entities...</div>
+
+            <div class="table-container">
+                <table id="entitiesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Building</th>
+                            <th>Floor</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="entitiesBody">
+                        <tr>
+                            <td colspan="6" class="empty-state">No entities loaded. Click "Refresh" to load directory entities.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="entitiesStats" class="table-stats"></div>
+        </section>
+
+        <!-- Entity Modal -->
+        <div id="entityModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="entityModalTitle">Add Entity</h3>
+                    <button id="closeEntityModal" class="close-btn">&times;</button>
+                </div>
+                <form id="entityForm">
+                    <div class="form-group">
+                        <label for="entityId">Entity ID *</label>
+                        <input type="text" id="entityId" placeholder="e.g., LIBRARY, CANTEEN" required>
+                        <small>Uppercase identifier, cannot be changed after creation</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="canonicalName">Canonical Name *</label>
+                        <input type="text" id="canonicalName" placeholder="e.g., Main Library" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="aliases">Aliases (comma-separated)</label>
+                        <input type="text" id="aliases" placeholder="e.g., library, reading room">
+                        <small>Alternative names users might use to find this location</small>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="building">Building *</label>
+                            <input type="text" id="building" placeholder="e.g., Saint Peter Building" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="floor">Floor *</label>
+                            <input type="text" id="floor" placeholder="e.g., 2nd Floor" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="room">Room</label>
+                        <input type="text" id="room" placeholder="e.g., SP-201">
+                    </div>
+                    <div class="form-group">
+                        <label for="landmarks">Landmarks</label>
+                        <textarea id="landmarks" rows="2" placeholder="e.g., Located above the Main Lobby"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" rows="2" placeholder="Brief description of this location"></textarea>
+                    </div>
+                    <div class="form-group" id="statusGroup" style="display: none;">
+                        <label for="entityStatus">Status</label>
+                        <select id="entityStatus">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" id="cancelEntityBtn" class="btn-secondary">Cancel</button>
+                        <button type="submit" id="saveEntityBtn" class="btn-primary">Save Entity</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <footer>
             <p>CoCo — Columban College, Inc. | Admin Panel</p>
         </footer>

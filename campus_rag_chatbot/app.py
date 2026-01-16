@@ -169,6 +169,34 @@ class ResetRequest(BaseModel):
 
 
 # ==============================================================================
+# ENTITY MANAGEMENT MODELS - Phase 10
+# ==============================================================================
+
+class EntityCreate(BaseModel):
+    """Request model for creating a new directory entity."""
+    entity_id: str
+    canonical_name: str
+    aliases: List[str]
+    building: str
+    floor: str
+    room: Optional[str] = None
+    landmarks: Optional[str] = None
+    description: Optional[str] = None
+
+
+class EntityUpdate(BaseModel):
+    """Request model for updating an existing directory entity."""
+    canonical_name: Optional[str] = None
+    aliases: Optional[List[str]] = None
+    building: Optional[str] = None
+    floor: Optional[str] = None
+    room: Optional[str] = None
+    landmarks: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+
+
+# ==============================================================================
 # SESSION MANAGEMENT
 # ==============================================================================
 
@@ -948,6 +976,315 @@ async def delete_document(document_id: str):
         "status": "success",
         "message": "Document deleted successfully",
         "document_name": document_name
+    }
+
+
+# ==============================================================================
+# ADMIN ENTITY ENDPOINTS - Phase 10
+# ==============================================================================
+
+@app.get("/admin/entities", dependencies=[Depends(verify_admin_api_key)])
+async def list_entities():
+    """
+    List all directory entities.
+
+    Returns:
+        List of entities with metadata including status
+    """
+    from dataclasses import asdict
+
+    entities = []
+    for entity in entity_registry.get_all_entities():
+        entity_dict = asdict(entity)
+        entities.append(entity_dict)
+
+    # Sort by entity_id for consistent ordering
+    entities.sort(key=lambda x: x['entity_id'])
+
+    return {
+        "entities": entities,
+        "total": len(entities),
+        "active": len([e for e in entities if e.get('status', 'active') == 'active'])
+    }
+
+
+# ==============================================================================
+# ENTITY CSV IMPORT/EXPORT - Phase 10 Extension
+# Note: These routes MUST be defined before the {entity_id} route
+# ==============================================================================
+
+@app.get("/admin/entities/export", dependencies=[Depends(verify_admin_api_key)])
+async def export_entities():
+    """
+    Export all directory entities to CSV format.
+
+    Returns:
+        CSV file download with all entities
+    """
+    import csv
+    import io
+    from fastapi.responses import StreamingResponse
+
+    # Create CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Write header
+    headers = [
+        'entity_id', 'canonical_name', 'aliases', 'building', 'floor',
+        'room', 'landmarks', 'description', 'status', 'last_updated'
+    ]
+    writer.writerow(headers)
+
+    # Write entity rows
+    for entity in sorted(entity_registry.get_all_entities(), key=lambda e: e.entity_id):
+        # Join aliases with semicolon
+        aliases_str = ';'.join(entity.aliases) if entity.aliases else ''
+
+        row = [
+            entity.entity_id,
+            entity.canonical_name,
+            aliases_str,
+            entity.building,
+            entity.floor,
+            entity.room or '',
+            entity.landmarks or '',
+            entity.description or '',
+            entity.status,
+            entity.last_updated or ''
+        ]
+        writer.writerow(row)
+
+    # Prepare response
+    output.seek(0)
+    filename = f"directory_entities_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
+@app.post("/admin/entities/import", dependencies=[Depends(verify_admin_api_key)])
+async def import_entities(file: UploadFile = File(...)):
+    """
+    Import directory entities from CSV file.
+
+    CSV must have columns: entity_id, canonical_name, aliases, building, floor,
+    room, landmarks, description, status
+
+    Import rules:
+    - If entity_id exists → update entity
+    - If entity_id is new → create entity
+    - If status is 'inactive' → soft delete
+    - Changes applied atomically (all-or-nothing)
+
+    Args:
+        file: CSV file upload
+
+    Returns:
+        Import result with stats
+    """
+    import csv
+    import io
+
+    # Validate file type
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="File must be a CSV")
+
+    try:
+        # Read file content
+        content = await file.read()
+        text = content.decode('utf-8-sig')  # Handle BOM from Excel
+
+        # Parse CSV
+        reader = csv.DictReader(io.StringIO(text))
+        entities_data = list(reader)
+
+        if not entities_data:
+            raise HTTPException(status_code=400, detail="CSV file is empty")
+
+        # Perform bulk import
+        success, message, stats = entity_registry.bulk_import(entities_data)
+
+        if not success:
+            return {
+                "status": "error",
+                "message": message,
+                "stats": stats
+            }
+
+        return {
+            "status": "success",
+            "message": message,
+            "stats": stats
+        }
+
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid file encoding. Please use UTF-8.")
+    except csv.Error as e:
+        raise HTTPException(status_code=400, detail=f"CSV parsing error: {str(e)}")
+
+
+@app.get("/admin/entities/{entity_id}", dependencies=[Depends(verify_admin_api_key)])
+async def get_entity(entity_id: str):
+    """
+    Get a single directory entity by ID.
+
+    Args:
+        entity_id: Entity identifier
+
+    Returns:
+        Entity data
+
+    Raises:
+        404: Entity not found
+    """
+    from dataclasses import asdict
+
+    entity = entity_registry.get_by_id(entity_id.upper())
+    if not entity:
+        raise HTTPException(status_code=404, detail=f"Entity '{entity_id}' not found")
+
+    return {
+        "entity": asdict(entity)
+    }
+
+
+@app.post("/admin/entities", dependencies=[Depends(verify_admin_api_key)])
+async def create_entity(entity_data: EntityCreate):
+    """
+    Create a new directory entity.
+
+    Args:
+        entity_data: Entity creation data
+
+    Returns:
+        Success message with created entity
+
+    Raises:
+        400: Validation error or duplicate ID
+    """
+    from dataclasses import asdict
+
+    success, message = entity_registry.add_entity(
+        entity_id=entity_data.entity_id,
+        canonical_name=entity_data.canonical_name,
+        aliases=entity_data.aliases,
+        building=entity_data.building,
+        floor=entity_data.floor,
+        room=entity_data.room,
+        landmarks=entity_data.landmarks,
+        description=entity_data.description
+    )
+
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    # Get the created entity to return
+    created_entity = entity_registry.get_by_id(entity_data.entity_id.upper())
+
+    return {
+        "status": "success",
+        "message": message,
+        "entity": asdict(created_entity) if created_entity else None
+    }
+
+
+@app.put("/admin/entities/{entity_id}", dependencies=[Depends(verify_admin_api_key)])
+async def update_entity(entity_id: str, entity_data: EntityUpdate):
+    """
+    Update an existing directory entity.
+
+    Args:
+        entity_id: Entity identifier
+        entity_data: Fields to update (only non-None values)
+
+    Returns:
+        Success message with updated entity
+
+    Raises:
+        400: Validation error
+        404: Entity not found
+    """
+    from dataclasses import asdict
+
+    # Check if entity exists
+    existing = entity_registry.get_by_id(entity_id.upper())
+    if not existing:
+        raise HTTPException(status_code=404, detail=f"Entity '{entity_id}' not found")
+
+    # Build update kwargs from non-None fields
+    update_kwargs = {}
+    if entity_data.canonical_name is not None:
+        update_kwargs['canonical_name'] = entity_data.canonical_name
+    if entity_data.aliases is not None:
+        update_kwargs['aliases'] = entity_data.aliases
+    if entity_data.building is not None:
+        update_kwargs['building'] = entity_data.building
+    if entity_data.floor is not None:
+        update_kwargs['floor'] = entity_data.floor
+    if entity_data.room is not None:
+        update_kwargs['room'] = entity_data.room
+    if entity_data.landmarks is not None:
+        update_kwargs['landmarks'] = entity_data.landmarks
+    if entity_data.description is not None:
+        update_kwargs['description'] = entity_data.description
+    if entity_data.status is not None:
+        update_kwargs['status'] = entity_data.status
+
+    if not update_kwargs:
+        raise HTTPException(status_code=400, detail="No fields to update")
+
+    success, message = entity_registry.update_entity(entity_id, **update_kwargs)
+
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    # Get the updated entity to return
+    updated_entity = entity_registry.get_by_id(entity_id.upper())
+
+    return {
+        "status": "success",
+        "message": message,
+        "entity": asdict(updated_entity) if updated_entity else None
+    }
+
+
+@app.delete("/admin/entities/{entity_id}", dependencies=[Depends(verify_admin_api_key)])
+async def delete_entity(entity_id: str, hard: bool = False):
+    """
+    Delete a directory entity (soft or hard delete).
+
+    Soft delete (default): Sets status to 'inactive', entity remains in storage.
+    Hard delete: Permanently removes entity from storage (use with caution).
+
+    Args:
+        entity_id: Entity identifier
+        hard: If True, permanently remove entity
+
+    Returns:
+        Success message
+
+    Raises:
+        404: Entity not found
+    """
+    # Check if entity exists
+    existing = entity_registry.get_by_id(entity_id.upper())
+    if not existing:
+        raise HTTPException(status_code=404, detail=f"Entity '{entity_id}' not found")
+
+    success, message = entity_registry.delete_entity(entity_id, hard=hard)
+
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    return {
+        "status": "success",
+        "message": message,
+        "entity_id": entity_id.upper(),
+        "delete_type": "hard" if hard else "soft"
     }
 
 

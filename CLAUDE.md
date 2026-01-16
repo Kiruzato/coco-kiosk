@@ -6,7 +6,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 
 ## Current State
 
-**Completed through Phase 9** - Entity-anchored directory retrieval
+**Completed through Phase 10** - Admin-managed Directory Entity Editor
 
 ### Phase History
 1. **Phase 1-3**: Core RAG pipeline, document management, multi-format support
@@ -16,6 +16,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 5. **Phase 7**: Remote admin document management system (web-based)
 6. **Phase 8**: Directory answering with text normalization, query canonicalization, entity-aware confidence promotion, soft max-similarity gating
 7. **Phase 9**: Entity-anchored directory retrieval (structured directory entities)
+8. **Phase 10**: Admin-managed Directory Entity Editor (CRUD operations for directory entities)
 
 ## Architecture
 
@@ -47,12 +48,14 @@ campus_rag_chatbot/
 - Classifies queries as: `directory`, `academic`, `event`, `general`, `greeting`, `out_of_scope`
 - Directory queries get special handling with entity resolution
 
-### Entity Resolution (Phase 9)
+### Entity Resolution (Phase 9-10)
 - Directory locations are first-class entities with:
   - `entity_id`, `canonical_name`, `aliases`
   - `building`, `floor`, `room`
+  - `status` (active/inactive), `last_updated`
 - Entity resolution replaces pure similarity-based confidence
 - Safety guardrails prevent LLM from inventing location details
+- Admin can create, update, and deactivate entities via web UI
 
 ### Confidence Scoring
 - HIGH/MEDIUM/LOW confidence levels
@@ -81,11 +84,12 @@ ADMIN_API_KEY=<uuid for admin authentication>
 
 ## Current Work / Next Steps
 
-The project has implemented Phase 9 (entity-anchored directory retrieval). Potential future work:
+The project has implemented Phase 10 (admin-managed directory entity editor). Potential future work:
 - Background job queue for long document operations
 - HTTPS support
 - Enhanced security features
 - Document preview in admin interface
+- Entity import/export functionality
 
 ## Session Notes
 

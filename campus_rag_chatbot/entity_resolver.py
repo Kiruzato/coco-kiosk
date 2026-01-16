@@ -97,6 +97,11 @@ def resolve_entity(
     entity = registry.get_by_alias(normalized)
 
     if entity:
+        # Safety check: ensure entity is active (defense-in-depth)
+        if getattr(entity, 'status', 'active') != 'active':
+            logger.debug(f"Entity '{entity.entity_id}' found but inactive")
+            return None, 0.0, "none"
+
         # Determine if it was canonical or alias match
         if entity.canonical_name.lower() == normalized:
             return entity, 1.0, "exact_canonical"

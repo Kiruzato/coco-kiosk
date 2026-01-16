@@ -12,9 +12,10 @@ Used by entity_resolver.py to resolve directory queries to specific locations.
 
 import json
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,8 @@ class DirectoryEntity:
         room: Room number(s) if applicable, None otherwise
         landmarks: Navigation hints to help find the location
         description: Brief description of the location's purpose
+        status: Entity status - "active" or "inactive" (default: "active")
+        last_updated: ISO timestamp of last modification
     """
     entity_id: str
     canonical_name: str
@@ -42,6 +45,8 @@ class DirectoryEntity:
     room: Optional[str]
     landmarks: Optional[str]
     description: Optional[str]
+    status: str = "active"
+    last_updated: Optional[str] = None
 
 
 class EntityRegistry:
@@ -90,32 +95,21 @@ class EntityRegistry:
                     floor=entry['floor'],
                     room=entry.get('room'),
                     landmarks=entry.get('landmarks'),
-                    description=entry.get('description')
+                    description=entry.get('description'),
+                    status=entry.get('status', 'active'),
+                    last_updated=entry.get('last_updated')
                 )
 
-                # Store entity by ID
+                # Store entity by ID (all entities, including inactive)
                 self.entities[entity.entity_id] = entity
 
-                # Index canonical name (normalized)
-                canonical_normalized = entity.canonical_name.lower().strip()
-                self.alias_index[canonical_normalized] = entity.entity_id
+            # Build alias index (only active entities)
+            self._rebuild_alias_index()
 
-                # Index all aliases (normalized)
-                for alias in entity.aliases:
-                    alias_normalized = alias.lower().strip()
-                    if alias_normalized in self.alias_index:
-                        # Log collision but don't override
-                        existing = self.alias_index[alias_normalized]
-                        logger.debug(
-                            f"Alias collision: '{alias_normalized}' maps to both "
-                            f"{existing} and {entity.entity_id}"
-                        )
-                    else:
-                        self.alias_index[alias_normalized] = entity.entity_id
-
+            active_count = len([e for e in self.entities.values() if e.status == "active"])
             logger.info(
-                f"Loaded {len(self.entities)} directory entities with "
-                f"{len(self.alias_index)} aliases"
+                f"Loaded {len(self.entities)} directory entities "
+                f"({active_count} active) with {len(self.alias_index)} aliases"
             )
 
         except json.JSONDecodeError as e:
@@ -181,3 +175,410 @@ class EntityRegistry:
     def __contains__(self, alias: str) -> bool:
         """Check if an alias exists in the registry."""
         return alias.lower().strip() in self.alias_index
+
+    def _rebuild_alias_index(self) -> None:
+        """Rebuild the alias index from current entities."""
+        self.alias_index.clear()
+
+        for entity in self.entities.values():
+            # Only index active entities
+            if entity.status != "active":
+                continue
+
+            # Index canonical name (normalized)
+            canonical_normalized = entity.canonical_name.lower().strip()
+            self.alias_index[canonical_normalized] = entity.entity_id
+
+            # Index all aliases (normalized)
+            for alias in entity.aliases:
+                alias_normalized = alias.lower().strip()
+                if alias_normalized not in self.alias_index:
+                    self.alias_index[alias_normalized] = entity.entity_id
+
+    def save_entities(self) -> Tuple[bool, str]:
+        """
+        Save all entities to the JSON file.
+
+        Returns:
+            Tuple of (success: bool, message: str)
+        """
+        try:
+            # Build entity list for JSON
+            entities_list = []
+            for entity in self.entities.values():
+                entity_dict = asdict(entity)
+                entities_list.append(entity_dict)
+
+            # Sort by entity_id for consistent output
+            entities_list.sort(key=lambda x: x['entity_id'])
+
+            data = {
+                "version": "1.1",
+                "last_updated": datetime.now().isoformat(),
+                "entities": entities_list
+            }
+
+            path = Path(self._json_path)
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+
+            logger.info(f"Saved {len(entities_list)} entities to {self._json_path}")
+            return True, f"Saved {len(entities_list)} entities"
+
+        except Exception as e:
+            logger.error(f"Failed to save entities: {e}")
+            return False, f"Failed to save entities: {str(e)}"
+
+    def add_entity(
+        self,
+        entity_id: str,
+        canonical_name: str,
+        aliases: List[str],
+        building: str,
+        floor: str,
+        room: Optional[str] = None,
+        landmarks: Optional[str] = None,
+        description: Optional[str] = None
+    ) -> Tuple[bool, str]:
+        """
+        Add a new entity to the registry.
+
+        Args:
+            entity_id: Unique identifier (will be uppercased)
+            canonical_name: Official display name
+            aliases: List of alternative names
+            building: Building name
+            floor: Floor level
+            room: Room number (optional)
+            landmarks: Navigation hints (optional)
+            description: Brief description (optional)
+
+        Returns:
+            Tuple of (success: bool, message: str)
+        """
+        # Normalize entity_id
+        entity_id = entity_id.upper().strip()
+
+        # Validation
+        if not entity_id:
+            return False, "Entity ID cannot be empty"
+
+        if entity_id in self.entities:
+            return False, f"Entity ID '{entity_id}' already exists"
+
+        if not canonical_name or not canonical_name.strip():
+            return False, "Canonical name cannot be empty"
+
+        if not building or not building.strip():
+            return False, "Building cannot be empty"
+
+        if not floor or not floor.strip():
+            return False, "Floor cannot be empty"
+
+        # Normalize aliases (lowercase, trimmed, deduplicated)
+        normalized_aliases = []
+        seen = set()
+        for alias in aliases:
+            normalized = alias.lower().strip()
+            if normalized and normalized not in seen:
+                normalized_aliases.append(normalized)
+                seen.add(normalized)
+
+        # Create entity
+        entity = DirectoryEntity(
+            entity_id=entity_id,
+            canonical_name=canonical_name.strip(),
+            aliases=normalized_aliases,
+            building=building.strip(),
+            floor=floor.strip(),
+            room=room.strip() if room else None,
+            landmarks=landmarks.strip() if landmarks else None,
+            description=description.strip() if description else None,
+            status="active",
+            last_updated=datetime.now().isoformat()
+        )
+
+        # Add to registry
+        self.entities[entity_id] = entity
+
+        # Rebuild alias index
+        self._rebuild_alias_index()
+
+        # Save to file
+        success, msg = self.save_entities()
+        if not success:
+            # Rollback on save failure
+            del self.entities[entity_id]
+            self._rebuild_alias_index()
+            return False, msg
+
+        logger.info(f"Added entity: {entity_id}")
+        return True, f"Entity '{entity_id}' created successfully"
+
+    def update_entity(
+        self,
+        entity_id: str,
+        canonical_name: Optional[str] = None,
+        aliases: Optional[List[str]] = None,
+        building: Optional[str] = None,
+        floor: Optional[str] = None,
+        room: Optional[str] = None,
+        landmarks: Optional[str] = None,
+        description: Optional[str] = None,
+        status: Optional[str] = None
+    ) -> Tuple[bool, str]:
+        """
+        Update an existing entity.
+
+        Args:
+            entity_id: Entity to update
+            Other args: Fields to update (None = keep existing)
+
+        Returns:
+            Tuple of (success: bool, message: str)
+        """
+        entity_id = entity_id.upper().strip()
+
+        if entity_id not in self.entities:
+            return False, f"Entity '{entity_id}' not found"
+
+        entity = self.entities[entity_id]
+
+        # Validate updates
+        if canonical_name is not None:
+            if not canonical_name.strip():
+                return False, "Canonical name cannot be empty"
+            entity.canonical_name = canonical_name.strip()
+
+        if aliases is not None:
+            # Normalize aliases
+            normalized_aliases = []
+            seen = set()
+            for alias in aliases:
+                normalized = alias.lower().strip()
+                if normalized and normalized not in seen:
+                    normalized_aliases.append(normalized)
+                    seen.add(normalized)
+            entity.aliases = normalized_aliases
+
+        if building is not None:
+            if not building.strip():
+                return False, "Building cannot be empty"
+            entity.building = building.strip()
+
+        if floor is not None:
+            if not floor.strip():
+                return False, "Floor cannot be empty"
+            entity.floor = floor.strip()
+
+        if room is not None:
+            entity.room = room.strip() if room.strip() else None
+
+        if landmarks is not None:
+            entity.landmarks = landmarks.strip() if landmarks.strip() else None
+
+        if description is not None:
+            entity.description = description.strip() if description.strip() else None
+
+        if status is not None:
+            if status not in ("active", "inactive"):
+                return False, "Status must be 'active' or 'inactive'"
+            entity.status = status
+
+        # Update timestamp
+        entity.last_updated = datetime.now().isoformat()
+
+        # Rebuild alias index
+        self._rebuild_alias_index()
+
+        # Save to file
+        success, msg = self.save_entities()
+        if not success:
+            # Reload from file on save failure
+            self.entities.clear()
+            self.alias_index.clear()
+            self._load_entities()
+            return False, msg
+
+        logger.info(f"Updated entity: {entity_id}")
+        return True, f"Entity '{entity_id}' updated successfully"
+
+    def delete_entity(self, entity_id: str, hard: bool = False) -> Tuple[bool, str]:
+        """
+        Delete an entity (soft or hard delete).
+
+        Args:
+            entity_id: Entity to delete
+            hard: If True, permanently remove; if False, set status to inactive
+
+        Returns:
+            Tuple of (success: bool, message: str)
+        """
+        entity_id = entity_id.upper().strip()
+
+        if entity_id not in self.entities:
+            return False, f"Entity '{entity_id}' not found"
+
+        if hard:
+            # Hard delete - remove from registry
+            del self.entities[entity_id]
+            self._rebuild_alias_index()
+
+            success, msg = self.save_entities()
+            if not success:
+                # Reload from file on save failure
+                self.entities.clear()
+                self.alias_index.clear()
+                self._load_entities()
+                return False, msg
+
+            logger.info(f"Hard deleted entity: {entity_id}")
+            return True, f"Entity '{entity_id}' permanently deleted"
+        else:
+            # Soft delete - set status to inactive
+            return self.update_entity(entity_id, status="inactive")
+
+    def get_active_entities(self) -> List[DirectoryEntity]:
+        """
+        Get all active entities.
+
+        Returns:
+            List of active DirectoryEntity objects
+        """
+        return [e for e in self.entities.values() if e.status == "active"]
+
+    def reload(self) -> None:
+        """Reload entities from file."""
+        self.entities.clear()
+        self.alias_index.clear()
+        self._load_entities()
+
+    def bulk_import(
+        self,
+        entities_data: List[dict]
+    ) -> Tuple[bool, str, dict]:
+        """
+        Import multiple entities atomically (all-or-nothing).
+
+        Rules:
+        - If entity_id exists → update entity
+        - If entity_id is new → create entity
+        - If status is 'inactive' → soft delete
+        - All changes applied only if ALL rows are valid
+
+        Args:
+            entities_data: List of entity dicts with keys:
+                entity_id, canonical_name, aliases, building, floor,
+                room, landmarks, description, status
+
+        Returns:
+            Tuple of (success, message, stats)
+            stats = {"created": N, "updated": N, "errors": [...]}
+        """
+        stats = {"created": 0, "updated": 0, "errors": []}
+
+        # Phase 1: Validate all entities before applying any changes
+        validated_entities = []
+
+        for idx, data in enumerate(entities_data):
+            row_num = idx + 2  # +2 for 1-indexed and header row
+
+            # Required field validation
+            entity_id = str(data.get('entity_id', '')).upper().strip()
+            canonical_name = str(data.get('canonical_name', '')).strip()
+            building = str(data.get('building', '')).strip()
+            floor = str(data.get('floor', '')).strip()
+
+            if not entity_id:
+                stats["errors"].append(f"Row {row_num}: entity_id is required")
+                continue
+
+            if not canonical_name:
+                stats["errors"].append(f"Row {row_num}: canonical_name is required")
+                continue
+
+            if not building:
+                stats["errors"].append(f"Row {row_num}: building is required")
+                continue
+
+            if not floor:
+                stats["errors"].append(f"Row {row_num}: floor is required")
+                continue
+
+            # Optional fields
+            aliases = data.get('aliases', [])
+            if isinstance(aliases, str):
+                # Parse semicolon-separated aliases
+                aliases = [a.strip().lower() for a in aliases.split(';') if a.strip()]
+
+            room = str(data.get('room', '')).strip() or None
+            landmarks = str(data.get('landmarks', '')).strip() or None
+            description = str(data.get('description', '')).strip() or None
+
+            status = str(data.get('status', 'active')).strip().lower()
+            if status not in ('active', 'inactive'):
+                status = 'active'
+
+            validated_entities.append({
+                'entity_id': entity_id,
+                'canonical_name': canonical_name,
+                'aliases': aliases,
+                'building': building,
+                'floor': floor,
+                'room': room,
+                'landmarks': landmarks,
+                'description': description,
+                'status': status,
+                'is_new': entity_id not in self.entities
+            })
+
+        # If any validation errors, abort
+        if stats["errors"]:
+            return False, f"Validation failed: {len(stats['errors'])} error(s)", stats
+
+        # Phase 2: Apply all changes
+        for entity_data in validated_entities:
+            entity_id = entity_data['entity_id']
+            is_new = entity_data['is_new']
+
+            if is_new:
+                # Create new entity
+                entity = DirectoryEntity(
+                    entity_id=entity_id,
+                    canonical_name=entity_data['canonical_name'],
+                    aliases=entity_data['aliases'],
+                    building=entity_data['building'],
+                    floor=entity_data['floor'],
+                    room=entity_data['room'],
+                    landmarks=entity_data['landmarks'],
+                    description=entity_data['description'],
+                    status=entity_data['status'],
+                    last_updated=datetime.now().isoformat()
+                )
+                self.entities[entity_id] = entity
+                stats["created"] += 1
+            else:
+                # Update existing entity
+                entity = self.entities[entity_id]
+                entity.canonical_name = entity_data['canonical_name']
+                entity.aliases = entity_data['aliases']
+                entity.building = entity_data['building']
+                entity.floor = entity_data['floor']
+                entity.room = entity_data['room']
+                entity.landmarks = entity_data['landmarks']
+                entity.description = entity_data['description']
+                entity.status = entity_data['status']
+                entity.last_updated = datetime.now().isoformat()
+                stats["updated"] += 1
+
+        # Rebuild alias index and save
+        self._rebuild_alias_index()
+        success, save_msg = self.save_entities()
+
+        if not success:
+            # Reload from file on save failure
+            self.reload()
+            return False, f"Import failed: {save_msg}", stats
+
+        total = stats["created"] + stats["updated"]
+        return True, f"Successfully imported {total} entities ({stats['created']} created, {stats['updated']} updated)", stats
