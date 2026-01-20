@@ -32,6 +32,8 @@ class DirectoryEntity:
         building: Building name where the location is found
         floor: Floor level (e.g., "Ground Floor", "2nd Floor")
         room: Room number(s) if applicable, None otherwise
+        campus: Campus where the location is found (e.g., "Main Campus")
+        department: Department the location belongs to (optional)
         landmarks: Navigation hints to help find the location
         description: Brief description of the location's purpose
         status: Entity status - "active" or "inactive" (default: "active")
@@ -43,6 +45,8 @@ class DirectoryEntity:
     building: str
     floor: str
     room: Optional[str]
+    campus: str
+    department: Optional[str]
     landmarks: Optional[str]
     description: Optional[str]
     status: str = "active"
@@ -94,6 +98,8 @@ class EntityRegistry:
                     building=entry['building'],
                     floor=entry['floor'],
                     room=entry.get('room'),
+                    campus=entry.get('campus', 'Main Campus'),  # Default for backward compat
+                    department=entry.get('department'),
                     landmarks=entry.get('landmarks'),
                     description=entry.get('description'),
                     status=entry.get('status', 'active'),
@@ -237,6 +243,8 @@ class EntityRegistry:
         building: str,
         floor: str,
         room: Optional[str] = None,
+        campus: str = "Main Campus",
+        department: Optional[str] = None,
         landmarks: Optional[str] = None,
         description: Optional[str] = None
     ) -> Tuple[bool, str]:
@@ -250,6 +258,8 @@ class EntityRegistry:
             building: Building name
             floor: Floor level
             room: Room number (optional)
+            campus: Campus name (required)
+            department: Department name (optional)
             landmarks: Navigation hints (optional)
             description: Brief description (optional)
 
@@ -275,6 +285,9 @@ class EntityRegistry:
         if not floor or not floor.strip():
             return False, "Floor cannot be empty"
 
+        if not campus or not campus.strip():
+            return False, "Campus cannot be empty"
+
         # Normalize aliases (lowercase, trimmed, deduplicated)
         normalized_aliases = []
         seen = set()
@@ -292,6 +305,8 @@ class EntityRegistry:
             building=building.strip(),
             floor=floor.strip(),
             room=room.strip() if room else None,
+            campus=campus.strip(),
+            department=department.strip() if department else None,
             landmarks=landmarks.strip() if landmarks else None,
             description=description.strip() if description else None,
             status="active",
@@ -323,6 +338,8 @@ class EntityRegistry:
         building: Optional[str] = None,
         floor: Optional[str] = None,
         room: Optional[str] = None,
+        campus: Optional[str] = None,
+        department: Optional[str] = None,
         landmarks: Optional[str] = None,
         description: Optional[str] = None,
         status: Optional[str] = None
@@ -373,6 +390,14 @@ class EntityRegistry:
 
         if room is not None:
             entity.room = room.strip() if room.strip() else None
+
+        if campus is not None:
+            if not campus.strip():
+                return False, "Campus cannot be empty"
+            entity.campus = campus.strip()
+
+        if department is not None:
+            entity.department = department.strip() if department.strip() else None
 
         if landmarks is not None:
             entity.landmarks = landmarks.strip() if landmarks.strip() else None
@@ -469,7 +494,7 @@ class EntityRegistry:
         Args:
             entities_data: List of entity dicts with keys:
                 entity_id, canonical_name, aliases, building, floor,
-                room, landmarks, description, status
+                room, campus, department, landmarks, description, status
 
         Returns:
             Tuple of (success, message, stats)
@@ -488,6 +513,7 @@ class EntityRegistry:
             canonical_name = str(data.get('canonical_name', '')).strip()
             building = str(data.get('building', '')).strip()
             floor = str(data.get('floor', '')).strip()
+            campus = str(data.get('campus', '')).strip()
 
             if not entity_id:
                 stats["errors"].append(f"Row {row_num}: entity_id is required")
@@ -505,6 +531,10 @@ class EntityRegistry:
                 stats["errors"].append(f"Row {row_num}: floor is required")
                 continue
 
+            if not campus:
+                stats["errors"].append(f"Row {row_num}: campus is required")
+                continue
+
             # Optional fields
             aliases = data.get('aliases', [])
             if isinstance(aliases, str):
@@ -512,6 +542,7 @@ class EntityRegistry:
                 aliases = [a.strip().lower() for a in aliases.split(';') if a.strip()]
 
             room = str(data.get('room', '')).strip() or None
+            department = str(data.get('department', '')).strip() or None
             landmarks = str(data.get('landmarks', '')).strip() or None
             description = str(data.get('description', '')).strip() or None
 
@@ -526,6 +557,8 @@ class EntityRegistry:
                 'building': building,
                 'floor': floor,
                 'room': room,
+                'campus': campus,
+                'department': department,
                 'landmarks': landmarks,
                 'description': description,
                 'status': status,
@@ -550,6 +583,8 @@ class EntityRegistry:
                     building=entity_data['building'],
                     floor=entity_data['floor'],
                     room=entity_data['room'],
+                    campus=entity_data['campus'],
+                    department=entity_data['department'],
                     landmarks=entity_data['landmarks'],
                     description=entity_data['description'],
                     status=entity_data['status'],
@@ -565,6 +600,8 @@ class EntityRegistry:
                 entity.building = entity_data['building']
                 entity.floor = entity_data['floor']
                 entity.room = entity_data['room']
+                entity.campus = entity_data['campus']
+                entity.department = entity_data['department']
                 entity.landmarks = entity_data['landmarks']
                 entity.description = entity_data['description']
                 entity.status = entity_data['status']

@@ -325,6 +325,8 @@ function showEntityModal(entity = null) {
         document.getElementById('building').value = entity.building || '';
         document.getElementById('floor').value = entity.floor || '';
         document.getElementById('room').value = entity.room || '';
+        document.getElementById('campus').value = entity.campus || 'Main Campus';
+        document.getElementById('department').value = entity.department || '';
         document.getElementById('landmarks').value = entity.landmarks || '';
         document.getElementById('description').value = entity.description || '';
         document.getElementById('entityStatus').value = entity.status || 'active';
@@ -334,6 +336,7 @@ function showEntityModal(entity = null) {
         editingEntityId = null;
         title.textContent = 'Add Entity';
         entityIdInput.disabled = false;
+        document.getElementById('campus').value = 'Main Campus';  // Default value
         statusGroup.style.display = 'none';
     }
 
@@ -363,6 +366,8 @@ async function saveEntity(e) {
     const building = document.getElementById('building').value.trim();
     const floor = document.getElementById('floor').value.trim();
     const room = document.getElementById('room').value.trim();
+    const campus = document.getElementById('campus').value.trim();
+    const department = document.getElementById('department').value.trim();
     const landmarks = document.getElementById('landmarks').value.trim();
     const description = document.getElementById('description').value.trim();
     const status = document.getElementById('entityStatus').value;
@@ -373,7 +378,7 @@ async function saveEntity(e) {
         : [];
 
     // Validation
-    if (!entityId || !canonicalName || !building || !floor) {
+    if (!entityId || !canonicalName || !building || !floor || !campus) {
         showNotification('Please fill in all required fields', 'error');
         return;
     }
@@ -395,6 +400,8 @@ async function saveEntity(e) {
                 building: building,
                 floor: floor,
                 room: room || null,
+                campus: campus,
+                department: department || null,
                 landmarks: landmarks || null,
                 description: description || null,
                 status: status
@@ -416,6 +423,8 @@ async function saveEntity(e) {
                 building: building,
                 floor: floor,
                 room: room || null,
+                campus: campus,
+                department: department || null,
                 landmarks: landmarks || null,
                 description: description || null
             };

@@ -189,6 +189,8 @@ class EntityCreate(BaseModel):
     building: str
     floor: str
     room: Optional[str] = None
+    campus: str = "Main Campus"
+    department: Optional[str] = None
     landmarks: Optional[str] = None
     description: Optional[str] = None
 
@@ -200,6 +202,8 @@ class EntityUpdate(BaseModel):
     building: Optional[str] = None
     floor: Optional[str] = None
     room: Optional[str] = None
+    campus: Optional[str] = None
+    department: Optional[str] = None
     landmarks: Optional[str] = None
     description: Optional[str] = None
     status: Optional[str] = None
@@ -1093,7 +1097,7 @@ async def export_entities():
     # Write header
     headers = [
         'entity_id', 'canonical_name', 'aliases', 'building', 'floor',
-        'room', 'landmarks', 'description', 'status', 'last_updated'
+        'room', 'campus', 'department', 'landmarks', 'description', 'status', 'last_updated'
     ]
     writer.writerow(headers)
 
@@ -1109,6 +1113,8 @@ async def export_entities():
             entity.building,
             entity.floor,
             entity.room or '',
+            entity.campus,
+            entity.department or '',
             entity.landmarks or '',
             entity.description or '',
             entity.status,
@@ -1236,6 +1242,8 @@ async def create_entity(entity_data: EntityCreate):
         building=entity_data.building,
         floor=entity_data.floor,
         room=entity_data.room,
+        campus=entity_data.campus,
+        department=entity_data.department,
         landmarks=entity_data.landmarks,
         description=entity_data.description
     )
@@ -1288,6 +1296,10 @@ async def update_entity(entity_id: str, entity_data: EntityUpdate):
         update_kwargs['floor'] = entity_data.floor
     if entity_data.room is not None:
         update_kwargs['room'] = entity_data.room
+    if entity_data.campus is not None:
+        update_kwargs['campus'] = entity_data.campus
+    if entity_data.department is not None:
+        update_kwargs['department'] = entity_data.department
     if entity_data.landmarks is not None:
         update_kwargs['landmarks'] = entity_data.landmarks
     if entity_data.description is not None:
