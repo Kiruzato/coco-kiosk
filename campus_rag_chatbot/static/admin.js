@@ -13,65 +13,36 @@ let isSavingEntity = false;
 let editingEntityId = null;  // Track which entity is being edited
 
 // ==============================================================================
-// API KEY MANAGEMENT
+// SESSION MANAGEMENT
 // ==============================================================================
 
 /**
- * Save API key to sessionStorage
+ * Check if user is authenticated, redirect to login if not
  */
-function saveApiKey() {
-    const apiKeyInput = document.getElementById('apiKeyInput');
-    const apiKey = apiKeyInput.value.trim();
-
-    if (!apiKey) {
-        showNotification('Please enter an API key', 'error');
-        return;
-    }
-
-    sessionStorage.setItem('admin_api_key', apiKey);
-    updateApiKeyStatus(true);
-    showNotification('API key saved for this session', 'success');
-
-    // Load documents after saving API key
-    loadDocuments();
-}
-
-/**
- * Get API key from sessionStorage
- */
-function getApiKey() {
-    return sessionStorage.getItem('admin_api_key');
-}
-
-/**
- * Update API key status indicator
- */
-function updateApiKeyStatus(isSet) {
-    const statusDiv = document.getElementById('apiKeyStatus');
-
-    if (isSet) {
-        statusDiv.textContent = '✓ API key is saved';
-        statusDiv.className = 'api-key-status success';
-    } else {
-        statusDiv.textContent = '⚠ API key not set';
-        statusDiv.className = 'api-key-status warning';
+async function checkAuth() {
+    try {
+        const response = await fetch('/admin/documents');
+        if (response.status === 401) {
+            window.location.href = '/admin/login';
+            return false;
+        }
+        return true;
+    } catch (error) {
+        window.location.href = '/admin/login';
+        return false;
     }
 }
 
 /**
- * Toggle API key visibility
+ * Logout and redirect to login page
  */
-function toggleApiKeyVisibility() {
-    const apiKeyInput = document.getElementById('apiKeyInput');
-    const toggleIcon = document.getElementById('toggleIcon');
-
-    if (apiKeyInput.type === 'password') {
-        apiKeyInput.type = 'text';
-        toggleIcon.textContent = '🙈';
-    } else {
-        apiKeyInput.type = 'password';
-        toggleIcon.textContent = '👁️';
+async function logout() {
+    try {
+        await fetch('/admin/logout', { method: 'POST' });
+    } catch (error) {
+        // Ignore errors, redirect anyway
     }
+    window.location.href = '/admin/login';
 }
 
 // ==============================================================================
@@ -97,23 +68,21 @@ function showNotification(message, type = 'info') {
 // ==============================================================================
 
 /**
- * Generic API call with authentication
+ * Generic API call with session authentication
  */
 async function apiCall(endpoint, options = {}) {
-    const apiKey = getApiKey();
-
-    if (!apiKey) {
-        showNotification('Please save your API key first', 'error');
-        throw new Error('No API key set');
-    }
-
     const response = await fetch(endpoint, {
         ...options,
         headers: {
-            'X-API-Key': apiKey,
             ...options.headers
         }
     });
+
+    // Redirect to login if not authenticated
+    if (response.status === 401) {
+        window.location.href = '/admin/login';
+        throw new Error('Not authenticated');
+    }
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -169,11 +138,6 @@ async function uploadDocument(file) {
  * Load and display all documents
  */
 async function loadDocuments() {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-        return; // Silently return if no API key
-    }
-
     const loadingIndicator = document.getElementById('loadingIndicator');
     const tableBody = document.getElementById('documentsBody');
 
@@ -195,7 +159,7 @@ async function loadDocuments() {
 
     } catch (error) {
         showNotification(`Failed to load documents: ${error.message}`, 'error');
-        tableBody.innerHTML = '<tr><td colspan="5" class="error-state">Failed to load documents. Please check your API key and try again.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5" class="error-state">Failed to load documents. Please try again.</td></tr>';
     } finally {
         loadingIndicator.classList.add('hidden');
     }
@@ -276,11 +240,6 @@ function escapeHtml(text) {
  * Load and display all directory entities
  */
 async function loadEntities() {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-        return; // Silently return if no API key
-    }
-
     const loadingIndicator = document.getElementById('entitiesLoadingIndicator');
     const tableBody = document.getElementById('entitiesBody');
     const statsDiv = document.getElementById('entitiesStats');
@@ -305,7 +264,7 @@ async function loadEntities() {
 
     } catch (error) {
         showNotification(`Failed to load entities: ${error.message}`, 'error');
-        tableBody.innerHTML = '<tr><td colspan="6" class="error-state">Failed to load entities. Please check your API key and try again.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="6" class="error-state">Failed to load entities. Please try again.</td></tr>';
         statsDiv.textContent = '';
     } finally {
         loadingIndicator.classList.add('hidden');
@@ -536,18 +495,15 @@ window.toggleEntityStatus = toggleEntityStatus;
  * Export entities to CSV file
  */
 async function exportEntities() {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-        showNotification('Please save your API key first', 'error');
-        return;
-    }
-
     try {
         showNotification('Exporting entities...', 'info');
 
-        const response = await fetch('/admin/entities/export', {
-            headers: { 'X-API-Key': apiKey }
-        });
+        const response = await fetch('/admin/entities/export');
+
+        if (response.status === 401) {
+            window.location.href = '/admin/login';
+            return;
+        }
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
@@ -584,12 +540,6 @@ async function exportEntities() {
  * Import entities from CSV file
  */
 async function importEntities(file) {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-        showNotification('Please save your API key first', 'error');
-        return;
-    }
-
     if (!file) {
         showNotification('No file selected', 'error');
         return;
@@ -608,9 +558,13 @@ async function importEntities(file) {
 
         const response = await fetch('/admin/entities/import', {
             method: 'POST',
-            headers: { 'X-API-Key': apiKey },
             body: formData
         });
+
+        if (response.status === 401) {
+            window.location.href = '/admin/login';
+            return;
+        }
 
         const data = await response.json();
 
@@ -647,17 +601,8 @@ async function importEntities(file) {
 // ==============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    // API Key Management
-    document.getElementById('saveApiKey').addEventListener('click', saveApiKey);
-    document.getElementById('toggleApiKey').addEventListener('click', toggleApiKeyVisibility);
-
-    // API key input - Enter key to save
-    document.getElementById('apiKeyInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            saveApiKey();
-        }
-    });
+    // Logout Button
+    document.getElementById('logoutBtn').addEventListener('click', logout);
 
     // File Input
     const fileInput = document.getElementById('fileInput');
@@ -732,17 +677,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // INITIALIZATION
     // ==============================================================================
 
-    // Check if API key is already saved
-    const savedApiKey = getApiKey();
-    if (savedApiKey) {
-        updateApiKeyStatus(true);
-        document.getElementById('apiKeyInput').value = savedApiKey;
-        // Auto-load documents and entities if API key exists
-        loadDocuments();
-        loadEntities();
-    } else {
-        updateApiKeyStatus(false);
-    }
+    // Check authentication and load data
+    checkAuth().then(isAuthenticated => {
+        if (isAuthenticated) {
+            loadDocuments();
+            loadEntities();
+        }
+    });
 });
 
 // Make deleteDocument available globally for onclick handlers

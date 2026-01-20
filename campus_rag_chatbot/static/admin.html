@@ -9,32 +9,17 @@
 <body>
     <div class="container">
         <header>
-            <h1>CoCo Admin</h1>
-            <p class="subtitle">Document Management — Columban College, Inc.</p>
+            <div class="header-content">
+                <div class="header-title">
+                    <h1>CoCo Admin</h1>
+                    <p class="subtitle">Document Management — Columban College, Inc.</p>
+                </div>
+                <button id="logoutBtn" class="btn-logout">Logout</button>
+            </div>
         </header>
 
         <!-- Notification Area -->
         <div id="notification" class="notification hidden"></div>
-
-        <!-- API Key Section -->
-        <section class="card">
-            <h2>API Authentication</h2>
-            <div class="api-key-section">
-                <div class="input-group">
-                    <input
-                        type="password"
-                        id="apiKeyInput"
-                        placeholder="Enter admin API key"
-                        class="api-key-input"
-                    >
-                    <button id="toggleApiKey" class="btn-secondary" title="Show/Hide API key">
-                        <span id="toggleIcon">👁️</span>
-                    </button>
-                    <button id="saveApiKey" class="btn-primary">Save API Key</button>
-                </div>
-                <div id="apiKeyStatus" class="api-key-status"></div>
-            </div>
-        </section>
 
         <!-- File Upload Section -->
         <section class="card">

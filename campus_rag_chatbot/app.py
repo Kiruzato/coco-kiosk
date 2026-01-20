@@ -12,10 +12,11 @@ Endpoints:
 
 import os
 import uuid
+import secrets
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Optional, List
-from fastapi import FastAPI, HTTPException, File, UploadFile, Header, Depends
+from fastapi import FastAPI, HTTPException, File, UploadFile, Header, Depends, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -62,6 +63,10 @@ ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
 if not ADMIN_API_KEY:
     raise ValueError("ADMIN_API_KEY environment variable not set. Please add it to .env file.")
 
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+if not ADMIN_PASSWORD:
+    raise ValueError("ADMIN_PASSWORD environment variable not set. Please add it to .env file.")
+
 PROJECT_ROOT = Path(__file__).parent
 REGISTRY_PATH = PROJECT_ROOT / "document_registry.json"
 VECTOR_STORE_PATH = PROJECT_ROOT / "vector_store"
@@ -75,9 +80,13 @@ MEMORY_WINDOW_SIZE = 5
 MIN_CONFIDENCE_TO_ANSWER = ConfidenceLevel.MEDIUM
 MIN_CONFIDENCE_DIRECTORY = ConfidenceLevel.HIGH  # Phase 8: Stricter for location queries
 
-# Session settings
+# Session settings (chat sessions)
 SESSION_TIMEOUT_MINUTES = 30
 sessions: Dict[str, Dict] = {}  # In-memory session storage
+
+# Admin session settings
+ADMIN_SESSION_DURATION = timedelta(hours=8)
+admin_sessions: Dict[str, datetime] = {}  # {session_token: expiry_datetime}
 
 # ==============================================================================
 # INITIALIZE SYSTEM
@@ -264,9 +273,61 @@ def cleanup_expired_sessions():
 # ADMIN AUTHENTICATION
 # ==============================================================================
 
+def cleanup_expired_admin_sessions():
+    """Remove expired admin sessions."""
+    now = datetime.now()
+    expired = [token for token, expiry in admin_sessions.items() if now > expiry]
+    for token in expired:
+        del admin_sessions[token]
+
+
+def create_admin_session() -> str:
+    """Create a new admin session and return the token."""
+    cleanup_expired_admin_sessions()
+    token = secrets.token_urlsafe(32)
+    admin_sessions[token] = datetime.now() + ADMIN_SESSION_DURATION
+    return token
+
+
+def validate_admin_session(token: str) -> bool:
+    """Check if an admin session token is valid."""
+    if not token or token not in admin_sessions:
+        return False
+    if datetime.now() > admin_sessions[token]:
+        del admin_sessions[token]
+        return False
+    return True
+
+
+def invalidate_admin_session(token: str):
+    """Remove an admin session."""
+    if token in admin_sessions:
+        del admin_sessions[token]
+
+
+async def verify_admin_session(request: Request):
+    """
+    Verify admin session for protected endpoints.
+
+    Args:
+        request: FastAPI request object
+
+    Raises:
+        HTTPException: If session is missing or invalid
+
+    Returns:
+        True if authenticated
+    """
+    token = request.cookies.get("admin_session")
+    if not validate_admin_session(token):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return True
+
+
+# Legacy API key auth (kept for backwards compatibility)
 async def verify_admin_api_key(x_api_key: str = Header(None)):
     """
-    Verify admin API key for protected endpoints.
+    Verify admin API key for protected endpoints (legacy).
 
     Args:
         x_api_key: API key from X-API-Key header
@@ -855,7 +916,7 @@ async def reset_session(request: ResetRequest):
 # ADMIN ENDPOINTS - Phase 7
 # ==============================================================================
 
-@app.post("/admin/upload", dependencies=[Depends(verify_admin_api_key)])
+@app.post("/admin/upload", dependencies=[Depends(verify_admin_session)])
 async def upload_document(file: UploadFile = File(...)):
     """
     Upload and ingest a document into the knowledge base.
@@ -919,7 +980,7 @@ async def upload_document(file: UploadFile = File(...)):
     }
 
 
-@app.get("/admin/documents", dependencies=[Depends(verify_admin_api_key)])
+@app.get("/admin/documents", dependencies=[Depends(verify_admin_session)])
 async def list_documents():
     """
     List all ingested documents with metadata.
@@ -934,7 +995,7 @@ async def list_documents():
     }
 
 
-@app.delete("/admin/documents/{document_id}", dependencies=[Depends(verify_admin_api_key)])
+@app.delete("/admin/documents/{document_id}", dependencies=[Depends(verify_admin_session)])
 async def delete_document(document_id: str):
     """
     Delete a document from the knowledge base.
@@ -983,7 +1044,7 @@ async def delete_document(document_id: str):
 # ADMIN ENTITY ENDPOINTS - Phase 10
 # ==============================================================================
 
-@app.get("/admin/entities", dependencies=[Depends(verify_admin_api_key)])
+@app.get("/admin/entities", dependencies=[Depends(verify_admin_session)])
 async def list_entities():
     """
     List all directory entities.
@@ -1013,7 +1074,7 @@ async def list_entities():
 # Note: These routes MUST be defined before the {entity_id} route
 # ==============================================================================
 
-@app.get("/admin/entities/export", dependencies=[Depends(verify_admin_api_key)])
+@app.get("/admin/entities/export", dependencies=[Depends(verify_admin_session)])
 async def export_entities():
     """
     Export all directory entities to CSV format.
@@ -1066,7 +1127,7 @@ async def export_entities():
     )
 
 
-@app.post("/admin/entities/import", dependencies=[Depends(verify_admin_api_key)])
+@app.post("/admin/entities/import", dependencies=[Depends(verify_admin_session)])
 async def import_entities(file: UploadFile = File(...)):
     """
     Import directory entities from CSV file.
@@ -1127,7 +1188,7 @@ async def import_entities(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=f"CSV parsing error: {str(e)}")
 
 
-@app.get("/admin/entities/{entity_id}", dependencies=[Depends(verify_admin_api_key)])
+@app.get("/admin/entities/{entity_id}", dependencies=[Depends(verify_admin_session)])
 async def get_entity(entity_id: str):
     """
     Get a single directory entity by ID.
@@ -1152,7 +1213,7 @@ async def get_entity(entity_id: str):
     }
 
 
-@app.post("/admin/entities", dependencies=[Depends(verify_admin_api_key)])
+@app.post("/admin/entities", dependencies=[Depends(verify_admin_session)])
 async def create_entity(entity_data: EntityCreate):
     """
     Create a new directory entity.
@@ -1192,7 +1253,7 @@ async def create_entity(entity_data: EntityCreate):
     }
 
 
-@app.put("/admin/entities/{entity_id}", dependencies=[Depends(verify_admin_api_key)])
+@app.put("/admin/entities/{entity_id}", dependencies=[Depends(verify_admin_session)])
 async def update_entity(entity_id: str, entity_data: EntityUpdate):
     """
     Update an existing directory entity.
@@ -1252,7 +1313,7 @@ async def update_entity(entity_id: str, entity_data: EntityUpdate):
     }
 
 
-@app.delete("/admin/entities/{entity_id}", dependencies=[Depends(verify_admin_api_key)])
+@app.delete("/admin/entities/{entity_id}", dependencies=[Depends(verify_admin_session)])
 async def delete_entity(entity_id: str, hard: bool = False):
     """
     Delete a directory entity (soft or hard delete).
@@ -1286,6 +1347,69 @@ async def delete_entity(entity_id: str, hard: bool = False):
         "entity_id": entity_id.upper(),
         "delete_type": "hard" if hard else "soft"
     }
+
+
+# ==============================================================================
+# ADMIN LOGIN/LOGOUT ENDPOINTS
+# ==============================================================================
+
+class LoginRequest(BaseModel):
+    """Login request model."""
+    password: str
+
+
+@app.get("/admin/login")
+async def serve_login_page():
+    """Serve the admin login page."""
+    return FileResponse(PROJECT_ROOT / "static" / "login.html")
+
+
+@app.post("/admin/login")
+async def admin_login(login_data: LoginRequest, response: Response):
+    """
+    Authenticate admin and create session.
+
+    Args:
+        login_data: Login credentials (password)
+        response: FastAPI response object for setting cookies
+
+    Returns:
+        Success message with redirect URL
+    """
+    if login_data.password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Invalid password")
+
+    # Create session and set cookie
+    token = create_admin_session()
+    response.set_cookie(
+        key="admin_session",
+        value=token,
+        httponly=True,
+        samesite="strict",
+        max_age=int(ADMIN_SESSION_DURATION.total_seconds())
+    )
+
+    return {"status": "success", "message": "Login successful", "redirect": "/admin"}
+
+
+@app.post("/admin/logout", dependencies=[Depends(verify_admin_session)])
+async def admin_logout(request: Request, response: Response):
+    """
+    Logout admin and destroy session.
+
+    Args:
+        request: FastAPI request object
+        response: FastAPI response object for clearing cookies
+
+    Returns:
+        Success message with redirect URL
+    """
+    token = request.cookies.get("admin_session")
+    if token:
+        invalidate_admin_session(token)
+
+    response.delete_cookie(key="admin_session")
+    return {"status": "success", "message": "Logout successful", "redirect": "/admin/login"}
 
 
 @app.get("/admin")
