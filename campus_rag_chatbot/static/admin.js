@@ -119,7 +119,7 @@ async function uploadDocument(file) {
         // Reset file input
         const fileInput = document.getElementById('fileInput');
         fileInput.value = '';
-        document.getElementById('fileName').textContent = 'Choose a file or drag here';
+        document.getElementById('fileName').textContent = 'Choose a file';
         uploadBtn.disabled = true;
 
         // Reload documents table
@@ -623,7 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('fileName').textContent = file.name;
             uploadBtn.disabled = false;
         } else {
-            document.getElementById('fileName').textContent = 'Choose a file or drag here';
+            document.getElementById('fileName').textContent = 'Choose a file';
             uploadBtn.disabled = true;
         }
     });
