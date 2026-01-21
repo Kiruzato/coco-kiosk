@@ -226,7 +226,13 @@ def create_session() -> Dict:
         "memory": memory,
         "created_at": datetime.now(),
         "last_activity": datetime.now(),
-        "query_count": 0
+        "query_count": 0,
+        "conversation_context": {
+            "last_intent": None,
+            "last_entity_id": None,
+            "last_entity_name": None,
+            "last_campus": None,
+        }
     }
 
 
@@ -271,6 +277,38 @@ def cleanup_expired_sessions():
 
     for sid in expired:
         del sessions[sid]
+
+
+# ==============================================================================
+# CONVERSATION CONTEXT MANAGEMENT (Phase 13)
+# ==============================================================================
+
+def update_conversation_context(session: Dict, intent: str, entity_id: str = None,
+                                 entity_name: str = None, campus: str = None):
+    """Update session conversation context after a successful high-confidence answer."""
+    session["conversation_context"] = {
+        "last_intent": intent,
+        "last_entity_id": entity_id,
+        "last_entity_name": entity_name,
+        "last_campus": campus,
+    }
+
+
+def get_conversation_context(session: Dict) -> Dict:
+    """Get the conversation context for follow-up query handling."""
+    return session.get("conversation_context", {})
+
+
+def is_followup_query(query: str) -> bool:
+    """Detect if a query appears to be a follow-up question."""
+    followup_patterns = [
+        "what time", "when does", "when is", "is it open", "is it closed",
+        "how do i get there", "where is it", "what floor", "what building",
+        "how about", "what about", "and the", "also", "its ", "it's ",
+        "their", "the same", "that place", "this place", "that one", "this one"
+    ]
+    query_lower = query.lower()
+    return any(pattern in query_lower for pattern in followup_patterns)
 
 
 # ==============================================================================
@@ -610,7 +648,8 @@ async def handle_directory_query(
     query: str,
     session_id: str,
     memory: ConversationBufferWindowMemory,
-    intent_metadata: Dict
+    intent_metadata: Dict,
+    session: Dict = None
 ) -> ChatResponse:
     """
     Handle directory/location queries with strict grounding (Phase 8).
@@ -664,6 +703,16 @@ async def handle_directory_query(
                 "phase": "entity_resolution"
             }
         )
+
+        # Update conversation context for follow-up queries (Phase 13)
+        if session:
+            update_conversation_context(
+                session,
+                intent="directory",
+                entity_id=resolved_entity.entity_id,
+                entity_name=resolved_entity.canonical_name,
+                campus=resolved_entity.campus
+            )
 
         return ChatResponse(
             session_id=session_id,
@@ -846,6 +895,43 @@ async def chat(request: ChatRequest):
     if not query:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
+    # === PHASE 13: CHECK FOR FOLLOW-UP QUERY WITH CONTEXT ===
+    context = get_conversation_context(session)
+
+    if context.get("last_entity_id") and is_followup_query(query):
+        # This is a follow-up query - use context to resolve directly
+        # Re-resolve the entity from context and return formatted response
+        resolved_entity = entity_registry.get_by_id(context["last_entity_id"])
+        if resolved_entity and resolved_entity.status == "active":
+            answer = format_entity_response(resolved_entity)
+
+            # Log the follow-up resolution
+            query_logger.log_query(
+                query=query,
+                session_id=session_id,
+                metadata={
+                    "intent": "directory",
+                    "confidence_level": "High",
+                    "confidence_score": 98.0,
+                    "rejected": False,
+                    "resolution_method": "context_followup",
+                    "entity_id": resolved_entity.entity_id,
+                    "canonical_name": resolved_entity.canonical_name,
+                    "phase": "conversation_context"
+                }
+            )
+
+            return ChatResponse(
+                session_id=session_id,
+                answer=answer,
+                sources=[],
+                confidence_level="High",
+                confidence_score=98.0,
+                rejected=False,
+                timestamp=datetime.now().isoformat(),
+                mode="directory"
+            )
+
     # === PHASE 8: CHECK FOR DIRECTORY QUERY FIRST ===
     # Directory queries get stricter handling (HIGH confidence required)
     if is_directory_query(query):
@@ -855,7 +941,7 @@ async def chat(request: ChatRequest):
             "raw_classification": "DIRECTORY",
             "query_length": len(query)
         }
-        return await handle_directory_query(query, session_id, memory, intent_metadata)
+        return await handle_directory_query(query, session_id, memory, intent_metadata, session)
 
     # === PHASE 6: INTENT CLASSIFICATION ===
     intent, intent_metadata = classify_intent(query=query, llm=llm)

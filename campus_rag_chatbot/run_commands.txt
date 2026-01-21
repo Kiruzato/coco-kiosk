@@ -1,0 +1,12 @@
+START THE APP
+=============
+cd campus_rag_chatbot
+python app.py
+
+App runs at: http://localhost:8000
+Admin panel: http://localhost:8000/admin
+
+
+STOP THE APP
+============
+Press Ctrl+C in the terminal
