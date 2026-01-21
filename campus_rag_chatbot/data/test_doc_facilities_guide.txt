@@ -1,0 +1,36 @@
+COLUMBAN COLLEGE, INC.
+Campus Facilities Guide
+(Test Document - Fictional Data)
+
+MAIN CAMPUS BUILDINGS
+
+Administration Building
+The Admin Building houses most administrative offices. The ground floor contains the Registrar, Admissions, and Cashier offices. Student Affairs is on the 2nd floor.
+
+Academic Building A
+This building is home to the College of Arts and Sciences. The Main Library (also known as the Learning Resource Center or LRC) occupies the entire 2nd floor with study areas and computer terminals. The Dean's Office for CAS is located on the 3rd floor (AB-A301).
+
+Academic Building B
+Houses the IT Department and computer facilities. The 3rd floor has two computer labs (Comp Lab 1 and Comp Lab 2) as well as the IT Office for technical support and account issues.
+
+Student Center
+The heart of student life on campus. Contains the canteen (food court), bookstore, health clinic, and guidance office all on the ground floor.
+
+Gymnasium Building
+Located at the far end of campus. The gym is used for PE classes, basketball, volleyball, and school events. Also referred to as the sports hall or covered court.
+
+ENGINEERING CAMPUS
+
+The Engineering Campus is a separate facility for COE students. It has its own IT Office on the 2nd floor of the Engineering Building (EB-201) and the Engineering Dean's Office (EB-200).
+
+PARKING
+
+Vehicle parking is available behind the gymnasium. Access through the back gate. Faculty, staff, and visitors may use this area.
+
+IT SUPPORT
+
+For computer problems or account issues:
+- Main Campus students: IT Office at Academic Building B, 3rd Floor
+- Engineering Campus students: IT Office at Engineering Building, 2nd Floor
+
+Both offices handle password resets, WiFi access, and technical troubleshooting.
