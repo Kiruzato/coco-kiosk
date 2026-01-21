@@ -109,6 +109,50 @@
             <div id="entitiesStats" class="table-stats"></div>
         </section>
 
+        <!-- Analytics Section (Phase 16) -->
+        <section class="card">
+            <div class="table-header">
+                <h2>System Analytics</h2>
+                <button id="refreshAnalyticsBtn" class="btn-secondary">🔄 Refresh</button>
+            </div>
+
+            <div id="analyticsLoadingIndicator" class="loading hidden">Loading analytics...</div>
+
+            <div class="stats-grid" id="analyticsGrid">
+                <div class="stat-card">
+                    <h3>Total Queries</h3>
+                    <span id="stat-total-queries" class="stat-value">-</span>
+                </div>
+                <div class="stat-card">
+                    <h3>Clarification Rate</h3>
+                    <span id="stat-clarification-rate" class="stat-value">-</span>
+                </div>
+                <div class="stat-card">
+                    <h3>Refusal Rate</h3>
+                    <span id="stat-refusal-rate" class="stat-value">-</span>
+                </div>
+                <div class="stat-card">
+                    <h3>Clarification Success</h3>
+                    <span id="stat-clarification-success" class="stat-value">-</span>
+                </div>
+            </div>
+
+            <div class="analytics-breakdown">
+                <div class="breakdown-section">
+                    <h4>Query Types</h4>
+                    <div id="query-type-breakdown" class="breakdown-grid"></div>
+                </div>
+                <div class="breakdown-section">
+                    <h4>Confidence Levels</h4>
+                    <div id="confidence-breakdown" class="breakdown-grid"></div>
+                </div>
+                <div class="breakdown-section">
+                    <h4>Refusal Reasons</h4>
+                    <div id="refusal-reasons-breakdown" class="breakdown-grid"></div>
+                </div>
+            </div>
+        </section>
+
         <!-- Entity Modal -->
         <div id="entityModal" class="modal hidden">
             <div class="modal-content">

@@ -606,6 +606,77 @@ async function importEntities(file) {
 }
 
 // ==============================================================================
+// ANALYTICS FUNCTIONS - Phase 16
+// ==============================================================================
+
+/**
+ * Load and display analytics data
+ */
+async function loadAnalytics() {
+    const loadingIndicator = document.getElementById('analyticsLoadingIndicator');
+    loadingIndicator.classList.remove('hidden');
+
+    try {
+        const data = await apiCall('/admin/analytics');
+        displayAnalytics(data);
+    } catch (error) {
+        showNotification(`Failed to load analytics: ${error.message}`, 'error');
+    } finally {
+        loadingIndicator.classList.add('hidden');
+    }
+}
+
+/**
+ * Display analytics data in the UI
+ */
+function displayAnalytics(data) {
+    // Summary stats
+    document.getElementById('stat-total-queries').textContent =
+        data.summary.total_queries.toLocaleString();
+    document.getElementById('stat-clarification-rate').textContent =
+        data.summary.clarification_rate + '%';
+    document.getElementById('stat-refusal-rate').textContent =
+        data.summary.refusal_rate + '%';
+    document.getElementById('stat-clarification-success').textContent =
+        data.summary.clarification_success_rate + '%';
+
+    // Query type breakdown
+    const queryTypeDiv = document.getElementById('query-type-breakdown');
+    queryTypeDiv.innerHTML = Object.entries(data.by_query_type)
+        .map(([type, count]) => `
+            <div class="breakdown-item">
+                <span class="breakdown-label">${type}</span>
+                <span class="breakdown-value">${count}</span>
+            </div>
+        `).join('');
+
+    // Confidence breakdown
+    const confidenceDiv = document.getElementById('confidence-breakdown');
+    confidenceDiv.innerHTML = Object.entries(data.by_confidence)
+        .map(([level, count]) => `
+            <div class="breakdown-item">
+                <span class="breakdown-label">${level}</span>
+                <span class="breakdown-value">${count}</span>
+            </div>
+        `).join('');
+
+    // Refusal reasons
+    const refusalDiv = document.getElementById('refusal-reasons-breakdown');
+    const refusalReasons = data.refusal_reasons || {};
+    if (Object.keys(refusalReasons).length === 0) {
+        refusalDiv.innerHTML = '<div class="breakdown-item"><span class="breakdown-label">No refusals</span></div>';
+    } else {
+        refusalDiv.innerHTML = Object.entries(refusalReasons)
+            .map(([reason, count]) => `
+                <div class="breakdown-item">
+                    <span class="breakdown-label">${reason.replace(/_/g, ' ')}</span>
+                    <span class="breakdown-value">${count}</span>
+                </div>
+            `).join('');
+    }
+}
+
+// ==============================================================================
 // EVENT LISTENERS
 // ==============================================================================
 
@@ -683,6 +754,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==============================================================================
+    // ANALYTICS EVENT LISTENERS - Phase 16
+    // ==============================================================================
+
+    // Refresh Analytics Button
+    document.getElementById('refreshAnalyticsBtn').addEventListener('click', loadAnalytics);
+
+    // ==============================================================================
     // INITIALIZATION
     // ==============================================================================
 
@@ -691,6 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isAuthenticated) {
             loadDocuments();
             loadEntities();
+            loadAnalytics();
         }
     });
 });

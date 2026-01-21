@@ -54,6 +54,7 @@ from text_normalizer import normalize_text, canonicalize_directory_query  # Text
 from entity_analyzer import check_entity_agreement, should_promote_confidence  # Entity-aware confidence promotion
 from entity_registry import EntityRegistry  # Phase 9: Structured directory entities
 from entity_resolver import extract_subject, resolve_entity, format_entity_response  # Phase 9: Entity resolution
+from event_tracker import EventTracker, EventType  # Phase 16: Observability
 
 # ==============================================================================
 # CONFIGURATION
@@ -115,6 +116,9 @@ llm = ChatOpenAI(
 
 # Initialize query logger
 query_logger = QueryLogger(log_dir=LOG_DIR)
+
+# Initialize event tracker for observability (Phase 16)
+event_tracker = EventTracker(log_dir=LOG_DIR)
 
 # Initialize entity registry for directory queries (Phase 9)
 ENTITY_REGISTRY_PATH = PROJECT_ROOT / "data" / "directory_entities.json"
@@ -434,6 +438,15 @@ def handle_document_clarification(
     """
     logger.info(f"[DOC_CLARIFICATION] Multiple sources for '{query}': {similar_sources}")
 
+    # Phase 16: Track clarification event
+    event_tracker.track(
+        EventType.CLARIFICATION_TRIGGERED,
+        session_id=session_id,
+        clarification_type="document",
+        reason="ambiguity",
+        num_sources=len(similar_sources[:4])
+    )
+
     # Build informational clarification message
     options = []
     for i, source in enumerate(similar_sources[:4], 1):
@@ -524,6 +537,15 @@ def handle_document_selection(
 
     if selected_source:
         logger.info(f"[DOC_CLARIFICATION] Resolved to: {selected_source}")
+
+        # Phase 16: Track successful document clarification resolution
+        event_tracker.track(
+            EventType.CLARIFICATION_RESOLVED,
+            session_id=session_id,
+            success=True,
+            clarification_type="document"
+        )
+
         context["doc_clarification_active"] = False
         context["doc_last_source"] = selected_source
         return selected_source
@@ -804,6 +826,22 @@ Context from campus documents:
         mode_used="campus"
     )
 
+    # Phase 16: Track query and answer/refusal
+    event_tracker.track(EventType.QUERY_RECEIVED, session_id, query_type="document")
+    if rejected:
+        event_tracker.track(
+            EventType.ANSWER_REFUSED,
+            session_id=session_id,
+            reason="low_confidence"
+        )
+    else:
+        event_tracker.track(
+            EventType.ANSWER_RETURNED,
+            session_id=session_id,
+            confidence_level=confidence_level.value.lower(),
+            source_type="document"
+        )
+
     return ChatResponse(
         session_id=session_id,
         answer=answer,
@@ -864,6 +902,15 @@ Answer:"""
         session_id=session_id,
         intent=intent_metadata["intent"],
         mode_used="general"
+    )
+
+    # Phase 16: Track query and answer
+    event_tracker.track(EventType.QUERY_RECEIVED, session_id, query_type="general")
+    event_tracker.track(
+        EventType.ANSWER_RETURNED,
+        session_id=session_id,
+        confidence_level="n/a",
+        source_type="general"
     )
 
     return ChatResponse(
@@ -935,6 +982,15 @@ def handle_entity_disambiguation(
     """
     # Phase 14.1: Log clarification trigger
     logger.info(f"[CLARIFICATION] Multiple matches for '{query}': {[e.canonical_name for e in candidates[:4]]}")
+
+    # Phase 16: Track clarification event
+    event_tracker.track(
+        EventType.CLARIFICATION_TRIGGERED,
+        session_id=session_id,
+        clarification_type="directory",
+        reason="ambiguity",
+        num_candidates=len(candidates[:4])
+    )
 
     # Build clarification message with numbered options
     options = []
@@ -1015,6 +1071,15 @@ def handle_disambiguation_selection(
     if selected_entity and selected_entity.status == "active":
         # Phase 14.1: Log successful resolution
         logger.info(f"[CLARIFICATION] Resolved to: {selected_entity.canonical_name}")
+
+        # Phase 16: Track successful clarification resolution
+        event_tracker.track(
+            EventType.CLARIFICATION_RESOLVED,
+            session_id=session_id,
+            success=True,
+            clarification_type="directory"
+        )
+
         # Clear disambiguation state
         context["awaiting_disambiguation"] = False
         context["disambiguation_candidates"] = []
@@ -1129,6 +1194,15 @@ async def handle_directory_query(
                 entity_name=resolved_entity.canonical_name,
                 campus=resolved_entity.campus
             )
+
+        # Phase 16: Track query and answer
+        event_tracker.track(EventType.QUERY_RECEIVED, session_id, query_type="directory")
+        event_tracker.track(
+            EventType.ANSWER_RETURNED,
+            session_id=session_id,
+            confidence_level="high",
+            source_type="directory"
+        )
 
         return ChatResponse(
             session_id=session_id,
@@ -1267,6 +1341,22 @@ Context from campus directory:
         intent=intent_metadata["intent"],
         mode_used="directory"
     )
+
+    # Phase 16: Track query and answer/refusal
+    event_tracker.track(EventType.QUERY_RECEIVED, session_id, query_type="directory")
+    if rejected:
+        event_tracker.track(
+            EventType.ANSWER_REFUSED,
+            session_id=session_id,
+            reason="low_confidence"
+        )
+    else:
+        event_tracker.track(
+            EventType.ANSWER_RETURNED,
+            session_id=session_id,
+            confidence_level=confidence_level.value.lower(),
+            source_type="directory"
+        )
 
     return ChatResponse(
         session_id=session_id,
@@ -1636,6 +1726,43 @@ async def delete_document(document_id: str):
         "status": "success",
         "message": "Document deleted successfully",
         "document_name": document_name
+    }
+
+
+# ==============================================================================
+# ADMIN ANALYTICS ENDPOINTS - Phase 16
+# ==============================================================================
+
+@app.get("/admin/analytics", dependencies=[Depends(verify_admin_session)])
+async def get_analytics():
+    """
+    Get observability analytics for admin debug view.
+
+    Phase 16: Returns aggregated stats only - no user content.
+    Privacy-safe metadata for understanding system behavior.
+
+    Returns:
+        Analytics summary with rates and breakdowns
+    """
+    return event_tracker.get_analytics_summary()
+
+
+@app.get("/admin/analytics/recent", dependencies=[Depends(verify_admin_session)])
+async def get_recent_events(limit: int = 100):
+    """
+    Get recent events for debugging.
+
+    Phase 16: Returns recent events (metadata only, no user content).
+
+    Args:
+        limit: Maximum number of events to return (default 100)
+
+    Returns:
+        List of recent events
+    """
+    return {
+        "events": event_tracker.get_recent_events(limit=min(limit, 500)),
+        "total_in_memory": len(event_tracker.get_recent_events(limit=1000))
     }
 
 
