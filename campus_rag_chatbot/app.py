@@ -236,12 +236,17 @@ def create_session() -> Dict:
             "last_entity_id": None,
             "last_entity_name": None,
             "last_campus": None,
-            # Phase 14: Disambiguation state
+            # Phase 14: Disambiguation state (directory)
             "awaiting_disambiguation": False,
             "disambiguation_candidates": [],
             "disambiguation_query": None,
             # Phase 14.1: Failure handling
             "disambiguation_attempt_count": 0,
+            # Phase 15: Document clarification state
+            "doc_clarification_active": False,
+            "doc_clarification_sources": [],
+            "doc_clarification_query": None,
+            "doc_last_source": None,
         }
     }
 
@@ -341,6 +346,201 @@ def is_topic_change(query: str, context: Dict) -> bool:
     """
     # Only relevant if disambiguation is pending
     if not context.get("awaiting_disambiguation"):
+        return False
+
+    query_lower = query.lower().strip()
+
+    # Explicit reset/cancel phrases
+    reset_phrases = [
+        "never mind", "nevermind", "forget it", "different question",
+        "something else", "cancel", "start over", "new question"
+    ]
+    if any(phrase in query_lower for phrase in reset_phrases):
+        return True
+
+    # If query contains a new directory question, it's a topic change
+    directory_keywords = [
+        "where is", "where's", "find the", "location of",
+        "how to get to", "how do i get to", "where can i find"
+    ]
+    if any(kw in query_lower for kw in directory_keywords):
+        return True
+
+    return False
+
+
+# ==============================================================================
+# DOCUMENT CLARIFICATION - Phase 15
+# ==============================================================================
+
+def detect_document_ambiguity(
+    retrieval_results: List[tuple],
+    similarity_threshold: float = 0.05
+) -> tuple[bool, List[str]]:
+    """
+    Detect if multiple documents scored similarly (ambiguous).
+
+    Phase 15: This triggers informational clarification for document queries
+    when no single document dominates the results.
+
+    Args:
+        retrieval_results: List of (doc, score) tuples from retrieval
+        similarity_threshold: Max difference to consider "similar"
+
+    Returns:
+        (is_ambiguous, list_of_source_names)
+    """
+    if len(retrieval_results) < 2:
+        return False, []
+
+    # Group by source document (using document_name metadata field)
+    source_scores = {}
+    for doc, score in retrieval_results:
+        source = doc.metadata.get("document_name", doc.metadata.get("source", "Unknown"))
+        if source not in source_scores:
+            source_scores[source] = []
+        source_scores[source].append(score)
+
+    # Get max score per source
+    source_max = {src: max(scores) for src, scores in source_scores.items()}
+
+    if len(source_max) < 2:
+        return False, []  # Single source, not ambiguous
+
+    # Check if top sources are within threshold
+    sorted_sources = sorted(source_max.items(), key=lambda x: x[1], reverse=True)
+    top_score = sorted_sources[0][1]
+
+    similar_sources = [
+        src for src, score in sorted_sources
+        if top_score - score <= similarity_threshold
+    ]
+
+    return len(similar_sources) > 1, similar_sources[:4]  # Max 4 sources
+
+
+def handle_document_clarification(
+    query: str,
+    similar_sources: List[str],
+    session_id: str,
+    session: Dict,
+    retrieval_results: List[tuple]
+) -> ChatResponse:
+    """
+    Handle ambiguous document queries by presenting source options.
+
+    Phase 15: Uses softer, informational style - may provide summary with follow-up.
+    Unlike directory clarification, this is not blocking.
+    """
+    logger.info(f"[DOC_CLARIFICATION] Multiple sources for '{query}': {similar_sources}")
+
+    # Build informational clarification message
+    options = []
+    for i, source in enumerate(similar_sources[:4], 1):
+        # Extract filename from path
+        display_name = os.path.basename(source).replace('.txt', '').replace('_', ' ').title()
+        options.append(f"{i}. {display_name}")
+
+    options_text = "\n".join(options)
+
+    answer = (
+        f"I found relevant information in multiple documents:\n\n"
+        f"{options_text}\n\n"
+        f"Which one would you like me to focus on? Or I can provide a general summary."
+    )
+
+    # Store document clarification state
+    context = session["conversation_context"]
+    context["doc_clarification_active"] = True
+    context["doc_clarification_sources"] = similar_sources[:4]
+    context["doc_clarification_query"] = query
+
+    return ChatResponse(
+        session_id=session_id,
+        answer=answer,
+        sources=[],
+        confidence_level="Medium",
+        confidence_score=50.0,
+        rejected=False,
+        timestamp=datetime.now().isoformat(),
+        mode="clarification"
+    )
+
+
+def handle_document_selection(
+    selection: str,
+    session: Dict,
+    session_id: str
+) -> Optional[str]:
+    """
+    Handle user's document source selection.
+
+    Phase 15: Returns selected source path, "ALL" for summary mode, or None if no match.
+    """
+    context = session["conversation_context"]
+    sources = context.get("doc_clarification_sources", [])
+
+    if not sources:
+        return None
+
+    logger.info(f"[DOC_CLARIFICATION] Selection attempt: '{selection}'")
+
+    selection_lower = selection.lower().strip()
+
+    # Check for "summary" or "all" request
+    if any(word in selection_lower for word in ["summary", "all", "general", "both"]):
+        context["doc_clarification_active"] = False
+        context["doc_last_source"] = None  # No specific source
+        return "ALL"  # Special marker for summary mode
+
+    # Number matching
+    num_map = {
+        "1": 0, "2": 1, "3": 2, "4": 3,
+        "first": 0, "second": 1, "third": 2, "fourth": 3,
+        "one": 0, "two": 1, "three": 2, "four": 3
+    }
+
+    selected_source = None
+
+    if selection_lower in num_map:
+        idx = num_map[selection_lower]
+        if 0 <= idx < len(sources):
+            selected_source = sources[idx]
+    else:
+        # Check if number word is in selection phrase
+        for key, idx in num_map.items():
+            if key in selection_lower.split():
+                if 0 <= idx < len(sources):
+                    selected_source = sources[idx]
+                    break
+
+    # Name matching
+    if not selected_source:
+        for source in sources:
+            source_name = os.path.basename(source).lower().replace('.txt', '').replace('_', ' ')
+            if selection_lower in source_name or source_name in selection_lower:
+                selected_source = source
+                break
+
+    if selected_source:
+        logger.info(f"[DOC_CLARIFICATION] Resolved to: {selected_source}")
+        context["doc_clarification_active"] = False
+        context["doc_last_source"] = selected_source
+        return selected_source
+
+    logger.info(f"[DOC_CLARIFICATION] Selection failed")
+    return None
+
+
+def is_doc_topic_change(query: str, context: Dict) -> bool:
+    """
+    Detect if user is changing topics (abandoning document clarification).
+
+    Phase 15: Returns True if user appears to be asking about something else
+    while document clarification is pending.
+    """
+    # Only relevant if document clarification is pending
+    if not context.get("doc_clarification_active"):
         return False
 
     query_lower = query.lower().strip()
@@ -472,7 +672,8 @@ async def handle_campus_query(
     query: str,
     session_id: str,
     memory: ConversationBufferWindowMemory,
-    intent_metadata: Dict
+    intent_metadata: Dict,
+    session: Dict = None
 ) -> ChatResponse:
     """
     Handle campus query using existing RAG pipeline.
@@ -482,6 +683,7 @@ async def handle_campus_query(
     - Confidence scoring
     - Grounding validation
     - Source citation
+    - Phase 15: Document ambiguity detection and clarification
     """
     # Normalize query for consistent retrieval (case-insensitive matching)
     normalized_query = normalize_text(query)
@@ -492,6 +694,28 @@ async def handle_campus_query(
         k=RETRIEVAL_TOP_K,
         score_threshold=RELEVANCE_SCORE_THRESHOLD
     )
+
+    # Phase 15: Check for document ambiguity
+    if session:
+        context = get_conversation_context(session)
+        preferred_source = context.get("doc_last_source")
+
+        if preferred_source:
+            # Filter results to preferred source (using document_name metadata field)
+            filtered_results = [
+                (doc, score) for doc, score in retrieval_results
+                if doc.metadata.get("document_name", doc.metadata.get("source")) == preferred_source
+            ]
+            if filtered_results:
+                retrieval_results = filtered_results
+                logger.info(f"[DOC_CLARIFICATION] Filtered to source: {preferred_source}")
+        else:
+            # Check for ambiguity (multiple documents scoring similarly)
+            is_ambiguous, similar_sources = detect_document_ambiguity(retrieval_results)
+            if is_ambiguous:
+                return handle_document_clarification(
+                    query, similar_sources, session_id, session, retrieval_results
+                )
 
     retrieved_docs = [doc for doc, score in retrieval_results]
     similarity_scores = [score for doc, score in retrieval_results]
@@ -1140,6 +1364,48 @@ async def chat(request: ChatRequest):
                 mode="clarification"
             )
 
+    # === PHASE 15: CHECK FOR PENDING DOCUMENT CLARIFICATION ===
+    if is_doc_topic_change(query, context):
+        logger.info(f"[DOC_CLARIFICATION] Topic change detected, clearing document clarification state")
+        context["doc_clarification_active"] = False
+        context["doc_clarification_sources"] = []
+        context["doc_clarification_query"] = None
+        # Continue to normal flow with the new query
+
+    elif context.get("doc_clarification_active"):
+        # User is responding to a document clarification question
+        logger.info(f"[DOC_CLARIFICATION] Processing document selection: '{query}'")
+        selected = handle_document_selection(query, session, session_id)
+
+        if selected:
+            # Got a selection - re-process original query with scope
+            original_query = context.get("doc_clarification_query", query)
+            context["doc_clarification_query"] = None
+            context["doc_clarification_sources"] = []
+
+            # Continue to process with the original query (preferred source is now set)
+            query = original_query
+            logger.info(f"[DOC_CLARIFICATION] Re-processing query: '{query}' with source: {selected}")
+        else:
+            # Selection failed but document clarification is softer - just continue
+            # Re-show options with a helpful message
+            sources = context.get("doc_clarification_sources", [])
+            options = []
+            for i, source in enumerate(sources[:4], 1):
+                display_name = os.path.basename(source).replace('.txt', '').replace('_', ' ').title()
+                options.append(f"{i}. {display_name}")
+
+            return ChatResponse(
+                session_id=session_id,
+                answer=f"Please select a document or say 'summary' for a general answer:\n\n" + "\n".join(options),
+                sources=[],
+                confidence_level="Medium",
+                confidence_score=50.0,
+                rejected=False,
+                timestamp=datetime.now().isoformat(),
+                mode="clarification"
+            )
+
     # === PHASE 13: CHECK FOR FOLLOW-UP QUERY WITH CONTEXT ===
     if context.get("last_entity_id") and is_followup_query(query):
         # This is a follow-up query - use context to resolve directly
@@ -1195,7 +1461,7 @@ async def chat(request: ChatRequest):
     elif intent == QueryIntent.AMBIGUOUS:
         return await handle_ambiguous_query(query, session_id, intent_metadata)
     else:  # QueryIntent.CAMPUS
-        return await handle_campus_query(query, session_id, memory, intent_metadata)
+        return await handle_campus_query(query, session_id, memory, intent_metadata, session)
 
 
 @app.post("/feedback")

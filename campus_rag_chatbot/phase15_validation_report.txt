@@ -1,0 +1,155 @@
+================================================================
+PHASE 15 VALIDATION REPORT
+================================================================
+Date: 2026-01-21
+Status: ACCEPTED
+
+================================================================
+1. DATA SETUP VERIFICATION
+================================================================
+
+Documents Ingested: 9 total
+- campus_info.txt (20 chunks)
+- academic_programs.txt (34 chunks)
+- events_activities.txt (29 chunks)
+- campus_directory.txt (27 chunks)
+- student_employment.txt (18 chunks)
+- it_services.txt (12 chunks)
+- test_doc_student_services.txt (5 chunks) [NEW]
+- test_doc_facilities_guide.txt (5 chunks) [NEW]
+- test_doc_orientation_memo.txt (6 chunks) [NEW]
+
+Overlapping Content Verified:
+- "IT support" query: 4 similar sources detected
+- "Canteen" query: 4 similar sources detected
+- "Student services" query: 2 similar sources detected
+- "Bookstore" query: 3 similar sources detected
+- "Library hours" query: 1 dominant source (no ambiguity)
+
+Result: PASS
+
+================================================================
+2. DOCUMENT CLARIFICATION SCENARIOS
+================================================================
+
+LOCAL LOGIC TESTS (16/16 passed):
+
+Session Context Fields:
+[PASS] doc_clarification_active
+[PASS] doc_clarification_sources
+[PASS] doc_clarification_query
+[PASS] doc_last_source
+
+Document Ambiguity Detection:
+[PASS] Detects similar-score documents (within 0.05 threshold)
+[PASS] No false positives for dominant documents
+
+Document Selection Handling:
+[PASS] Number selection ("1", "2", etc.)
+[PASS] Ordinal selection ("first", "second", etc.)
+[PASS] Name selection (partial document name match)
+[PASS] Summary request ("summary", "all", "general")
+
+Topic Change Detection:
+[PASS] Cancel phrases ("never mind", "forget it")
+[PASS] Directory queries during clarification
+[PASS] Selection numbers not flagged as topic change
+[PASS] Summary requests not flagged as topic change
+
+State Management:
+[PASS] State clears after selection
+[PASS] Selected source stored in session memory
+
+Result: PASS
+
+================================================================
+3. CONFIDENCE & SAFETY ENFORCEMENT
+================================================================
+
+Confidence Requirements:
+[PASS] Directory queries require HIGH confidence
+[PASS] Document queries allow MEDIUM confidence
+
+Safety Checks:
+[PASS] Clarification does not bypass retrieval
+[PASS] Document answers grounded in retrieved content
+[PASS] Citations included via existing RAG pipeline
+
+Result: PASS
+
+================================================================
+4. CONVERSATION MEMORY VALIDATION
+================================================================
+
+[PASS] Document scope stored after selection (doc_last_source)
+[PASS] Memory assists follow-up by filtering to preferred source
+[PASS] Memory resets on topic change
+[PASS] Memory resets when switching to directory queries
+
+Result: PASS
+
+================================================================
+5. DIRECTORY BOUNDARY PROTECTION (CRITICAL)
+================================================================
+
+Directory/Document Separation Tests (6/6 passed):
+
+[PASS] Directory/Document handlers are separate
+[PASS] Directory topic change detection unchanged (Phase 14)
+[PASS] Document topic change detection independent (Phase 15)
+[PASS] Session state isolation (states don't interfere)
+[PASS] Confidence requirements correct (HIGH vs MEDIUM)
+[PASS] Entity registry functional for directory queries
+
+Directory Behavior Unchanged:
+- Entity disambiguation still uses Phase 14 logic
+- Two-strike rule still applies to directory clarification
+- HIGH confidence still required for directory answers
+- Entity registry and resolution working correctly
+
+Result: PASS - CRITICAL CHECK PASSED
+
+================================================================
+ISSUES FOUND
+================================================================
+
+Issue #1: Metadata field mismatch (FIXED)
+- detect_document_ambiguity() used "source" instead of "document_name"
+- Fixed to check both fields for compatibility
+
+No other issues found.
+
+================================================================
+VALIDATION SUMMARY
+================================================================
+
+Phase 15 (Document-Aware Clarification & Scoped RAG) is:
+
+[X] CORRECT - All logic tests pass (22/22 total)
+[X] SAFE - Confidence requirements enforced
+[X] ISOLATED - Directory behavior completely unchanged
+[X] COMPLETE - All acceptance criteria met
+
+Test Results:
+- Local Logic Tests: 16/16 PASS
+- Directory Boundary Tests: 6/6 PASS
+- Data Setup Verification: PASS
+- Issue Found & Fixed: 1
+
+================================================================
+ACCEPTANCE DECISION
+================================================================
+
+                     *** PHASE 15 ACCEPTED ***
+
+The document clarification system is:
+- Working correctly for ambiguous document queries
+- Using softer, informational clarification style
+- Preserving session memory for follow-up queries
+- Completely isolated from directory clarification logic
+
+Directory behavior (Phase 14) remains unchanged and protected.
+
+RECOMMENDATION: Ready for integration testing with live API.
+
+================================================================
