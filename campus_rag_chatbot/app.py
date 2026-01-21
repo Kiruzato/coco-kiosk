@@ -13,10 +13,14 @@ Endpoints:
 import os
 import uuid
 import secrets
+import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Optional, List
 from fastapi import FastAPI, HTTPException, File, UploadFile, Header, Depends, Request, Response
+
+# Phase 14.1: Set up logging for clarification flow debugging
+logger = logging.getLogger(__name__)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -236,6 +240,8 @@ def create_session() -> Dict:
             "awaiting_disambiguation": False,
             "disambiguation_candidates": [],
             "disambiguation_query": None,
+            # Phase 14.1: Failure handling
+            "disambiguation_attempt_count": 0,
         }
     }
 
@@ -289,13 +295,17 @@ def cleanup_expired_sessions():
 
 def update_conversation_context(session: Dict, intent: str, entity_id: str = None,
                                  entity_name: str = None, campus: str = None):
-    """Update session conversation context after a successful high-confidence answer."""
-    session["conversation_context"] = {
-        "last_intent": intent,
-        "last_entity_id": entity_id,
-        "last_entity_name": entity_name,
-        "last_campus": campus,
-    }
+    """Update session conversation context after a successful high-confidence answer.
+
+    Phase 14.1: Uses field-level updates to preserve disambiguation state fields
+    instead of replacing the entire context dict.
+    """
+    context = session.get("conversation_context", {})
+    context["last_intent"] = intent
+    context["last_entity_id"] = entity_id
+    context["last_entity_name"] = entity_name
+    context["last_campus"] = campus
+    session["conversation_context"] = context
 
 
 def get_conversation_context(session: Dict) -> Dict:
@@ -313,6 +323,45 @@ def is_followup_query(query: str) -> bool:
     ]
     query_lower = query.lower()
     return any(pattern in query_lower for pattern in followup_patterns)
+
+
+def is_topic_change(query: str, context: Dict) -> bool:
+    """
+    Detect if user is changing topics (abandoning current disambiguation).
+
+    Phase 14.1: Returns True if user appears to be asking about something else
+    while disambiguation is pending.
+
+    Args:
+        query: The user's current query
+        context: The conversation context dict
+
+    Returns:
+        True if this looks like a topic change, False otherwise
+    """
+    # Only relevant if disambiguation is pending
+    if not context.get("awaiting_disambiguation"):
+        return False
+
+    query_lower = query.lower().strip()
+
+    # Explicit reset/cancel phrases
+    reset_phrases = [
+        "never mind", "nevermind", "forget it", "different question",
+        "something else", "cancel", "start over", "new question"
+    ]
+    if any(phrase in query_lower for phrase in reset_phrases):
+        return True
+
+    # If query contains a new directory question, it's a topic change
+    directory_keywords = [
+        "where is", "where's", "find the", "location of",
+        "how to get to", "how do i get to", "where can i find"
+    ]
+    if any(kw in query_lower for kw in directory_keywords):
+        return True
+
+    return False
 
 
 # ==============================================================================
@@ -660,6 +709,9 @@ def handle_entity_disambiguation(
     When multiple entities match a query, present numbered options
     and wait for user selection.
     """
+    # Phase 14.1: Log clarification trigger
+    logger.info(f"[CLARIFICATION] Multiple matches for '{query}': {[e.canonical_name for e in candidates[:4]]}")
+
     # Build clarification message with numbered options
     options = []
     for i, entity in enumerate(candidates[:4], 1):  # Max 4 options
@@ -701,20 +753,32 @@ def handle_disambiguation_selection(
     if not candidates:
         return None
 
+    # Phase 14.1: Log selection attempt
+    logger.info(f"[CLARIFICATION] Selection attempt: '{selection}' from candidates: {candidates}")
+
     selected_entity = None
     selection_lower = selection.lower().strip()
 
     # Try to match by number (1, 2, 3, 4) or ordinal words
+    # Phase 14.1: Support phrases like "the first one", "number 2", etc.
     num_map = {
         "1": 0, "2": 1, "3": 2, "4": 3,
         "first": 0, "second": 1, "third": 2, "fourth": 3,
         "one": 0, "two": 1, "three": 2, "four": 3
     }
 
+    # Check exact match first, then check if key is contained in selection
     if selection_lower in num_map:
         idx = num_map[selection_lower]
         if 0 <= idx < len(candidates):
             selected_entity = entity_registry.get_by_id(candidates[idx])
+    else:
+        # Check if any number word/digit is contained in the phrase
+        for key, idx in num_map.items():
+            if key in selection_lower.split():  # Match whole words only
+                if 0 <= idx < len(candidates):
+                    selected_entity = entity_registry.get_by_id(candidates[idx])
+                    break
 
     # Try to match by name if number didn't work
     if not selected_entity:
@@ -725,6 +789,8 @@ def handle_disambiguation_selection(
                 break
 
     if selected_entity and selected_entity.status == "active":
+        # Phase 14.1: Log successful resolution
+        logger.info(f"[CLARIFICATION] Resolved to: {selected_entity.canonical_name}")
         # Clear disambiguation state
         context["awaiting_disambiguation"] = False
         context["disambiguation_candidates"] = []
@@ -751,6 +817,8 @@ def handle_disambiguation_selection(
             mode="directory"
         )
 
+    # Phase 14.1: Log failed selection
+    logger.info(f"[CLARIFICATION] Selection failed, no match found for '{selection}'")
     return None
 
 
@@ -1019,18 +1087,58 @@ async def chat(request: ChatRequest):
     if not query:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
-    # === PHASE 14: CHECK FOR PENDING DISAMBIGUATION ===
+    # === PHASE 14/14.1: CHECK FOR PENDING DISAMBIGUATION ===
     context = get_conversation_context(session)
 
-    if context.get("awaiting_disambiguation"):
-        # User is responding to a disambiguation question
-        response = handle_disambiguation_selection(query, session, session_id)
-        if response:
-            return response
-        # If selection failed, clear state and continue normal flow
+    # Phase 14.1: Check for topic change first (user abandoning disambiguation)
+    if is_topic_change(query, context):
+        logger.info(f"[CLARIFICATION] Topic change detected, clearing disambiguation state")
         context["awaiting_disambiguation"] = False
         context["disambiguation_candidates"] = []
         context["disambiguation_query"] = None
+        context["disambiguation_attempt_count"] = 0
+        # Continue to normal flow with the new query
+
+    elif context.get("awaiting_disambiguation"):
+        # User is responding to a disambiguation question
+        logger.info(f"[CLARIFICATION] Processing disambiguation response: '{query}'")
+        response = handle_disambiguation_selection(query, session, session_id)
+        if response:
+            # Success - reset attempt counter
+            context["disambiguation_attempt_count"] = 0
+            return response
+
+        # Selection failed - Phase 14.1: Implement two-strike rule
+        context["disambiguation_attempt_count"] = context.get("disambiguation_attempt_count", 0) + 1
+        logger.info(f"[CLARIFICATION] Selection failed, attempt {context['disambiguation_attempt_count']}")
+
+        if context["disambiguation_attempt_count"] >= 2:
+            # Two strikes - gracefully reset and continue to normal flow
+            logger.info(f"[CLARIFICATION] Failed after 2 attempts, resetting state")
+            context["awaiting_disambiguation"] = False
+            context["disambiguation_candidates"] = []
+            context["disambiguation_query"] = None
+            context["disambiguation_attempt_count"] = 0
+            # Fall through to normal processing
+        else:
+            # First failure - ask again with clearer instructions
+            candidates = context.get("disambiguation_candidates", [])
+            options = []
+            for i, eid in enumerate(candidates[:4], 1):
+                entity = entity_registry.get_by_id(eid)
+                if entity:
+                    options.append(f"{i}. {entity.canonical_name}")
+
+            return ChatResponse(
+                session_id=session_id,
+                answer=f"I didn't quite catch that. Please reply with just a number:\n\n" + "\n".join(options),
+                sources=[],
+                confidence_level="Medium",
+                confidence_score=50.0,
+                rejected=False,
+                timestamp=datetime.now().isoformat(),
+                mode="clarification"
+            )
 
     # === PHASE 13: CHECK FOR FOLLOW-UP QUERY WITH CONTEXT ===
     if context.get("last_entity_id") and is_followup_query(query):
