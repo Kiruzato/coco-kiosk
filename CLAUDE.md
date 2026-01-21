@@ -6,7 +6,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 
 ## Current State
 
-**Completed through Phase 10** - Admin-managed Directory Entity Editor
+**Completed through Phase 14** - Memory-Aware Clarification & Disambiguation
 
 ### Phase History
 1. **Phase 1-3**: Core RAG pipeline, document management, multi-format support
@@ -17,6 +17,10 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 6. **Phase 8**: Directory answering with text normalization, query canonicalization, entity-aware confidence promotion, soft max-similarity gating
 7. **Phase 9**: Entity-anchored directory retrieval (structured directory entities)
 8. **Phase 10**: Admin-managed Directory Entity Editor (CRUD operations for directory entities)
+9. **Phase 11**: Admin CSV import/export for directory entities
+10. **Phase 12**: Campus/department field support for entities
+11. **Phase 13**: Session-scoped conversation memory for follow-up queries
+12. **Phase 14**: Memory-aware clarification & disambiguation flow
 
 ## Architecture
 
@@ -48,14 +52,27 @@ campus_rag_chatbot/
 - Classifies queries as: `directory`, `academic`, `event`, `general`, `greeting`, `out_of_scope`
 - Directory queries get special handling with entity resolution
 
-### Entity Resolution (Phase 9-10)
+### Entity Resolution (Phase 9-14)
 - Directory locations are first-class entities with:
   - `entity_id`, `canonical_name`, `aliases`
   - `building`, `floor`, `room`
   - `status` (active/inactive), `last_updated`
+  - `campus`, `department` (Phase 12)
 - Entity resolution replaces pure similarity-based confidence
 - Safety guardrails prevent LLM from inventing location details
 - Admin can create, update, and deactivate entities via web UI
+- CSV import/export for bulk entity management (Phase 11)
+
+### Conversation Memory (Phase 13)
+- Session-scoped memory tracks last entity discussed
+- Follow-up queries ("What floor is it on?") use context
+- Context switches when user asks about different entity
+
+### Disambiguation (Phase 14)
+- Detects when multiple entities match a query (e.g., "court")
+- Presents numbered options for user to select
+- Supports selection by number (1-4), word (first, second), or partial name
+- Only updates context after user confirms selection
 
 ### Confidence Scoring
 - HIGH/MEDIUM/LOW confidence levels

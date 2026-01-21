@@ -156,6 +156,42 @@ class EntityRegistry:
             return self.entities.get(entity_id)
         return None
 
+    def find_matching_entities(self, query: str) -> List[DirectoryEntity]:
+        """
+        Find all entities that could match a query term (Phase 14).
+
+        Checks canonical names and aliases for partial matches.
+        Used for disambiguation when multiple entities might match.
+
+        Args:
+            query: Search term (e.g., "court", "office")
+
+        Returns:
+            List of matching DirectoryEntity objects (may be 0, 1, or many)
+        """
+        query_lower = query.lower().strip()
+        matches = []
+        seen_ids = set()
+
+        for entity in self.get_active_entities():
+            if entity.entity_id in seen_ids:
+                continue
+
+            # Check canonical name
+            if query_lower in entity.canonical_name.lower():
+                matches.append(entity)
+                seen_ids.add(entity.entity_id)
+                continue
+
+            # Check aliases
+            for alias in entity.aliases:
+                if query_lower in alias.lower() or alias.lower() in query_lower:
+                    matches.append(entity)
+                    seen_ids.add(entity.entity_id)
+                    break
+
+        return matches
+
     def get_all_aliases(self) -> List[str]:
         """
         Get all registered aliases and canonical names.

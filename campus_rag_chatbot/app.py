@@ -232,6 +232,10 @@ def create_session() -> Dict:
             "last_entity_id": None,
             "last_entity_name": None,
             "last_campus": None,
+            # Phase 14: Disambiguation state
+            "awaiting_disambiguation": False,
+            "disambiguation_candidates": [],
+            "disambiguation_query": None,
         }
     }
 
@@ -641,6 +645,116 @@ Could you please clarify? For example:
 
 
 # ==============================================================================
+# ENTITY DISAMBIGUATION - Phase 14
+# ==============================================================================
+
+def handle_entity_disambiguation(
+    query: str,
+    candidates: List,
+    session_id: str,
+    session: Dict
+) -> ChatResponse:
+    """
+    Handle ambiguous entity queries by presenting options to user (Phase 14).
+
+    When multiple entities match a query, present numbered options
+    and wait for user selection.
+    """
+    # Build clarification message with numbered options
+    options = []
+    for i, entity in enumerate(candidates[:4], 1):  # Max 4 options
+        options.append(f"{i}. {entity.canonical_name} ({entity.building})")
+
+    options_text = "\n".join(options)
+    answer = f"I found multiple locations that might match. Which one do you mean?\n\n{options_text}\n\nPlease reply with the number or name."
+
+    # Store disambiguation state (don't update last_entity yet)
+    session["conversation_context"]["awaiting_disambiguation"] = True
+    session["conversation_context"]["disambiguation_candidates"] = [e.entity_id for e in candidates[:4]]
+    session["conversation_context"]["disambiguation_query"] = query
+
+    return ChatResponse(
+        session_id=session_id,
+        answer=answer,
+        sources=[],
+        confidence_level="Medium",
+        confidence_score=50.0,
+        rejected=False,
+        timestamp=datetime.now().isoformat(),
+        mode="clarification"
+    )
+
+
+def handle_disambiguation_selection(
+    selection: str,
+    session: Dict,
+    session_id: str
+) -> Optional[ChatResponse]:
+    """
+    Handle user's selection from disambiguation options (Phase 14).
+
+    Returns ChatResponse if selection is valid, None otherwise.
+    """
+    context = session["conversation_context"]
+    candidates = context.get("disambiguation_candidates", [])
+
+    if not candidates:
+        return None
+
+    selected_entity = None
+    selection_lower = selection.lower().strip()
+
+    # Try to match by number (1, 2, 3, 4) or ordinal words
+    num_map = {
+        "1": 0, "2": 1, "3": 2, "4": 3,
+        "first": 0, "second": 1, "third": 2, "fourth": 3,
+        "one": 0, "two": 1, "three": 2, "four": 3
+    }
+
+    if selection_lower in num_map:
+        idx = num_map[selection_lower]
+        if 0 <= idx < len(candidates):
+            selected_entity = entity_registry.get_by_id(candidates[idx])
+
+    # Try to match by name if number didn't work
+    if not selected_entity:
+        for entity_id in candidates:
+            entity = entity_registry.get_by_id(entity_id)
+            if entity and selection_lower in entity.canonical_name.lower():
+                selected_entity = entity
+                break
+
+    if selected_entity and selected_entity.status == "active":
+        # Clear disambiguation state
+        context["awaiting_disambiguation"] = False
+        context["disambiguation_candidates"] = []
+        context["disambiguation_query"] = None
+
+        # Update context with confirmed entity
+        update_conversation_context(
+            session,
+            intent="directory",
+            entity_id=selected_entity.entity_id,
+            entity_name=selected_entity.canonical_name,
+            campus=selected_entity.campus
+        )
+
+        answer = format_entity_response(selected_entity)
+        return ChatResponse(
+            session_id=session_id,
+            answer=answer,
+            sources=[],
+            confidence_level="High",
+            confidence_score=98.0,
+            rejected=False,
+            timestamp=datetime.now().isoformat(),
+            mode="directory"
+        )
+
+    return None
+
+
+# ==============================================================================
 # DIRECTORY QUERY HANDLER - Phase 8
 # ==============================================================================
 
@@ -680,6 +794,16 @@ async def handle_directory_query(
     # PHASE 9: Entity-Anchored Resolution (try before RAG fallback)
     # ===========================================================================
     subject = extract_subject(canonical_query)
+
+    # ===========================================================================
+    # PHASE 14: Check for multiple entity matches (disambiguation)
+    # ===========================================================================
+    if session:
+        matching_entities = entity_registry.find_matching_entities(subject)
+        if len(matching_entities) > 1:
+            # Multiple matches - trigger disambiguation
+            return handle_entity_disambiguation(query, matching_entities, session_id, session)
+
     resolved_entity, resolution_confidence, resolution_method = resolve_entity(
         subject, entity_registry
     )
@@ -895,9 +1019,20 @@ async def chat(request: ChatRequest):
     if not query:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
-    # === PHASE 13: CHECK FOR FOLLOW-UP QUERY WITH CONTEXT ===
+    # === PHASE 14: CHECK FOR PENDING DISAMBIGUATION ===
     context = get_conversation_context(session)
 
+    if context.get("awaiting_disambiguation"):
+        # User is responding to a disambiguation question
+        response = handle_disambiguation_selection(query, session, session_id)
+        if response:
+            return response
+        # If selection failed, clear state and continue normal flow
+        context["awaiting_disambiguation"] = False
+        context["disambiguation_candidates"] = []
+        context["disambiguation_query"] = None
+
+    # === PHASE 13: CHECK FOR FOLLOW-UP QUERY WITH CONTEXT ===
     if context.get("last_entity_id") and is_followup_query(query):
         # This is a follow-up query - use context to resolve directly
         # Re-resolve the entity from context and return formatted response
