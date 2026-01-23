@@ -153,8 +153,9 @@ class EventTracker:
                 return
 
             # Check file size as proxy (avoid reading entire file every time)
+            # Use 150 bytes per event estimate (typical event is ~150-200 bytes)
             file_size = self.events_file.stat().st_size
-            if file_size < self.max_events * 500:  # ~500 bytes per event estimate
+            if file_size < self.max_events * 150:
                 return
 
             with open(self.events_file, 'r', encoding='utf-8') as f:
