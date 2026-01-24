@@ -1198,3 +1198,179 @@ Phase 16 is ready for production deployment.
 ================================================================================
 END OF PHASE 16.1 VALIDATION GATE REPORT
 ================================================================================
+
+
+================================================================================
+REAL-WORLD ACCEPTANCE TEST REPORT
+================================================================================
+
+Date: 2026-01-24
+Document Tested: 2022_student_manual_latest.pdf (143 pages, 416 chunks)
+Status: PASS
+
+--------------------------------------------------------------------------------
+TEST CONFIGURATION
+--------------------------------------------------------------------------------
+
+Document: 2022 Student Manual (PDF)
+Chunks: 416
+Chunk Size: 500 characters
+Chunk Overlap: 50 characters
+
+Test Categories:
+1. Broad document questions (3 queries)
+2. Specific questions (4 queries)
+3. Ambiguous questions (3 queries)
+4. Follow-up questions with memory (3 queries)
+5. Out-of-scope questions (3 queries)
+6. Directory questions - boundary test (3 queries)
+
+Total: 19 test queries
+
+--------------------------------------------------------------------------------
+TEST RESULTS SUMMARY
+--------------------------------------------------------------------------------
+
+| Category        | Queries | Rejected | High Conf | Mode Used    |
+|-----------------|---------|----------|-----------|--------------|
+| Broad           | 3       | 0        | 0         | campus       |
+| Specific        | 4       | 0        | 1         | campus       |
+| Ambiguous       | 3       | 0        | 0         | campus       |
+| Memory-Initial  | 1       | 0        | 1         | campus       |
+| Memory-Followup | 2       | 0        | 0         | campus       |
+| Out-of-Scope    | 3       | 0        | 0         | general      |
+| Directory       | 3       | 0        | 3         | directory    |
+
+--------------------------------------------------------------------------------
+DETAILED TEST RESULTS
+--------------------------------------------------------------------------------
+
+TEST 1: BROAD DOCUMENT QUESTIONS
+  Q: "What is this student manual about?"
+     Result: Answered | Confidence: Medium | Mode: campus
+  Q: "What are the main policies covered in the manual?"
+     Result: Answered | Confidence: Medium | Mode: campus
+  Q: "What services does the college offer to students?"
+     Result: Answered | Confidence: Medium | Mode: campus
+
+TEST 2: SPECIFIC QUESTIONS
+  Q: "What is the grading system used?"
+     Result: Answered | Confidence: Medium | Mode: campus
+  Q: "What are the requirements for graduation?"
+     Result: Answered | Confidence: High | Mode: campus
+  Q: "What is the dress code policy?"
+     Result: Answered | Confidence: Medium | Mode: campus
+  Q: "What are the library rules?"
+     Result: Answered | Confidence: Medium | Mode: campus
+
+TEST 3: AMBIGUOUS QUESTIONS
+  Q: "What are the rules?"
+     Result: Answered | Confidence: N/A | Clarification behavior observed
+  Q: "Tell me about the fees"
+     Result: Answered | Confidence: Medium | Mode: campus
+  Q: "What happens if I'm late?"
+     Result: Answered | Confidence: Medium | Mode: campus
+
+TEST 4: FOLLOW-UP QUESTIONS (MEMORY TEST)
+  Q1: "What are the academic requirements?"
+      Result: Answered | Confidence: High
+  Q2: "Can you explain more about that?" (follow-up)
+      Result: Answered | Memory used correctly
+  Q3: "What about the grading?" (follow-up)
+      Result: Answered | Confidence: Medium
+
+TEST 5: OUT-OF-SCOPE QUESTIONS
+  Q: "What is the weather today?"
+     Result: Answered | Mode: general (correct - handled as general knowledge)
+  Q: "Who is the president of the United States?"
+     Result: Answered | Mode: general (correct)
+  Q: "How do I cook pasta?"
+     Result: Answered | Mode: general (correct)
+
+TEST 6: DIRECTORY QUESTIONS (BOUNDARY TEST)
+  Q: "Where is the registrar's office?"
+     Result: Answered | Confidence: High | Mode: directory
+  Q: "Where is the library?"
+     Result: Answered | Confidence: High | Mode: directory
+  Q: "Where can I find the canteen?"
+     Result: Answered | Confidence: High | Mode: directory
+
+--------------------------------------------------------------------------------
+OBSERVABILITY VERIFICATION (PHASE 16)
+--------------------------------------------------------------------------------
+
+Event Log: logs/events.jsonl
+Total Events: 155
+
+Event Flow Verified:
+  - query_received events fired for all queries
+  - answer_returned events fired for all successful answers
+  - Query types correctly categorized (directory, document, general)
+  - Confidence levels recorded (high, medium, n/a)
+  - Source types match answer modes
+  - No raw user content in logs (privacy-safe)
+
+Sample Event:
+{
+  "event_type": "query_received",
+  "timestamp": "2026-01-24T15:24:00.977408",
+  "session_id": "671405fe-5b22-433a-986b-8f7f723c208a",
+  "metadata": {"query_type": "directory"}
+}
+
+--------------------------------------------------------------------------------
+KEY OBSERVATIONS
+--------------------------------------------------------------------------------
+
+1. RETRIEVAL QUALITY: Good
+   - Broad questions retrieved relevant context
+   - Specific questions got accurate answers
+   - Graduation requirements query achieved HIGH confidence
+
+2. CLARIFICATION BEHAVIOR: Working
+   - Ambiguous "What are the rules?" triggered appropriate response
+   - System did not over-clarify on reasonably specific queries
+
+3. CONFIDENCE HANDLING: Appropriate
+   - Most document queries returned MEDIUM confidence (appropriate for RAG)
+   - Directory queries returned HIGH confidence (entity-resolved)
+   - Graduation query achieved HIGH (strong retrieval match)
+
+4. CITATION/GROUNDING: Verified
+   - Answers stayed grounded in retrieved text
+   - No obvious hallucinations observed
+   - Sources available in response objects
+
+5. MEMORY USAGE: Working
+   - Follow-up queries correctly used session context
+   - "Can you explain more about that?" understood prior context
+   - Session IDs maintained across queries
+
+6. BOUNDARY PROTECTION: Verified
+   - Directory queries used directory mode (Phase 14 rules)
+   - Document queries used campus mode
+   - Out-of-scope queries correctly routed to general mode
+
+--------------------------------------------------------------------------------
+ISSUES FOUND
+--------------------------------------------------------------------------------
+
+None. All tests passed.
+
+--------------------------------------------------------------------------------
+FINAL ASSESSMENT
+--------------------------------------------------------------------------------
+
+PASS - Ready for next phase.
+
+The system correctly:
+  - Retrieves relevant content from the 416-chunk document
+  - Maintains appropriate confidence levels
+  - Routes queries to correct modes (directory/document/general)
+  - Uses session memory for follow-up queries
+  - Logs privacy-safe observability events
+  - Handles out-of-scope queries gracefully
+
+================================================================================
+END OF REAL-WORLD ACCEPTANCE TEST REPORT
+================================================================================
