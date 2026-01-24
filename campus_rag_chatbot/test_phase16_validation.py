@@ -299,8 +299,10 @@ def test_behavioral_noninterference() -> ValidationResult:
     )
 
     # Test 4: Thread-safety (basic check)
+    # Use higher max_events to avoid rolling limit interference
     import threading
-    tracker, temp_dir = create_test_tracker()
+    temp_dir = Path(tempfile.mkdtemp())
+    tracker = EventTracker(log_dir=temp_dir, max_events=500)  # Higher limit for this test
     errors = []
 
     def track_events():
@@ -323,7 +325,7 @@ def test_behavioral_noninterference() -> ValidationResult:
         f"Errors: {errors}" if errors else "No errors in 5 concurrent threads"
     )
 
-    # Verify all events were written
+    # Verify all events were written (with higher limit, no trimming should occur)
     events = read_events_from_file(tracker.events_file)
     result.add_check(
         "All concurrent events persisted",
@@ -693,12 +695,9 @@ def test_performance_stability() -> ValidationResult:
     # Test 1: Rolling log enforcement
     tracker, temp_dir = create_test_tracker()  # max_events=100
 
-    # Write 150 events
+    # Write 150 events - enforcement should trigger automatically
     for i in range(150):
         tracker.track(EventType.QUERY_RECEIVED, f"session-{i}", query_type="directory")
-
-    # Force enforcement
-    tracker._enforce_rolling_limit()
 
     events = read_events_from_file(tracker.events_file)
     result.add_check(

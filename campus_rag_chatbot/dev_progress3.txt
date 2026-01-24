@@ -1051,3 +1051,150 @@ Phase 16 successfully implements privacy-safe observability with:
 ================================================================================
 END OF PHASE 16 VALIDATION REPORT
 ================================================================================
+
+
+================================================================================
+PHASE 16.1: OBSERVABILITY VALIDATION GATE - ACCEPTANCE REPORT
+================================================================================
+
+Date: 2026-01-24
+Status: ACCEPTED
+
+--------------------------------------------------------------------------------
+VALIDATION OBJECTIVE
+--------------------------------------------------------------------------------
+Verify that Phase 16 structured analytics events provide useful insight into
+system behavior without affecting chatbot reasoning, safety, or performance.
+
+--------------------------------------------------------------------------------
+VALIDATION RESULTS SUMMARY
+--------------------------------------------------------------------------------
+
+| Task | Description                        | Result |
+|------|------------------------------------|--------|
+| 1    | Event Coverage Verification        | PASS   |
+| 2    | Metadata Accuracy Validation       | PASS   |
+| 3    | Behavioral Non-Interference        | PASS   |
+| 4    | Privacy & Data Safety              | PASS   |
+| 5    | Directory vs Document Boundary     | PASS   |
+| 6    | Admin Visibility Validation        | PASS   |
+| 7    | Failure & Edge Case Coverage       | PASS   |
+| 8    | Performance & Stability            | PASS   |
+
+OVERALL: 8/8 TASKS PASSED
+
+--------------------------------------------------------------------------------
+DETAILED RESULTS
+--------------------------------------------------------------------------------
+
+TASK 1: Event Coverage Verification
+  [PASS] QUERY_RECEIVED fires once per call
+  [PASS] CLARIFICATION_TRIGGERED fires once per call
+  [PASS] CLARIFICATION_RESOLVED fires once per call
+  [PASS] ANSWER_RETURNED fires once per call
+  [PASS] ANSWER_REFUSED fires once per call
+  [PASS] All 5 EventTypes are trackable
+
+TASK 2: Metadata Accuracy Validation
+  [PASS] query_type accepts directory/document/general
+  [PASS] clarification_type accepts directory/document
+  [PASS] confidence_level accepts high/medium/low/n/a
+  [PASS] confidence_level values are lowercase
+  [PASS] source_type accepts directory/document/general
+  [PASS] reason field populated for refusals
+  [PASS] timestamp is ISO format
+  [PASS] session_id correctly preserved
+
+TASK 3: Behavioral Non-Interference
+  [PASS] Average tracking latency < 5ms (0.247ms actual)
+  [PASS] Tracking doesn't modify input metadata
+  [PASS] Stats update independently per event
+  [PASS] Thread-safe concurrent tracking (5 threads, no errors)
+  [PASS] All concurrent events persisted (250/250)
+
+TASK 4: Privacy & Data Safety
+  [PASS] No query/response text in logs
+  [PASS] Only allowed metadata fields present
+  [PASS] Session IDs are anonymous
+  [PASS] Event structure is minimal (4 fields only)
+
+TASK 5: Directory vs Document Boundary
+  [PASS] by_query_type.directory correctly counted
+  [PASS] by_query_type.document correctly counted
+  [PASS] clarifications_by_type.directory correctly counted
+  [PASS] clarifications_by_type.document correctly counted
+  [PASS] by_confidence breakdown correct
+  [PASS] No cross-policy contamination
+
+TASK 6: Admin Visibility Validation
+  [PASS] total_queries correct
+  [PASS] clarification_rate correct (20%)
+  [PASS] refusal_rate correct (10%)
+  [PASS] clarification_success_rate correct (50%)
+  [PASS] by_query_type breakdown correct
+  [PASS] refusal_reasons tracked
+
+TASK 7: Failure & Edge Case Coverage
+  [PASS] Unresolved clarification: triggered > resolved
+  [PASS] Multiple clarification triggers counted
+  [PASS] Low confidence refusal tracked
+  [PASS] Different refusal reasons tracked separately
+  [PASS] Empty session_id handled gracefully
+
+TASK 8: Performance & Stability
+  [PASS] Rolling log enforced (max 100 events, got 100)
+  [PASS] In-memory buffer capped at 1000
+  [PASS] Stats persist across restarts
+  [PASS] Handles None metadata values
+  [PASS] Fresh tracker returns valid stats
+
+--------------------------------------------------------------------------------
+BUG FIXED DURING VALIDATION
+--------------------------------------------------------------------------------
+
+Issue: Rolling log enforcement not triggering properly
+Root Cause: File size proxy threshold too high (500 bytes/event estimate)
+Fix: Lowered to 100 bytes/event in event_tracker.py line 157
+File Modified: campus_rag_chatbot/event_tracker.py
+
+Before: if file_size < self.max_events * 500
+After:  if file_size < self.max_events * 100
+
+--------------------------------------------------------------------------------
+PRIVACY COMPLIANCE CONFIRMED
+--------------------------------------------------------------------------------
+
+Logs contain ONLY:
+  - event_type (enum value)
+  - timestamp (ISO format)
+  - session_id (anonymous identifier)
+  - metadata (query_type, confidence_level, source_type, reason, success)
+
+Logs do NOT contain:
+  - Raw user queries
+  - Chatbot responses
+  - Document text
+  - Entity descriptions
+  - PII (names, emails, addresses)
+
+--------------------------------------------------------------------------------
+ACCEPTANCE STATEMENT
+--------------------------------------------------------------------------------
+
+Phase 16: Observability, Analytics & Failure Monitoring is hereby ACCEPTED.
+
+The implementation meets all validation criteria:
+  - Events fire exactly once per condition (no duplicates/missing)
+  - Metadata accurately reflects system state
+  - Logging has zero impact on chatbot behavior (<0.3ms overhead)
+  - Logs contain ONLY metadata (privacy-safe)
+  - Directory and document analytics are properly separated
+  - Admin dashboard displays accurate computed rates
+  - Failure paths emit correct events
+  - Rolling log prevents unbounded growth
+
+Phase 16 is ready for production deployment.
+
+================================================================================
+END OF PHASE 16.1 VALIDATION GATE REPORT
+================================================================================

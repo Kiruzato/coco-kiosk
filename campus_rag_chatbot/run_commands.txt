@@ -10,3 +10,20 @@ Admin panel: http://localhost:8000/admin
 STOP THE APP
 ============
 Press Ctrl+C in the terminal
+
+
+GIT COMMANDS
+============
+
+# List all tags with titles
+git tag -n1
+
+# Commit current work
+git add -A
+git commit -m "Phase 16.1: Observability Validation Gate - ACCEPTED"
+
+# Tag as iteration
+git tag -a iteration_12.1 -m "Phase 16.1: Observability Validation Gate"
+
+# Push (if needed)
+git push origin main --tags
