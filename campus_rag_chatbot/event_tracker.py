@@ -35,6 +35,7 @@ class EventType(Enum):
     CLARIFICATION_RESOLVED = "clarification_resolved"
     ANSWER_RETURNED = "answer_returned"
     ANSWER_REFUSED = "answer_refused"
+    GROUNDING_FAILED = "grounding_failed"  # Phase 17A: Retrieval grounding validation
 
 
 @dataclass
@@ -86,6 +87,7 @@ class EventTracker:
             "answers_refused": 0,
             "by_confidence": {"high": 0, "medium": 0, "low": 0},
             "refusal_reasons": {},
+            "grounding_failures": 0,  # Phase 17A
         }
 
         # Load existing stats from log file
@@ -204,6 +206,11 @@ class EventTracker:
             self._stats["refusal_reasons"][reason] = \
                 self._stats["refusal_reasons"].get(reason, 0) + 1
 
+        elif event_type == EventType.GROUNDING_FAILED.value:
+            # Phase 17A: Track grounding validation failures
+            self._stats["grounding_failures"] = \
+                self._stats.get("grounding_failures", 0) + 1
+
     def get_stats(self) -> Dict:
         """
         Get current aggregated statistics.
@@ -277,6 +284,7 @@ class EventTracker:
                 "answers_refused": 0,
                 "by_confidence": {"high": 0, "medium": 0, "low": 0},
                 "refusal_reasons": {},
+                "grounding_failures": 0,  # Phase 17A
             }
             self._recent_events.clear()
             logger.info("Event statistics reset")

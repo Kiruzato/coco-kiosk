@@ -6,7 +6,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 
 ## Current State
 
-**Completed through Phase 14** - Memory-Aware Clarification & Disambiguation
+**Completed through Phase 17A** - Retrieval Precision & Concept Grounding
 
 ### Phase History
 1. **Phase 1-3**: Core RAG pipeline, document management, multi-format support
@@ -21,6 +21,9 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 10. **Phase 12**: Campus/department field support for entities
 11. **Phase 13**: Session-scoped conversation memory for follow-up queries
 12. **Phase 14**: Memory-aware clarification & disambiguation flow
+13. **Phase 15**: Document-aware clarification & scoped RAG
+14. **Phase 16**: Observability, analytics & failure monitoring
+15. **Phase 17A**: Hybrid retrieval (BM25 + vector) & grounding validation
 
 ## Architecture
 
@@ -36,6 +39,8 @@ campus_rag_chatbot/
 ├── entity_resolver.py        # Entity resolution pipeline
 ├── entity_analyzer.py        # Entity analysis utilities
 ├── query_logger.py           # Query logging
+├── event_tracker.py          # Phase 16: Observability & analytics
+├── retrieval_validator.py    # Phase 17A: Hybrid retrieval & grounding
 ├── admin.py                  # CLI admin interface
 ├── static/                   # Web frontend (index.html, admin.html, etc.)
 ├── data/                     # Source documents
@@ -79,6 +84,19 @@ campus_rag_chatbot/
 - Entity-resolved answers get HIGH confidence automatically
 - Similarity-based scoring as fallback
 
+### Observability (Phase 16)
+- EventTracker logs structured events (privacy-safe, metadata only)
+- Tracks: query types, clarifications, answers, refusals
+- Admin analytics dashboard at `/admin/analytics`
+- Rolling log limit prevents unbounded growth
+
+### Hybrid Retrieval & Grounding (Phase 17A)
+- Combines vector similarity (0.7 weight) with BM25 keyword matching (0.3 weight)
+- Prevents semantic neighbor confusion (e.g., "Dean's Lister" returning "Team Leadership Award")
+- Query term extraction filters stopwords, identifies key concepts
+- Grounding validation requires query terms in retrieved chunks
+- Refuses gracefully if grounding fails: "I couldn't confidently find information about [topic]"
+
 ## Running the Application
 
 ```bash
@@ -101,12 +119,12 @@ ADMIN_API_KEY=<uuid for admin authentication>
 
 ## Current Work / Next Steps
 
-The project has implemented Phase 10 (admin-managed directory entity editor). Potential future work:
+The project has implemented Phase 17A (hybrid retrieval & grounding validation). Potential future work:
+- Phase 17B: Multi-word phrase detection for improved term extraction
 - Background job queue for long document operations
 - HTTPS support
 - Enhanced security features
 - Document preview in admin interface
-- Entity import/export functionality
 
 ## Session Notes
 

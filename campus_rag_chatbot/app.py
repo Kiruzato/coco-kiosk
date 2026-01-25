@@ -55,6 +55,13 @@ from entity_analyzer import check_entity_agreement, should_promote_confidence  #
 from entity_registry import EntityRegistry  # Phase 9: Structured directory entities
 from entity_resolver import extract_subject, resolve_entity, format_entity_response  # Phase 9: Entity resolution
 from event_tracker import EventTracker, EventType  # Phase 16: Observability
+from retrieval_validator import (  # Phase 17A: Hybrid retrieval & grounding
+    extract_query_terms,
+    compute_keyword_scores,
+    combine_hybrid_scores,
+    validate_grounding,
+    get_grounding_refusal_message
+)
 
 # ==============================================================================
 # CONFIGURATION
@@ -84,6 +91,11 @@ RELEVANCE_SCORE_THRESHOLD = 0.5
 MEMORY_WINDOW_SIZE = 5
 MIN_CONFIDENCE_TO_ANSWER = ConfidenceLevel.MEDIUM
 MIN_CONFIDENCE_DIRECTORY = ConfidenceLevel.HIGH  # Phase 8: Stricter for location queries
+
+# Phase 17A: Hybrid retrieval settings
+HYBRID_VECTOR_WEIGHT = 0.7       # Weight for vector similarity score
+HYBRID_KEYWORD_WEIGHT = 0.3      # Weight for BM25 keyword score
+MIN_GROUNDING_TERMS = 1          # Minimum query terms required in chunks
 
 # Session settings (chat sessions)
 SESSION_TIMEOUT_MINUTES = 30
@@ -739,16 +751,79 @@ async def handle_campus_query(
                     query, similar_sources, session_id, session, retrieval_results
                 )
 
-    retrieved_docs = [doc for doc, score in retrieval_results]
-    similarity_scores = [score for doc, score in retrieval_results]
+    # =========================================================================
+    # Phase 17A: Hybrid Retrieval & Grounding Validation
+    # =========================================================================
+    # Extract meaningful query terms for keyword matching
+    query_terms = extract_query_terms(query)
+    logger.debug(f"[PHASE17A] Extracted query terms: {query_terms}")
 
-    # Compute confidence
+    # Compute keyword scores for retrieved chunks
+    retrieved_docs_for_scoring = [doc for doc, score in retrieval_results]
+    keyword_scores = compute_keyword_scores(query_terms, retrieved_docs_for_scoring)
+
+    # Combine vector and keyword scores, re-rank results
+    hybrid_results, hybrid_details = combine_hybrid_scores(
+        retrieval_results,
+        keyword_scores,
+        vector_weight=HYBRID_VECTOR_WEIGHT,
+        keyword_weight=HYBRID_KEYWORD_WEIGHT
+    )
+
+    # Validate grounding: ensure query terms appear in retrieved chunks
+    grounding_result = validate_grounding(
+        query_terms,
+        hybrid_results,
+        min_term_matches=MIN_GROUNDING_TERMS
+    )
+
+    # If grounding fails, refuse with topic-specific message
+    if not grounding_result.is_grounded and query_terms:
+        logger.info(f"[PHASE17A] Grounding failed for query: '{query}' - "
+                   f"terms {query_terms} not found in chunks")
+
+        # Log grounding failure event
+        event_tracker.track(EventType.QUERY_RECEIVED, session_id, query_type="document")
+        event_tracker.track(
+            EventType.GROUNDING_FAILED,
+            session_id=session_id,
+            topic=grounding_result.topic,
+            query_terms=query_terms,
+            matched_terms=grounding_result.matched_terms,
+            reason=grounding_result.reason
+        )
+        event_tracker.track(
+            EventType.ANSWER_REFUSED,
+            session_id=session_id,
+            reason="grounding_failed"
+        )
+
+        return ChatResponse(
+            session_id=session_id,
+            answer=get_grounding_refusal_message(grounding_result.topic),
+            sources=[],
+            confidence_level="LOW",
+            confidence_score=0.0,
+            rejected=True,
+            timestamp=datetime.now().isoformat(),
+            mode="campus"
+        )
+
+    # Use hybrid-ranked results for downstream processing
+    retrieval_results = hybrid_results
+    # =========================================================================
+
+    retrieved_docs = [doc for doc, score in retrieval_results]
+    # Convert to Python floats to avoid numpy type coercion issues
+    similarity_scores = [float(score) for doc, score in retrieval_results]
+
+    # Compute confidence (using hybrid scores now)
     confidence_level, confidence_metrics = compute_confidence_score(
         similarity_scores=similarity_scores,
         min_chunks_retrieved=1
     )
 
-    # Check if we should answer (grounding validation)
+    # Check if we should answer (confidence validation)
     if not should_answer_confidently(confidence_level, MIN_CONFIDENCE_TO_ANSWER):
         answer = "I don't have verified campus information to answer that question confidently. The information I found has low relevance to your query. Please try rephrasing your question or ask about campus services, facilities, or policies."
         rejected = True
