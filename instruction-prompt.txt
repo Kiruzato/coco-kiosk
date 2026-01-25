@@ -1,0 +1,63 @@
+Phase 17A: Retrieval Precision & Concept Grounding
+During real-document QA testing, we observed semantic neighbor confusion (e.g., “Dean’s Lister requirements” returning “Team Leadership Award” content even though the correct section exists).
+This phase focuses exclusively on retrieval correctness and grounding validation.
+Do NOT address formatting or UX in this phase.
+________________________________________
+Goals
+•	Ensure queries retrieve the correct conceptual chunks
+•	Prevent wrong-but-confident answers
+•	Add groundedness checks before response generation
+This phase must improve precision, not answer style.
+________________________________________
+Part 1 — Hybrid Retrieval (Required)
+Replace pure embedding retrieval with hybrid search:
+•	Combine vector similarity with keyword/BM25 matching
+•	Boost chunks that contain explicit query terms
+Implementation guidance:
+•	Use LangChain hybrid retriever or equivalent
+•	Apply weighted scoring:
+o	vector_score + keyword_score
+•	Keyword component must prioritize exact query terms (e.g., “dean”, “lister”)
+________________________________________
+Part 2 — Query Term Enforcement (Required)
+Before accepting retrieved chunks:
+•	Extract meaningful terms from user query
+•	Require at least one term to appear in top chunks
+If no retrieved chunk contains any query term:
+→ Trigger safe refusal or clarification instead of answering.
+This prevents answering from semantically similar but incorrect sections.
+________________________________________
+Part 3 — Grounding Validation (Required)
+Before generating the final answer:
+•	Verify that top chunks explicitly reference the user’s core concept
+If grounding fails:
+•	Do NOT answer
+•	Respond with:
+“I couldn’t confidently find information about [topic]. Could you clarify?”
+Grounding validation must run after retrieval but before LLM generation.
+________________________________________
+Safety Rules (Critical)
+•	Do NOT relax confidence thresholds
+•	Do NOT increase chunk counts
+•	Do NOT raise temperature
+•	Do NOT expand context windows
+Focus on retrieval correctness, not verbosity.
+________________________________________
+Implementation Notes
+•	Add a retrieval_validator module
+•	Log grounding failures using Phase 16 analytics
+•	Keep directory logic unchanged
+•	Apply these rules to document queries only
+________________________________________
+Non-Goals
+•	No answer formatting changes
+•	No UI changes
+•	No memory changes
+•	No document clarification changes
+________________________________________
+Outcome
+The system should:
+•	Prefer correct concepts over nearby semantic neighbors
+•	Refuse or clarify instead of answering incorrectly
+•	Eliminate silent mis-grounded answers
+This phase should noticeably reduce incorrect document answers such as award/requirement mixups.

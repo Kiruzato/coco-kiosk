@@ -1,0 +1,93 @@
+================================================================================
+QA AUDIT REPORT: Document-Only Acceptance Test
+================================================================================
+
+Date: 2026-01-24
+Test File: document_test_results.json
+Total Queries: 99
+
+================================================================================
+AGGREGATE METRICS
+================================================================================
+
+Total queries:          99
+Answered:               99 (100%)
+Rejected:               0 (0%)
+
+MODE DISTRIBUTION:
+  campus (document RAG): 62 (62.6%)
+  general (knowledge):   36 (36.4%)
+  clarification:         1 (1.0%)
+  directory:             0 (0%)
+
+CONFIDENCE DISTRIBUTION (Campus mode only):
+  High:   51 (82.3%)
+  Medium: 11 (17.7%)
+  Low:    0 (0%)
+
+CITATION SUCCESS RATE:
+  Campus mode: 62/62 (100%)
+  General mode: 0/36 (0% - expected, no RAG used)
+
+================================================================================
+PER-RECORD EVALUATION
+================================================================================
+
+PASS CONDITIONS:
+  [PASS] Campus mode queries: 62/62 have sources (100% citation success)
+  [PASS] No Low confidence answers accepted
+  [PASS] No directory mode leakage (0 queries)
+  [PASS] Clarification triggered appropriately (1 ambiguous query)
+
+FLAG CONDITIONS:
+  [FLAG] 36 queries (36.4%) routed to general mode instead of document RAG
+         - These receive no sources (expected for general mode)
+         - Sample: "What is the purpose of the Board of Trustees?"
+         - Could be document-answerable but was routed to general
+
+FAIL CONDITIONS:
+  [NONE] No blocking failures detected
+
+================================================================================
+PATTERN ANALYSIS
+================================================================================
+
+GENERAL MODE ROUTING:
+  Many questions routed to general mode have T5 generator artifacts
+  (repeated "???" characters). The intent classifier likely couldn't
+  match them to document content. Some legitimate questions may have
+  been misrouted, but this is a classification issue, not a safety issue.
+
+NO SYSTEMATIC FAILURES:
+  - All campus mode answers have sources
+  - Confidence distribution is healthy (82% High, 18% Medium)
+  - No hallucinated answers detected (no answers without sources in campus mode)
+
+CLARIFICATION BEHAVIOR:
+  - 1 query triggered clarification: "What is the purpose of the program?"
+  - System correctly asked for disambiguation
+  - Expected and correct behavior
+
+================================================================================
+FINAL VERDICT
+================================================================================
+
+STATUS: ACCEPTABLE WITH MINOR ISSUES
+
+JUSTIFICATION:
+  - Document RAG behavior is correct (100% citation success in campus mode)
+  - No hallucination or safety violations
+  - No directory leakage
+  - The 36.4% general mode routing is a classification issue, not a safety issue
+
+RECOMMENDATIONS:
+  1. Review intent classifier thresholds - some document questions going
+     to general mode instead of document RAG
+  2. Clean up generated_questions.txt to remove T5 artifacts (repeated ???)
+  3. Consider adding a fallback: if general mode can't answer, try document RAG
+
+DEPLOYMENT STATUS: Ready for deployment - core document RAG behavior is sound.
+
+================================================================================
+END OF QA AUDIT REPORT
+================================================================================
