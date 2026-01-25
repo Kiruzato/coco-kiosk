@@ -36,6 +36,7 @@ class EventType(Enum):
     ANSWER_RETURNED = "answer_returned"
     ANSWER_REFUSED = "answer_refused"
     GROUNDING_FAILED = "grounding_failed"  # Phase 17A: Retrieval grounding validation
+    RAG_MODE_CHANGED = "rag_mode_changed"  # Phase 17A.1: Developer RAG-only mode toggle
 
 
 @dataclass

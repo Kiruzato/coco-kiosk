@@ -6,7 +6,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 
 ## Current State
 
-**Completed through Phase 17A** - Retrieval Precision & Concept Grounding
+**Completed through Phase 17A.1** - Developer RAG-Only Mode
 
 ### Phase History
 1. **Phase 1-3**: Core RAG pipeline, document management, multi-format support
@@ -24,6 +24,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 13. **Phase 15**: Document-aware clarification & scoped RAG
 14. **Phase 16**: Observability, analytics & failure monitoring
 15. **Phase 17A**: Hybrid retrieval (BM25 + vector) & grounding validation
+16. **Phase 17A.1**: Developer RAG-only mode toggle for debugging
 
 ## Architecture
 
@@ -97,6 +98,13 @@ campus_rag_chatbot/
 - Grounding validation requires query terms in retrieved chunks
 - Refuses gracefully if grounding fails: "I couldn't confidently find information about [topic]"
 
+### Developer Tools (Phase 17A.1)
+- Developer page at `/dev` for debugging RAG behavior
+- RAG-only mode toggle disables general AI fallback
+- When enabled, only document-based answers are returned
+- Toggle events logged via EventTracker
+- In-memory flag (not persisted to disk)
+
 ## Running the Application
 
 ```bash
@@ -108,6 +116,7 @@ python app.py
 # Access points:
 # - User interface: http://localhost:8000/
 # - Admin interface: http://localhost:8000/admin
+# - Developer tools: http://localhost:8000/dev
 ```
 
 ## Environment Variables (.env)

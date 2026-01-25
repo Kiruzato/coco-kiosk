@@ -105,6 +105,9 @@ sessions: Dict[str, Dict] = {}  # In-memory session storage
 ADMIN_SESSION_DURATION = timedelta(hours=8)
 admin_sessions: Dict[str, datetime] = {}  # {session_token: expiry_datetime}
 
+# Phase 17A.1: Developer RAG-only mode (in-memory, not persisted)
+rag_only_mode: bool = False
+
 # ==============================================================================
 # INITIALIZE SYSTEM
 # ==============================================================================
@@ -1622,6 +1625,20 @@ async def chat(request: ChatRequest):
 
     # === PHASE 6: ROUTE BASED ON INTENT ===
     if intent == QueryIntent.GENERAL:
+        # Phase 17A.1: RAG-only mode blocks general AI queries
+        if rag_only_mode:
+            event_tracker.track(EventType.QUERY_RECEIVED, session_id, query_type="general")
+            event_tracker.track(EventType.ANSWER_REFUSED, session_id, reason="rag_only_mode")
+            return ChatResponse(
+                session_id=session_id,
+                answer="[RAG-Only Mode] General AI knowledge is disabled. Please ask a question about campus information.",
+                sources=[],
+                confidence_level="LOW",
+                confidence_score=0.0,
+                rejected=True,
+                timestamp=datetime.now().isoformat(),
+                mode="rag_only"
+            )
         return await handle_general_query(query, session_id, memory, intent_metadata)
     elif intent == QueryIntent.AMBIGUOUS:
         return await handle_ambiguous_query(query, session_id, intent_metadata)
@@ -1743,6 +1760,46 @@ async def upload_document(file: UploadFile = File(...)):
         "document": doc_info
     }
 
+
+# ==============================================================================
+# DEVELOPER TOOLS - Phase 17A.1
+# ==============================================================================
+
+@app.get("/dev")
+async def dev_page():
+    """Serve the developer tools page."""
+    return FileResponse(PROJECT_ROOT / "static" / "dev.html")
+
+
+@app.get("/dev/status")
+async def get_dev_status():
+    """Get current RAG-only mode status."""
+    global rag_only_mode
+    return {"rag_only_mode": rag_only_mode}
+
+
+@app.post("/dev/rag-only-mode")
+async def toggle_rag_only_mode(request: Request):
+    """Toggle RAG-only mode on/off."""
+    global rag_only_mode
+    body = await request.json()
+    enabled = body.get("enabled", False)
+    rag_only_mode = enabled
+    event_tracker.track(
+        EventType.RAG_MODE_CHANGED,
+        session_id="dev",
+        enabled=enabled
+    )
+    logger.info(f"[DEV] RAG-only mode {'enabled' if enabled else 'disabled'}")
+    return {
+        "rag_only_mode": rag_only_mode,
+        "message": f"RAG-only mode {'enabled' if enabled else 'disabled'}"
+    }
+
+
+# ==============================================================================
+# ADMIN DOCUMENT MANAGEMENT
+# ==============================================================================
 
 @app.get("/admin/documents", dependencies=[Depends(verify_admin_session)])
 async def list_documents():
