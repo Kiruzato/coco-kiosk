@@ -6,7 +6,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 
 ## Current State
 
-**Completed through Phase 17A.1** - Developer RAG-Only Mode
+**Completed through Phase 17A.2** - Retrieval-First Routing
 
 ### Phase History
 1. **Phase 1-3**: Core RAG pipeline, document management, multi-format support
@@ -25,6 +25,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 14. **Phase 16**: Observability, analytics & failure monitoring
 15. **Phase 17A**: Hybrid retrieval (BM25 + vector) & grounding validation
 16. **Phase 17A.1**: Developer RAG-only mode toggle for debugging
+17. **Phase 17A.2**: Retrieval-first routing (campus-default behavior)
 
 ## Architecture
 

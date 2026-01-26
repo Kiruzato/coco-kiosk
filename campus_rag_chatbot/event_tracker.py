@@ -37,6 +37,10 @@ class EventType(Enum):
     ANSWER_REFUSED = "answer_refused"
     GROUNDING_FAILED = "grounding_failed"  # Phase 17A: Retrieval grounding validation
     RAG_MODE_CHANGED = "rag_mode_changed"  # Phase 17A.1: Developer RAG-only mode toggle
+    # Phase 17A.2: Retrieval-first routing events
+    ROUTING_DOCUMENT_ATTEMPTED = "routing_document_attempted"
+    ROUTING_DOCUMENT_SUCCESS = "routing_document_success"
+    ROUTING_GENERAL_FALLBACK = "routing_general_fallback"
 
 
 @dataclass

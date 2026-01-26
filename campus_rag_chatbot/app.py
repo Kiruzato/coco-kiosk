@@ -702,68 +702,52 @@ async def health_check():
 
 
 # ==============================================================================
-# QUERY HANDLERS - Phase 6
+# RETRIEVAL-FIRST ROUTING - Phase 17A.2
 # ==============================================================================
 
-async def handle_campus_query(
-    query: str,
-    session_id: str,
-    memory: ConversationBufferWindowMemory,
-    intent_metadata: Dict,
-    session: Dict = None
-) -> ChatResponse:
+def attempt_document_retrieval(query: str) -> dict:
     """
-    Handle campus query using existing RAG pipeline.
+    Attempt document retrieval and grounding validation.
 
-    This function implements the original campus RAG logic with:
-    - Vector retrieval
-    - Confidence scoring
-    - Grounding validation
-    - Source citation
-    - Phase 15: Document ambiguity detection and clarification
+    This is the first step in retrieval-first routing. Returns results
+    that can be used to decide whether to use RAG or fall back to general AI.
+
+    Returns:
+        dict with keys:
+        - is_grounded: bool - whether query terms appear in chunks
+        - retrieval_results: list - hybrid-ranked (doc, score) tuples
+        - grounding_result: GroundingResult object
+        - confidence_level: ConfidenceLevel enum
+        - confidence_score: float
+        - query_terms: list - extracted meaningful terms
     """
-    # Normalize query for consistent retrieval (case-insensitive matching)
+    # Normalize query for consistent retrieval
     normalized_query = normalize_text(query)
 
-    # Retrieve with similarity scores using normalized query
+    # Retrieve with similarity scores
     retrieval_results = doc_manager.vector_store.similarity_search_with_relevance_scores(
         normalized_query,
         k=RETRIEVAL_TOP_K,
         score_threshold=RELEVANCE_SCORE_THRESHOLD
     )
 
-    # Phase 15: Check for document ambiguity
-    if session:
-        context = get_conversation_context(session)
-        preferred_source = context.get("doc_last_source")
+    # Handle empty retrieval
+    if not retrieval_results:
+        return {
+            "is_grounded": False,
+            "retrieval_results": [],
+            "grounding_result": None,
+            "confidence_level": ConfidenceLevel.LOW,
+            "confidence_score": 0.0,
+            "query_terms": []
+        }
 
-        if preferred_source:
-            # Filter results to preferred source (using document_name metadata field)
-            filtered_results = [
-                (doc, score) for doc, score in retrieval_results
-                if doc.metadata.get("document_name", doc.metadata.get("source")) == preferred_source
-            ]
-            if filtered_results:
-                retrieval_results = filtered_results
-                logger.info(f"[DOC_CLARIFICATION] Filtered to source: {preferred_source}")
-        else:
-            # Check for ambiguity (multiple documents scoring similarly)
-            is_ambiguous, similar_sources = detect_document_ambiguity(retrieval_results)
-            if is_ambiguous:
-                return handle_document_clarification(
-                    query, similar_sources, session_id, session, retrieval_results
-                )
-
-    # =========================================================================
-    # Phase 17A: Hybrid Retrieval & Grounding Validation
-    # =========================================================================
     # Extract meaningful query terms for keyword matching
     query_terms = extract_query_terms(query)
-    logger.debug(f"[PHASE17A] Extracted query terms: {query_terms}")
 
     # Compute keyword scores for retrieved chunks
-    retrieved_docs_for_scoring = [doc for doc, score in retrieval_results]
-    keyword_scores = compute_keyword_scores(query_terms, retrieved_docs_for_scoring)
+    retrieved_docs = [doc for doc, score in retrieval_results]
+    keyword_scores = compute_keyword_scores(query_terms, retrieved_docs)
 
     # Combine vector and keyword scores, re-rank results
     hybrid_results, hybrid_details = combine_hybrid_scores(
@@ -780,41 +764,148 @@ async def handle_campus_query(
         min_term_matches=MIN_GROUNDING_TERMS
     )
 
-    # If grounding fails, refuse with topic-specific message
-    if not grounding_result.is_grounded and query_terms:
-        logger.info(f"[PHASE17A] Grounding failed for query: '{query}' - "
-                   f"terms {query_terms} not found in chunks")
+    # Compute confidence
+    similarity_scores = [float(score) for doc, score in hybrid_results]
+    confidence_level, confidence_metrics = compute_confidence_score(
+        similarity_scores=similarity_scores,
+        min_chunks_retrieved=1
+    )
 
-        # Log grounding failure event
-        event_tracker.track(EventType.QUERY_RECEIVED, session_id, query_type="document")
-        event_tracker.track(
-            EventType.GROUNDING_FAILED,
-            session_id=session_id,
-            topic=grounding_result.topic,
-            query_terms=query_terms,
-            matched_terms=grounding_result.matched_terms,
-            reason=grounding_result.reason
-        )
-        event_tracker.track(
-            EventType.ANSWER_REFUSED,
-            session_id=session_id,
-            reason="grounding_failed"
+    return {
+        "is_grounded": grounding_result.is_grounded if query_terms else True,
+        "retrieval_results": hybrid_results,
+        "grounding_result": grounding_result,
+        "confidence_level": confidence_level,
+        "confidence_score": confidence_metrics.get("confidence_score", 0.0),
+        "query_terms": query_terms
+    }
+
+
+# ==============================================================================
+# QUERY HANDLERS - Phase 6
+# ==============================================================================
+
+async def handle_campus_query(
+    query: str,
+    session_id: str,
+    memory: ConversationBufferWindowMemory,
+    intent_metadata: Dict,
+    session: Dict = None,
+    precomputed_retrieval: dict = None  # Phase 17A.2: Pre-computed retrieval results
+) -> ChatResponse:
+    """
+    Handle campus query using existing RAG pipeline.
+
+    This function implements the original campus RAG logic with:
+    - Vector retrieval
+    - Confidence scoring
+    - Grounding validation
+    - Source citation
+    - Phase 15: Document ambiguity detection and clarification
+    - Phase 17A.2: Can accept pre-computed retrieval results
+    """
+    # Phase 17A.2: Use pre-computed results if provided
+    if precomputed_retrieval:
+        retrieval_results = precomputed_retrieval["retrieval_results"]
+        query_terms = precomputed_retrieval["query_terms"]
+        grounding_result = precomputed_retrieval["grounding_result"]
+        # Skip to confidence calculation since retrieval is done
+        logger.debug(f"[PHASE17A.2] Using pre-computed retrieval results")
+    else:
+        # Original flow: perform retrieval
+        # Normalize query for consistent retrieval (case-insensitive matching)
+        normalized_query = normalize_text(query)
+
+        # Retrieve with similarity scores using normalized query
+        retrieval_results = doc_manager.vector_store.similarity_search_with_relevance_scores(
+            normalized_query,
+            k=RETRIEVAL_TOP_K,
+            score_threshold=RELEVANCE_SCORE_THRESHOLD
         )
 
-        return ChatResponse(
-            session_id=session_id,
-            answer=get_grounding_refusal_message(grounding_result.topic),
-            sources=[],
-            confidence_level="LOW",
-            confidence_score=0.0,
-            rejected=True,
-            timestamp=datetime.now().isoformat(),
-            mode="campus"
+        # Phase 15: Check for document ambiguity
+        if session:
+            context = get_conversation_context(session)
+            preferred_source = context.get("doc_last_source")
+
+            if preferred_source:
+                # Filter results to preferred source (using document_name metadata field)
+                filtered_results = [
+                    (doc, score) for doc, score in retrieval_results
+                    if doc.metadata.get("document_name", doc.metadata.get("source")) == preferred_source
+                ]
+                if filtered_results:
+                    retrieval_results = filtered_results
+                    logger.info(f"[DOC_CLARIFICATION] Filtered to source: {preferred_source}")
+            else:
+                # Check for ambiguity (multiple documents scoring similarly)
+                is_ambiguous, similar_sources = detect_document_ambiguity(retrieval_results)
+                if is_ambiguous:
+                    return handle_document_clarification(
+                        query, similar_sources, session_id, session, retrieval_results
+                    )
+
+        # =========================================================================
+        # Phase 17A: Hybrid Retrieval & Grounding Validation
+        # =========================================================================
+        # Extract meaningful query terms for keyword matching
+        query_terms = extract_query_terms(query)
+        logger.debug(f"[PHASE17A] Extracted query terms: {query_terms}")
+
+        # Compute keyword scores for retrieved chunks
+        retrieved_docs_for_scoring = [doc for doc, score in retrieval_results]
+        keyword_scores = compute_keyword_scores(query_terms, retrieved_docs_for_scoring)
+
+        # Combine vector and keyword scores, re-rank results
+        hybrid_results, hybrid_details = combine_hybrid_scores(
+            retrieval_results,
+            keyword_scores,
+            vector_weight=HYBRID_VECTOR_WEIGHT,
+            keyword_weight=HYBRID_KEYWORD_WEIGHT
         )
 
-    # Use hybrid-ranked results for downstream processing
-    retrieval_results = hybrid_results
-    # =========================================================================
+        # Validate grounding: ensure query terms appear in retrieved chunks
+        grounding_result = validate_grounding(
+            query_terms,
+            hybrid_results,
+            min_term_matches=MIN_GROUNDING_TERMS
+        )
+
+        # If grounding fails, refuse with topic-specific message
+        if not grounding_result.is_grounded and query_terms:
+            logger.info(f"[PHASE17A] Grounding failed for query: '{query}' - "
+                       f"terms {query_terms} not found in chunks")
+
+            # Log grounding failure event
+            event_tracker.track(EventType.QUERY_RECEIVED, session_id, query_type="document")
+            event_tracker.track(
+                EventType.GROUNDING_FAILED,
+                session_id=session_id,
+                topic=grounding_result.topic,
+                query_terms=query_terms,
+                matched_terms=grounding_result.matched_terms,
+                reason=grounding_result.reason
+            )
+            event_tracker.track(
+                EventType.ANSWER_REFUSED,
+                session_id=session_id,
+                reason="grounding_failed"
+            )
+
+            return ChatResponse(
+                session_id=session_id,
+                answer=get_grounding_refusal_message(grounding_result.topic),
+                sources=[],
+                confidence_level="LOW",
+                confidence_score=0.0,
+                rejected=True,
+                timestamp=datetime.now().isoformat(),
+                mode="campus"
+            )
+
+        # Use hybrid-ranked results for downstream processing
+        retrieval_results = hybrid_results
+        # =========================================================================
 
     retrieved_docs = [doc for doc, score in retrieval_results]
     # Convert to Python floats to avoid numpy type coercion issues
@@ -1620,18 +1711,55 @@ async def chat(request: ChatRequest):
         }
         return await handle_directory_query(query, session_id, memory, intent_metadata, session)
 
-    # === PHASE 6: INTENT CLASSIFICATION ===
-    intent, intent_metadata = classify_intent(query=query, llm=llm)
+    # === PHASE 17A.2: RETRIEVAL-FIRST ROUTING ===
+    # Attempt document retrieval FIRST before deciding whether to use general AI
+    retrieval_result = attempt_document_retrieval(query)
 
-    # === PHASE 6: ROUTE BASED ON INTENT ===
-    if intent == QueryIntent.GENERAL:
-        # Phase 17A.1: RAG-only mode blocks general AI queries
+    # Log retrieval attempt
+    event_tracker.track(
+        EventType.ROUTING_DOCUMENT_ATTEMPTED,
+        session_id=session_id,
+        grounded=retrieval_result["is_grounded"],
+        confidence=retrieval_result["confidence_score"],
+        rag_only_mode=rag_only_mode
+    )
+
+    # Check if retrieval succeeded (grounded AND sufficient confidence)
+    retrieval_succeeded = (
+        retrieval_result["is_grounded"] and
+        should_answer_confidently(retrieval_result["confidence_level"], MIN_CONFIDENCE_TO_ANSWER)
+    )
+
+    if retrieval_succeeded:
+        # Retrieval succeeded - use RAG answer
+        event_tracker.track(EventType.ROUTING_DOCUMENT_SUCCESS, session_id=session_id)
+        intent_metadata = {
+            "intent": "campus",
+            "reasoning": "Retrieval-first routing: document retrieval succeeded",
+            "raw_classification": "CAMPUS",
+            "query_length": len(query)
+        }
+        return await handle_campus_query(
+            query, session_id, memory, intent_metadata, session,
+            precomputed_retrieval=retrieval_result
+        )
+    else:
+        # Retrieval failed - decide fallback
         if rag_only_mode:
-            event_tracker.track(EventType.QUERY_RECEIVED, session_id, query_type="general")
-            event_tracker.track(EventType.ANSWER_REFUSED, session_id, reason="rag_only_mode")
+            # RAG-only mode: refuse instead of falling back to general AI
+            grounding_result = retrieval_result.get("grounding_result")
+            topic = grounding_result.topic if grounding_result else "your question"
+
+            event_tracker.track(
+                EventType.ANSWER_REFUSED,
+                session_id=session_id,
+                reason="retrieval_failed_rag_only",
+                confidence=retrieval_result["confidence_score"]
+            )
+
             return ChatResponse(
                 session_id=session_id,
-                answer="[RAG-Only Mode] General AI knowledge is disabled. Please ask a question about campus information.",
+                answer=f"[RAG-Only Mode] I couldn't find relevant campus information about {topic}. Please try rephrasing your question or ask about a different topic.",
                 sources=[],
                 confidence_level="LOW",
                 confidence_score=0.0,
@@ -1639,11 +1767,21 @@ async def chat(request: ChatRequest):
                 timestamp=datetime.now().isoformat(),
                 mode="rag_only"
             )
-        return await handle_general_query(query, session_id, memory, intent_metadata)
-    elif intent == QueryIntent.AMBIGUOUS:
-        return await handle_ambiguous_query(query, session_id, intent_metadata)
-    else:  # QueryIntent.CAMPUS
-        return await handle_campus_query(query, session_id, memory, intent_metadata, session)
+        else:
+            # Normal mode: fall back to general AI
+            event_tracker.track(
+                EventType.ROUTING_GENERAL_FALLBACK,
+                session_id=session_id,
+                confidence=retrieval_result["confidence_score"],
+                grounded=retrieval_result["is_grounded"]
+            )
+            intent_metadata = {
+                "intent": "general",
+                "reasoning": "Retrieval-first routing: document retrieval failed, falling back to general AI",
+                "raw_classification": "GENERAL_FALLBACK",
+                "query_length": len(query)
+            }
+            return await handle_general_query(query, session_id, memory, intent_metadata)
 
 
 @app.post("/feedback")
