@@ -62,6 +62,7 @@ from retrieval_validator import (  # Phase 17A: Hybrid retrieval & grounding
     validate_grounding,
     get_grounding_refusal_message
 )
+from response_formatter import format_structured_answer  # Phase 17B: Structured formatting
 
 # ==============================================================================
 # CONFIGURATION
@@ -1011,6 +1012,15 @@ Context from campus documents:
             source_type="document"
         )
 
+    # Phase 17B: Apply structured formatting (skip for rejections)
+    if not rejected:
+        answer = format_structured_answer(
+            raw_answer=answer,
+            confidence_level=confidence_level,
+            sources=sources,
+            mode="campus"
+        )
+
     return ChatResponse(
         session_id=session_id,
         answer=answer,
@@ -1061,8 +1071,16 @@ Answer:"""
     # Update conversation memory
     memory.save_context({"question": query}, {"answer": answer})
 
+    # Phase 17B: Apply structured formatting for general answers
+    formatted_answer = format_structured_answer(
+        raw_answer=answer,
+        confidence_level="Medium",  # General queries get MEDIUM confidence
+        sources=[],
+        mode="general"
+    )
+
     # Add transparency label
-    answer_with_label = f"{answer}\n\n[Based on general AI knowledge]"
+    answer_with_label = f"{formatted_answer}\n\n[Based on general AI knowledge]"
 
     # Log general interaction
     query_id = query_logger.log_general_interaction(
