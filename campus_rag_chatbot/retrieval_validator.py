@@ -161,19 +161,20 @@ def compute_keyword_scores(
     num_terms = len(query_terms)
 
     for doc in documents:
-        content = f" {doc.page_content.lower()} "  # Pad for word boundary matching
+        content = doc.page_content.lower()
 
         # Count term matches (coverage score)
         matched_terms = 0
         total_occurrences = 0
 
         for term in query_terms:
-            # Check for word boundary matches (including plural forms)
-            if f" {term} " in content or f" {term}s " in content or f" {term}'" in content:
+            # Use regex for proper word boundary matching
+            # This handles terms followed by punctuation, spaces, or end of string
+            pattern = r'\b' + re.escape(term) + r's?\b'
+            matches = re.findall(pattern, content)
+            if matches:
                 matched_terms += 1
-                # Count occurrences for frequency weighting
-                total_occurrences += content.count(f" {term} ")
-                total_occurrences += content.count(f" {term}s ")
+                total_occurrences += len(matches)
 
         # Base score: fraction of query terms found (0-1)
         coverage_score = matched_terms / num_terms if num_terms > 0 else 0.0

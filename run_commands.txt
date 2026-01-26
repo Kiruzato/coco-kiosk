@@ -1,0 +1,53 @@
+Git Tags - How to Use Old Versions and Return to Latest
+========================================================
+
+1. LIST ALL AVAILABLE ITERATIONS
+   git tag -l "iteration_*"
+
+2. VIEW TAG DETAILS
+   git show iteration_13.3
+
+3. SWITCH TO AN OLD VERSION (e.g., iteration_13)
+   git checkout iteration_13
+
+   Note: This puts you in "detached HEAD" state. You can look around,
+   test the old code, but don't make commits here.
+
+4. RETURN TO THE LATEST VERSION
+   git checkout main
+
+5. COMPARE TWO VERSIONS
+   git diff iteration_13 iteration_13.3
+
+6. SEE WHAT CHANGED IN A SPECIFIC ITERATION
+   git log iteration_13..iteration_13.3 --oneline
+
+EXAMPLE WORKFLOW
+----------------
+# You want to test how the app worked in iteration_13.1
+
+1. Stop the running app first (if any)
+
+2. Switch to old version:
+   git checkout iteration_13.1
+
+3. Run the app:
+   cd campus_rag_chatbot
+   python app.py
+
+4. Test the old behavior...
+
+5. Stop the app
+
+6. Return to latest:
+   git checkout main
+
+7. Run the latest version:
+   python app.py
+
+CURRENT ITERATIONS
+------------------
+iteration_13   - Phase 17A: Hybrid Retrieval & Grounding Validation
+iteration_13.1 - Phase 17A.1: Developer RAG-Only Mode
+iteration_13.2 - Phase 17A.2: Retrieval-First Routing
+iteration_13.3 - Phase 17A.2.1: Fix keyword scoring (term coverage)
