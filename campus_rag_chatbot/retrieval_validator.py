@@ -19,7 +19,6 @@ import logging
 from typing import List, Tuple, Optional
 from dataclasses import dataclass
 
-from rank_bm25 import BM25Okapi
 from text_normalizer import normalize_text
 
 logger = logging.getLogger(__name__)
@@ -141,9 +140,11 @@ def compute_keyword_scores(
     weight_exact: float = 2.0
 ) -> List[float]:
     """
-    Compute keyword matching scores for retrieved documents using BM25.
+    Compute keyword matching scores for retrieved documents.
 
-    Uses BM25 for base scoring with bonus for exact term matches.
+    Uses term coverage scoring (what fraction of query terms appear in each doc)
+    combined with term frequency weighting. This avoids BM25's IDF penalty
+    that hurts scores when multiple retrieved chunks contain the same terms.
 
     Args:
         query_terms: Meaningful terms extracted from query
@@ -156,46 +157,33 @@ def compute_keyword_scores(
     if not query_terms or not documents:
         return [0.0] * len(documents)
 
-    # Tokenize documents for BM25
-    doc_tokens = []
-    for doc in documents:
-        content = doc.page_content.lower()
-        # Split on whitespace and punctuation
-        tokens = re.split(r'[\s\-\'\",.?!:;()\[\]]+', content)
-        tokens = [t.strip() for t in tokens if t.strip()]
-        doc_tokens.append(tokens)
-
-    # Handle empty tokenizations
-    if not any(doc_tokens):
-        return [0.0] * len(documents)
-
-    # BM25 scoring
-    try:
-        bm25 = BM25Okapi(doc_tokens)
-        bm25_scores = bm25.get_scores(query_terms)
-    except Exception as e:
-        logger.warning(f"BM25 scoring failed: {e}")
-        return [0.0] * len(documents)
-
-    # Normalize BM25 scores to 0-1 range
-    max_bm25 = max(bm25_scores) if max(bm25_scores) > 0 else 1.0
-    normalized_bm25 = [s / max_bm25 for s in bm25_scores]
-
-    # Add exact match bonus
     final_scores = []
-    for i, doc in enumerate(documents):
+    num_terms = len(query_terms)
+
+    for doc in documents:
         content = f" {doc.page_content.lower()} "  # Pad for word boundary matching
 
-        # Count exact term matches (with word boundaries)
-        exact_matches = 0
-        for term in query_terms:
-            # Check for word boundary matches
-            if f" {term} " in content or f" {term}s " in content:
-                exact_matches += 1
+        # Count term matches (coverage score)
+        matched_terms = 0
+        total_occurrences = 0
 
-        # Apply bonus (capped at 0.3)
-        bonus = min(exact_matches * 0.1, 0.3)
-        final_scores.append(min(normalized_bm25[i] + bonus, 1.0))
+        for term in query_terms:
+            # Check for word boundary matches (including plural forms)
+            if f" {term} " in content or f" {term}s " in content or f" {term}'" in content:
+                matched_terms += 1
+                # Count occurrences for frequency weighting
+                total_occurrences += content.count(f" {term} ")
+                total_occurrences += content.count(f" {term}s ")
+
+        # Base score: fraction of query terms found (0-1)
+        coverage_score = matched_terms / num_terms if num_terms > 0 else 0.0
+
+        # Frequency bonus: small boost for multiple occurrences (capped at 0.2)
+        frequency_bonus = min(total_occurrences * 0.05, 0.2)
+
+        # Combined score
+        final_score = min(coverage_score + frequency_bonus, 1.0)
+        final_scores.append(final_score)
 
     logger.debug(f"Keyword scores: {final_scores}")
     return final_scores
