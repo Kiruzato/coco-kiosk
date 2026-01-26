@@ -56,6 +56,53 @@ function addUserMessage(text) {
 }
 
 /**
+ * Render structured answer with proper HTML formatting - Phase 17B.1
+ */
+function renderStructuredAnswer(structured) {
+    let html = '';
+
+    // Direct Answer section
+    if (structured.direct_answer) {
+        html += `
+            <div class="answer-section">
+                <h3 class="section-heading">Direct Answer</h3>
+                <p class="direct-answer">${escapeHtml(structured.direct_answer)}</p>
+            </div>
+        `;
+    }
+
+    // Key Details section (bullet list)
+    if (structured.key_details && structured.key_details.length > 0) {
+        html += `
+            <div class="answer-section">
+                <h3 class="section-heading">Key Details</h3>
+                <ul class="key-details-list">
+        `;
+        structured.key_details.forEach(detail => {
+            html += `<li>${escapeHtml(detail)}</li>`;
+        });
+        html += `</ul></div>`;
+    }
+
+    // Notes section
+    if (structured.notes) {
+        html += `
+            <div class="answer-section notes-section">
+                <h3 class="section-heading">Notes</h3>
+                <p>${escapeHtml(structured.notes)}</p>
+            </div>
+        `;
+    }
+
+    // Disclaimer
+    if (structured.disclaimer) {
+        html += `<p class="disclaimer">${escapeHtml(structured.disclaimer)}</p>`;
+    }
+
+    return html;
+}
+
+/**
  * Add an assistant message to the chat
  */
 function addAssistantMessage(data) {
@@ -65,8 +112,13 @@ function addAssistantMessage(data) {
     // Build message content
     let html = `<div class="message-content">`;
 
-    // Answer text
-    html += `<p class="large-text">${escapeHtml(data.answer)}</p>`;
+    // Phase 17B.1: Use structured_answer if available, otherwise fall back to plain answer
+    if (data.structured_answer) {
+        html += renderStructuredAnswer(data.structured_answer);
+    } else {
+        // Fallback to plain text answer
+        html += `<p class="large-text">${escapeHtml(data.answer)}</p>`;
+    }
 
     // Confidence badge
     const confidenceClass = `confidence-${data.confidence_level.toLowerCase()}`;

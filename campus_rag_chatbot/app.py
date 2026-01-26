@@ -62,7 +62,7 @@ from retrieval_validator import (  # Phase 17A: Hybrid retrieval & grounding
     validate_grounding,
     get_grounding_refusal_message
 )
-from response_formatter import format_structured_answer  # Phase 17B: Structured formatting
+from response_formatter import format_structured_answer, build_structured_answer  # Phase 17B/17B.1
 
 # ==============================================================================
 # CONFIGURATION
@@ -176,10 +176,19 @@ class Source(BaseModel):
     chunk_id: int
 
 
+class StructuredAnswer(BaseModel):
+    """Structured answer for frontend rendering - Phase 17B.1."""
+    direct_answer: str
+    key_details: List[str] = []
+    notes: Optional[str] = None
+    disclaimer: Optional[str] = None
+
+
 class ChatResponse(BaseModel):
     """Chat response model."""
     session_id: str
-    answer: str
+    answer: str  # Keep for backward compatibility
+    structured_answer: Optional[StructuredAnswer] = None  # Phase 17B.1: Structured format
     sources: List[Source]
     confidence_level: str
     confidence_score: float
@@ -1012,18 +1021,24 @@ Context from campus documents:
             source_type="document"
         )
 
-    # Phase 17B: Apply structured formatting (skip for rejections)
+    # Phase 17B.1: Build structured answer for frontend rendering
+    structured_answer = None
     if not rejected:
-        answer = format_structured_answer(
+        structured_data = build_structured_answer(
             raw_answer=answer,
             confidence_level=confidence_level,
             sources=sources,
             mode="campus"
         )
+        if structured_data:
+            structured_answer = StructuredAnswer(**structured_data)
+            # Keep plain answer as direct_answer for backward compatibility
+            answer = structured_data.get("direct_answer", answer)
 
     return ChatResponse(
         session_id=session_id,
         answer=answer,
+        structured_answer=structured_answer,
         sources=sources,
         confidence_level=confidence_level.value,
         confidence_score=round(confidence_metrics["confidence_score"], 1),
@@ -1071,16 +1086,29 @@ Answer:"""
     # Update conversation memory
     memory.save_context({"question": query}, {"answer": answer})
 
-    # Phase 17B: Apply structured formatting for general answers
-    formatted_answer = format_structured_answer(
+    # Phase 17B.1: Build structured answer for frontend rendering
+    structured_answer = None
+    structured_data = build_structured_answer(
         raw_answer=answer,
         confidence_level="Medium",  # General queries get MEDIUM confidence
         sources=[],
         mode="general"
     )
+    if structured_data:
+        structured_answer = StructuredAnswer(**structured_data)
+        # Add general AI attribution to disclaimer
+        if structured_answer.disclaimer:
+            structured_answer.disclaimer += " [Based on general AI knowledge]"
+        else:
+            structured_answer = StructuredAnswer(
+                direct_answer=structured_data["direct_answer"],
+                key_details=structured_data["key_details"],
+                notes=structured_data["notes"],
+                disclaimer="[Based on general AI knowledge]"
+            )
 
-    # Add transparency label
-    answer_with_label = f"{formatted_answer}\n\n[Based on general AI knowledge]"
+    # Keep plain answer with label for backward compatibility
+    answer_with_label = f"{answer}\n\n[Based on general AI knowledge]"
 
     # Log general interaction
     query_id = query_logger.log_general_interaction(
@@ -1103,6 +1131,7 @@ Answer:"""
     return ChatResponse(
         session_id=session_id,
         answer=answer_with_label,
+        structured_answer=structured_answer,
         sources=[],
         confidence_level="N/A",
         confidence_score=0.0,

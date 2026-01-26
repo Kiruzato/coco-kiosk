@@ -198,14 +198,14 @@ def format_sources(sources: List) -> str:
     return f"*Sources: {', '.join(doc_names)}*"
 
 
-def format_structured_answer(
+def build_structured_answer(
     raw_answer: str,
     confidence_level: str,
     sources: List = None,
     mode: str = "campus"
-) -> str:
+) -> Optional[dict]:
     """
-    Transform raw LLM answer into structured format.
+    Build structured answer object for frontend rendering - Phase 17B.1.
 
     Args:
         raw_answer: Raw answer text from LLM
@@ -214,7 +214,62 @@ def format_structured_answer(
         mode: "campus" or "general"
 
     Returns:
-        Formatted answer with sections
+        dict with: direct_answer, key_details, notes, disclaimer
+        Returns None if formatting should be skipped
+    """
+    if sources is None:
+        sources = []
+
+    # Convert enum to string if needed
+    if hasattr(confidence_level, 'value'):
+        confidence_level = confidence_level.value
+
+    # Skip formatting for rejections/clarifications
+    if should_skip_formatting(raw_answer):
+        logger.debug("Skipping structured answer for rejection/clarification")
+        return None
+
+    # Extract components
+    direct_answer = extract_direct_answer(raw_answer)
+    key_details = extract_key_details(raw_answer)
+    notes_list = extract_notes(raw_answer)
+
+    # Combine notes into single string (if any)
+    notes = ". ".join(notes_list) if notes_list else None
+
+    # Add disclaimer for MEDIUM confidence
+    disclaimer = None
+    if confidence_level.lower() == "medium":
+        disclaimer = "Some details may vary. Please verify with campus staff if needed."
+
+    return {
+        "direct_answer": direct_answer,
+        "key_details": key_details,
+        "notes": notes,
+        "disclaimer": disclaimer
+    }
+
+
+def format_structured_answer(
+    raw_answer: str,
+    confidence_level: str,
+    sources: List = None,
+    mode: str = "campus"
+) -> str:
+    """
+    Transform raw LLM answer into structured format (legacy text-based).
+
+    Note: This function is kept for backward compatibility.
+    New code should use build_structured_answer() for frontend rendering.
+
+    Args:
+        raw_answer: Raw answer text from LLM
+        confidence_level: "High", "Medium", or "Low" (or ConfidenceLevel enum)
+        sources: List of Source objects (optional)
+        mode: "campus" or "general"
+
+    Returns:
+        Formatted answer with sections (Markdown-style)
     """
     if sources is None:
         sources = []
