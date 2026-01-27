@@ -504,38 +504,9 @@ body {
     border-top: 1px solid #e0e0e0;
 }
 
-/* Full Answer Expandable Section */
-.full-answer-section {
-    margin-top: 15px;
-}
-
-.show-more-btn {
-    background: #f5f7fa;
-    border: 2px solid #1e3c72;
-    color: #1e3c72;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.show-more-btn:hover {
-    background: #1e3c72;
-    color: white;
-}
-
-.full-answer-content {
-    margin-top: 15px;
-    padding: 20px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border-left: 4px solid #1e3c72;
-}
-
-.full-answer-content p {
-    font-size: 18px;
+/* Full Answer Display - Phase 17B.2 Kiosk-First */
+.full-answer {
+    font-size: 20px;
     line-height: 1.7;
     color: #333;
     white-space: pre-wrap;

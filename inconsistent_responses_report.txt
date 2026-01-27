@@ -1,0 +1,180 @@
+DIAGNOSTIC REPORT: Inconsistent Responses for "List All the Deans"
+===================================================================
+Date: 2026-01-27
+Project: CoCo - Campus RAG Chatbot
+
+PROBLEM
+-------
+The same query "list all the deans" returns different results across attempts:
+
+  Attempt 1: 2 deans (Dr. Matriano, Engr. Yap)
+  Attempt 2: 3 deans (Dr. Capili, Dr. Matriano, Engr. Yap)
+  Attempt 3: 3 deans (Dr. Matriano, Engr. Yap, Dr. Capili)
+
+The full list should be 5 deans:
+  1. Dr. Leilani E. Capili - Dean, College of Nursing
+  2. Dr. Eric A. Matriano - Dean, College of Business & Accountancy
+  3. Engr. Noel H. Yap - Dean, College of Computer Studies
+  4. Arch. Corazon Z. Gonzales - Dean, College of Architecture
+  5. Dr. Engr. Vivian E. Gutierrez - Dean, College of Engineering
+
+Two deans are NEVER returned: Arch. Gonzales and Dr. Engr. Gutierrez.
+
+
+ROOT CAUSES
+-----------
+
+1. RETRIEVAL_TOP_K = 4 (Primary Cause)
+   File: campus_rag_chatbot/app.py, line 90
+
+   Only 4 document chunks are retrieved per query. The 5 deans are spread
+   across the source PDF (2022_student_manual_latest.pdf) and may require
+   more than 4 chunks to capture all of them. With k=4, at least one dean
+   will always be missing if each dean is in a separate chunk.
+
+2. DUAL RETRIEVAL PIPELINE (Major Cause of Inconsistency)
+   File: campus_rag_chatbot/app.py, lines 831 and 959-967
+
+   Two SEPARATE retrieval calls occur for each query:
+
+   a) First retrieval (line 831):
+      similarity_search_with_relevance_scores(query, k=4)
+      Used for confidence scoring and hybrid re-ranking.
+
+   b) Second retrieval (line 959-967):
+      ConversationalRetrievalChain creates its OWN retriever:
+      doc_manager.vector_store.as_retriever(k=4)
+      Used for actual answer generation.
+
+   These two retrievals can return DIFFERENT chunks because:
+   - ConversationalRetrievalChain reformulates the query using conversation
+     history via the LLM before searching
+   - The reformulated query may differ from the original, causing different
+     vector similarity rankings
+   - The first retrieval uses the original query; the second uses a
+     potentially reworded version
+
+3. CHUNK BOUNDARIES
+   File: campus_rag_chatbot/document_manager.py
+   Settings: chunk_size=500, chunk_overlap=50
+
+   The student manual PDF is split into 500-character chunks with 50-char
+   overlap. Dean information may be scattered across different sections
+   of the PDF. If deans are mentioned in different parts of the document
+   (e.g., different sections for different colleges), their chunks will
+   have varying semantic similarity to the query "list all the deans."
+
+4. HYBRID RE-RANKING SCORE TIES
+   File: campus_rag_chatbot/retrieval_validator.py, lines 193-242
+
+   Hybrid scores combine:
+   - Vector similarity (70% weight)
+   - Keyword BM25 score (30% weight)
+
+   When dean chunks have similar hybrid scores, the ordering becomes
+   sensitive to minor score differences. Chunks near the k=4 cutoff
+   boundary can swap in/out across retrievals.
+
+5. KEYWORD SCORING LIMITATIONS
+   File: campus_rag_chatbot/retrieval_validator.py, lines 137-191
+
+   Query terms extracted from "list all the deans" after stopword filtering:
+   ["list", "deans"]
+
+   The keyword scorer uses word boundary regex with optional plural:
+   r'\b' + term + r's?\b'
+
+   Chunks that mention a specific dean by name but don't contain the word
+   "dean" or "deans" will score low on keyword matching, even if they're
+   semantically relevant.
+
+
+WHY CERTAIN DEANS ARE NEVER RETURNED
+-------------------------------------
+Arch. Corazon Z. Gonzales (Architecture) and Dr. Engr. Vivian E. Gutierrez
+(Engineering) are never returned because:
+
+1. Their names likely appear in chunks with LOWER vector similarity to the
+   query "list all the deans" compared to the other 3 deans
+2. Their chunks may be in sections of the PDF that are less semantically
+   related to the concept of "listing deans"
+3. With k=4, they consistently fall outside the top 4 results
+4. The hybrid re-ranking doesn't boost them enough to overcome their lower
+   vector similarity
+
+
+TECHNICAL DETAILS
+-----------------
+
+Retrieval Pipeline Flow:
+  Query -> Normalize -> FAISS Vector Search (k=4, threshold=0.5)
+       -> Extract Query Terms -> Compute Keyword Scores
+       -> Combine Hybrid Scores (0.7 * vector + 0.3 * keyword)
+       -> Re-rank -> Validate Grounding
+       -> ConversationalRetrievalChain (SECOND retrieval, k=4)
+       -> LLM generates answer from retrieved context
+
+Key Configuration (app.py):
+  RETRIEVAL_TOP_K = 4
+  RELEVANCE_SCORE_THRESHOLD = 0.5
+  HYBRID_VECTOR_WEIGHT = 0.7
+  HYBRID_KEYWORD_WEIGHT = 0.3
+  MIN_GROUNDING_TERMS = 1
+  temperature = 0 (LLM is deterministic, not the cause)
+
+Source Data:
+  File: data/uploaded/2022_student_manual_latest.pdf
+  Chunking: 500 chars per chunk, 50 char overlap
+
+
+RECOMMENDED FIXES
+-----------------
+Listed in order of impact and simplicity:
+
+Fix 1: INCREASE RETRIEVAL_TOP_K
+  File: campus_rag_chatbot/app.py, line 90
+  Change: RETRIEVAL_TOP_K = 4 -> RETRIEVAL_TOP_K = 6 (or 8)
+  Impact: Retrieves more chunks, increasing chance all deans are captured.
+  Risk: Slightly more context for LLM, marginally higher latency.
+  This is the simplest and highest-impact fix.
+
+Fix 2: ELIMINATE DUAL RETRIEVAL
+  File: campus_rag_chatbot/app.py, lines 959-974
+  Change: Instead of ConversationalRetrievalChain creating a second
+  retriever, pass the already-retrieved and re-ranked chunks directly
+  to the LLM using a simpler chain (e.g., StuffDocumentsChain or
+  direct LLM call with context).
+  Impact: Ensures the LLM uses the same chunks that were scored and
+  validated, eliminating the source of inconsistency.
+  Risk: Requires refactoring the answer generation pipeline.
+
+Fix 3: IMPROVE CHUNK STRATEGY FOR STRUCTURED DATA
+  File: campus_rag_chatbot/document_manager.py
+  Change: Use section-aware chunking that keeps related content together
+  (e.g., all deans in one chunk if they appear in the same section).
+  Impact: Ensures related data stays in the same chunk.
+  Risk: Requires re-ingestion of documents and careful section detection.
+
+
+CRITICAL CODE LOCATIONS
+-----------------------
+campus_rag_chatbot/app.py:90              - RETRIEVAL_TOP_K = 4
+campus_rag_chatbot/app.py:127-131         - LLM config (temperature=0)
+campus_rag_chatbot/app.py:831-835         - First retrieval call
+campus_rag_chatbot/app.py:959-974         - Second retrieval (ConversationalRetrievalChain)
+campus_rag_chatbot/app.py:937-947         - System prompt ("ONLY answer using context")
+campus_rag_chatbot/retrieval_validator.py:82-135   - Query term extraction
+campus_rag_chatbot/retrieval_validator.py:137-191  - Keyword scoring
+campus_rag_chatbot/retrieval_validator.py:193-242  - Hybrid score combination
+campus_rag_chatbot/document_manager.py             - Chunking settings
+
+
+SUMMARY
+-------
+The inconsistency is caused by:
+1. k=4 limit cannot capture all 5 deans
+2. Two separate retrieval calls can return different chunks
+3. Similar dean chunks compete for limited retrieval slots
+
+The simplest fix is increasing RETRIEVAL_TOP_K from 4 to 6 or 8.
+The most impactful fix is eliminating the dual retrieval pipeline.

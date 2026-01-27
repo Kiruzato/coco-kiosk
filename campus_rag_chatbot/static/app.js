@@ -56,55 +56,29 @@ function addUserMessage(text) {
 }
 
 /**
- * Render structured answer with proper HTML formatting - Phase 17B.1
- * Updated: Added full_answer expandable section to prevent truncation
+ * Render structured answer for kiosk display - Phase 17B.2
+ * Shows full answer immediately without expand/collapse for better kiosk UX
  */
 function renderStructuredAnswer(structured) {
     let html = '';
-    const expandId = 'expand-' + Date.now();
 
-    // Check if full answer is significantly longer than direct answer
-    const hasMoreContent = structured.full_answer &&
-        structured.full_answer.length > structured.direct_answer.length + 50;
-
-    // Direct Answer section
-    if (structured.direct_answer) {
+    // Full Answer - displayed directly for kiosk users
+    if (structured.full_answer) {
         html += `
             <div class="answer-section">
-                <h3 class="section-heading">Direct Answer</h3>
-                <p class="direct-answer">${escapeHtml(structured.direct_answer)}</p>
+                <p class="full-answer">${escapeHtml(structured.full_answer)}</p>
+            </div>
+        `;
+    } else if (structured.direct_answer) {
+        // Fallback to direct_answer if full_answer not available
+        html += `
+            <div class="answer-section">
+                <p class="full-answer">${escapeHtml(structured.direct_answer)}</p>
             </div>
         `;
     }
 
-    // Full Answer expandable section (only if there's more content)
-    if (hasMoreContent) {
-        html += `
-            <div class="answer-section full-answer-section">
-                <button class="show-more-btn" onclick="toggleFullAnswer('${expandId}')">
-                    Show full answer
-                </button>
-                <div id="${expandId}" class="full-answer-content" style="display: none;">
-                    <p>${escapeHtml(structured.full_answer)}</p>
-                </div>
-            </div>
-        `;
-    }
-
-    // Key Details section (bullet list)
-    if (structured.key_details && structured.key_details.length > 0) {
-        html += `
-            <div class="answer-section">
-                <h3 class="section-heading">Key Details</h3>
-                <ul class="key-details-list">
-        `;
-        structured.key_details.forEach(detail => {
-            html += `<li>${escapeHtml(detail)}</li>`;
-        });
-        html += `</ul></div>`;
-    }
-
-    // Notes section
+    // Notes section (kept for important warnings)
     if (structured.notes) {
         html += `
             <div class="answer-section notes-section">
@@ -114,28 +88,12 @@ function renderStructuredAnswer(structured) {
         `;
     }
 
-    // Disclaimer
+    // Disclaimer (kept for medium confidence answers)
     if (structured.disclaimer) {
         html += `<p class="disclaimer">${escapeHtml(structured.disclaimer)}</p>`;
     }
 
     return html;
-}
-
-/**
- * Toggle visibility of full answer section
- */
-function toggleFullAnswer(expandId) {
-    const content = document.getElementById(expandId);
-    const btn = content.previousElementSibling;
-
-    if (content.style.display === 'none') {
-        content.style.display = 'block';
-        btn.textContent = 'Show less';
-    } else {
-        content.style.display = 'none';
-        btn.textContent = 'Show full answer';
-    }
 }
 
 /**
