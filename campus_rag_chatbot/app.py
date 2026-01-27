@@ -179,6 +179,7 @@ class Source(BaseModel):
 class StructuredAnswer(BaseModel):
     """Structured answer for frontend rendering - Phase 17B.1."""
     direct_answer: str
+    full_answer: str  # Complete answer for "Show more" expansion
     key_details: List[str] = []
     notes: Optional[str] = None
     disclaimer: Optional[str] = None
@@ -1032,8 +1033,6 @@ Context from campus documents:
         )
         if structured_data:
             structured_answer = StructuredAnswer(**structured_data)
-            # Keep plain answer as direct_answer for backward compatibility
-            answer = structured_data.get("direct_answer", answer)
 
     return ChatResponse(
         session_id=session_id,
@@ -1102,6 +1101,7 @@ Answer:"""
         else:
             structured_answer = StructuredAnswer(
                 direct_answer=structured_data["direct_answer"],
+                full_answer=structured_data["full_answer"],
                 key_details=structured_data["key_details"],
                 notes=structured_data["notes"],
                 disclaimer="[Based on general AI knowledge]"

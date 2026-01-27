@@ -57,9 +57,15 @@ function addUserMessage(text) {
 
 /**
  * Render structured answer with proper HTML formatting - Phase 17B.1
+ * Updated: Added full_answer expandable section to prevent truncation
  */
 function renderStructuredAnswer(structured) {
     let html = '';
+    const expandId = 'expand-' + Date.now();
+
+    // Check if full answer is significantly longer than direct answer
+    const hasMoreContent = structured.full_answer &&
+        structured.full_answer.length > structured.direct_answer.length + 50;
 
     // Direct Answer section
     if (structured.direct_answer) {
@@ -67,6 +73,20 @@ function renderStructuredAnswer(structured) {
             <div class="answer-section">
                 <h3 class="section-heading">Direct Answer</h3>
                 <p class="direct-answer">${escapeHtml(structured.direct_answer)}</p>
+            </div>
+        `;
+    }
+
+    // Full Answer expandable section (only if there's more content)
+    if (hasMoreContent) {
+        html += `
+            <div class="answer-section full-answer-section">
+                <button class="show-more-btn" onclick="toggleFullAnswer('${expandId}')">
+                    Show full answer
+                </button>
+                <div id="${expandId}" class="full-answer-content" style="display: none;">
+                    <p>${escapeHtml(structured.full_answer)}</p>
+                </div>
             </div>
         `;
     }
@@ -100,6 +120,22 @@ function renderStructuredAnswer(structured) {
     }
 
     return html;
+}
+
+/**
+ * Toggle visibility of full answer section
+ */
+function toggleFullAnswer(expandId) {
+    const content = document.getElementById(expandId);
+    const btn = content.previousElementSibling;
+
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        btn.textContent = 'Show less';
+    } else {
+        content.style.display = 'none';
+        btn.textContent = 'Show full answer';
+    }
 }
 
 /**

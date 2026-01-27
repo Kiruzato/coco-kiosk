@@ -1,0 +1,88 @@
+CHATBOT RESPONSE FORMAT SUMMARY
+================================
+Query Example: "List the deans of this school"
+
+API ENDPOINT
+------------
+POST /chat
+Content-Type: application/json
+Request Body: {"message": "List the deans of this school"}
+
+RESPONSE STRUCTURE (JSON)
+-------------------------
+{
+  "session_id": string,           // UUID for conversation tracking
+  "answer": string,               // Full plain text answer (complete, not truncated)
+  "structured_answer": {          // Formatted answer object for UI rendering
+    "direct_answer": string,      // 1-2 sentence summary (may be truncated)
+    "full_answer": string,        // Complete answer (same as top-level "answer")
+    "key_details": string[],      // Array of bullet points (max 5 items)
+    "notes": string | null,       // Optional notes/conditions
+    "disclaimer": string | null   // Optional disclaimer text
+  },
+  "sources": [                    // Array of source documents used
+    {
+      "document_name": string,
+      "section": string,
+      "chunk_id": number
+    }
+  ],
+  "confidence_level": string,     // "High" | "Medium" | "Low"
+  "confidence_score": number,     // 0-100 score
+  "rejected": boolean,            // true if answer was refused
+  "timestamp": string,            // ISO 8601 timestamp
+  "mode": string                  // "campus" | "general" | "clarification"
+}
+
+ACTUAL RESPONSE EXAMPLE
+-----------------------
+{
+  "session_id": "b1213bdd-7af3-49ef-a835-fc16a86dca05",
+  "answer": "The deans of Columban College, Inc. are:\n\n1. Dr. Leilani E. Capili - Dean, College of Nursing & Asst. SAO Director\n2. Dr. Eric A. Matriano - Dean, College of Business & Accountancy\n3. Engr. Noel H. Yap - Dean, College of Computer Studies\n4. Arch. Corazon Z. Gonzales - Dean, College of Architecture\n5. Dr. Engr. Vivian E. Gutierrez - Dean, College of Engineering\n\n(Source: Campus document)",
+  "structured_answer": {
+    "direct_answer": "The deans of Columban College, Inc. are:\n\n1.",
+    "full_answer": "The deans of Columban College, Inc. are:\n\n1. Dr. Leilani E. Capili - Dean, College of Nursing & Asst. SAO Director\n2. Dr. Eric A. Matriano - Dean, College of Business & Accountancy\n3. Engr. Noel H. Yap - Dean, College of Computer Studies\n4. Arch. Corazon Z. Gonzales - Dean, College of Architecture\n5. Dr. Engr. Vivian E. Gutierrez - Dean, College of Engineering\n\n(Source: Campus document)",
+    "key_details": [
+      "Capili - Dean, College of Nursing & Asst.",
+      "SAO Director",
+      "Matriano - Dean, College of Business & Accountancy",
+      "Yap - Dean, College of Computer Studies",
+      "Gonzales - Dean, College of Architecture"
+    ],
+    "notes": null,
+    "disclaimer": "Some details may vary. Please verify with campus staff if needed."
+  },
+  "sources": [
+    {"document_name": "2022_student_manual_latest.pdf", "section": "Provision", "chunk_id": 395}
+  ],
+  "confidence_level": "Medium",
+  "confidence_score": 68.4,
+  "rejected": false,
+  "timestamp": "2026-01-27T08:37:57.544393",
+  "mode": "campus"
+}
+
+KEY POINTS FOR PARSING
+----------------------
+1. Use "answer" field for complete plain text response
+2. Use "structured_answer.full_answer" for complete answer in structured format
+3. "structured_answer.direct_answer" is a SUMMARY only (may be incomplete)
+4. "key_details" array may have fragmented text due to sentence splitting
+5. Check "rejected" boolean - if true, answer was refused due to low confidence
+6. "mode" indicates source: "campus" = from documents, "general" = AI knowledge
+
+FRONTEND RENDERING LOGIC
+------------------------
+1. If structured_answer exists AND full_answer.length > direct_answer.length + 50:
+   - Show direct_answer as summary
+   - Show "Show full answer" button
+   - Hidden expandable section contains full_answer
+2. If structured_answer is null:
+   - Fall back to displaying "answer" field as plain text
+3. Always show: confidence badge, sources list, mode indicator
+
+FILES DEFINING THIS FORMAT
+--------------------------
+- Response model: campus_rag_chatbot/app.py (StructuredAnswer, ChatResponse classes)
+- Formatter logic: campus_rag_chatbot/response_formatter.py (build_structured_answer)
+- Frontend render: campus_rag_chatbot/static/app.js (renderStructuredAnswer function)

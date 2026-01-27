@@ -244,6 +244,7 @@ def build_structured_answer(
 
     return {
         "direct_answer": direct_answer,
+        "full_answer": raw_answer,  # Preserve complete answer for "Show more"
         "key_details": key_details,
         "notes": notes,
         "disclaimer": disclaimer
