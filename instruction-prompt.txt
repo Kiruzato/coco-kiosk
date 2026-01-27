@@ -1,63 +1,86 @@
-Phase 17A: Retrieval Precision & Concept Grounding
-During real-document QA testing, we observed semantic neighbor confusion (e.g., “Dean’s Lister requirements” returning “Team Leadership Award” content even though the correct section exists).
-This phase focuses exclusively on retrieval correctness and grounding validation.
-Do NOT address formatting or UX in this phase.
+Phase 17C: Single Retrieval Pipeline + Enumeration Stability
+Phase 17A–17B stabilized retrieval correctness, grounding, routing, and answer presentation. However, list-style queries (e.g., “list all the deans”) still produce inconsistent or incomplete results due to:
+•	Dual retrieval (validated chunks differ from LLM context)
+•	Retrieval top-k being too low for enumeration
+•	Chunk competition near the cutoff boundary
+This phase eliminates context drift and ensures stable, complete enumeration answers.
 ________________________________________
 Goals
-•	Ensure queries retrieve the correct conceptual chunks
-•	Prevent wrong-but-confident answers
-•	Add groundedness checks before response generation
-This phase must improve precision, not answer style.
+•	Ensure the LLM uses exactly the same retrieved chunks that were hybrid-ranked and validated
+•	Remove dual retrieval paths
+•	Increase recall for list-style queries
+•	Make enumeration responses deterministic and complete
 ________________________________________
-Part 1 — Hybrid Retrieval (Required)
-Replace pure embedding retrieval with hybrid search:
-•	Combine vector similarity with keyword/BM25 matching
-•	Boost chunks that contain explicit query terms
-Implementation guidance:
-•	Use LangChain hybrid retriever or equivalent
-•	Apply weighted scoring:
-o	vector_score + keyword_score
-•	Keyword component must prioritize exact query terms (e.g., “dean”, “lister”)
+Required Changes
+1. Eliminate Dual Retrieval (Critical)
+Currently:
+•	Hybrid retrieval + grounding validation occurs
+•	Then ConversationalRetrievalChain performs a SECOND retrieval with its own retriever
+This must be removed.
+Replace with:
+•	Perform retrieval once (hybrid + validation)
+•	Pass the validated chunks directly into the LLM prompt
+Use:
+•	StuffDocumentsChain, or
+•	Direct LLM call with constructed context
+The LLM must receive ONLY the already-scored, already-validated chunks.
+No secondary retriever is allowed.
 ________________________________________
-Part 2 — Query Term Enforcement (Required)
-Before accepting retrieved chunks:
-•	Extract meaningful terms from user query
-•	Require at least one term to appear in top chunks
-If no retrieved chunk contains any query term:
-→ Trigger safe refusal or clarification instead of answering.
-This prevents answering from semantically similar but incorrect sections.
+2. Increase Retrieval Top-K
+Update:
+RETRIEVAL_TOP_K = 4
+To:
+RETRIEVAL_TOP_K = 8
+This ensures list-style queries (deans, awards, offices) can retrieve all relevant entities.
+Latency impact is acceptable on RPI5 for this scale.
 ________________________________________
-Part 3 — Grounding Validation (Required)
-Before generating the final answer:
-•	Verify that top chunks explicitly reference the user’s core concept
-If grounding fails:
-•	Do NOT answer
-•	Respond with:
-“I couldn’t confidently find information about [topic]. Could you clarify?”
-Grounding validation must run after retrieval but before LLM generation.
+3. Preserve Existing Safety Guarantees
+Must remain unchanged:
+•	Hybrid scoring (0.7 vector / 0.3 keyword)
+•	Grounding validation logic
+•	Confidence thresholds
+•	Directory routing
+•	RAG-only mode behavior
+This phase modifies retrieval flow only.
 ________________________________________
-Safety Rules (Critical)
-•	Do NOT relax confidence thresholds
-•	Do NOT increase chunk counts
-•	Do NOT raise temperature
-•	Do NOT expand context windows
-Focus on retrieval correctness, not verbosity.
+Implementation Guidance
+•	Remove or bypass ConversationalRetrievalChain retriever usage
+•	Replace with single retrieval pipeline:
+query
+→ hybrid retrieval (k=8)
+→ re-ranking
+→ grounding validation
+→ pass validated chunks to LLM
+→ structured answer builder
+•	Ensure confidence scoring uses the SAME chunk set
+•	Ensure LLM context uses the SAME chunk set
+Add logging:
+•	retrieval_chunks_used_count
+•	enumeration_query_detected (optional heuristic: “list”, “all”, plural nouns)
 ________________________________________
-Implementation Notes
-•	Add a retrieval_validator module
-•	Log grounding failures using Phase 16 analytics
-•	Keep directory logic unchanged
-•	Apply these rules to document queries only
+Validation Criteria
+The following queries must return COMPLETE and consistent results across runs:
+•	“list all the deans”
+•	“who are the deans”
+•	“show all college deans”
+Expected:
+•	All 5 deans appear every time
+•	Ordering may vary, but membership must be complete
+•	No missing entities
+•	Same result across repeated queries
 ________________________________________
 Non-Goals
+•	No chunk strategy changes
 •	No answer formatting changes
-•	No UI changes
+•	No admin changes
 •	No memory changes
-•	No document clarification changes
+Chunk restructuring may be addressed in a later phase only if necessary.
 ________________________________________
 Outcome
-The system should:
-•	Prefer correct concepts over nearby semantic neighbors
-•	Refuse or clarify instead of answering incorrectly
-•	Eliminate silent mis-grounded answers
-This phase should noticeably reduce incorrect document answers such as award/requirement mixups.
+After this phase:
+•	Retrieval happens exactly once per query
+•	LLM answers are grounded in the validated chunks
+•	Enumeration queries become deterministic
+•	All list entities are consistently returned
+This completes core RAG correctness for campus knowledge.
+

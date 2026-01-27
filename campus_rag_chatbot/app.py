@@ -28,8 +28,8 @@ import shutil
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-from langchain_classic.chains import ConversationalRetrievalChain
 from langchain_core.prompts import SystemMessagePromptTemplate, HumanMessagePromptTemplate, ChatPromptTemplate
+from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_classic.memory import ConversationBufferWindowMemory
 
 # Load environment variables
@@ -87,7 +87,7 @@ LOG_DIR = PROJECT_ROOT / "logs"
 FEEDBACK_LOG_PATH = LOG_DIR / "feedback.jsonl"
 
 # API settings
-RETRIEVAL_TOP_K = 4
+RETRIEVAL_TOP_K = 8  # Phase 17C: Increased from 4 for complete enumeration
 RELEVANCE_SCORE_THRESHOLD = 0.5
 MEMORY_WINDOW_SIZE = 5
 MIN_CONFIDENCE_TO_ANSWER = ConfidenceLevel.MEDIUM
@@ -734,6 +734,7 @@ def attempt_document_retrieval(query: str) -> dict:
     """
     # Normalize query for consistent retrieval
     normalized_query = normalize_text(query)
+    logger.info(f"[PHASE17C] attempt_document_retrieval: query='{query}', normalized='{normalized_query}'")
 
     # Retrieve with similarity scores
     retrieval_results = doc_manager.vector_store.similarity_search_with_relevance_scores(
@@ -741,6 +742,8 @@ def attempt_document_retrieval(query: str) -> dict:
         k=RETRIEVAL_TOP_K,
         score_threshold=RELEVANCE_SCORE_THRESHOLD
     )
+
+    logger.info(f"[PHASE17C] Retrieved {len(retrieval_results)} chunks, scores: {[round(float(s),3) for _,s in retrieval_results[:8]]}")
 
     # Handle empty retrieval
     if not retrieval_results:
@@ -782,7 +785,7 @@ def attempt_document_retrieval(query: str) -> dict:
         min_chunks_retrieved=1
     )
 
-    return {
+    result = {
         "is_grounded": grounding_result.is_grounded if query_terms else True,
         "retrieval_results": hybrid_results,
         "grounding_result": grounding_result,
@@ -790,6 +793,119 @@ def attempt_document_retrieval(query: str) -> dict:
         "confidence_score": confidence_metrics.get("confidence_score", 0.0),
         "query_terms": query_terms
     }
+    logger.info(f"[PHASE17C] Retrieval result: grounded={result['is_grounded']}, "
+                f"confidence={confidence_level.value}, score={result['confidence_score']}, "
+                f"terms={query_terms}, matched={grounding_result.matched_terms if grounding_result else 'N/A'}")
+    return result
+
+
+def _expand_with_adjacent_chunks(docs, vector_store) -> list:
+    """
+    Phase 17C: Expand each retrieved chunk by merging its +1 neighbor inline.
+
+    When a list is split across chunk boundaries (e.g., deans in chunk N and N+1),
+    this fetches the next chunk and appends it to the source chunk's content.
+    The total number of context blocks stays the same (no extra chunks added).
+    """
+    if not docs or not vector_store:
+        return docs
+
+    from langchain_core.documents import Document
+
+    # Build set of already-retrieved chunk_ids
+    existing_ids = {doc.metadata.get('chunk_id', -1) for doc in docs}
+
+    # Collect all needed ±1 neighbors
+    needed = {}  # chunk_id -> None (to be filled)
+    doc_names = {}  # chunk_id -> document_name
+    # Track which original chunk needs which neighbor
+    prev_neighbors = {}  # original_chunk_id -> prev_chunk_id
+    next_neighbors = {}  # original_chunk_id -> next_chunk_id
+    for doc in docs:
+        doc_name = doc.metadata.get('document_name', '')
+        chunk_id = doc.metadata.get('chunk_id', -1)
+        if chunk_id >= 0:
+            prev_id = chunk_id - 1
+            next_id = chunk_id + 1
+            if prev_id >= 0 and prev_id not in existing_ids and prev_id not in needed:
+                needed[prev_id] = None
+                doc_names[prev_id] = doc_name
+                prev_neighbors[chunk_id] = prev_id
+            if next_id not in existing_ids and next_id not in needed:
+                needed[next_id] = None
+                doc_names[next_id] = doc_name
+                next_neighbors[chunk_id] = next_id
+
+    if not needed:
+        return docs
+
+    # Fetch all needed neighbors in one pass
+    try:
+        docstore = vector_store.docstore
+        for doc_id in vector_store.index_to_docstore_id.values():
+            stored_doc = docstore.search(doc_id)
+            if stored_doc and hasattr(stored_doc, 'metadata'):
+                stored_name = stored_doc.metadata.get('document_name', '')
+                stored_id = stored_doc.metadata.get('chunk_id', -1)
+                if stored_id in needed and stored_name == doc_names.get(stored_id, ''):
+                    needed[stored_id] = stored_doc.page_content
+                    if all(v is not None for v in needed.values()):
+                        break
+    except Exception as e:
+        logger.warning(f"[PHASE17C] Adjacent chunk expansion failed: {e}")
+        return docs
+
+    # Merge each chunk with its ±1 neighbors (inline)
+    expanded_docs = []
+    expand_count = 0
+    for doc in docs:
+        chunk_id = doc.metadata.get('chunk_id', -1)
+        parts = []
+
+        # Prepend -1 neighbor if available
+        prev_id = prev_neighbors.get(chunk_id)
+        if prev_id is not None and needed.get(prev_id) is not None:
+            parts.append(needed[prev_id])
+
+        parts.append(doc.page_content)
+
+        # Append +1 neighbor if available
+        next_id = next_neighbors.get(chunk_id)
+        if next_id is not None and needed.get(next_id) is not None:
+            parts.append(needed[next_id])
+
+        if len(parts) > 1:
+            merged_content = " ".join(parts)
+            expanded_docs.append(Document(
+                page_content=merged_content,
+                metadata=dict(doc.metadata)
+            ))
+            expand_count += 1
+        else:
+            expanded_docs.append(doc)
+
+    if expand_count > 0:
+        logger.info(f"[PHASE17C] Expanded {expand_count} chunks with ±1 neighbors")
+    return expanded_docs
+
+
+def _build_annotated_context(docs) -> str:
+    """
+    Phase 17C: Build LLM context with chunk ordering annotations.
+
+    Chunks are sorted by document + chunk_id and labeled with sequential part numbers.
+    Consecutive chunks are marked to help the LLM understand document continuity
+    (e.g., a "Deans:" heading in Part 1 applies to names continuing in Part 2).
+    """
+    if not docs:
+        return ""
+
+    # Keep hybrid-ranked order: most relevant chunks first
+    # This ensures the LLM sees the best-matching content prominently
+    blocks = [doc.page_content for doc in docs]
+
+    logger.info(f"[PHASE17C] Built context from {len(docs)} chunks")
+    return "\n\n".join(blocks)
 
 
 # ==============================================================================
@@ -918,7 +1034,19 @@ async def handle_campus_query(
         retrieval_results = hybrid_results
         # =========================================================================
 
-    retrieved_docs = [doc for doc, score in retrieval_results]
+    # Phase 17C: Filter out low-scoring noise chunks before passing to LLM
+    # After hybrid ranking, chunks without keyword matches score ~0.49 (noise)
+    # while relevant chunks score ~0.79+ (keyword match boosted)
+    MIN_HYBRID_SCORE_FOR_CONTEXT = 0.6
+    retrieved_docs = [doc for doc, score in retrieval_results if score >= MIN_HYBRID_SCORE_FOR_CONTEXT]
+    if not retrieved_docs:
+        # Fallback: use all results if filtering removes everything
+        retrieved_docs = [doc for doc, score in retrieval_results]
+    logger.info(f"[PHASE17C] After hybrid filter: {len(retrieved_docs)} chunks (from {len(retrieval_results)})")
+
+    # Phase 17C: Expand with adjacent chunks to capture split lists
+    retrieved_docs = _expand_with_adjacent_chunks(retrieved_docs, doc_manager.vector_store)
+
     # Convert to Python floats to avoid numpy type coercion issues
     similarity_scores = [float(score) for doc, score in retrieval_results]
 
@@ -934,8 +1062,15 @@ async def handle_campus_query(
         rejected = True
         sources = []
     else:
-        # Generate answer
-        system_template = """You are a campus information assistant for Columban College, Inc. Provide accurate information ONLY from the verified campus documents.
+        # Phase 17C: Single retrieval pipeline - use validated chunks directly
+        # Merge consecutive chunks from the same document to avoid split lists
+        context = _build_annotated_context(retrieved_docs)
+
+        # Get conversation history from memory
+        chat_history = memory.load_memory_variables({}).get("chat_history", "")
+
+        # Build system prompt with context and history
+        system_content = f"""You are a campus information assistant for Columban College, Inc. Provide accurate information ONLY from the verified campus documents.
 
 CRITICAL RULES:
 1. ONLY answer using the provided context
@@ -943,43 +1078,30 @@ CRITICAL RULES:
 3. NEVER guess or make up information
 4. ALWAYS cite sources by mentioning document name and section
 5. Use conversation history to understand follow-up questions
+6. When listing or enumerating items (e.g., deans, offices, programs), scan ALL provided context thoroughly and include every person/item that holds the requested role. A person may be identified by their title appearing near their name (e.g., "Dr. X Dean, College of Y" means Dr. X is a Dean).
 
 Context from campus documents:
-{context}"""
+{context}
 
-        human_template = "{question}"
+Conversation history:
+{chat_history}"""
 
-        messages = [
-            SystemMessagePromptTemplate.from_template(system_template),
-            HumanMessagePromptTemplate.from_template(human_template)
-        ]
-
-        qa_prompt = ChatPromptTemplate.from_messages(messages)
-
-        qa_chain = ConversationalRetrievalChain.from_llm(
-            llm=llm,
-            retriever=doc_manager.vector_store.as_retriever(
-                search_type="similarity_score_threshold",
-                search_kwargs={
-                    "k": RETRIEVAL_TOP_K,
-                    "score_threshold": RELEVANCE_SCORE_THRESHOLD
-                }
-            ),
-            memory=memory,
-            return_source_documents=True,
-            combine_docs_chain_kwargs={"prompt": qa_prompt},
-            verbose=False
-        )
-
-        result = qa_chain.invoke({"question": query})
-        answer = result['answer']
-        source_docs = result.get('source_documents', [])
+        # Direct LLM call with validated chunks (no second retrieval)
+        logger.info(f"[PHASE17C] Passing {len(retrieved_docs)} validated chunks to LLM")
+        response = llm.invoke([
+            SystemMessage(content=system_content),
+            HumanMessage(content=query)
+        ])
+        answer = response.content
         rejected = False
 
-        # Extract sources
+        # Update conversation memory
+        memory.save_context({"question": query}, {"answer": answer})
+
+        # Extract sources from already-retrieved docs (single retrieval)
         sources = []
         seen = set()
-        for doc in source_docs:
+        for doc in retrieved_docs:
             doc_name = doc.metadata.get('document_name', 'Unknown')
             section = doc.metadata.get('section', 'Unknown')
             chunk_id = doc.metadata.get('chunk_id', 0)
@@ -1481,8 +1603,15 @@ async def handle_directory_query(
         rejected = True
         sources = []
     else:
-        # Generate answer with strict directory-focused prompt
-        system_template = """You are a campus directory assistant for Columban College, Inc. helping visitors find locations on campus.
+        # Phase 17C: Single retrieval pipeline for directory queries
+        # Merge consecutive chunks from the same document
+        context = _build_annotated_context(retrieved_docs)
+
+        # Get conversation history from memory
+        chat_history = memory.load_memory_variables({}).get("chat_history", "")
+
+        # Build system prompt with directory-focused rules
+        system_content = f"""You are a campus directory assistant for Columban College, Inc. helping visitors find locations on campus.
 
 CRITICAL RULES FOR LOCATION QUESTIONS:
 1. ONLY provide location information that is EXPLICITLY stated in the context below
@@ -1497,41 +1626,27 @@ CRITICAL RULES FOR LOCATION QUESTIONS:
 6. Keep responses concise and easy to follow
 
 Context from campus directory:
-{context}"""
+{context}
 
-        human_template = "{question}"
+Conversation history:
+{chat_history}"""
 
-        messages = [
-            SystemMessagePromptTemplate.from_template(system_template),
-            HumanMessagePromptTemplate.from_template(human_template)
-        ]
-
-        qa_prompt = ChatPromptTemplate.from_messages(messages)
-
-        qa_chain = ConversationalRetrievalChain.from_llm(
-            llm=llm,
-            retriever=doc_manager.vector_store.as_retriever(
-                search_type="similarity_score_threshold",
-                search_kwargs={
-                    "k": RETRIEVAL_TOP_K,
-                    "score_threshold": RELEVANCE_SCORE_THRESHOLD
-                }
-            ),
-            memory=memory,
-            return_source_documents=True,
-            combine_docs_chain_kwargs={"prompt": qa_prompt},
-            verbose=False
-        )
-
-        result = qa_chain.invoke({"question": query})
-        answer = result['answer']
-        source_docs = result.get('source_documents', [])
+        # Direct LLM call with validated chunks (no second retrieval)
+        logger.info(f"[PHASE17C] Directory fallback: Passing {len(retrieved_docs)} validated chunks to LLM")
+        response = llm.invoke([
+            SystemMessage(content=system_content),
+            HumanMessage(content=query)
+        ])
+        answer = response.content
         rejected = False
 
-        # Extract sources
+        # Update conversation memory
+        memory.save_context({"question": query}, {"answer": answer})
+
+        # Extract sources from already-retrieved docs (single retrieval)
         sources = []
         seen = set()
-        for doc in source_docs:
+        for doc in retrieved_docs:
             doc_name = doc.metadata.get('document_name', 'Unknown')
             section = doc.metadata.get('section', 'Unknown')
             chunk_id = doc.metadata.get('chunk_id', 0)

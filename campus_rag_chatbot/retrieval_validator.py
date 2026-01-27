@@ -45,6 +45,8 @@ STOPWORDS = {
     'and', 'or', 'but', 'if', 'then', 'so', 'as', 'because', 'while',
     # Common question phrases
     'tell', 'know', 'find', 'need', 'want', 'please', 'help',
+    # Command/enumeration words (Phase 17C: don't penalize keyword scoring)
+    'list', 'show', 'give', 'name', 'all', 'every', 'each',
     # Campus-specific common words (still want to extract the subject)
     'campus', 'school', 'college', 'university',
 }
@@ -169,8 +171,9 @@ def compute_keyword_scores(
 
         for term in query_terms:
             # Use regex for proper word boundary matching
-            # This handles terms followed by punctuation, spaces, or end of string
-            pattern = r'\b' + re.escape(term) + r's?\b'
+            # Handle both singular and plural forms: "deans" matches "dean", "dean" matches "deans"
+            stem = term.rstrip('s') if term.endswith('s') and len(term) > 3 else term
+            pattern = r'\b' + re.escape(stem) + r's?\b'
             matches = re.findall(pattern, content)
             if matches:
                 matched_terms += 1
