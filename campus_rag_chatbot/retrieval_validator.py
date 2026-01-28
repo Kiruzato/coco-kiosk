@@ -289,12 +289,20 @@ def validate_grounding(
 
     for doc, score in retrieval_results[:chunks_checked]:
         content = f" {doc.page_content.lower()} "  # Pad for word boundaries
+        # Phase 18: Also check section_title metadata for grounding
+        section_title = doc.metadata.get('section_title', '') if hasattr(doc, 'metadata') else ''
+        if section_title:
+            content += f" {section_title.lower()} "
 
         for term in query_terms:
-            # Check for term presence (with common variations)
+            # Phase 18: Apply same stemming as keyword scorer for consistency
+            stem = term.rstrip('s') if term.endswith('s') and len(term) > 3 else term
+            # Check for term/stem presence (with common variations)
             if (f" {term} " in content or
                 f" {term}s " in content or  # Plural
-                f" {term}'" in content):    # Possessive
+                f" {term}'" in content or   # Possessive
+                (stem != term and (f" {stem} " in content or
+                                   f" {stem}s " in content))):
                 matched_terms.add(term)
 
     is_grounded = len(matched_terms) >= min_term_matches

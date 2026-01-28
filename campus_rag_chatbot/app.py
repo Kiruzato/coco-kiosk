@@ -1078,7 +1078,7 @@ CRITICAL RULES:
 3. NEVER guess or make up information
 4. ALWAYS cite sources by mentioning document name and section
 5. Use conversation history to understand follow-up questions
-6. When listing or enumerating items (e.g., deans, offices, programs), scan ALL provided context thoroughly and include every person/item that holds the requested role. A person may be identified by their title appearing near their name (e.g., "Dr. X Dean, College of Y" means Dr. X is a Dean).
+6. When listing or enumerating items (e.g., deans, offices, programs), scan ALL provided context blocks thoroughly and include every person/item that holds the requested role. Do NOT treat any single section as the complete list — the information may be spread across multiple context blocks. A person may be identified by their title appearing near their name (e.g., "Dr. X Dean, College of Y" means Dr. X is a Dean).
 
 Context from campus documents:
 {context}

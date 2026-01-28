@@ -21,7 +21,8 @@ tiktoken>=0.7.0
 rank_bm25>=0.2.2           # BM25 keyword matching for hybrid retrieval
 
 # Document format support (Phase 3)
-pypdf>=5.0.0            # PDF document loading
+pypdf>=5.0.0            # PDF document loading (fallback)
+unstructured[pdf]>=0.16.0  # Layout-aware PDF extraction (Phase 18)
 python-docx>=1.1.0       # DOCX document loading
 tabulate>=0.9.0          # Pretty table formatting for admin CLI
 

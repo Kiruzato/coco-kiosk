@@ -263,6 +263,242 @@ def load_pdf_document(file_path: Path) -> str:
         raise
 
 
+def load_pdf_structured(file_path: Path) -> Optional[List[dict]]:
+    """
+    Phase 18: Layout-aware PDF extraction using unstructured.
+    Returns list of elements with type, text, and metadata,
+    or None if unstructured is not available.
+
+    Args:
+        file_path: Path to the PDF file
+
+    Returns:
+        List of element dicts with 'type', 'text', 'metadata' keys, or None
+    """
+    try:
+        from unstructured.partition.pdf import partition_pdf
+    except ImportError:
+        logger.warning("[PHASE18] unstructured not installed, falling back to pypdf")
+        return None
+
+    try:
+        elements = partition_pdf(
+            filename=str(file_path),
+            strategy="fast",
+            include_page_breaks=True,
+        )
+
+        structured = []
+        for el in elements:
+            structured.append({
+                "type": type(el).__name__,
+                "text": str(el),
+                "metadata": {
+                    "page_number": el.metadata.page_number if hasattr(el.metadata, 'page_number') else None,
+                }
+            })
+
+        logger.info(f"[PHASE18] Extracted {len(structured)} elements from {file_path.name}")
+        return structured
+
+    except Exception as e:
+        logger.warning(f"[PHASE18] Structured extraction failed for {file_path.name}: {e}")
+        return None
+
+
+def chunk_by_sections(
+    elements: List[dict],
+    document_id: str,
+    document_name: str,
+    file_type: str,
+    ingestion_timestamp: str,
+    max_chunk_size: int = 1500
+) -> List[Document]:
+    """
+    Phase 18: Group elements by section headings into semantic chunks.
+    Long sections are sub-split to stay under max_chunk_size.
+
+    Args:
+        elements: List of element dicts from load_pdf_structured()
+        document_id: Unique document identifier
+        document_name: Original filename
+        file_type: File extension
+        ingestion_timestamp: ISO format timestamp
+        max_chunk_size: Maximum characters per chunk
+
+    Returns:
+        List of Document objects with metadata including section_title and page_number
+    """
+    # Group elements into sections by Title/Header boundaries
+    sections = []
+    current_title = "Untitled Section"
+    current_texts = []
+    current_pages = set()
+
+    for el in elements:
+        el_type = el["type"]
+        el_text = el["text"].strip()
+        if not el_text:
+            continue
+
+        if el_type in ("Title", "Header"):
+            # Only treat as section boundary if the title is descriptive enough.
+            # Short titles (< 5 words) that look like sub-headings within lists
+            # (e.g., "DEANS", "Students") are kept as body text to avoid
+            # fragmenting related content like meeting attendee lists.
+            MIN_TITLE_WORDS = 3
+            is_section_heading = len(el_text.split()) >= MIN_TITLE_WORDS
+
+            if is_section_heading:
+                # Save previous section
+                if current_texts:
+                    sections.append({
+                        "title": current_title,
+                        "text": "\n".join(current_texts),
+                        "pages": sorted(current_pages) if current_pages else [],
+                    })
+                current_title = el_text
+                current_texts = []
+                current_pages = set()
+            else:
+                # Short title: treat as body text (preserves context flow)
+                current_texts.append(el_text)
+                page = el["metadata"].get("page_number")
+                if page is not None:
+                    current_pages.add(page)
+        else:
+            # Tables: preserve as-is with a marker
+            if el_type == "Table":
+                current_texts.append(f"[Table]\n{el_text}")
+            else:
+                current_texts.append(el_text)
+            page = el["metadata"].get("page_number")
+            if page is not None:
+                current_pages.add(page)
+
+    # Don't forget last section
+    if current_texts:
+        sections.append({
+            "title": current_title,
+            "text": "\n".join(current_texts),
+            "pages": sorted(current_pages) if current_pages else [],
+        })
+
+    logger.info(f"[PHASE18] Detected {len(sections)} raw sections in {document_name}")
+
+    # Merge small sections into their next neighbor to prevent fragmentation.
+    # Sub-headings in meeting minutes, lists, etc. create tiny sections that
+    # break related content apart. Merge sections under MIN_SECTION_SIZE chars.
+    MIN_SECTION_SIZE = 200
+    merged_sections = []
+    carry_title = None
+    carry_texts = []
+    carry_pages = []
+
+    for section in sections:
+        combined_text = "\n".join(carry_texts + [section["text"]]) if carry_texts else section["text"]
+        combined_title = carry_title or section["title"]
+        combined_pages = sorted(set(carry_pages + section["pages"]))
+
+        if len(combined_text) < MIN_SECTION_SIZE:
+            # Too small, carry forward and merge with next section
+            carry_title = combined_title
+            carry_texts = [combined_text]
+            carry_pages = combined_pages
+        else:
+            merged_sections.append({
+                "title": combined_title,
+                "text": combined_text,
+                "pages": combined_pages,
+            })
+            carry_title = None
+            carry_texts = []
+            carry_pages = []
+
+    # Flush any remaining carried content
+    if carry_texts:
+        if merged_sections:
+            # Append to last section
+            last = merged_sections[-1]
+            last["text"] += "\n" + "\n".join(carry_texts)
+            last["pages"] = sorted(set(last["pages"] + carry_pages))
+        else:
+            merged_sections.append({
+                "title": carry_title or "Untitled Section",
+                "text": "\n".join(carry_texts),
+                "pages": carry_pages,
+            })
+
+    sections = merged_sections
+    logger.info(f"[PHASE18] After merging small sections: {len(sections)} sections")
+
+    # Convert sections to Document chunks, sub-splitting long sections
+    documents = []
+    chunk_id = 0
+
+    for section in sections:
+        # Prepend section title to body for grounding and LLM context
+        title = section["title"]
+        body = section["text"]
+        text = f"{title}\n{body}" if title and title != "Untitled Section" else body
+        base_metadata = {
+            "document_id": document_id,
+            "document_name": document_name,
+            "file_type": file_type,
+            "ingestion_timestamp": ingestion_timestamp,
+            "section_title": section["title"],
+            "page_number": section["pages"],
+        }
+
+        if len(text) <= max_chunk_size:
+            normalized = normalize_text(text)
+            doc = Document(
+                page_content=normalized,
+                metadata={
+                    **base_metadata,
+                    "chunk_id": chunk_id,
+                    "section": section["title"],
+                    "original_text": text,
+                }
+            )
+            documents.append(doc)
+            chunk_id += 1
+        else:
+            # Sub-split long sections
+            splitter = RecursiveCharacterTextSplitter(
+                chunk_size=max_chunk_size,
+                chunk_overlap=100,
+                length_function=len,
+                separators=["\n\n", "\n", ". ", " ", ""]
+            )
+            sub_chunks = splitter.split_text(text)
+            for sub in sub_chunks:
+                normalized = normalize_text(sub)
+                doc = Document(
+                    page_content=normalized,
+                    metadata={
+                        **base_metadata,
+                        "chunk_id": chunk_id,
+                        "section": section["title"],
+                        "original_text": sub,
+                    }
+                )
+                documents.append(doc)
+                chunk_id += 1
+
+    # Update total_chunks in all documents
+    total = len(documents)
+    for doc in documents:
+        doc.metadata["total_chunks"] = total
+
+    # Log stats
+    sizes = [len(d.page_content) for d in documents]
+    avg_size = sum(sizes) / len(sizes) if sizes else 0
+    logger.info(f"[PHASE18] Created {total} section-based chunks, avg size: {avg_size:.0f} chars")
+
+    return documents
+
+
 def load_docx_document(file_path: Path) -> str:
     """
     Load a DOCX document.
@@ -488,22 +724,38 @@ class DocumentManager:
 
             logger.info(f"Ingesting document: {document_name}")
 
-            # Load document content
-            text_content = load_document(file_path)
+            documents = None
 
-            if not text_content.strip():
-                return False, f"Document is empty: {document_name}"
+            # Phase 18: Try layout-aware structured extraction for PDFs
+            if file_type == '.pdf':
+                structured_elements = load_pdf_structured(file_path)
+                if structured_elements:
+                    documents = chunk_by_sections(
+                        elements=structured_elements,
+                        document_id=document_id,
+                        document_name=document_name,
+                        file_type=file_type,
+                        ingestion_timestamp=ingestion_timestamp,
+                    )
+                    if documents:
+                        logger.info(f"[PHASE18] Using section-based chunks for {document_name}")
 
-            # Chunk document with metadata
-            documents = chunk_document(
-                text=text_content,
-                document_id=document_id,
-                document_name=document_name,
-                file_type=file_type,
-                ingestion_timestamp=ingestion_timestamp,
-                chunk_size=chunk_size,
-                chunk_overlap=chunk_overlap
-            )
+            # Fallback: original text-based chunking (all formats, or PDF if structured failed)
+            if not documents:
+                text_content = load_document(file_path)
+
+                if not text_content.strip():
+                    return False, f"Document is empty: {document_name}"
+
+                documents = chunk_document(
+                    text=text_content,
+                    document_id=document_id,
+                    document_name=document_name,
+                    file_type=file_type,
+                    ingestion_timestamp=ingestion_timestamp,
+                    chunk_size=chunk_size,
+                    chunk_overlap=chunk_overlap
+                )
 
             # Add to vector store (incremental)
             if self.vector_store is None:
@@ -655,19 +907,34 @@ class DocumentManager:
                     logger.warning(f"File not found, skipping: {file_path}")
                     continue
 
-                # Load document
-                text_content = load_document(file_path)
+                documents = None
 
-                # Chunk with original metadata
-                documents = chunk_document(
-                    text=text_content,
-                    document_id=doc_info['document_id'],
-                    document_name=doc_info['document_name'],
-                    file_type=doc_info['file_type'],
-                    ingestion_timestamp=doc_info['ingestion_timestamp'],
-                    chunk_size=doc_info.get('chunk_size', 500),
-                    chunk_overlap=doc_info.get('chunk_overlap', 50)
-                )
+                # Phase 18: Try structured extraction for PDFs
+                if doc_info['file_type'] == '.pdf':
+                    structured_elements = load_pdf_structured(file_path)
+                    if structured_elements:
+                        documents = chunk_by_sections(
+                            elements=structured_elements,
+                            document_id=doc_info['document_id'],
+                            document_name=doc_info['document_name'],
+                            file_type=doc_info['file_type'],
+                            ingestion_timestamp=doc_info['ingestion_timestamp'],
+                        )
+                        if documents:
+                            logger.info(f"[PHASE18] Rebuilt {doc_info['document_name']} with section-based chunks")
+
+                # Fallback: original text-based chunking
+                if not documents:
+                    text_content = load_document(file_path)
+                    documents = chunk_document(
+                        text=text_content,
+                        document_id=doc_info['document_id'],
+                        document_name=doc_info['document_name'],
+                        file_type=doc_info['file_type'],
+                        ingestion_timestamp=doc_info['ingestion_timestamp'],
+                        chunk_size=doc_info.get('chunk_size', 500),
+                        chunk_overlap=doc_info.get('chunk_overlap', 50)
+                    )
 
                 all_documents.extend(documents)
 
