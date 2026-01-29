@@ -42,6 +42,14 @@ except ImportError:
     except ImportError:
         PDF_LOADER = None
 
+# Phase 18: Layout-aware PDF parsing
+try:
+    from unstructured.partition.pdf import partition_pdf
+    LAYOUT_AWARE_PARSER = True
+except ImportError:
+    LAYOUT_AWARE_PARSER = False
+    logger.warning("unstructured library not available. Layout-aware PDF parsing disabled.")
+
 # DOCX loader
 try:
     from docx import Document as DocxDocument
@@ -263,6 +271,543 @@ def load_pdf_document(file_path: Path) -> str:
         raise
 
 
+def load_pdf_document_layout_aware(file_path: Path) -> List[Dict]:
+    """
+    Load a PDF document with layout-aware parsing (Phase 18).
+
+    Extracts structured elements (Title, NarrativeText, ListItem, Table) with metadata.
+
+    Args:
+        file_path: Path to the PDF file
+
+    Returns:
+        List of element dictionaries with:
+        - type: Element type (Title, NarrativeText, ListItem, Table, etc.)
+        - text: Element text content
+        - metadata: Dict with page_number, etc.
+
+    Raises:
+        ImportError: If layout-aware parser is not available
+        Exception: If PDF cannot be parsed (caller should fallback to linear extraction)
+    """
+    if not LAYOUT_AWARE_PARSER:
+        raise ImportError("unstructured library not available. Use fallback linear extraction.")
+
+    try:
+        # Partition PDF using fast strategy (suitable for most campus documents)
+        # strategy="fast" uses rule-based parsing without OCR for better performance
+        elements = partition_pdf(
+            filename=str(file_path),
+            strategy="fast",
+            infer_table_structure=True  # Extract tables as structured data
+        )
+
+        logger.info(f"Layout-aware parsing found {len(elements)} elements in {file_path.name}")
+
+        # Convert elements to dictionaries with standardized structure
+        extracted_elements = []
+        element_type_counts = {}
+
+        for elem in elements:
+            elem_type = elem.category if hasattr(elem, 'category') else type(elem).__name__
+            
+            # Count element types for logging
+            element_type_counts[elem_type] = element_type_counts.get(elem_type, 0) + 1
+
+            # Extract text content
+            # For tables, prefer HTML representation if available
+            if elem_type == "Table" and hasattr(elem, 'metadata'):
+                text_content = getattr(elem.metadata, 'text_as_html', None) or str(elem)
+            else:
+                text_content = str(elem)
+
+            # Extract metadata
+            elem_metadata = {}
+            if hasattr(elem, 'metadata'):
+                # Capture page number if available
+                if hasattr(elem.metadata, 'page_number'):
+                    elem_metadata['page_number'] = elem.metadata.page_number
+
+            extracted_elements.append({
+                'type': elem_type,
+                'text': text_content,
+                'metadata': elem_metadata
+            })
+
+        # Log element type distribution
+        type_summary = ', '.join([f"{typ}: {count}" for typ, count in element_type_counts.items()])
+        logger.info(f"Element types in {file_path.name}: {type_summary}")
+
+        return extracted_elements
+
+    except Exception as e:
+        logger.warning(f"Layout-aware parsing failed for {file_path.name}: {str(e)}")
+        raise  # Caller will handle fallback to linear extraction
+
+
+def group_elements_by_section(elements: List[Dict]) -> List[Dict]:
+    """
+    Group extracted PDF elements into logical sections based on Title elements (Phase 18).
+
+    Args:
+        elements: List of element dictionaries from load_pdf_document_layout_aware
+
+    Returns:
+        List of section dictionaries with:
+        - section_title: Section heading (or "Document Content" if no title)
+        - elements: List of element dicts belonging to this section
+        - element_types: Set of element types present in section
+        - page_numbers: Set of page numbers spanned by section
+    """
+    sections = []
+    current_section = {
+        'section_title': 'Document Content',
+        'elements': [],
+        'element_types': set(),
+        'page_numbers': set()
+    }
+
+    for elem in elements:
+        elem_type = elem['type']
+        
+        # Title elements start a new section
+        if elem_type == 'Title':
+            # Save previous section if it has content
+            if current_section['elements']:
+                sections.append(current_section)
+            
+            # Start new section with this title
+            current_section = {
+                'section_title': elem['text'].strip(),
+                'elements': [elem],
+                'element_types': {elem_type},
+                'page_numbers': {elem['metadata'].get('page_number')} if elem['metadata'].get('page_number') else set()
+            }
+        else:
+            # Add element to current section
+            current_section['elements'].append(elem)
+            current_section['element_types'].add(elem_type)
+            if elem['metadata'].get('page_number'):
+                current_section['page_numbers'].add(elem['metadata'].get('page_number'))
+
+    # Don't forget the last section
+    if current_section['elements']:
+        sections.append(current_section)
+
+    logger.info(f"Grouped {len(elements)} elements into {len(sections)} sections")
+    
+    # Phase 18 Fix: Merge related administrative sections
+    sections = merge_related_admin_sections(sections)
+    
+    return sections
+
+
+def merge_related_admin_sections(sections: List[Dict]) -> List[Dict]:
+    """
+    Merge related administrative sections with HARD BOUNDARIES for enumeration groups.
+    
+    Phase 18 Structural Fix: Treats "Deans" as a protected enumeration group that must
+    never be mixed with other administrative roles (Directors, VPs, Chairs). This ensures
+    deterministic enumeration completeness for queries like "Who are the deans".
+    
+    Design principles:
+    1. Enumeration groups (Deans, Directors, etc.) are HARD BOUNDARIES
+    2. Never merge across different role types
+    3. Collect ALL instances of same role type into ONE canonical group
+    4. Enumerated entities appear FIRST in chunk content
+    5. Deterministic, not ranking-dependent
+    
+    Args:
+        sections: List of section dictionaries from group_elements_by_section
+    
+    Returns:
+        List of sections with enumeration groups properly isolated
+    """
+    if not sections:
+        return sections
+    
+    # Define enumeration groups (hard boundaries - never mix)
+    ENUMERATION_GROUPS = {
+        'deans': ['dean'],  # Exact match for dean roles
+        'directors': ['director'],  # Director roles
+        'vps': ['vice president', 'vp'],  # VP roles
+        'chairs': ['chair', 'chairperson'],  # Department chairs
+    }
+    
+    def classify_section(section: Dict) -> tuple:
+        """
+        Classify section into enumeration group.
+        Returns: (group_name, is_enumeration_section, contains_person_names, is_title_only)
+        """
+        title_lower = section['section_title'].lower().strip()
+        section_text = ' '.join([elem['text'] for elem in section['elements']]).lower()
+        
+        # Check if this is a title-only section (just the heading, no content)
+        is_title_only = (len(section['elements']) == 1 and 
+                        section['elements'][0]['type'] == 'Title')
+        
+        # Check for person name indicators
+        has_person_names = any(
+            title in section_text 
+            for title in ['dr.', 'engr.', 'arch.', 'prof.', 'mr.', 'ms.', 'mrs.']
+        )
+        
+        # Check for exact enumeration group matches
+        for group_name, keywords in ENUMERATION_GROUPS.items():
+            for keyword in keywords:
+                # Title match (high confidence)
+                if title_lower == keyword or title_lower == keyword + 's':
+                    return (group_name, True, has_person_names, is_title_only)
+                
+                # Content match with person names (enumeration pattern)
+                if keyword in section_text and has_person_names:
+                    # Additional check: multiple instances suggest enumeration
+                    if section_text.count(keyword) >= 1:
+                        return (group_name, True, has_person_names, is_title_only)
+        
+        return (None, False, has_person_names, is_title_only)
+    
+    # First pass: Identify and group enumeration sections
+    # Handle title-only sections by merging with following section
+    enumeration_groups = {group: [] for group in ENUMERATION_GROUPS.keys()}
+    other_sections = []
+    section_classifications = []
+    
+    i = 0
+    while i < len(sections):
+        section = sections[i]
+        group_name, is_enum, has_names, is_title_only = classify_section(section)
+        section_classifications.append((group_name, is_enum, has_names, is_title_only))
+        
+        # Handle title-only enumeration sections
+        if is_enum and is_title_only and group_name:
+            # This is a title-only section like "Deans" with no content
+            # Merge it with the next section(s) that contain the actual data
+            merged_section = {
+                'section_title': section['section_title'],  # Keep the clean title
+                'elements': list(section['elements']),
+                'element_types': set(section['element_types']),
+                'page_numbers': set(section['page_numbers'])
+            }
+            
+            # Look ahead for content sections
+            j = i + 1
+            while j < len(sections):
+                next_section = sections[j]
+                next_group, next_is_enum, next_has_names, next_is_title_only = classify_section(next_section)
+                
+                # Merge if:
+                # 1. Next section has person names (the actual enumeration data)
+                # 2. Same or adjacent pages
+                # 3. Not another title-only section
+                if next_has_names and not next_is_title_only:
+                    next_pages = next_section['page_numbers']
+                    current_pages = merged_section['page_numbers']
+                    
+                    if current_pages and next_pages:
+                        max_current = max(current_pages)
+                        min_next = min(next_pages)
+                        
+                        # Merge if on same page or adjacent
+                        if abs(min_next - max_current) <= 1:
+                            merged_section['elements'].extend(next_section['elements'])
+                            merged_section['element_types'].update(next_section['element_types'])
+                            merged_section['page_numbers'].update(next_section['page_numbers'])
+                            j += 1
+                            continue
+                
+                # Stop merging
+                break
+            
+            enumeration_groups[group_name].append((i, merged_section))
+            i = j  # Skip merged sections
+        elif is_enum and group_name:
+            enumeration_groups[group_name].append((i, section))
+            i += 1
+        else:
+            other_sections.append((i, section))
+            i += 1
+    
+    # Second pass: Merge enumeration groups
+    merged_sections = []
+    processed_indices = set()
+    
+    for group_name, group_sections in enumeration_groups.items():
+        if not group_sections:
+            continue
+        
+        # Collect all sections for this enumeration group
+        # Group by page proximity (within 3 pages = same logical block)
+        page_clusters = []
+        
+        for idx, section in sorted(group_sections, key=lambda x: min(x[1]['page_numbers']) if x[1]['page_numbers'] else 0):
+            section_pages = section['page_numbers']
+            if not section_pages:
+                continue
+            
+            # Find cluster to add to
+            added = False
+            for cluster in page_clusters:
+                cluster_pages = set()
+                for _, s in cluster:
+                    cluster_pages.update(s['page_numbers'])
+                
+                # Check if within 3 pages of cluster
+                if cluster_pages and section_pages:
+                    min_section = min(section_pages)
+                    max_section = max(section_pages)
+                    min_cluster = min(cluster_pages)
+                    max_cluster = max(cluster_pages)
+                    
+                    if (abs(min_section - max_cluster) <= 3 or 
+                        abs(max_section - min_cluster) <= 3 or
+                        section_pages.intersection(cluster_pages)):
+                        cluster.append((idx, section))
+                        added = True
+                        break
+            
+            if not added:
+                page_clusters.append([(idx, section)])
+        
+        # Create merged sections for each cluster
+        for cluster in page_clusters:
+            if not cluster:
+                continue
+            
+            # Sort by page number to maintain document order
+            cluster.sort(key=lambda x: min(x[1]['page_numbers']) if x[1]['page_numbers'] else 0)
+            
+            # Create merged section with enumeration-first ordering
+            merged_elements = []
+            merged_pages = set()
+            merged_types = set()
+            
+            # CRITICAL: Collect elements in enumeration-first order
+            # 1. First, collect all Title elements (section headers)
+            # 2. Then, collect all person name elements (the actual enumeration)
+            # 3. Finally, collect supporting text
+            
+            title_elements = []
+            person_elements = []
+            other_elements = []
+            
+            for idx, section in cluster:
+                processed_indices.add(idx)
+                merged_pages.update(section['page_numbers'])
+                merged_types.update(section['element_types'])
+                
+                for elem in section['elements']:
+                    elem_text = elem['text'].lower()
+                    elem_type = elem['type']
+                    
+                    # Classify element
+                    if elem_type == 'Title':
+                        # Check if it's the main enumeration title
+                        if any(kw in elem_text for kw in ENUMERATION_GROUPS[group_name]):
+                            title_elements.insert(0, elem)  # Main title first
+                        else:
+                            title_elements.append(elem)
+                    elif any(title in elem_text for title in ['dr.', 'engr.', 'arch.', 'prof.', 'mr.', 'ms.', 'mrs.']):
+                        # Person name element - this is the enumeration data
+                        person_elements.append(elem)
+                    else:
+                        other_elements.append(elem)
+            
+            # Assemble in correct order: Titles → People → Other
+            merged_elements = title_elements + person_elements + other_elements
+            
+            # Determine canonical title
+            canonical_title = group_name.capitalize()  # e.g., "Deans", "Directors"
+            
+            # Check if any section has the exact canonical title
+            for idx, section in cluster:
+                if section['section_title'].lower().strip() in [group_name, group_name + 's']:
+                    canonical_title = section['section_title']
+                    break
+            
+            merged_section = {
+                'section_title': canonical_title,
+                'elements': merged_elements,
+                'element_types': merged_types,
+                'page_numbers': merged_pages
+            }
+            
+            merged_sections.append((min(merged_pages) if merged_pages else 0, merged_section))
+    
+    # Add non-enumeration sections
+    for idx, section in other_sections:
+        if idx not in processed_indices:
+            merged_sections.append((min(section['page_numbers']) if section['page_numbers'] else idx, section))
+            processed_indices.add(idx)
+    
+    # Sort by page number to maintain document order
+    merged_sections.sort(key=lambda x: x[0])
+    result = [section for _, section in merged_sections]
+    
+    if len(result) < len(sections):
+        logger.info(f"Merged {len(sections)} sections into {len(result)} (isolated {len(sections) - len(result)} enumeration groups)")
+    
+    return result
+
+
+
+
+def create_chunks_from_sections(
+    sections: List[Dict],
+    document_id: str,
+    document_name: str,
+    file_type: str,
+    ingestion_timestamp: str,
+    target_size: int = 500,
+    max_size: int = 800
+) -> List[Document]:
+    """
+    Create chunks from sections with smart size management (Phase 18).
+
+    Strategy:
+    - Keep small sections intact (< max_size)
+    - Split large sections at element boundaries
+    - Preserve lists and tables together when possible
+    - Enrich metadata with section context
+
+    Args:
+        sections: List of section dictionaries from group_elements_by_section
+        document_id: Unique document identifier
+        document_name: Original filename
+        file_type: File extension
+        ingestion_timestamp: ISO format timestamp
+        target_size: Target chunk size in characters
+        max_size: Maximum chunk size before forced split
+
+    Returns:
+        List of Document objects with enriched metadata
+    """
+    documents = []
+    chunk_id = 0
+
+    for section in sections:
+        section_title = section['section_title']
+        section_elements = section['elements']
+        section_element_types = list(section['element_types'])  # Convert set to list
+        section_page_numbers = sorted(list(section['page_numbers']))  # Convert set to sorted list
+
+        # Combine all element texts in this section
+        section_text = '\n\n'.join([elem['text'] for elem in section_elements])
+        section_length = len(section_text)
+
+        # Case 1: Section fits within max_size - keep intact
+        if section_length <= max_size:
+            normalized_text = normalize_text(section_text)
+            
+            metadata = {
+                "document_id": document_id,
+                "document_name": document_name,
+                "file_type": file_type,
+                "ingestion_timestamp": ingestion_timestamp,
+                "chunk_id": chunk_id,
+                "section": extract_section_name(section_text),  # Legacy compatibility
+                "section_title": section_title,  # Phase 18: Explicit section title
+                "element_types": section_element_types,  # Phase 18: Element types in chunk
+                "page_numbers": section_page_numbers,  # Phase 18: Pages spanned
+                "original_text": section_text
+            }
+            
+            doc = Document(page_content=normalized_text, metadata=metadata)
+            documents.append(doc)
+            chunk_id += 1
+
+        # Case 2: Section too large - split at element boundaries
+        else:
+            current_chunk_elements = []
+            current_chunk_length = 0
+
+            for elem in section_elements:
+                elem_text = elem['text']
+                elem_length = len(elem_text)
+
+                # If adding this element exceeds max_size and we have content, save current chunk
+                if current_chunk_length + elem_length > max_size and current_chunk_elements:
+                    # Save current chunk
+                    chunk_text = '\n\n'.join([e['text'] for e in current_chunk_elements])
+                    normalized_text = normalize_text(chunk_text)
+                    
+                    # Aggregate page numbers from elements in this chunk
+                    chunk_page_numbers = sorted(list(set([
+                        e['metadata'].get('page_number') 
+                        for e in current_chunk_elements 
+                        if e['metadata'].get('page_number')
+                    ])))
+                    
+                    # Aggregate element types
+                    chunk_element_types = list(set([e['type'] for e in current_chunk_elements]))
+                    
+                    metadata = {
+                        "document_id": document_id,
+                        "document_name": document_name,
+                        "file_type": file_type,
+                        "ingestion_timestamp": ingestion_timestamp,
+                        "chunk_id": chunk_id,
+                        "section": extract_section_name(chunk_text),
+                        "section_title": section_title,
+                        "element_types": chunk_element_types,
+                        "page_numbers": chunk_page_numbers,
+                        "original_text": chunk_text
+                    }
+                    
+                    doc = Document(page_content=normalized_text, metadata=metadata)
+                    documents.append(doc)
+                    chunk_id += 1
+
+                    # Reset for next chunk
+                    current_chunk_elements = []
+                    current_chunk_length = 0
+
+                # Add element to current chunk
+                current_chunk_elements.append(elem)
+                current_chunk_length += elem_length + 2  # +2 for '\n\n' separator
+
+            # Don't forget remaining elements
+            if current_chunk_elements:
+                chunk_text = '\n\n'.join([e['text'] for e in current_chunk_elements])
+                normalized_text = normalize_text(chunk_text)
+                
+                chunk_page_numbers = sorted(list(set([
+                    e['metadata'].get('page_number') 
+                    for e in current_chunk_elements 
+                    if e['metadata'].get('page_number')
+                ])))
+                
+                chunk_element_types = list(set([e['type'] for e in current_chunk_elements]))
+                
+                metadata = {
+                    "document_id": document_id,
+                    "document_name": document_name,
+                    "file_type": file_type,
+                    "ingestion_timestamp": ingestion_timestamp,
+                    "chunk_id": chunk_id,
+                    "section": extract_section_name(chunk_text),
+                    "section_title": section_title,
+                    "element_types": chunk_element_types,
+                    "page_numbers": chunk_page_numbers,
+                    "original_text": chunk_text
+                }
+                
+                doc = Document(page_content=normalized_text, metadata=metadata)
+                documents.append(doc)
+                chunk_id += 1
+
+    # Update total_chunks for all documents
+    total_chunks = len(documents)
+    for doc in documents:
+        doc.metadata['total_chunks'] = total_chunks
+
+    logger.info(f"Created {total_chunks} chunks from {len(sections)} sections")
+    return documents
+
+
+
+
+
 def load_docx_document(file_path: Path) -> str:
     """
     Load a DOCX document.
@@ -328,10 +873,14 @@ def chunk_document(
     file_type: str,
     ingestion_timestamp: str,
     chunk_size: int = 500,
-    chunk_overlap: int = 50
+    chunk_overlap: int = 50,
+    file_path: Optional[Path] = None  # Phase 18: Add file_path for layout-aware parsing
 ) -> List[Document]:
     """
     Chunk a document and attach metadata to each chunk.
+    
+    Phase 18: PDFs use layout-aware parsing when available, falling back to
+    linear chunking if parsing fails or unstructured library is not installed.
 
     Args:
         text: Document text content
@@ -341,11 +890,35 @@ def chunk_document(
         ingestion_timestamp: ISO format timestamp
         chunk_size: Maximum chunk size in characters
         chunk_overlap: Overlap between chunks
+        file_path: Path to original file (Phase 18, for layout-aware PDF parsing)
 
     Returns:
         List of Document objects with metadata
     """
-    # Initialize text splitter
+    # Phase 18: Try layout-aware parsing for PDFs
+    if file_type == '.pdf' and file_path and LAYOUT_AWARE_PARSER:
+        try:
+            logger.info(f"Using layout-aware parsing for {document_name}")
+            elements = load_pdf_document_layout_aware(file_path)
+            sections = group_elements_by_section(elements)
+            documents = create_chunks_from_sections(
+                sections=sections,
+                document_id=document_id,
+                document_name=document_name,
+                file_type=file_type,
+                ingestion_timestamp=ingestion_timestamp,
+                target_size=chunk_size,
+                max_size=min(chunk_size * 2, 800)  # Max 800 chars or 2x chunk_size
+            )
+            logger.info(f"Layout-aware parsing completed for {document_name}")
+            return documents
+        except Exception as e:
+            logger.warning(f"Layout-aware parsing failed for {document_name}: {str(e)}")
+            logger.info(f"Falling back to linear chunking for {document_name}")
+            # Fall through to linear chunking below
+    
+    # Linear chunking (original Phase 17C logic)
+    # Used for: .txt, .docx, PDFs when layout parsing unavailable/fails
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
@@ -494,7 +1067,7 @@ class DocumentManager:
             if not text_content.strip():
                 return False, f"Document is empty: {document_name}"
 
-            # Chunk document with metadata
+            # Chunk document with metadata (Phase 18: pass file_path for layout-aware parsing)
             documents = chunk_document(
                 text=text_content,
                 document_id=document_id,
@@ -502,9 +1075,14 @@ class DocumentManager:
                 file_type=file_type,
                 ingestion_timestamp=ingestion_timestamp,
                 chunk_size=chunk_size,
-                chunk_overlap=chunk_overlap
+                chunk_overlap=chunk_overlap,
+                file_path=file_path  # Phase 18: Enable layout-aware PDF parsing
             )
 
+            # Phase 18 Entity Consolidation: Create synthetic chunks for enumeration roles
+            from entity_consolidation import consolidate_dean_chunks
+            documents = consolidate_dean_chunks(documents)
+            
             # Add to vector store (incremental)
             if self.vector_store is None:
                 # Create new vector store
@@ -658,7 +1236,7 @@ class DocumentManager:
                 # Load document
                 text_content = load_document(file_path)
 
-                # Chunk with original metadata
+                # Chunk with original metadata (Phase 18: pass file_path for layout-aware parsing)
                 documents = chunk_document(
                     text=text_content,
                     document_id=doc_info['document_id'],
@@ -666,7 +1244,8 @@ class DocumentManager:
                     file_type=doc_info['file_type'],
                     ingestion_timestamp=doc_info['ingestion_timestamp'],
                     chunk_size=doc_info.get('chunk_size', 500),
-                    chunk_overlap=doc_info.get('chunk_overlap', 50)
+                    chunk_overlap=doc_info.get('chunk_overlap', 50),
+                    file_path=file_path  # Phase 18: Enable layout-aware PDF parsing
                 )
 
                 all_documents.extend(documents)

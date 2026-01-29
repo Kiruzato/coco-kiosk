@@ -20,10 +20,17 @@ tiktoken>=0.7.0
 # Hybrid retrieval (Phase 17A)
 rank_bm25>=0.2.2           # BM25 keyword matching for hybrid retrieval
 
-# Document format support (Phase 3)
-pypdf>=5.0.0            # PDF document loading
+# Document format support (Phase 3 + Phase 18)
+pypdf>=5.0.0            # PDF document loading (fallback for Phase 18)
 python-docx>=1.1.0       # DOCX document loading
 tabulate>=0.9.0          # Pretty table formatting for admin CLI
+
+# Layout-aware PDF parsing (Phase 18)
+# Note: Requires system dependencies on deployment:
+#   - libmagic-dev (file type detection)
+#   - poppler-utils (PDF processing)
+#   Optional: tesseract-ocr (for OCR on scanned PDFs)
+unstructured[pdf]>=0.12.0  # Layout-aware PDF element extraction
 
 # Web API and server (Phase 5)
 fastapi>=0.115.0         # Web framework for API
