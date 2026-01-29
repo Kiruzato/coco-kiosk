@@ -799,13 +799,20 @@ def attempt_document_retrieval(query: str) -> dict:
     return result
 
 
-def _expand_with_adjacent_chunks(docs, vector_store) -> list:
+def _expand_with_adjacent_chunks(docs, vector_store, max_size=2000) -> list:
     """
-    Phase 17C: Expand each retrieved chunk by merging its +1 neighbor inline.
+    Phase 19: Expand each retrieved chunk by merging its ±1 neighbors inline.
 
-    When a list is split across chunk boundaries (e.g., deans in chunk N and N+1),
-    this fetches the next chunk and appends it to the source chunk's content.
-    The total number of context blocks stays the same (no extra chunks added).
+    When long-form content (hymns, prayers, policies) is split across chunk boundaries,
+    this fetches adjacent chunks and merges them to restore semantic continuity.
+    
+    Args:
+        docs: List of retrieved Document objects
+        vector_store: FAISS vector store with docstore
+        max_size: Maximum size for expanded chunk (chars), default 2000
+    
+    Returns:
+        List of Document objects with expanded content and metadata
     """
     if not docs or not vector_store:
         return docs
@@ -852,41 +859,95 @@ def _expand_with_adjacent_chunks(docs, vector_store) -> list:
                     if all(v is not None for v in needed.values()):
                         break
     except Exception as e:
-        logger.warning(f"[PHASE17C] Adjacent chunk expansion failed: {e}")
+        logger.warning(f"[PHASE19] Adjacent chunk expansion failed: {e}")
         return docs
 
     # Merge each chunk with its ±1 neighbors (inline)
     expanded_docs = []
     expand_count = 0
+    total_original_size = 0
+    total_expanded_size = 0
+    
     for doc in docs:
         chunk_id = doc.metadata.get('chunk_id', -1)
         parts = []
+        expanded_chunk_ids = []
 
         # Prepend -1 neighbor if available
         prev_id = prev_neighbors.get(chunk_id)
         if prev_id is not None and needed.get(prev_id) is not None:
             parts.append(needed[prev_id])
+            expanded_chunk_ids.append(prev_id)
 
         parts.append(doc.page_content)
+        expanded_chunk_ids.append(chunk_id)
 
         # Append +1 neighbor if available
         next_id = next_neighbors.get(chunk_id)
         if next_id is not None and needed.get(next_id) is not None:
             parts.append(needed[next_id])
+            expanded_chunk_ids.append(next_id)
 
         if len(parts) > 1:
             merged_content = " ".join(parts)
+            original_size = len(doc.page_content)
+            
+            # Phase 19: Size cap with intelligent truncation
+            if len(merged_content) > max_size:
+                merged_content = _truncate_at_sentence_boundary(merged_content, max_size)
+            
+            # Phase 19: Enhanced metadata tracking
+            new_metadata = dict(doc.metadata)
+            new_metadata['expanded'] = True
+            new_metadata['expanded_chunk_ids'] = expanded_chunk_ids
+            new_metadata['expansion_method'] = 'phase19_adjacent'
+            new_metadata['original_size'] = original_size
+            new_metadata['expanded_size'] = len(merged_content)
+            
             expanded_docs.append(Document(
                 page_content=merged_content,
-                metadata=dict(doc.metadata)
+                metadata=new_metadata
             ))
             expand_count += 1
+            total_original_size += original_size
+            total_expanded_size += len(merged_content)
         else:
             expanded_docs.append(doc)
 
     if expand_count > 0:
-        logger.info(f"[PHASE17C] Expanded {expand_count} chunks with ±1 neighbors")
+        logger.info(f"[PHASE19] Expanded {expand_count}/{len(docs)} chunks with ±1 neighbors")
+        logger.info(f"[PHASE19] Total context: {total_original_size} → {total_expanded_size} chars " +
+                   f"({round(total_expanded_size/total_original_size*100)}% of original)")
     return expanded_docs
+
+
+def _truncate_at_sentence_boundary(text: str, max_length: int) -> str:
+    """
+    Phase 19: Truncate text at sentence boundary without exceeding max_length.
+    
+    Preserves semantic completeness by cutting at sentence endings.
+    """
+    if len(text) <= max_length:
+        return text
+    
+    # Find last sentence boundary before max_length
+    truncated = text[:max_length]
+    last_period = truncated.rfind('.')
+    last_question = truncated.rfind('?')
+    last_exclamation = truncated.rfind('!')
+    
+    boundary = max(last_period, last_question, last_exclamation)
+    
+    # Only use sentence boundary if it's reasonably close (at least 70% of max)
+    if boundary > max_length * 0.7:
+        return text[:boundary + 1]
+    
+    # Fallback: truncate at word boundary
+    last_space = truncated.rfind(' ')
+    if last_space > 0:
+        return text[:last_space] + '...'
+    
+    return text[:max_length] + '...'
 
 
 def _build_annotated_context(docs) -> str:
