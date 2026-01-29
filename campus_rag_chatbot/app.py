@@ -1066,11 +1066,59 @@ async def handle_campus_query(
         # Merge consecutive chunks from the same document to avoid split lists
         context = _build_annotated_context(retrieved_docs)
 
-        # Get conversation history from memory
-        chat_history = memory.load_memory_variables({}).get("chat_history", "")
+        # =====================================================================
+        # Phase 18.2: Deterministic Enumeration Extraction
+        # =====================================================================
+        # For enumeration queries (e.g., "who are the deans"), bypass LLM
+        # and use deterministic regex-based extraction for 100% accuracy
+        from entity_extractors import is_dean_enumeration_query, extract_deans_from_text, format_dean_list
+        
+        if is_dean_enumeration_query(query):
+            logger.info(f"[PHASE18.2] Dean enumeration query detected, using deterministic extraction")
+            deans = extract_deans_from_text(context)
+            
+            if len(deans) >= 1:
+                # Use deterministic extraction result (bypass LLM)
+                answer = format_dean_list(deans)
+                rejected = False
+                
+                logger.info(f"[PHASE18.2] Extracted {len(deans)} deans deterministically")
+                
+                # Update conversation memory with deterministic result
+                memory.save_context({"question": query}, {"answer": answer})
+                
+                # Extract sources from retrieved docs
+                sources = []
+                seen = set()
+                for doc in retrieved_docs:
+                    doc_name = doc.metadata.get('document_name', 'Unknown')
+                    section = doc.metadata.get('section', 'Unknown')
+                    chunk_id = doc.metadata.get('chunk_id', 0)
+                    
+                    key = f"{doc_name}:{section}:{chunk_id}"
+                    if key not in seen:
+                        sources.append(Source(
+                            document_name=doc_name,
+                            section=section,
+                            chunk_id=chunk_id
+                        ))
+                        seen.add(key)
+                
+                # Skip LLM call - use deterministic extraction
+                # Continue to logging section below
+            else:
+                # No deans found via extraction, fall back to LLM
+                logger.info(f"[PHASE18.2] No deans extracted, falling back to LLM")
+                # Continue with LLM flow below
+        # =====================================================================
+        
+        # Only invoke LLM if deterministic extraction didn't handle the query
+        if 'answer' not in locals() or answer is None:
+            # Get conversation history from memory
+            chat_history = memory.load_memory_variables({}).get("chat_history", "")
 
-        # Build system prompt with context and history
-        system_content = f"""You are a campus information assistant for Columban College, Inc. Provide accurate information ONLY from the verified campus documents.
+            # Build system prompt with context and history
+            system_content = f"""You are a campus information assistant for Columban College, Inc. Provide accurate information ONLY from the verified campus documents.
 
 CRITICAL RULES:
 1. ONLY answer using the provided context
@@ -1086,34 +1134,34 @@ Context from campus documents:
 Conversation history:
 {chat_history}"""
 
-        # Direct LLM call with validated chunks (no second retrieval)
-        logger.info(f"[PHASE17C] Passing {len(retrieved_docs)} validated chunks to LLM")
-        response = llm.invoke([
-            SystemMessage(content=system_content),
-            HumanMessage(content=query)
-        ])
-        answer = response.content
-        rejected = False
+            # Direct LLM call with validated chunks (no second retrieval)
+            logger.info(f"[PHASE17C] Passing {len(retrieved_docs)} validated chunks to LLM")
+            response = llm.invoke([
+                SystemMessage(content=system_content),
+                HumanMessage(content=query)
+            ])
+            answer = response.content
+            rejected = False
 
-        # Update conversation memory
-        memory.save_context({"question": query}, {"answer": answer})
+            # Update conversation memory
+            memory.save_context({"question": query}, {"answer": answer})
 
-        # Extract sources from already-retrieved docs (single retrieval)
-        sources = []
-        seen = set()
-        for doc in retrieved_docs:
-            doc_name = doc.metadata.get('document_name', 'Unknown')
-            section = doc.metadata.get('section', 'Unknown')
-            chunk_id = doc.metadata.get('chunk_id', 0)
+            # Extract sources from already-retrieved docs (single retrieval)
+            sources = []
+            seen = set()
+            for doc in retrieved_docs:
+                doc_name = doc.metadata.get('document_name', 'Unknown')
+                section = doc.metadata.get('section', 'Unknown')
+                chunk_id = doc.metadata.get('chunk_id', 0)
 
-            key = f"{doc_name}:{section}:{chunk_id}"
-            if key not in seen:
-                sources.append(Source(
-                    document_name=doc_name,
-                    section=section,
-                    chunk_id=chunk_id
-                ))
-                seen.add(key)
+                key = f"{doc_name}:{section}:{chunk_id}"
+                if key not in seen:
+                    sources.append(Source(
+                        document_name=doc_name,
+                        section=section,
+                        chunk_id=chunk_id
+                    ))
+                    seen.add(key)
 
     # Log the interaction with intent and mode
     query_id = query_logger.log_full_interaction(
