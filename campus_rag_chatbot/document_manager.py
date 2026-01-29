@@ -900,6 +900,22 @@ def chunk_document(
         try:
             logger.info(f"Using layout-aware parsing for {document_name}")
             elements = load_pdf_document_layout_aware(file_path)
+            
+            # Phase 18.1: Text normalization pipeline
+            from text_normalizer_pipeline import normalize_elements, get_normalization_stats
+            original_element_count = len(elements)
+            elements = normalize_elements(elements)
+            
+            # Log normalization stats
+            stats = get_normalization_stats(
+                [{'text': ''}] * original_element_count,  # Placeholder for original count
+                elements
+            )
+            logger.info(
+                f"Text normalization: {stats['original_element_count']} → {stats['normalized_element_count']} elements "
+                f"({stats['elements_removed']} removed)"
+            )
+            
             sections = group_elements_by_section(elements)
             documents = create_chunks_from_sections(
                 sections=sections,

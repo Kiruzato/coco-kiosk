@@ -79,6 +79,52 @@ def consolidate_dean_chunks(documents: List[Document]) -> List[Document]:
         # Format: Title + All dean chunk content (page-ordered, so structured lists appear first)
         synthetic_content = "Deans\n\n" + "\n\n---\n\n".join(combined_content)
         
+        # Phase 18.1: Additional cleanup for synthetic chunk
+        # Remove noise headers that may have made it through sectioning
+        noise_headers = [
+            'Student Organizations',
+            'Student OIrganizations',
+            '9 Special Provision',
+            'SAS Directors',
+            'DIRECTORS & RESEARCH PROPONENTS'
+        ]
+        
+        lines = synthetic_content.split('\n')
+        cleaned_lines = []
+        for line in lines:
+            line_stripped = line.strip()
+            
+            # Skip noise header lines
+            is_noise = any(noise.lower() == line_stripped.lower() for noise in noise_headers)
+            
+            # Skip numbered provision lines
+            is_provision = re.match(r'^\d+\s+(Special\s+)?Provision\s*$', line_stripped, re.IGNORECASE)
+            
+            # Skip SAS Directors list line (starts with "SAS Directors")
+            is_sas_directors = line_stripped.startswith('SAS Directors')
+            
+            if not is_noise and not is_provision and not is_sas_directors:
+                cleaned_lines.append(line)
+        
+        synthetic_content = '\n'.join(cleaned_lines)
+        
+        # Collapse excessive whitespace (2+ spaces → 1 space, to handle 200+ space runs)
+        synthetic_content = re.sub(r' {2,}', ' ', synthetic_content)
+        
+        # Remove lines that are just whitespace or fragments like "o"
+        lines = synthetic_content.split('\n')
+        cleaned_lines = []
+        for line in lines:
+            stripped = line.strip()
+            # Keep line if it's not empty or single char fragment
+            if stripped and not (len(stripped) == 1 and not stripped.isalnum()):
+                cleaned_lines.append(line)
+        
+        synthetic_content = '\n'.join(cleaned_lines)
+        
+        #Final strip
+        synthetic_content = synthetic_content.strip()
+        
         # Create synthetic chunk metadata
         source_chunk_ids = [chunk['chunk_id'] for chunk in dean_chunks]
         source_pages = sorted(list(set(
