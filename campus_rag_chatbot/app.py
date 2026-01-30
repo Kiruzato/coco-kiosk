@@ -193,6 +193,7 @@ class ChatResponse(BaseModel):
     sources: List[Source]
     confidence_level: str
     confidence_score: float
+    grounding_mode: str = "keyword"  # Phase 20: "keyword" | "semantic"
     rejected: bool
     timestamp: str
     mode: str  # "campus" | "general" | "clarification"
@@ -772,10 +773,12 @@ def attempt_document_retrieval(query: str) -> dict:
     )
 
     # Validate grounding: ensure query terms appear in retrieved chunks
+    # Phase 20: Allow semantic override for high-confidence long-form content
     grounding_result = validate_grounding(
         query_terms,
         hybrid_results,
-        min_term_matches=MIN_GROUNDING_TERMS
+        min_term_matches=MIN_GROUNDING_TERMS,
+        allow_semantic_override=True  # Phase 20
     )
 
     # Compute confidence
@@ -1053,10 +1056,12 @@ async def handle_campus_query(
         )
 
         # Validate grounding: ensure query terms appear in retrieved chunks
+        # Phase 20: Allow semantic override for high-confidence long-form content
         grounding_result = validate_grounding(
             query_terms,
             hybrid_results,
-            min_term_matches=MIN_GROUNDING_TERMS
+            min_term_matches=MIN_GROUNDING_TERMS,
+            allow_semantic_override=True  # Phase 20
         )
 
         # If grounding fails, refuse with topic-specific message
@@ -1272,6 +1277,7 @@ Conversation history:
         sources=sources,
         confidence_level=confidence_level.value,
         confidence_score=round(confidence_metrics["confidence_score"], 1),
+        grounding_mode=grounding_result.grounding_mode,  # Phase 20
         rejected=rejected,
         timestamp=datetime.now().isoformat(),
         mode="campus"

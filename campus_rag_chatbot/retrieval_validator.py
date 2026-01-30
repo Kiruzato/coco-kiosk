@@ -54,6 +54,11 @@ STOPWORDS = {
 # Minimum term length to consider meaningful
 MIN_TERM_LENGTH = 2
 
+# Phase 20: Semantic grounding thresholds
+# Allow grounding bypass for high-confidence long-form content
+SEMANTIC_SIMILARITY_THRESHOLD = 0.75  # Min similarity for semantic override
+MIN_SEMANTIC_CONTENT_LENGTH = 300     # Min chars for long-form content
+
 
 @dataclass
 class GroundingResult:
@@ -62,6 +67,7 @@ class GroundingResult:
     topic: str
     matched_terms: List[str]
     reason: str
+    grounding_mode: str = "keyword"  # Phase 20: "keyword" | "semantic"
 
     def to_dict(self) -> dict:
         """Convert to dictionary for logging."""
@@ -69,7 +75,8 @@ class GroundingResult:
             "is_grounded": self.is_grounded,
             "topic": self.topic,
             "matched_terms": self.matched_terms,
-            "reason": self.reason
+            "reason": self.reason,
+            "grounding_mode": self.grounding_mode  # Phase 20
         }
 
 
@@ -245,23 +252,95 @@ def combine_hybrid_scores(
     return sorted_results, sorted_details
 
 
+def check_semantic_grounding_override(
+    retrieval_results: List[Tuple],  # [(doc, score), ...]
+    min_similarity: float = SEMANTIC_SIMILARITY_THRESHOLD,
+    min_content_length: int = MIN_SEMANTIC_CONTENT_LENGTH
+) -> Tuple[bool, dict]:
+    """
+    Phase 20: Check if semantic grounding override applies.
+    
+    Override applies when top chunk has:
+    - High similarity score (semantic confidence)
+    - Sufficient length (substantial long-form content)
+    
+    This allows answers for hymns, prayers, policies where
+    semantic retrieval succeeds but literal keywords don't match.
+    
+    Note: Expansion (Phase 19) is an implementation detail.
+    Grounding is gated by confidence + content size, not neighbor merging.
+    
+    Args:
+        retrieval_results: Ranked (doc, score) tuples
+        min_similarity: Minimum similarity threshold (default 0.75)
+        min_content_length: Minimum content length (default 300 chars)
+    
+    Returns:
+        (override_applies, metadata_dict)
+    """
+    if not retrieval_results:
+        return False, {}
+    
+    # Check top chunk
+    top_doc, top_score = retrieval_results[0]
+    
+    # Criterion 1: High similarity (semantic confidence)
+    similarity_ok = top_score >= min_similarity
+    
+    # Criterion 2: Sufficient content length (long-form content)
+    content_length = len(top_doc.page_content)
+    length_ok = content_length >= min_content_length
+    
+    # Override applies when BOTH criteria met
+    # (removed expanded=True requirement per industry standards)
+    override_applies = similarity_ok and length_ok
+    
+    # Track expansion status for observability (not gating)
+    is_expanded = top_doc.metadata.get('expanded', False)
+    
+    metadata = {
+        'top_similarity': round(top_score, 3),
+        'content_length': content_length,
+        'is_expanded': is_expanded,  # For observability only
+        'semantic_override': override_applies,
+        'criteria': {
+            'similarity_ok': similarity_ok,
+            'length_ok': length_ok
+        }
+    }
+    
+    if override_applies:
+        logger.info(
+            f"[PHASE20] Semantic grounding override triggered: "
+            f"similarity={top_score:.3f}, length={content_length} chars, "
+            f"expanded={is_expanded}"
+        )
+    
+    return override_applies, metadata
+
+
 def validate_grounding(
     query_terms: List[str],
     retrieval_results: List[Tuple],  # [(doc, score), ...]
     min_term_matches: int = 1,
-    check_top_k: int = 4
+    check_top_k: int = 4,
+    allow_semantic_override: bool = True  # Phase 20
 ) -> GroundingResult:
     """
     Validate that retrieved chunks are grounded in the query topic.
 
     Requires at least one query term to appear in top chunks.
     This prevents answering from semantically similar but incorrect sections.
+    
+    Phase 20: Can bypass keyword validation via semantic override when
+    high-confidence long-form content is retrieved.
 
     Args:
         query_terms: Meaningful terms from user query
         retrieval_results: List of (document, score) tuples
         min_term_matches: Minimum number of terms required (default 1)
         check_top_k: Number of top chunks to check (default 4)
+        allow_semantic_override: Enable Phase 20 semantic grounding (default True)
 
     Returns:
         GroundingResult with grounding status and details
@@ -282,7 +361,24 @@ def validate_grounding(
             matched_terms=[],
             reason="no_chunks_retrieved"
         )
+    
+    # Phase 20: Check semantic grounding override
+    if allow_semantic_override:
+        override_applies, override_meta = check_semantic_grounding_override(
+            retrieval_results
+        )
+        
+        if override_applies:
+            # Skip keyword validation, pass on semantic confidence
+            return GroundingResult(
+                is_grounded=True,
+                topic=" ".join(query_terms[:3]),
+                matched_terms=[],  # No literal matches needed
+                reason="semantic_confidence",
+                grounding_mode="semantic"
+            )
 
+    # Continue with existing keyword validation
     # Check top chunks for query term presence
     matched_terms = set()
     chunks_checked = min(check_top_k, len(retrieval_results))
