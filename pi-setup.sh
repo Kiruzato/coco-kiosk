@@ -33,13 +33,13 @@ echo ""
 echo -e "${YELLOW}[1/7] Installing system packages...${NC}"
 echo "This requires sudo access."
 
-sudo apt update && sudo apt install -y \
+sudo apt update
+
+# Install base packages (always available)
+sudo apt install -y \
     python3-dev \
     python3-pip \
     python3-venv \
-    python3.11 \
-    python3.11-venv \
-    python3.11-dev \
     libmagic-dev \
     poppler-utils \
     ffmpeg \
@@ -50,6 +50,17 @@ sudo apt update && sudo apt install -y \
     espeak-ng \
     espeak-ng-data \
     curl
+
+# Try to install Python 3.11 (optional - may not be available on all systems)
+echo "Checking for Python 3.11 availability..."
+if apt-cache show python3.11 &> /dev/null; then
+    echo "Python 3.11 found in repositories, installing..."
+    sudo apt install -y python3.11 python3.11-venv python3.11-dev
+else
+    echo -e "${YELLOW}Python 3.11 not available in repositories.${NC}"
+    echo "Will use system Python instead."
+    echo -e "${YELLOW}Note: Piper TTS may not work. Voice will use edge-tts (cloud) as fallback.${NC}"
+fi
 
 echo -e "${GREEN}System packages installed${NC}"
 echo ""
