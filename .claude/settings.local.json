@@ -108,7 +108,9 @@
       "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -m pip install edge-tts)",
       "Bash(/c/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/venv311/Scripts/python.exe:*)",
       "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\pip.exe\" install sse-starlette httpx)",
-      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -c \"import app; print\\(''Import OK''\\)\")"
+      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -c \"import app; print\\(''Import OK''\\)\")",
+      "Bash(du -sh:*)",
+      "Bash(wc:*)"
     ]
   }
 }

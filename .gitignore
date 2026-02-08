@@ -1,49 +1,85 @@
-# Windows null device artifacts
-nul
+# ============================================
+# CoCo Campus Kiosk - .gitignore for RPi5 Deployment
+# ============================================
 
-# Python
+# === Windows artifacts ===
+nul
+Thumbs.db
+
+# === macOS ===
+.DS_Store
+
+# === Python ===
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+
+# === Virtual environments ===
 venv/
 venv311/
 ENV/
 .venv/
 
-# Environment files
+# === Environment files (keep .env.example) ===
 .env
 *.env.local
 
-# IDE
+# === IDE ===
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Logs
+# === Logs ===
 *.log
 server.log
 
-# Audio files (test artifacts)
+# === Test audio artifacts ===
 *.wav
-test_audio*.wav
-question_audio*.wav
 
-# Credentials (never commit)
-*.json.backup*
+# === Credentials (never commit) ===
 credentials.enc
 .google_sa_temp.json
 sa_stt.json
 
-# OS files
-.DS_Store
-Thumbs.db
+# === Pytest ===
+.pytest_cache/
 
-# Whisper.cpp build (large)
+# === Development scripts (not needed on RPi5) ===
+scripts/
+
+# === Test reports and analysis ===
+reports/
+
+# === Development documentation ===
+PYTHON311_MIGRATION_REPORT.txt
+RPI5_DEPLOYMENT_EVALUATION.txt
+RPI5_DEPLOYMENT_INSTRUCTIONS.txt
+PROJECT_CONTEXT.md
+
+# === Temporary prompt/debug files ===
+*-prompt.txt
+checking.txt
+change_report.txt
+*_error.txt
+cookies.txt
+initial_plan.txt
+run_commands.txt
+
+# === UI design mockups ===
+ui_design/
+
+# === Question generator test data ===
+question_generator/test_archive/
+question_generator/*.json
+
+# === Whisper.cpp source (models are in voice/models/) ===
 whisper.cpp/
 
-# Temporary files
-*.tmp
-*.temp
+# === Backup directories ===
+backups/
+
+# === Test directories ===
+tests/

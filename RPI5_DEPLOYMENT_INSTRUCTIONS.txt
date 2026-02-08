@@ -46,8 +46,8 @@ The setup script automatically handles:
 Run the setup script:
 
     cd /home/pi/coco
-    chmod +x scripts/pi-setup.sh
-    ./scripts/pi-setup.sh
+    chmod +x pi-setup.sh
+    ./pi-setup.sh
 
 IMPORTANT: When prompted:
 - "Re-ingest documents?" -> Answer N (you'll ingest via admin UI from laptop)

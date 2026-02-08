@@ -4,7 +4,7 @@
 # ==============================
 # This script sets up the CoCo campus information kiosk on Raspberry Pi.
 #
-# Usage: ./scripts/pi-setup.sh
+# Usage: ./pi-setup.sh
 #
 
 set -e  # Exit on error
@@ -21,9 +21,8 @@ echo "  CoCo Campus Kiosk - Raspberry Pi Setup"
 echo "=============================================="
 echo ""
 
-# Get the script's directory and project root
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+# Get the script's directory (which is now the project root)
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="$PROJECT_ROOT/campus_rag_chatbot"
 
 echo "Project root: $PROJECT_ROOT"
@@ -96,7 +95,7 @@ else
 fi
 echo ""
 
-# Step 3: Activate virtual environment and install dependencies
+# Step 4: Activate virtual environment and install dependencies
 echo -e "${YELLOW}[4/7] Installing dependencies...${NC}"
 source "$VENV_DIR/bin/activate"
 
@@ -115,7 +114,7 @@ fi
 echo -e "${GREEN}Dependencies installed${NC}"
 echo ""
 
-# Step 4: Setup environment file
+# Step 5: Setup environment file
 echo -e "${YELLOW}[5/7] Setting up environment file...${NC}"
 ENV_FILE="$APP_DIR/.env"
 ENV_EXAMPLE="$APP_DIR/.env.example"
@@ -154,7 +153,7 @@ echo ""
 read -p "Press Enter when you have configured your .env file..."
 echo ""
 
-# Step 5: Ingest documents
+# Step 6: Ingest documents
 echo -e "${YELLOW}[6/7] Ingesting documents...${NC}"
 cd "$APP_DIR"
 
@@ -173,7 +172,7 @@ fi
 echo -e "${GREEN}Document ingestion complete${NC}"
 echo ""
 
-# Step 6: Test startup
+# Step 7: Test startup
 echo -e "${YELLOW}[7/7] Testing application startup...${NC}"
 echo "Starting server for quick test (will stop after 5 seconds)..."
 
@@ -207,6 +206,4 @@ echo "  python app.py"
 echo ""
 echo "Access the kiosk at:"
 echo "  http://$(hostname -I | awk '{print $1}'):8000/"
-echo ""
-echo "For auto-start on boot, see DEPLOYMENT.md"
 echo ""

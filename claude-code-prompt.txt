@@ -1,42 +1,17 @@
-Raspberry Pi 5 Test Preparation
-You are assisting with an existing web application that needs to be tested on Raspberry Pi 5 running Raspberry Pi OS.
-Objective
-Prepare the project for local testing and validation on Raspberry Pi 5, without changing the core behavior of the application unless strictly required for compatibility.
-What I want you to do
-1.	Assess Raspberry Pi 5 compatibility
-o	CPU architecture (ARM64)
-o	OS constraints (Raspberry Pi OS)
-o	Runtime requirements (Python, Node, system libraries, audio, etc.)
-2.	Identify prerequisites
-o	System packages that must be installed
-o	Python / Node / browser requirements
-o	Audio dependencies relevant to the web app (if applicable)
-o	Performance or memory considerations specific to RPI5
-3.	Prepare a step-by-step setup plan
-o	Environment setup
-o	Dependency installation
-o	Configuration steps
-o	Commands to run the app locally on RPI5
-o	How to verify the app is running correctly
-4.	Testing checklist
-o	What features should be tested first
-o	What behaviors are most likely to fail on RPI5
-o	How to detect performance or resource issues
-o	What logs or metrics to watch
-5.	Risk and mitigation notes
-o	Known ARM / Raspberry Pi pitfalls
-o	Workarounds or alternatives if something fails
-o	What should be tested on laptop vs RPI5
-Constraints & Guidance
-•	This is preparation and validation, not a redesign
-•	Avoid unnecessary refactors
-•	Prefer industry-standard deployment and testing practices
-•	Be explicit, practical, and execution-ready
-•	If something is uncertain, explain assumptions clearly
+.gitignore Review for RPI5 Testing
+You are working on an existing web app that will be tested on Raspberry Pi 5 via git remote.
+Task
+Review the project and design a proper .gitignore so that only files required to run and test the app on RPI5 are tracked.
+Goals
+•	Keep the repository clean and deployment-ready
+•	Exclude development-only, local, and non-essential files
+•	Follow industry-standard practices for production and edge-device deployment
+Guidance
+•	Identify which files are truly required on RPI5
+•	Ignore scripts, reports, docs, logs, temp files, and local artifacts not needed for testing
+•	Be careful not to exclude anything required for runtime
+•	Explain your decisions briefly and clearly
 Deliverable
-Produce a clear preparation and testing guide suitable for:
-•	a developer
-•	a kiosk / edge deployment scenario
-•	iterative testing (test on laptop → test on RPI5)
-Wait for my next instruction after completing the preparation plan.
-
+•	A proposed .gitignore
+•	A short explanation of what is included vs excluded and why
+Wait for my next instruction before applying changes.

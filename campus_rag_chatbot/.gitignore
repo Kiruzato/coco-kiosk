@@ -13,15 +13,17 @@ venv/
 env/
 ENV/
 
-# Vector store and document registry (Phase 3 - generated files)
-vector_store/
-document_registry.json
+# Vector store and document registry
+# NOTE: For RPi5 deployment, these should be TRACKED (pre-indexed)
+# Uncomment below to exclude them if rebuilding on device:
+# vector_store/
+# document_registry.json
 
-# Query logs (Phase 4 - generated files)
+# Query logs (generated files)
 logs/
 *.jsonl
 
-# Admin uploaded documents (Phase 7 - user uploaded files)
+# Admin uploaded documents (user uploaded files)
 data/uploaded/
 
 # IDE
@@ -33,3 +35,31 @@ data/uploaded/
 # OS
 .DS_Store
 Thumbs.db
+
+# === Demo/test scripts ===
+demo_phase*.py
+evaluate_demo.py
+evaluation.py
+test_*.py
+validate_*.py
+run_acceptance_tests.py
+
+# === Development documentation ===
+PHASE*.md
+*_QUICKSTART.md
+DIRECTORY_GUIDE.txt
+dev_progress*.txt
+
+# === Test result files ===
+phase*_test_results.txt
+phase*_validation_report.txt
+
+# === Vector store backups ===
+vector_store_backup_pre_phase*/
+
+# === Registry backups ===
+document_registry*.backup*
+data/*.backup*
+
+# === Audio test files ===
+*.wav
