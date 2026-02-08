@@ -168,17 +168,20 @@ echo ""
 echo -e "${YELLOW}[6/7] Ingesting documents...${NC}"
 cd "$APP_DIR"
 
+# Documents are in documents_to_ingest/ folder
+DOCS_DIR="documents_to_ingest"
+
 if [ -d "vector_store" ]; then
     echo "Vector store already exists"
     read -p "Re-ingest documents? (y/N): " reingest
     if [ "$reingest" = "y" ] || [ "$reingest" = "Y" ]; then
-        python admin.py ingest data/
+        python admin.py ingest "$DOCS_DIR/"
     else
         echo "Skipping document ingestion"
     fi
 else
-    echo "Ingesting default documents..."
-    python admin.py ingest data/
+    echo "Ingesting documents from $DOCS_DIR/..."
+    python admin.py ingest "$DOCS_DIR/"
 fi
 echo -e "${GREEN}Document ingestion complete${NC}"
 echo ""
