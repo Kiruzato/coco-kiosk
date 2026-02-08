@@ -1197,7 +1197,11 @@ def chunk_document(
         try:
             logger.info(f"Using layout-aware parsing for {document_name}")
             elements = load_pdf_document_layout_aware(file_path)
-            
+
+            # If no elements found, fall back to linear chunking
+            if not elements:
+                raise ValueError(f"Layout-aware parsing returned 0 elements for {document_name}")
+
             # Phase 18.1: Text normalization pipeline
             from text_normalizer_pipeline import normalize_elements, get_normalization_stats
             original_element_count = len(elements)
@@ -1578,6 +1582,18 @@ class DocumentManager:
 
             # Rebuild vector store
             logger.info(f"Rebuilding vector store with {len(all_documents)} chunks from {len(documents_list)} documents")
+
+            # Handle edge case: no chunks to rebuild
+            if len(all_documents) == 0:
+                logger.warning("No chunks to rebuild - clearing vector store")
+                # Clear vector store files
+                vector_store_path = Path(__file__).parent / "vector_store"
+                if vector_store_path.exists():
+                    import shutil
+                    shutil.rmtree(vector_store_path)
+                self.vector_store = None
+                return True, "All documents removed - vector store cleared"
+
             self.vector_store = FAISS.from_documents(all_documents, self.embeddings)
             self.save_vector_store()
 
