@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoCo Kiosk Redesign Preview</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Persistent Header -->
+        <header>
+            <div class="header-text">
+                <h1>CoCo Kiosk</h1>
+                <p class="subtitle">Campus Information Assistant</p>
+            </div>
+            <button id="resetBtn" class="reset-btn">Start Over</button>
+        </header>
+
+        <!-- Main Chat Area -->
+        <main class="chat-area" id="chatContainer">
+            <!-- Welcome Message -->
+            <div class="message system-message">
+                <div class="message-content">
+                    <h1>Welcome! 👋</h1>
+                    <p>I can help you with campus information, directions, and services.</p>
+                    <p><em>Try asking: "Where is the library?" or "Cafeteria hours"</em></p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Input Area -->
+        <footer class="input-area">
+            <form id="chatForm" class="input-wrapper">
+                <input 
+                    type="text" 
+                    id="userInput" 
+                    placeholder="Tap to type your question..." 
+                    autocomplete="off"
+                    aria-label="Ask a question"
+                >
+                <button type="submit" class="send-btn">Send</button>
+            </form>
+        </footer>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingIndicator">
+            <div class="spinner"></div>
+            <h3>Searching...</h3>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

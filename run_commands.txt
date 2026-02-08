@@ -22,6 +22,26 @@ Git Tags - How to Use Old Versions and Return to Latest
 6. SEE WHAT CHANGED IN A SPECIFIC ITERATION
    git log iteration_13..iteration_13.3 --oneline
 
+STARTING THE APPLICATION
+------------------------
+IMPORTANT: Always use Python 3.11 from venv311 (NOT global Python 3.13)
+
+Windows (PowerShell):
+   cd campus_rag_chatbot
+   ..\venv311\Scripts\python.exe app.py
+
+Windows (Command Prompt):
+   cd campus_rag_chatbot
+   ..\venv311\Scripts\python.exe app.py
+
+Git Bash / WSL:
+   cd campus_rag_chatbot
+   ../venv311/Scripts/python.exe app.py
+
+WHY: Python 3.13 has compatibility issues with piper-tts (missing espeakbridge).
+     Python 3.11 in venv311 has all dependencies properly configured.
+
+
 EXAMPLE WORKFLOW
 ----------------
 # You want to test how the app worked in iteration_13.1
@@ -33,7 +53,7 @@ EXAMPLE WORKFLOW
 
 3. Run the app:
    cd campus_rag_chatbot
-   python app.py
+   ..\venv311\Scripts\python.exe app.py
 
 4. Test the old behavior...
 
@@ -43,11 +63,17 @@ EXAMPLE WORKFLOW
    git checkout main
 
 7. Run the latest version:
-   python app.py
+   ..\venv311\Scripts\python.exe app.py
 
-CURRENT ITERATIONS
+CURRENT ITERATIONS (OUTDATED)
 ------------------
 iteration_13   - Phase 17A: Hybrid Retrieval & Grounding Validation
 iteration_13.1 - Phase 17A.1: Developer RAG-Only Mode
 iteration_13.2 - Phase 17A.2: Retrieval-First Routing
 iteration_13.3 - Phase 17A.2.1: Fix keyword scoring (term coverage)
+
+
+
+
+
+taskkill /F /IM python.exe

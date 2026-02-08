@@ -1,0 +1,150 @@
+Change Report - AI Model Upgrade
+=================================
+Date: February 8, 2026
+
+Summary
+-------
+Upgraded the chatbot's AI model from GPT-3.5-Turbo to GPT-4o-mini to align with the
+original system design and improve performance.
+
+
+Issue
+-----
+The Debugging Panel was showing "gpt-3.5-turbo" as the AI model, but the system was
+intended to use GPT-4o-mini according to the original plan. The old model reference
+was hardcoded in multiple places.
+
+
+Root Cause
+----------
+The AI model name was specified in several locations throughout the system:
+- The main application startup
+- The command-line interface
+- Debug information displays
+- Frontend fallback display
+
+All of these locations were set to the older model instead of the intended newer model.
+
+
+What Was Changed
+----------------
+1. Updated the AI model used by the chatbot from GPT-3.5-Turbo to GPT-4o-mini
+2. Updated all debug displays to show the correct model name
+3. Updated the frontend to show the correct model as a fallback value
+4. Updated documentation comments to reflect the new model
+
+
+Benefits of This Change
+-----------------------
+- GPT-4o-mini is more cost-effective (lower price per response)
+- GPT-4o-mini offers improved response quality
+- The system now matches the original design specification
+- The Debugging Panel accurately reflects what model is being used
+
+
+Validation
+----------
+- Verified no remaining references to the old model in application code
+- All debug information paths now report the correct model
+- Frontend display updated to match backend configuration
+
+
+Files Changed
+-------------
+- app.py: Main application AI model configuration and debug info
+- main.py: Command-line interface AI model configuration
+- intent_classifier.py: Documentation comment updated
+- static/app.js: Frontend debug panel fallback value
+
+
+No Regressions Expected
+-----------------------
+This change only affects which AI model handles responses. All other system behavior
+(voice features, document retrieval, clarification flows, etc.) remains unchanged.
+
+After restarting the server, the Debugging Panel will correctly show "gpt-4o-mini"
+as the AI model.
+
+
+================================================================================
+
+Change Report - Piper TTS Audio Fix
+===================================
+Date: February 8, 2026
+
+Summary
+-------
+Fixed an issue where the Piper text-to-speech engine was failing with an audio
+configuration error, causing the system to fall back to the cloud-based backup.
+
+
+Issue
+-----
+The Piper TTS engine (used for offline voice responses) was failing with the error:
+"# channels not specified"
+
+This caused all voice responses to use the cloud-based Edge TTS fallback instead
+of the local Piper engine.
+
+
+Root Cause
+----------
+When creating audio output, the system was not properly configuring the audio file
+format before writing. Specifically, it was missing the required settings for:
+- Number of audio channels (mono vs stereo)
+- Audio sample size (16-bit)
+- Audio sample rate (how many samples per second)
+
+Without these settings, the audio file could not be created.
+
+
+What Was Changed
+----------------
+Updated the Piper TTS engine to properly configure audio format settings before
+generating speech:
+- Set audio to mono (1 channel) - standard for speech
+- Set sample size to 16-bit - CD-quality audio
+- Set sample rate from the voice model configuration
+
+
+Benefits of This Change
+-----------------------
+- Piper TTS now works correctly for offline voice responses
+- Faster response times (no need to use cloud fallback)
+- Reduced dependency on internet connection for voice features
+- Lower latency for voice interactions
+
+
+Files Changed
+-------------
+- voice/engines/piper_tts.py: Added audio format configuration
+
+
+Validation
+----------
+- Code syntax verified
+- Server starts successfully with Piper TTS initialized
+- Error message should no longer appear in server logs
+
+Note: To fully test, restart the server and use voice input. The server logs should
+show "[PIPER] Voice loaded" and successful synthesis instead of falling back to
+edge-tts.
+
+
+================================================================================
+
+Important: Python Version Requirement
+=====================================
+
+The application MUST be run with Python 3.11 from the venv311 virtual environment.
+
+DO NOT use the global Python 3.13 - it has compatibility issues with Piper TTS
+(missing espeakbridge module).
+
+Correct startup command:
+   cd campus_rag_chatbot
+   ..\venv311\Scripts\python.exe app.py
+
+This requirement is documented in:
+- CLAUDE.md (Running the Application section)
+- run_commands.txt (Starting the Application section)

@@ -78,6 +78,42 @@ SUPPORTED_FORMATS = ['.txt', '.pdf', '.docx']
 
 
 # ==============================================================================
+# METADATA SCHEMA (Phase 23)
+# ==============================================================================
+
+# Required fields for ALL chunks
+REQUIRED_METADATA = {
+    'document_id': str,
+    'document_name': str,
+    'file_type': str,
+    'ingestion_timestamp': str,
+    'chunk_id': int,
+    'section': str,
+    'original_text': str,
+}
+
+# Additional required fields for PDF chunks with layout-aware parsing
+REQUIRED_PDF_LAYOUT_METADATA = {
+    'section_title': str,
+    'element_types': list,
+    'page_numbers': list,
+}
+
+# Additional required fields for synthetic chunks
+REQUIRED_SYNTHETIC_METADATA = {
+    'is_synthetic': bool,
+    'entity_type': str,
+    'source_chunk_ids': list,
+}
+
+# Suspicious values that trigger warnings
+SUSPICIOUS_VALUES = {
+    'section': ['General Information'],
+    'section_title': ['General Information', 'Document Content'],
+}
+
+
+# ==============================================================================
 # DOCUMENT REGISTRY MANAGEMENT
 # ==============================================================================
 
@@ -223,6 +259,205 @@ def extract_section_name(text_chunk: str) -> str:
     return "General Information"
 
 
+def is_appendix_section(section_title: str) -> tuple:
+    """
+    Phase 22: Detect if a section is an appendix and extract its identifier.
+
+    Appendix sections get special handling:
+    - Larger max_size to keep content intact
+    - Never merged with non-appendix content
+    - Marked with is_appendix metadata
+
+    Args:
+        section_title: The section title to check
+
+    Returns:
+        Tuple of (is_appendix: bool, appendix_id: str or None)
+
+    Examples:
+        "Appendix A" -> (True, "A")
+        "Appendix D - Prayer" -> (True, "D")
+        "APPENDIX C" -> (True, "C")
+        "Columban Hymn" -> (True, "CONTENT")
+        "Academic Programs" -> (False, None)
+    """
+    import re
+    title_lower = section_title.lower().strip()
+
+    # Pattern 1: "appendix" followed by letter/number
+    match = re.match(r'^appendix\s*([a-z0-9])?', title_lower)
+    if match:
+        appendix_id = match.group(1).upper() if match.group(1) else "UNKNOWN"
+        logger.info(f"[PHASE22] Detected appendix section: '{section_title}' (ID: {appendix_id})")
+        return True, appendix_id
+
+    # Pattern 2: Section title that IS an appendix item (Hymn, Prayer)
+    appendix_items = ['columban hymn', 'prayer to st. columban', 'prayer to st columban']
+    if any(item in title_lower for item in appendix_items):
+        logger.info(f"[PHASE22] Detected appendix content section: '{section_title}'")
+        return True, "CONTENT"
+
+    return False, None
+
+
+# ==============================================================================
+# METADATA VALIDATION (Phase 23)
+# ==============================================================================
+
+def validate_chunk_metadata(chunk: Document, is_pdf_layout: bool = False) -> tuple:
+    """
+    Phase 23: Validate chunk metadata against schema.
+
+    Args:
+        chunk: Document object with metadata
+        is_pdf_layout: Whether this chunk was created via layout-aware parsing
+
+    Returns:
+        Tuple of (is_valid: bool, errors: List[str], warnings: List[str])
+    """
+    errors = []
+    warnings = []
+    metadata = chunk.metadata
+    chunk_id = metadata.get('chunk_id', 'UNKNOWN')
+
+    # Check required fields
+    for field, expected_type in REQUIRED_METADATA.items():
+        if field not in metadata:
+            errors.append(f"Chunk {chunk_id}: Missing required field '{field}'")
+        elif not isinstance(metadata[field], expected_type):
+            errors.append(f"Chunk {chunk_id}: Field '{field}' wrong type "
+                         f"(expected {expected_type.__name__}, got {type(metadata[field]).__name__})")
+
+    # Check PDF layout-specific fields
+    if is_pdf_layout:
+        for field, expected_type in REQUIRED_PDF_LAYOUT_METADATA.items():
+            if field not in metadata:
+                warnings.append(f"Chunk {chunk_id}: Missing PDF layout field '{field}'")
+            elif not isinstance(metadata[field], expected_type):
+                errors.append(f"Chunk {chunk_id}: Field '{field}' wrong type")
+
+    # Check synthetic chunk fields
+    if metadata.get('is_synthetic', False):
+        for field, expected_type in REQUIRED_SYNTHETIC_METADATA.items():
+            if field not in metadata:
+                errors.append(f"Chunk {chunk_id}: Synthetic chunk missing '{field}'")
+            elif not isinstance(metadata[field], expected_type):
+                errors.append(f"Chunk {chunk_id}: Field '{field}' wrong type")
+
+    # Check for suspicious values
+    for field, suspicious_list in SUSPICIOUS_VALUES.items():
+        if field in metadata and metadata[field] in suspicious_list:
+            warnings.append(f"Chunk {chunk_id}: Suspicious value '{metadata[field]}'")
+
+    # Validate page_numbers elements are integers
+    if 'page_numbers' in metadata and isinstance(metadata['page_numbers'], list):
+        for pn in metadata['page_numbers']:
+            if not isinstance(pn, int):
+                errors.append(f"Chunk {chunk_id}: page_numbers contains non-integer: {pn}")
+
+    # Validate element_types elements are strings
+    if 'element_types' in metadata and isinstance(metadata['element_types'], list):
+        for et in metadata['element_types']:
+            if not isinstance(et, str):
+                errors.append(f"Chunk {chunk_id}: element_types contains non-string: {et}")
+
+    is_valid = len(errors) == 0
+    return is_valid, errors, warnings
+
+
+def validate_all_chunks(documents: List[Document], is_pdf_layout: bool = False) -> tuple:
+    """
+    Phase 23: Validate all chunks and log results.
+
+    Args:
+        documents: List of Document objects to validate
+        is_pdf_layout: Whether chunks were created via layout-aware parsing
+
+    Returns:
+        Tuple of (all_valid: bool, total_errors: int, total_warnings: int)
+    """
+    all_errors = []
+    all_warnings = []
+
+    for doc in documents:
+        is_valid, errors, warnings = validate_chunk_metadata(doc, is_pdf_layout)
+        all_errors.extend(errors)
+        all_warnings.extend(warnings)
+
+    # Log validation results
+    if all_errors:
+        logger.error(f"[PHASE23] Metadata validation: {len(all_errors)} errors")
+        for error in all_errors[:10]:
+            logger.error(f"  - {error}")
+        if len(all_errors) > 10:
+            logger.error(f"  ... and {len(all_errors) - 10} more errors")
+
+    if all_warnings:
+        logger.warning(f"[PHASE23] Metadata validation: {len(all_warnings)} warnings")
+        for warning in all_warnings[:10]:
+            logger.warning(f"  - {warning}")
+        if len(all_warnings) > 10:
+            logger.warning(f"  ... and {len(all_warnings) - 10} more warnings")
+
+    return len(all_errors) == 0, len(all_errors), len(all_warnings)
+
+
+def log_metadata_statistics(documents: List[Document]):
+    """
+    Phase 23: Log metadata statistics for observability.
+
+    Args:
+        documents: List of Document objects
+    """
+    if not documents:
+        logger.info("[PHASE23] No documents to analyze")
+        return
+
+    stats = {
+        'total': len(documents),
+        'synthetic': sum(1 for d in documents if d.metadata.get('is_synthetic')),
+        'appendix': sum(1 for d in documents if d.metadata.get('is_appendix')),
+        'sections': set(),
+        'element_types': set(),
+        'general_info': 0,
+        'sizes': [],
+    }
+
+    for doc in documents:
+        meta = doc.metadata
+
+        # Collect sections
+        section = meta.get('section_title') or meta.get('section', '')
+        if section:
+            stats['sections'].add(section)
+        if section == 'General Information':
+            stats['general_info'] += 1
+
+        # Collect element types
+        for et in meta.get('element_types', []):
+            stats['element_types'].add(et)
+
+        # Chunk sizes
+        stats['sizes'].append(len(doc.page_content))
+
+    # Calculate averages
+    avg_size = sum(stats['sizes']) / len(stats['sizes']) if stats['sizes'] else 0
+    min_size = min(stats['sizes']) if stats['sizes'] else 0
+    max_size = max(stats['sizes']) if stats['sizes'] else 0
+
+    # Log statistics
+    logger.info("[PHASE23] ========== METADATA STATISTICS ==========")
+    logger.info(f"[PHASE23] Total chunks: {stats['total']}")
+    logger.info(f"[PHASE23] Synthetic chunks: {stats['synthetic']}")
+    logger.info(f"[PHASE23] Appendix chunks: {stats['appendix']}")
+    logger.info(f"[PHASE23] Unique sections: {len(stats['sections'])}")
+    logger.info(f"[PHASE23] Element types: {sorted(stats['element_types'])}")
+    logger.info(f"[PHASE23] Chunk size: avg={avg_size:.0f}, min={min_size}, max={max_size}")
+    if stats['general_info'] > 0:
+        logger.warning(f"[PHASE23] 'General Information' sections: {stats['general_info']} (detection gaps)")
+    logger.info("[PHASE23] ============================================")
+
+
 def load_txt_document(file_path: Path) -> str:
     """
     Load a text document.
@@ -358,30 +593,40 @@ def group_elements_by_section(elements: List[Dict]) -> List[Dict]:
         - elements: List of element dicts belonging to this section
         - element_types: Set of element types present in section
         - page_numbers: Set of page numbers spanned by section
+        - is_appendix: Boolean flag for appendix sections (Phase 22)
+        - appendix_id: Appendix identifier if applicable (Phase 22)
     """
     sections = []
     current_section = {
         'section_title': 'Document Content',
         'elements': [],
         'element_types': set(),
-        'page_numbers': set()
+        'page_numbers': set(),
+        'is_appendix': False,
+        'appendix_id': None
     }
 
     for elem in elements:
         elem_type = elem['type']
-        
+
         # Title elements start a new section
         if elem_type == 'Title':
             # Save previous section if it has content
             if current_section['elements']:
                 sections.append(current_section)
-            
+
+            # Phase 22: Check if this is an appendix section
+            section_title = elem['text'].strip()
+            is_appendix, appendix_id = is_appendix_section(section_title)
+
             # Start new section with this title
             current_section = {
-                'section_title': elem['text'].strip(),
+                'section_title': section_title,
                 'elements': [elem],
                 'element_types': {elem_type},
-                'page_numbers': {elem['metadata'].get('page_number')} if elem['metadata'].get('page_number') else set()
+                'page_numbers': {elem['metadata'].get('page_number')} if elem['metadata'].get('page_number') else set(),
+                'is_appendix': is_appendix,
+                'appendix_id': appendix_id
             }
         else:
             # Add element to current section
@@ -405,26 +650,47 @@ def group_elements_by_section(elements: List[Dict]) -> List[Dict]:
 def merge_related_admin_sections(sections: List[Dict]) -> List[Dict]:
     """
     Merge related administrative sections with HARD BOUNDARIES for enumeration groups.
-    
+
     Phase 18 Structural Fix: Treats "Deans" as a protected enumeration group that must
     never be mixed with other administrative roles (Directors, VPs, Chairs). This ensures
     deterministic enumeration completeness for queries like "Who are the deans".
-    
+
+    Phase 22: Appendix sections are never merged with non-appendix content.
+
     Design principles:
     1. Enumeration groups (Deans, Directors, etc.) are HARD BOUNDARIES
     2. Never merge across different role types
     3. Collect ALL instances of same role type into ONE canonical group
     4. Enumerated entities appear FIRST in chunk content
     5. Deterministic, not ranking-dependent
-    
+    6. Appendix sections stay isolated (Phase 22)
+
     Args:
         sections: List of section dictionaries from group_elements_by_section
-    
+
     Returns:
         List of sections with enumeration groups properly isolated
     """
     if not sections:
         return sections
+
+    # Phase 22: Separate appendix sections - they are never merged
+    appendix_sections = []
+    non_appendix_sections = []
+
+    for section in sections:
+        if section.get('is_appendix', False):
+            appendix_sections.append(section)
+            logger.info(f"[PHASE22] Appendix section isolated: '{section['section_title']}'")
+        else:
+            non_appendix_sections.append(section)
+
+    # If no non-appendix sections, just return appendix sections
+    if not non_appendix_sections:
+        return appendix_sections
+
+    # Apply existing merge logic only to non-appendix sections
+    sections = non_appendix_sections
     
     # Define enumeration groups (hard boundaries - never mix)
     ENUMERATION_GROUPS = {
@@ -487,7 +753,9 @@ def merge_related_admin_sections(sections: List[Dict]) -> List[Dict]:
                 'section_title': section['section_title'],  # Keep the clean title
                 'elements': list(section['elements']),
                 'element_types': set(section['element_types']),
-                'page_numbers': set(section['page_numbers'])
+                'page_numbers': set(section['page_numbers']),
+                'is_appendix': False,  # Phase 22: Non-appendix by definition
+                'appendix_id': None
             }
             
             # Look ahead for content sections
@@ -629,9 +897,11 @@ def merge_related_admin_sections(sections: List[Dict]) -> List[Dict]:
                 'section_title': canonical_title,
                 'elements': merged_elements,
                 'element_types': merged_types,
-                'page_numbers': merged_pages
+                'page_numbers': merged_pages,
+                'is_appendix': False,  # Phase 22: Non-appendix by definition
+                'appendix_id': None
             }
-            
+
             merged_sections.append((min(merged_pages) if merged_pages else 0, merged_section))
     
     # Add non-enumeration sections
@@ -643,10 +913,17 @@ def merge_related_admin_sections(sections: List[Dict]) -> List[Dict]:
     # Sort by page number to maintain document order
     merged_sections.sort(key=lambda x: x[0])
     result = [section for _, section in merged_sections]
-    
+
     if len(result) < len(sections):
         logger.info(f"Merged {len(sections)} sections into {len(result)} (isolated {len(sections) - len(result)} enumeration groups)")
-    
+
+    # Phase 22: Append appendix sections at the end (they were isolated earlier)
+    if appendix_sections:
+        # Sort appendix sections by page number
+        appendix_sections.sort(key=lambda s: min(s['page_numbers']) if s['page_numbers'] else float('inf'))
+        result.extend(appendix_sections)
+        logger.info(f"[PHASE22] Appended {len(appendix_sections)} appendix sections to result")
+
     return result
 
 
@@ -685,20 +962,34 @@ def create_chunks_from_sections(
     documents = []
     chunk_id = 0
 
+    # Phase 22: Configuration for appendix sections
+    APPENDIX_MAX_SIZE = 2000  # Keep appendix content intact if under 2000 chars
+
     for section in sections:
         section_title = section['section_title']
         section_elements = section['elements']
         section_element_types = list(section['element_types'])  # Convert set to list
         section_page_numbers = sorted(list(section['page_numbers']))  # Convert set to sorted list
 
+        # Phase 22: Extract appendix flags
+        is_appendix = section.get('is_appendix', False)
+        appendix_id = section.get('appendix_id')
+
+        # Phase 22: Use larger max_size for appendix sections to keep them intact
+        if is_appendix:
+            effective_max_size = APPENDIX_MAX_SIZE
+            logger.info(f"[PHASE22] Appendix section '{section_title}' using max_size={effective_max_size}")
+        else:
+            effective_max_size = max_size
+
         # Combine all element texts in this section
         section_text = '\n\n'.join([elem['text'] for elem in section_elements])
         section_length = len(section_text)
 
-        # Case 1: Section fits within max_size - keep intact
-        if section_length <= max_size:
+        # Case 1: Section fits within effective_max_size - keep intact
+        if section_length <= effective_max_size:
             normalized_text = normalize_text(section_text)
-            
+
             metadata = {
                 "document_id": document_id,
                 "document_name": document_name,
@@ -709,9 +1000,11 @@ def create_chunks_from_sections(
                 "section_title": section_title,  # Phase 18: Explicit section title
                 "element_types": section_element_types,  # Phase 18: Element types in chunk
                 "page_numbers": section_page_numbers,  # Phase 18: Pages spanned
-                "original_text": section_text
+                "original_text": section_text,
+                "is_appendix": is_appendix,  # Phase 22: Appendix flag
+                "appendix_id": appendix_id   # Phase 22: Appendix identifier
             }
-            
+
             doc = Document(page_content=normalized_text, metadata=metadata)
             documents.append(doc)
             chunk_id += 1
@@ -725,22 +1018,22 @@ def create_chunks_from_sections(
                 elem_text = elem['text']
                 elem_length = len(elem_text)
 
-                # If adding this element exceeds max_size and we have content, save current chunk
-                if current_chunk_length + elem_length > max_size and current_chunk_elements:
+                # If adding this element exceeds effective_max_size and we have content, save current chunk
+                if current_chunk_length + elem_length > effective_max_size and current_chunk_elements:
                     # Save current chunk
                     chunk_text = '\n\n'.join([e['text'] for e in current_chunk_elements])
                     normalized_text = normalize_text(chunk_text)
-                    
+
                     # Aggregate page numbers from elements in this chunk
                     chunk_page_numbers = sorted(list(set([
-                        e['metadata'].get('page_number') 
-                        for e in current_chunk_elements 
+                        e['metadata'].get('page_number')
+                        for e in current_chunk_elements
                         if e['metadata'].get('page_number')
                     ])))
-                    
+
                     # Aggregate element types
                     chunk_element_types = list(set([e['type'] for e in current_chunk_elements]))
-                    
+
                     metadata = {
                         "document_id": document_id,
                         "document_name": document_name,
@@ -751,9 +1044,11 @@ def create_chunks_from_sections(
                         "section_title": section_title,
                         "element_types": chunk_element_types,
                         "page_numbers": chunk_page_numbers,
-                        "original_text": chunk_text
+                        "original_text": chunk_text,
+                        "is_appendix": is_appendix,  # Phase 22
+                        "appendix_id": appendix_id   # Phase 22
                     }
-                    
+
                     doc = Document(page_content=normalized_text, metadata=metadata)
                     documents.append(doc)
                     chunk_id += 1
@@ -770,15 +1065,15 @@ def create_chunks_from_sections(
             if current_chunk_elements:
                 chunk_text = '\n\n'.join([e['text'] for e in current_chunk_elements])
                 normalized_text = normalize_text(chunk_text)
-                
+
                 chunk_page_numbers = sorted(list(set([
-                    e['metadata'].get('page_number') 
-                    for e in current_chunk_elements 
+                    e['metadata'].get('page_number')
+                    for e in current_chunk_elements
                     if e['metadata'].get('page_number')
                 ])))
-                
+
                 chunk_element_types = list(set([e['type'] for e in current_chunk_elements]))
-                
+
                 metadata = {
                     "document_id": document_id,
                     "document_name": document_name,
@@ -789,9 +1084,11 @@ def create_chunks_from_sections(
                     "section_title": section_title,
                     "element_types": chunk_element_types,
                     "page_numbers": chunk_page_numbers,
-                    "original_text": chunk_text
+                    "original_text": chunk_text,
+                    "is_appendix": is_appendix,  # Phase 22
+                    "appendix_id": appendix_id   # Phase 22
                 }
-                
+
                 doc = Document(page_content=normalized_text, metadata=metadata)
                 documents.append(doc)
                 chunk_id += 1
@@ -1095,10 +1392,17 @@ class DocumentManager:
                 file_path=file_path  # Phase 18: Enable layout-aware PDF parsing
             )
 
-            # Phase 18 Entity Consolidation: Create synthetic chunks for enumeration roles
-            from entity_consolidation import consolidate_dean_chunks
-            documents = consolidate_dean_chunks(documents)
-            
+            # Phase 24: Generic consolidation engine (replaces hardcoded Phase 18/21.1)
+            from consolidation_engine import ConsolidationEngine
+            engine = ConsolidationEngine()
+            documents = engine.consolidate_all(documents)
+
+            # Phase 23: Validate metadata and log statistics
+            logger.info("[PHASE23] Validating chunk metadata...")
+            is_pdf_layout = file_type == '.pdf' and LAYOUT_AWARE_PARSER
+            validate_all_chunks(documents, is_pdf_layout)
+            log_metadata_statistics(documents)
+
             # Add to vector store (incremental)
             if self.vector_store is None:
                 # Create new vector store
@@ -1111,6 +1415,12 @@ class DocumentManager:
 
             # Save vector store
             self.save_vector_store()
+
+            # Phase 25: Build and save metadata index
+            from metadata_index import MetadataIndex
+            metadata_index = MetadataIndex()
+            metadata_index.build_from_vector_store(self.vector_store)
+            metadata_index.save()
 
             # Add to registry
             registry_metadata = {
@@ -1270,6 +1580,12 @@ class DocumentManager:
             logger.info(f"Rebuilding vector store with {len(all_documents)} chunks from {len(documents_list)} documents")
             self.vector_store = FAISS.from_documents(all_documents, self.embeddings)
             self.save_vector_store()
+
+            # Phase 25: Rebuild metadata index
+            from metadata_index import MetadataIndex
+            metadata_index = MetadataIndex()
+            metadata_index.build_from_vector_store(self.vector_store)
+            metadata_index.save()
 
             return True, f"Rebuilt vector store with {len(documents_list)} documents"
 

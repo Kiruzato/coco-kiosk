@@ -1,0 +1,197 @@
+================================================================================
+STT/TTS ENGINE VERIFICATION REPORT
+================================================================================
+Date: 2026-02-05
+Project: CoCo Campus RAG Chatbot (Phase 36)
+
+================================================================================
+EXECUTIVE SUMMARY
+================================================================================
+
+CRITICAL FINDING: The admin selection is NOT fully respected. The _init_engines()
+methods are hardcoded to only handle specific engine types, making most admin
+selections non-functional.
+
+================================================================================
+1. STT ENGINE VERIFICATION TABLE
+================================================================================
+
++----------------+----------------+-----------------------------+-------------------+
+| Engine         | Admin UI Shows | Selected -> Actually Exec?  | Fallback Trigger? |
++----------------+----------------+-----------------------------+-------------------+
+| whisper.cpp    | Available      | YES                         | No (if model ok)  |
+| whisper-openai | Available      | NO                          | N/A - never init  |
++----------------+----------------+-----------------------------+-------------------+
+
+Evidence:
+- stt_service.py:116 - Only `if engine_type == 'whisper.cpp'` is handled
+- No `elif` exists for 'whisper-openai' as primary
+
+STT Code Path (stt_service.py lines 114-124):
+```
+engine_type = primary_config.get('engine', 'whisper.cpp')
+if engine_type == 'whisper.cpp':        # <- ONLY THIS IS HANDLED
+    try:
+        from .engines.whisper_cpp import WhisperCppEngine
+        self.primary_engine = WhisperCppEngine(primary_config)
+    except Exception as e:
+        self._init_fallback_as_primary()
+# NO elif for 'whisper-openai' - it's simply ignored as primary
+```
+
+Result: If admin selects whisper-openai as primary, self.primary_engine stays
+None, and the system has no STT capability unless fallback is enabled.
+
+================================================================================
+2. TTS ENGINE VERIFICATION TABLE
+================================================================================
+
++----------------+----------------+-----------------------------+-------------------+
+| Engine         | Admin UI Shows | Selected -> Actually Exec?  | Fallback Trigger? |
++----------------+----------------+-----------------------------+-------------------+
+| piper          | Available      | YES                         | No (if model ok)  |
+| edge-tts       | Available      | NO (as primary)             | N/A - fallback ok |
+| openai-tts     | Available      | NO - Never executed         | Never             |
++----------------+----------------+-----------------------------+-------------------+
+
+Evidence:
+- tts_service.py:126 - Only `if engine_type == 'piper'` is handled
+- tts_service.py:143-148 - edge-tts only works when fallback_type == 'edge-tts'
+- openai-tts is not implemented anywhere - neither as primary nor fallback
+
+TTS Code Path (tts_service.py lines 124-132):
+```
+engine_type = primary_config.get('engine', 'piper')
+if engine_type == 'piper':              # <- ONLY THIS IS HANDLED AS PRIMARY
+    try:
+        from .engines.piper_tts import PiperTTSEngine
+        self.primary_engine = PiperTTSEngine(primary_config)
+    except Exception as e:
+        logger.warning(f"[TTS] Failed to initialize Piper: {e}")
+# NO handling for 'edge-tts' or 'openai-tts' as primary
+```
+
+Fallback code (lines 135-149):
+- espeak-ng -> EspeakTTSEngine
+- edge-tts  -> EdgeTTSEngine
+- NO openai-tts handling
+
+================================================================================
+3. FALLBACK LOGIC SUMMARY
+================================================================================
+
+STT Fallback Triggers (stt_service.py):
++-------------------------+---------------+----------------------------------------+
+| Condition               | Location      | What Happens                           |
++-------------------------+---------------+----------------------------------------+
+| Primary init fails      | Line 121-124  | Tries WhisperOpenAIEngine as primary   |
+| Confidence < 0.7        | Line 222-237  | Tries fallback, uses better result     |
+| Primary exception       | Line 241-249  | Falls through to fallback              |
++-------------------------+---------------+----------------------------------------+
+
+TTS Fallback Triggers (tts_service.py):
++-------------------------+---------------+----------------------------------------+
+| Condition               | Location      | What Happens                           |
++-------------------------+---------------+----------------------------------------+
+| Primary exception       | Line 211-226  | Tries fallback engine                  |
++-------------------------+---------------+----------------------------------------+
+
+Note: TTS has NO confidence-based fallback, only exception-based.
+
+================================================================================
+4. WHICH ENGINES ARE REAL VS DEAD
+================================================================================
+
+REAL (Actually Functional When Selected):
++----------------+-------------+------------------------------------------+
+| Engine         | Type        | Notes                                    |
++----------------+-------------+------------------------------------------+
+| whisper.cpp    | STT Primary | Works if model file exists               |
+| piper          | TTS Primary | Works if model file exists               |
++----------------+-------------+------------------------------------------+
+
+PARTIAL (Only Works in Specific Role):
++----------------+--------------+-----------------------------------------+
+| Engine         | Type         | Notes                                   |
++----------------+--------------+-----------------------------------------+
+| whisper-openai | STT Fallback | Works as fallback if enabled + API key  |
+| edge-tts       | TTS Fallback | Works as fallback, NOT as primary       |
++----------------+--------------+-----------------------------------------+
+
+DEAD (Never Executed):
++----------------+------+----------------------------------------------+
+| Engine         | Type | Notes                                        |
++----------------+------+----------------------------------------------+
+| openai-tts     | TTS  | Listed in admin UI but no code path exists   |
++----------------+------+----------------------------------------------+
+
+================================================================================
+5. IS ADMIN SELECTION RESPECTED?
+================================================================================
+
++----------------------------+------------+----------------------------------------+
+| Provider Registry Selection| Respected? | Reality                                |
++----------------------------+------------+----------------------------------------+
+| STT: whisper.cpp           | YES        | Works as intended                      |
+| STT: whisper-openai        | NO         | Ignored - no primary init path         |
+| TTS: piper                 | YES        | Works as intended                      |
+| TTS: edge-tts              | NO         | Ignored as primary - only fallback     |
+| TTS: openai-tts            | NO         | Dead code - not implemented            |
++----------------------------+------------+----------------------------------------+
+
+================================================================================
+6. RECOMMENDATIONS
+================================================================================
+
+Engines That Should Remain Selectable:
++----------------+--------+--------------------------------------------------+
+| Engine         | Keep?  | Reason                                           |
++----------------+--------+--------------------------------------------------+
+| whisper.cpp    | YES    | Fully functional, primary STT                    |
+| piper          | YES    | Fully functional, primary TTS                    |
+| edge-tts       | FIX    | Engine exists, just needs primary init code      |
++----------------+--------+--------------------------------------------------+
+
+Engines That Should Be Disabled/Removed:
++----------------+---------+-------------------------------------------------+
+| Engine         | Action  | Reason                                          |
++----------------+---------+-------------------------------------------------+
+| whisper-openai | REMOVE  | Can only work as fallback, misleading as primary|
+| openai-tts     | REMOVE  | No code path exists - completely dead           |
++----------------+---------+-------------------------------------------------+
+
+Misleading Admin Options:
+1. whisper-openai as STT primary - Selecting this does nothing; no STT
+2. edge-tts as TTS primary - Selecting this does nothing; no TTS
+3. openai-tts as TTS option - Complete facade; never executed anywhere
+
+================================================================================
+7. CODE LOCATIONS SUMMARY
+================================================================================
+
++-------------------------------+-------------+----------------------------------+
+| File                          | Key Lines   | Issue                            |
++-------------------------------+-------------+----------------------------------+
+| voice/stt_service.py          | 116         | Only handles whisper.cpp         |
+| voice/tts_service.py          | 126         | Only handles piper               |
+| voice/tts_service.py          | 135-149     | Fallback: espeak-ng, edge-tts    |
+| voice/provider_registry.py    | 56-97       | Lists non-working engines        |
+| voice_routes.py               | 304-313     | Updates config, no validation    |
++-------------------------------+-------------+----------------------------------+
+
+================================================================================
+8. CONCLUSION
+================================================================================
+
+The admin UI presents 5 engine options (2 STT, 3 TTS), but only 2 actually work
+as primary selections (whisper.cpp and piper). The others are either:
+
+- Fallback-only (whisper-openai, edge-tts)
+- Completely non-functional (openai-tts)
+
+Admin selection for non-default engines is silently ignored, with no error
+message or warning to the user.
+
+================================================================================
+END OF REPORT
+================================================================================

@@ -1,0 +1,302 @@
+================================================================================
+PHASE 40: SILENT TTS WITH IMPLICIT INTERRUPTION - TESTING INSTRUCTIONS
+================================================================================
+Date: February 7, 2026
+Status: Implementation Complete
+
+================================================================================
+OVERVIEW
+================================================================================
+
+Phase 40 redesigns the TTS (Text-to-Speech) user experience:
+- TTS audio now plays silently in the background
+- No visual overlay or "Speaking..." indicator is shown
+- No explicit "Stop" button is required
+- Speech is automatically interrupted when user interacts with input controls
+
+This follows voice assistant industry standards (Google Assistant, Alexa) where
+speech is a secondary modality that never blocks the primary (visual) interface.
+
+================================================================================
+PREREQUISITES
+================================================================================
+
+1. Start the server:
+   cd campus_rag_chatbot
+   python app.py
+
+2. Ensure voice services are enabled:
+   - Check /voice/status endpoint returns voice_enabled: true
+   - TTS should be available (tts_available: true)
+
+3. Open the chatbot UI in a browser:
+   http://localhost:8000/
+
+================================================================================
+TEST CASES
+================================================================================
+
+Test 1: Basic TTS Playback (No Overlay)
+---------------------------------------
+Steps:
+1. Type a question in the text input (e.g., "Where is the library?")
+2. Press Enter or click Send
+
+Expected:
+- Response appears in chat
+- Audio plays automatically (if TTS enabled)
+- NO overlay/modal appears
+- NO "Speaking response..." text visible
+- NO "Stop" button visible
+- User can read the response while audio plays
+- Audio ends naturally, no visual change
+
+Pass: [ ]
+
+
+Test 2: Interrupt by Clicking Text Input
+----------------------------------------
+Steps:
+1. Send a query that generates a response
+2. While audio is playing, click on the text input field
+
+Expected:
+- Audio stops immediately
+- No stuck states
+- Text input is focused and ready for typing
+
+Pass: [ ]
+
+
+Test 3: Interrupt by Focusing Text Input (Tab Key)
+-------------------------------------------------
+Steps:
+1. Send a query that generates a response
+2. While audio is playing, press Tab to focus text input
+
+Expected:
+- Audio stops immediately
+- Text input is focused
+
+Pass: [ ]
+
+
+Test 4: Interrupt by Typing
+---------------------------
+Steps:
+1. Send a query that generates a response
+2. While audio is playing, start typing in the text input
+
+Expected:
+- Audio stops immediately on first keystroke
+- Characters appear in text input normally
+
+Pass: [ ]
+
+
+Test 5: Interrupt by Clicking Send Button
+-----------------------------------------
+Steps:
+1. Send a query, wait for response with audio
+2. Type new query while audio plays
+3. Click Send button while audio still playing
+
+Expected:
+- Audio stops immediately
+- New query is submitted
+- Previous audio does not overlap with new response
+
+Pass: [ ]
+
+
+Test 6: Interrupt by Pressing Enter
+-----------------------------------
+Steps:
+1. Send a query, wait for response with audio
+2. Type new query in input while audio plays
+3. Press Enter to submit
+
+Expected:
+- Audio stops immediately
+- Form submits normally
+- No race conditions
+
+Pass: [ ]
+
+
+Test 7: Interrupt by Voice Button
+---------------------------------
+Steps:
+1. Send a text query, wait for response with audio
+2. While audio is playing, click the voice/microphone button
+
+Expected:
+- Audio stops immediately
+- Voice recording starts (if voice enabled)
+- No stuck audio states
+
+Pass: [ ]
+
+
+Test 8: New Response While Previous Speaking
+-------------------------------------------
+Steps:
+1. Send a query, wait for response with audio to start
+2. Quickly send another query before first audio finishes
+
+Expected:
+- First audio stops when second query is sent
+- Second response plays its audio
+- No overlapping audio
+
+Pass: [ ]
+
+
+Test 9: Rapid Voice Button Clicks
+---------------------------------
+Steps:
+1. Click voice button multiple times rapidly
+2. Or: Start recording, then rapidly click to stop/start
+
+Expected:
+- No stuck states
+- No error states
+- Clean state transitions
+
+Pass: [ ]
+
+
+Test 10: Page Refresh During Playback
+------------------------------------
+Steps:
+1. Send a query, wait for audio to play
+2. Refresh the page (F5) while audio is playing
+
+Expected:
+- Page reloads cleanly
+- No stuck audio on reload
+- Fresh state after reload
+
+Pass: [ ]
+
+
+Test 11: Voice Input Flow (Full Cycle)
+--------------------------------------
+Steps:
+1. Click voice button
+2. Speak a question
+3. Wait for transcription and response
+4. Audio should play for response
+5. Click voice button again while audio playing
+
+Expected:
+- Voice recording works
+- Response audio plays silently (no overlay)
+- Clicking voice button stops audio and starts new recording
+
+Pass: [ ]
+
+
+Test 12: Console Error Check
+----------------------------
+Steps:
+1. Open browser Developer Tools (F12) -> Console
+2. Perform several of the above tests
+
+Expected:
+- No JavaScript errors in console
+- May see "[Phase 40] TTS interruption listeners initialized" log
+- May see "TTS playback error (silent):" for expected failures (e.g., autoplay blocked)
+
+Pass: [ ]
+
+
+================================================================================
+EDGE CASES TO VERIFY
+================================================================================
+
+1. Autoplay Policy
+   - If browser blocks autoplay, TTS should fail silently
+   - No error shown to user
+   - Check console for "TTS playback error (silent)" message
+
+2. Disabled TTS
+   - If TTS is disabled, no audio should play
+   - UI should function normally
+
+3. Network Error
+   - If TTS audio fails to load, should fail silently
+   - No blocking of UI
+
+4. Empty Response
+   - If chatbot returns empty/rejected response
+   - No TTS should be attempted
+
+================================================================================
+ACCESSIBILITY VERIFICATION
+================================================================================
+
+1. Screen Reader Compatibility
+   - Response text should be readable by screen reader
+   - No modal overlay blocking content
+
+2. Keyboard Navigation
+   - Tab key should work normally
+   - Enter key should submit form
+   - No focus traps
+
+3. Motor Impairment
+   - No precise button targeting required
+   - Any interaction stops speech (easier than targeting Stop button)
+
+================================================================================
+BROWSER COMPATIBILITY
+================================================================================
+
+Test in:
+- [ ] Chrome (primary)
+- [ ] Firefox
+- [ ] Edge
+- [ ] Safari (if available)
+
+Note: Safari may have stricter autoplay policies
+
+================================================================================
+SUMMARY CHECKLIST
+================================================================================
+
+Core Functionality:
+[ ] TTS plays without visual overlay
+[ ] No "Stop" button visible
+[ ] User can read response while listening
+
+Interruption Works For:
+[ ] Text input focus
+[ ] Text input click
+[ ] Typing in input
+[ ] Send button click
+[ ] Enter key press
+[ ] Voice button click
+
+Edge Cases:
+[ ] No overlapping audio
+[ ] No stuck states
+[ ] Clean page refresh
+[ ] Silent failure on errors
+
+================================================================================
+NOTES
+================================================================================
+
+If any test fails, check:
+1. Browser console for JavaScript errors
+2. Network tab for failed audio requests
+3. Voice service status at /voice/status
+
+Report issues with:
+- Browser name and version
+- Steps to reproduce
+- Console error messages (if any)
+- Expected vs actual behavior
+
+================================================================================

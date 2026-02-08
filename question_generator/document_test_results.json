@@ -1,6 +1,6 @@
 {
   "test_run": {
-    "timestamp": "2026-01-25T19:55:01.666749",
+    "timestamp": "2026-01-26T10:07:54.044385",
     "questions_file": "generated_questions.txt",
     "total_questions": 99,
     "base_url": "http://localhost:8000"
@@ -8,13 +8,34 @@
   "results": [
     {
       "query": "What is a Bachelor of Science in Computer Science (BSCS)?",
-      "answer": "A Bachelor of Science in Computer Science (BSCS) is a undergraduate degree program that focuses on the study of computer systems, software development, algorithms, and programming languages. It prepares students for careers in fields such as software development, cybersecurity, data analysis, and more.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "A Bachelor of Science in Computer Science (BSCS) is a program offered by Columban College, Inc. under the College of Computer Studies. (Source: Campus documents)",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 41
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 37
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "College of Nursing",
+          "chunk_id": 42
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "Major in Financial Management (BSBA-FM)",
+          "chunk_id": 40
+        }
+      ],
+      "confidence_level": "High",
+      "confidence_score": 95.0,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:45:38.014689"
+      "mode": "campus",
+      "timestamp": "2026-01-26T09:58:55.125843"
     },
     {
       "query": "Why did the Vincentian Fathers take over the administration of the College?",
@@ -41,11 +62,11 @@
           "chunk_id": 15
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 93.0,
+      "confidence_level": "Medium",
+      "confidence_score": 71.4,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:45:45.792939"
+      "timestamp": "2026-01-26T09:59:00.608921"
     },
     {
       "query": "How many monasteries did St. Columban establish?",
@@ -73,10 +94,10 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.4000015258789,
+      "confidence_score": 93.3,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:45:53.036952"
+      "timestamp": "2026-01-26T09:59:06.983199"
     },
     {
       "query": "Why did the Diocese of Iba reassume the administration of Columban College in 1993?",
@@ -104,24 +125,45 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.5,
+      "confidence_score": 95.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:45:59.176826"
+      "timestamp": "2026-01-26T09:59:12.360514"
     },
     {
       "query": "Why do we need to create a strategy for effective global visibility of research outputs?",
-      "answer": "Creating a strategy for effective global visibility of research outputs is important to increase the impact and reach of the research, attract collaborators and funding opportunities, and contribute to the advancement of knowledge in the global academic community.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "It is important to create a strategy for effective global visibility of research outputs to ensure continuous quality assurance and improvement of the college’s educational programs, systems, structures, and processes towards accreditation and internationalization. (source: Campus documents, section on strategic goals)",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 24
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 31
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 348
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 371
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 71.5,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:46:04.506765"
+      "mode": "campus",
+      "timestamp": "2026-01-26T09:59:18.682617"
     },
     {
       "query": "What is the purpose of a COLUMBAN COLLEGE?",
-      "answer": "Columban College commits herself to teach not merely for the attainment of knowledge but for the acquisition of values and the discovery of truth necessary to be able to translate one’s faith into daily life and be able to celebrate it in prayer and worship. (Vision, Mission, Strategic Goals and Core Values of Columban College, Inc.)",
+      "answer": "Columban College commits herself to teach not merely for the attainment of knowledge but for the acquisition of values and the discovery of truth necessary to be able to translate one’s faith into daily life and be able to celebrate it in prayer and worship. (Source: Campus documents)",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -148,21 +190,42 @@
       "confidence_score": 95.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:46:11.193849"
+      "timestamp": "2026-01-26T09:59:24.208583"
     },
     {
       "query": "what is the role of a leader?",
-      "answer": "The role of a leader is to provide direction, guidance, and inspiration to a group of individuals in order to achieve a common goal. Leaders are responsible for making decisions, setting objectives, and motivating their team members to work towards success.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "A leader acts as a steward of God’s creation and his people, extends support for the social amelioration of the underprivileged, demonstrates leadership qualities, civic-mindedness, and responsible citizenship, and promotes social development to uphold the common good and uplift the quality of life of the people in the community. This information can be found in the campus document under the section discussing the role of a leader.",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "God’s creation and His people;",
+          "chunk_id": 33
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 48
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 338
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 61
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 69.0,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:46:15.868968"
+      "mode": "campus",
+      "timestamp": "2026-01-26T09:59:30.175270"
     },
     {
       "query": "What does the Director do to ensure the development of the campus to support the mission of the college?",
-      "answer": "The Director provides strategic and technical guidance to the management to ensure appropriate development of the campus to support the mission of the college. (Source: Document Name: Campus Organization Structure, Section: director of campus development)",
+      "answer": "The Director provides strategic and technical guidance to the management to ensure appropriate development of the campus to support the mission of the college. (Source: Document Name: Campus Organizational Structure, Section: director of campus development)",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -185,11 +248,11 @@
           "chunk_id": 64
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 94.4000015258789,
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:46:22.207910"
+      "timestamp": "2026-01-26T09:59:35.760711"
     },
     {
       "query": "How many Vincentian Fathers took over the administration of the College in 1983?",
@@ -216,25 +279,46 @@
           "chunk_id": 17
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 93.19999694824219,
+      "confidence_level": "Medium",
+      "confidence_score": 72.9,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:46:27.955921"
+      "timestamp": "2026-01-26T09:59:41.572122"
     },
     {
       "query": "What is the purpose of the Board of Trustees?",
-      "answer": "The purpose of the Board of Trustees is to provide governance, oversight, and strategic direction for an organization or institution.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "The purpose of the Board of Trustees is to serve as the highest policy-making body of the school, subject only to the provisions of Philippine laws and to the vision and mission of the school. (Source: Organization and Administration of Columban College, Inc., Section 1)",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 51
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 47
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 50
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 49
+        }
+      ],
+      "confidence_level": "High",
+      "confidence_score": 94.1,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:46:31.866996"
+      "mode": "campus",
+      "timestamp": "2026-01-26T09:59:47.686932"
     },
     {
       "query": "What is the role of the director of admissions and registration??",
-      "answer": "The director of admissions and registration is responsible for the entire operations concerning admissions and registration of students in the entire college. They also take charge of developing policies, procedures, and systems to improve the services of the office, keeping the college updated on new government policies related to student admission, retention, registration, and promotion, and ensuring that the school's practices are consistent with these policies. Additionally, they take full responsibility for student records and files (Source: Campus documents, Director of Admissions and Registration section).",
+      "answer": "The director of admissions and registration is responsible for the entire operations concerning admissions and registration of students in the entire college. They also take charge of developing policies, procedures, and systems to improve the services of the office, keep the college updated on new government policies related to student admission, retention, registration, and promotion, and ensure that the school's practices are consistent with these policies. Additionally, they take full responsibility for student records and files (Source: Campus Document, Section 15).",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -258,10 +342,10 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.5,
+      "confidence_score": 95.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:46:38.169601"
+      "timestamp": "2026-01-26T09:59:53.570945"
     },
     {
       "query": "What are the core values of COLUMBAN COLLEGE, INC.?",
@@ -288,25 +372,46 @@
           "chunk_id": 29
         }
       ],
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
+      "rejected": false,
+      "mode": "campus",
+      "timestamp": "2026-01-26T09:59:59.794326"
+    },
+    {
+      "query": "How does the Vice President for Administration advise the Vice President for Administration?",
+      "answer": "I don't have verified campus information to answer that question.",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 72
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 74
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 60
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 61
+        }
+      ],
       "confidence_level": "High",
       "confidence_score": 95.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:46:44.052432"
-    },
-    {
-      "query": "How does the Vice President for Administration advise the Vice President for Administration?",
-      "answer": "The Vice President for Administration typically advises the Vice President for Administration on matters related to operations, finance, human resources, and administrative policies.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
-      "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:46:47.587027"
+      "timestamp": "2026-01-26T10:00:05.094453"
     },
     {
       "query": "Who is responsible for articulating the school’s vision, mission, and goals?  Is a member of the Board of Trustees and heads the General and Executive Councils?  Is a member of the Board of Trustees and heads the General and Executive Councils?",
-      "answer": "The president & chief inspiration officer is responsible for articulating the school’s vision, mission, and goals. (Source: Campus documents, president & chief inspiration officer section)",
+      "answer": "The president & chief inspiration officer is responsible for articulating the school’s vision, mission, and goals. (Document name: Campus Documents, Section: president & chief inspiration officer)",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -329,31 +434,52 @@
           "chunk_id": 57
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 93.80000305175781,
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:46:53.270127"
+      "timestamp": "2026-01-26T10:00:10.620487"
     },
     {
       "query": "what does he mean by 'concerning the faith'?",
-      "answer": "\"Concerning the faith\" typically refers to matters or discussions related to religious beliefs, doctrines, or principles.\n\n[Based on general AI knowledge]",
+      "answer": "[RAG-Only Mode] I couldn't find relevant campus information about mean concerning faith. Please try rephrasing your question or ask about a different topic.",
       "sources": [],
-      "confidence_level": "N/A",
+      "confidence_level": "LOW",
       "confidence_score": 0.0,
-      "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:46:57.159876"
+      "rejected": true,
+      "mode": "rag_only",
+      "timestamp": "2026-01-26T10:00:14.318891"
     },
     {
       "query": "Why do you need to create a strategy for effective global visibility of research outputs? ?",
-      "answer": "Creating a strategy for effective global visibility of research outputs is important to increase the impact and reach of the research, attract collaborators and funding opportunities, and contribute to the advancement of knowledge in the global academic community.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "It is important to create a strategy for effective global visibility of research outputs to ensure continuous quality assurance and improvement of the college’s educational programs, systems, structures, and processes towards accreditation and internationalization. This information can be found in the provided context from the campus documents.",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 24
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 31
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 348
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 371
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 70.5,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:47:01.036822"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:00:20.169595"
     },
     {
       "query": "How did St. Columban learn to travel outside of Ireland?",
@@ -380,11 +506,11 @@
           "chunk_id": 4
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 94.69999694824219,
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:47:07.137742"
+      "timestamp": "2026-01-26T10:00:27.207863"
     },
     {
       "query": "What is the purpose of a COLUMBAN COLLEGE?",
@@ -415,7 +541,7 @@
       "confidence_score": 95.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:47:12.866740"
+      "timestamp": "2026-01-26T10:00:32.412638"
     },
     {
       "query": "How many monasteries did St. Columban establish in Bregenz, Austria?",
@@ -443,34 +569,76 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 93.30000305175781,
+      "confidence_score": 93.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:47:18.217433"
+      "timestamp": "2026-01-26T10:00:37.399228"
     },
     {
       "query": "What is a baccalaureate in architecture??",
-      "answer": "A baccalaureate in architecture is an undergraduate degree program that focuses on the study of architectural design, theory, and practice.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "I don't have verified campus information to answer that question.",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 37
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 41
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 160
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "College of Nursing",
+          "chunk_id": 42
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 73.0,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:47:22.406113"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:00:42.491186"
     },
     {
       "query": "Why do we need a diocesan education system?",
-      "answer": "A diocesan education system provides a religious foundation and values-based education that aligns with the teachings of the Catholic Church.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "The purpose of a diocesan education system is to upskill administrators, faculty, and non-teaching personnel, and harmonize policies, practices, standards, and structures to make member schools fully operated as a solid diocesan education system. This information can be found in the campus document that mentions the rationalization of costs of all member schools.",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 21
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 18
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 23
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 19
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 70.7,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:47:26.236421"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:00:48.019664"
     },
     {
       "query": "How does the Vice President for Finance & ADMINISTRATIVE SERVICES handle the planning, operation, administration, development and evaluation of all the offices under him/her?",
-      "answer": "The Vice President for Finance & Administrative Services handles the planning, operation, administration, development, and evaluation of all the offices under him/her by coordinating these aspects. This information is based on the document that mentions the responsibilities of the Vice President for Finance & Administrative Services.",
+      "answer": "The Vice President for Finance & Administrative Services takes charge of coordinating the planning, operation, administration, development, and evaluation of all the offices under him/her. This information is from the campus document under section 21.",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -480,12 +648,12 @@
         {
           "document_name": "2022_student_manual_latest.pdf",
           "section": "General Information",
-          "chunk_id": 74
+          "chunk_id": 57
         },
         {
           "document_name": "2022_student_manual_latest.pdf",
-          "section": "General Information",
-          "chunk_id": 57
+          "section": "28.  TREASURER",
+          "chunk_id": 78
         },
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -494,10 +662,10 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 93.9000015258789,
+      "confidence_score": 93.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:47:32.117305"
+      "timestamp": "2026-01-26T10:00:54.063968"
     },
     {
       "query": "what is the role of the director of guidance and testing center?",
@@ -525,14 +693,14 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.30000305175781,
+      "confidence_score": 95.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:47:37.298436"
+      "timestamp": "2026-01-26T10:00:59.108709"
     },
     {
       "query": "what are the main objectives of the college?",
-      "answer": "The main objectives of Columban College, Inc. are attained through collaborative and co-responsible efforts of administrators who coordinate and facilitate the total development of the educand, implement the policies and decisions of the school’s board of trustees for efficient operations, and ensure continuous quality assurance and improvement of the college’s educational programs, systems, structures, and processes towards accreditation and internationalization. (Source: Institutional Thrusts)",
+      "answer": "The main objectives of Columban College, Inc. are attained through collaborative and co-responsible efforts of administrators who coordinate and facilitate the total development of the educand, implement the policies and decisions of the school’s board of trustees for efficient administrative operations, and ensure continuous quality assurance and improvement of the college’s educational programs, systems, structures, and processes towards accreditation and internationalization. (Source: Institutional Thrusts section)",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -556,14 +724,14 @@
         }
       ],
       "confidence_level": "Medium",
-      "confidence_score": 75.0,
+      "confidence_score": 71.2,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:47:42.734916"
+      "timestamp": "2026-01-26T10:01:04.549826"
     },
     {
       "query": "What is the role of the director of student affairs?",
-      "answer": "The director of student affairs takes charge of the information, education, and orientation services, supervision of all extracurricular activities and student organizations in the college, develops and enhances leadership effectiveness, and encourages student leaders to write for student publication/yearbook/research. (Campus documents, section 20)",
+      "answer": "The director of student affairs takes charge of the information, education, and orientation services, supervision of all extracurricular activities and student organizations in the college, develops and enhances leadership effectiveness, and encourages student leaders to write for student publication/yearbook/research. (Campus documents, section: director of student affairs)",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -587,24 +755,45 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.69999694824219,
+      "confidence_score": 94.9,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:47:48.360354"
+      "timestamp": "2026-01-26T10:01:09.900320"
     },
     {
       "query": "Who was appointed as Treasurer in 1999?",
-      "answer": "I should answer campus-specific questions using verified documents. Please ask me about campus information.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "I don't have verified campus information to answer that question.",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "28.  TREASURER",
+          "chunk_id": 78
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 11
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "Plant & Facilities",
+          "chunk_id": 46
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 15
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 71.8,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:47:51.881233"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:01:14.545453"
     },
     {
       "query": "Why did St. Columban and his companions leave and begin their journey?",
-      "answer": "St. Columban and his companions left and began their journey to spread the message of the gospel among the peoples of Europe who barbarians had overrun. His abbot, St. Comgall, gave them permission to do so. (Chapter 1 Introduction - The Life of St. Columban)",
+      "answer": "St. Columban and his companions left and began their journey to spread the message of the gospel among the peoples of Europe who barbarians had overrun. This information can be found in the document \"Chapter 1 Introduction The Life of St. Columban.\"",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -627,15 +816,15 @@
           "chunk_id": 0
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 94.5999984741211,
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:47:57.940784"
+      "timestamp": "2026-01-26T10:01:20.015540"
     },
     {
       "query": "How did the College improve its processes, systems, human assets, and facilities to guarantee quality education and services to its clientele?",
-      "answer": "The College improved its processes, systems, human assets, and facilities to guarantee quality education and services to its clientele by enforcing highly differentiated student services and welfare activities, sustaining responsible stewardship of human resources, and maintaining responsible management of the physical plant, libraries, laboratories, technology, and other learning resources. This information can be found in the document \"Columban College, Inc. Strategic Plan 2018-2023\" under the section \"Strategic Objectives.\"",
+      "answer": "The College improved its processes, systems, human assets, and facilities to guarantee quality education and services to its clientele by enforcing highly differentiated student services and welfare activities, sustaining responsible stewardship of human resources, and maintaining responsible management of the physical plant, libraries, laboratories, technology, and other learning resources. This information can be found in the document \"Columban College, Inc. Vision-Mission-Goals\" under the section \"Core Values.\"",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -659,20 +848,41 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 93.5999984741211,
+      "confidence_score": 93.7,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:48:04.067501"
+      "timestamp": "2026-01-26T10:01:25.698338"
     },
     {
       "query": "Who was appointed as Treasurer in 1999?",
-      "answer": "I should answer campus-specific questions using verified documents. Please ask me about campus information.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "I don't have verified campus information to answer that question.",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "28.  TREASURER",
+          "chunk_id": 78
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 11
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "Plant & Facilities",
+          "chunk_id": 46
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 15
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 71.8,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:48:08.555800"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:01:30.210920"
     },
     {
       "query": "What does the Director do to ensure the development of the campus to support the mission of the college?",
@@ -699,11 +909,11 @@
           "chunk_id": 64
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 94.4000015258789,
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:48:13.606788"
+      "timestamp": "2026-01-26T10:01:35.809851"
     },
     {
       "query": "When did the Diocese of Iba reassume the administration of Columban College?",
@@ -731,20 +941,41 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.19999694824219,
+      "confidence_score": 95.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:48:19.375447"
+      "timestamp": "2026-01-26T10:01:41.079875"
     },
     {
       "query": "Why not ask questions about the physical services council plant & facilities principals?",
-      "answer": "It is important to ask questions about physical services, council, plant, and facilities principals to ensure the safety and efficiency of the campus environment.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "I don't have verified campus information to answer that question.",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "Plant & Facilities",
+          "chunk_id": 46
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 75
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "External Auditor",
+          "chunk_id": 45
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 76
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:48:23.315889"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:01:45.654796"
     },
     {
       "query": "How did St. Columban learn to travel outside Ireland?",
@@ -771,21 +1002,42 @@
           "chunk_id": 4
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 94.5999984741211,
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:48:29.346696"
+      "timestamp": "2026-01-26T10:01:50.516238"
     },
     {
       "query": "What is the role of the Director of Quality ASSURANCE and CHANGE MANAGEMENT??",
-      "answer": "The role of the Director of Quality Assurance and Change Management is to ensure that processes and procedures within an organization meet quality standards, identify areas for improvement, and manage changes effectively to enhance overall performance and efficiency.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "The Director of Quality Assurance and Change Management takes charge of the quality assurance program, process of accreditation, and institutional planning procedures. They provide advice and guidance to college staff concerning the implementation of a quality management system, serve as a liaison between the college and accreditation agencies to facilitate the process, act as a self-survey executive in charge of the operation of the various committees that make up the self-survey team, and ensure that quality processes and procedures serve the institution’s purposes, objectives, policies, procedures, systems, and processes. (Source: Campus documents, Director of Quality Assurance and Change Management section)",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 54
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 55
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 64
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "External Auditor",
+          "chunk_id": 45
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 73.8,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:48:33.629440"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:01:56.952886"
     },
     {
       "query": "How does the Director of Alumni & EXTERNAL AFFAIRS work?",
@@ -813,10 +1065,10 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.30000305175781,
+      "confidence_score": 94.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:48:39.715099"
+      "timestamp": "2026-01-26T10:02:02.154864"
     },
     {
       "query": "Who is responsible for the alignment of the program with the vision, mission, and goals of the college?",
@@ -847,11 +1099,11 @@
       "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:48:45.043344"
+      "timestamp": "2026-01-26T10:02:07.115135"
     },
     {
       "query": "What are the core values of Columban College?",
-      "answer": "The core values of Columban College, Inc. are Christian character, competence, service, compassion, and integrity. These values are reflected in the attributes of a Columban College graduate as stated in the campus documents. (Source: School Motto and Attributes of a Columban College Graduate)",
+      "answer": "The core values of Columban College, Inc. are Christian character, competence, service, compassion, and integrity. These values are reflected in the attributes of a Columban College graduate as stated in the document \"The School Motto 'We are Christ’s not our own.'\"",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -874,15 +1126,15 @@
           "chunk_id": 89
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 95.0,
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:48:50.360844"
+      "timestamp": "2026-01-26T10:02:12.655690"
     },
     {
       "query": "What are the Core Values of Columban College?",
-      "answer": "The core values of Columban College, Inc. are Christian character, competence, service, compassion, and integrity. These values are reflected in the attributes of a Columban College graduate as stated in the campus documents. (Source: School Motto and Attributes of a Columban College Graduate)",
+      "answer": "The core values of Columban College, Inc. are Christian character, competence, service, compassion, and integrity. These values are reflected in the attributes of a Columban College graduate as stated in the document \"The School Motto 'We are Christ's not our own.'\"",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -905,21 +1157,16 @@
           "chunk_id": 89
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 95.0,
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:48:55.618010"
+      "timestamp": "2026-01-26T10:02:18.289709"
     },
     {
       "query": "Who is responsible for articulating the school’s vision, mission, and goals?  Is a member of the Board of Trustees and heads the General and Executive Councils?",
-      "answer": "The President & Chief Inspiration Officer is responsible for articulating the school’s vision, mission, and goals and is a member of the Board of Trustees and heads the General and Executive Councils. (Source: Campus documents, President & Chief Inspiration Officer section)",
+      "answer": "The president & chief inspiration officer is responsible for articulating the school’s vision, mission, and goals. (Document name: Campus documents, Section: president & chief inspiration officer)",
       "sources": [
-        {
-          "document_name": "2022_student_manual_latest.pdf",
-          "section": "General Information",
-          "chunk_id": 49
-        },
         {
           "document_name": "2022_student_manual_latest.pdf",
           "section": "General Information",
@@ -933,24 +1180,50 @@
         {
           "document_name": "2022_student_manual_latest.pdf",
           "section": "General Information",
+          "chunk_id": 80
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
           "chunk_id": 57
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 93.9000015258789,
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:49:00.947744"
+      "timestamp": "2026-01-26T10:02:23.216311"
     },
     {
       "query": "What are the majors in education?",
-      "answer": "Some common majors in education include Elementary Education, Secondary Education, Special Education, and Early Childhood Education.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "The majors in education are major in filipino (bsed-f), major in mathematics (bsed-m), major in science (bsed-s), major in social studies (bsed-ss), major in religious education (bsed-re), and major in values education (bsed-ve). This information can be found in the provided context under the undergraduate programs section.",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "Major in Filipino (BSED-F)",
+          "chunk_id": 38
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 36
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 37
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "Certificate Programs",
+          "chunk_id": 39
+        }
+      ],
+      "confidence_level": "High",
+      "confidence_score": 95.0,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:49:04.645695"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:02:31.078171"
     },
     {
       "query": "Who is responsible for the alignment of the program with the vision, mission, and goals of the school?",
@@ -981,27 +1254,69 @@
       "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:49:10.377687"
+      "timestamp": "2026-01-26T10:02:36.854036"
     },
     {
       "query": "Who is responsible for the alignment of the program with the vision, mission, and goals of the school? ?",
-      "answer": "The school administration is responsible for aligning the program with the vision, mission, and goals of the school.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "The Vice President for Academic Affairs is responsible for the development, implementation, and improvement of academic policies, rules, and regulations to ensure their alignment with the vision, mission, and goals of the college. This information can be found in the document under the section \"vp ll/ss oversees the development, evaluation, and upgrading of all academic programs of the college.\"",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 62
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 57
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 52
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 48
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:49:15.620128"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:02:42.607248"
     },
     {
       "query": "Why do you need to create a strategy for effective global visibility of research outputs?",
-      "answer": "Creating a strategy for effective global visibility of research outputs is important to increase the impact and reach of the research, attract collaborators and funding opportunities, and contribute to the advancement of knowledge in the global academic community.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "It is important to create a strategy for effective global visibility of research outputs to ensure continuous quality assurance and improvement of the college’s educational programs, systems, structures, and processes towards accreditation and internationalization. (source: Campus documents, section on strategic objectives)",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 24
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 31
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 348
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 371
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 70.4,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:49:20.435566"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:02:48.556987"
     },
     {
       "query": "Who is in charge of the overall organization, administration, supervision and development of the libraries in the Main and Barrel Colleges?",
@@ -1028,21 +1343,42 @@
           "chunk_id": 64
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 93.4000015258789,
+      "confidence_level": "Medium",
+      "confidence_score": 74.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:49:26.527710"
+      "timestamp": "2026-01-26T10:02:54.159903"
     },
     {
       "query": "Why do we need a diocesan education system?",
-      "answer": "A diocesan education system helps to integrate faith and values into the academic curriculum, providing a holistic approach to education that nurtures the spiritual, moral, and intellectual development of students.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "A diocesan education system is necessary to upskill administrators, faculty, and non-teaching personnel, and harmonize policies, practices, standards, and structures to make member schools fully operated as a solid diocesan education system. This information can be found in the campus document under the section \"value of financial, material, information, and learning resources\" and \"the year 2020 pivoted the college towards enhancing its academic environment and services in response to the covid-19 pandemic.\"",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 21
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 18
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 23
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 19
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 70.7,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:49:30.306201"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:03:00.059653"
     },
     {
       "query": "What is the role of the Director of Student Affairs?",
@@ -1070,14 +1406,14 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.69999694824219,
+      "confidence_score": 94.9,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:49:35.959629"
+      "timestamp": "2026-01-26T10:03:05.777336"
     },
     {
       "query": "Who is in charge of the overall organization, administration, supervision and development of the libraries?",
-      "answer": "The Director of Libraries and Instructional Media Center is responsible for the overall organization, administration, supervision, and development of the libraries in the main and barretto campuses. This information can be found in the campus document under section 18.",
+      "answer": "The Vice President for Academic Affairs and Student Services is in charge of the overall organization, administration, supervision, and development of the libraries in the Main and Barretto campuses. (Source: Student Manual Review Committee, July 21, 2022, CCI Main Library, Chapter Chairpersons)",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -1087,34 +1423,55 @@
         {
           "document_name": "2022_student_manual_latest.pdf",
           "section": "General Information",
-          "chunk_id": 62
+          "chunk_id": 76
         },
         {
           "document_name": "2022_student_manual_latest.pdf",
           "section": "General Information",
-          "chunk_id": 64
+          "chunk_id": 56
         },
         {
           "document_name": "2022_student_manual_latest.pdf",
-          "section": "16.  DIRECTOR OF GUIDANCE AND TESTING CENTER",
-          "chunk_id": 65
+          "section": "General Information",
+          "chunk_id": 392
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 93.4000015258789,
+      "confidence_score": 92.7,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:49:41.889822"
+      "timestamp": "2026-01-26T10:03:11.595045"
     },
     {
       "query": "What is a baccalaureate in architecture?",
-      "answer": "A baccalaureate in architecture is an undergraduate degree program that focuses on the study of architectural design, construction, and theory. It typically takes around 4-5 years to complete and prepares students for careers in architecture.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "I don't have verified campus information to answer that question.",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 37
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 41
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 160
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "College of Nursing",
+          "chunk_id": 42
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 72.9,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:49:46.491106"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:03:16.140230"
     },
     {
       "query": "Why did St. Columban and his companions leave and begin their journey? Why did St. Columban and his friends settle in eastern France?",
@@ -1142,14 +1499,14 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.5999984741211,
+      "confidence_score": 93.5,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:49:52.520578"
+      "timestamp": "2026-01-26T10:03:21.423374"
     },
     {
       "query": "What is the college of nursing?",
-      "answer": "The College of Nursing offers a Bachelor of Science in Nursing (BSN) program. This information can be found in the document \"9 Special Provision\" under the section where Dr. Leilani E. Capili is mentioned as the Dean of the College of Nursing.",
+      "answer": "The College of Nursing offers a Bachelor of Science in Nursing (BSN) program. This information is based on the verified campus document \"9 Special Provision\" under the section \"Dr. Leilani E. Capili Dean, College of Nursing & Asst. SAO Director.\"",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -1173,24 +1530,45 @@
         }
       ],
       "confidence_level": "Medium",
-      "confidence_score": 75.0,
+      "confidence_score": 74.7,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:49:57.835275"
+      "timestamp": "2026-01-26T10:03:26.279553"
     },
     {
       "query": "What are the majors in education?",
-      "answer": "Some common majors in education include Elementary Education, Secondary Education, Special Education, and Early Childhood Education.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "The majors in education are major in English Language Teaching (MALT), major in Religious Education (MARE), major in Science Education (MASE), and major in Values Education (MAV). This information can be found in the document under the section \"Graduate Programs.\"",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "Major in Filipino (BSED-F)",
+          "chunk_id": 38
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 36
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 37
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "Certificate Programs",
+          "chunk_id": 39
+        }
+      ],
+      "confidence_level": "High",
+      "confidence_score": 95.0,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:50:01.476402"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:03:32.027914"
     },
     {
       "query": "what is the role of the director of admissions and registration???????",
-      "answer": "The director of admissions and registration is responsible for the entire operations concerning admissions and registration of students in the entire college. They take charge of the development of policies, procedures, and systems to improve the services of the office, keep the college updated on new government policies relative to student admission, retention, registration, and promotion, and ensure that the school’s practices are consistent with these policies. Additionally, they take full responsibility for student records and files (source: Campus documents, Director of Admissions and Registration section).",
+      "answer": "The director of admissions and registration is responsible for the entire operations concerning admissions and registration of students in the entire college. They take charge of the development of policies, procedures, and systems to improve the services of the office, keep the college updated on new government policies relative to student admission, retention, registration, and promotion, and ensure that the school’s practices are consistent with these policies. Additionally, they take full responsibility for student records and files. (Source: Campus document, Section 15)",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -1214,20 +1592,41 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.5,
+      "confidence_score": 94.9,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:50:07.393601"
+      "timestamp": "2026-01-26T10:03:37.271767"
     },
     {
       "query": "What does the Director of RESEARCH, INNOVATION and KNOWLEDGE DEVELOPMENT do?",
-      "answer": "The Director of Research, Innovation, and Knowledge Development is responsible for overseeing and leading efforts to advance research initiatives, promote innovation, and enhance knowledge development within an organization or institution.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "The Director of Research, Innovation, and Knowledge Development promotes the research culture in the college, supervises the operations of the office, undertakes institutional research, provides technical assistance to facilitate research development by faculty and departments, and publishes the research journal containing the researches undertaken by the college, and the Zambales Museum of Natural History. This information can be found in the document \"Director of Research, Innovation, and Knowledge Development.\"",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 347
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 56
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "External Auditor",
+          "chunk_id": 45
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 55
+        }
+      ],
+      "confidence_level": "High",
+      "confidence_score": 94.8,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:50:12.169882"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:03:42.581219"
     },
     {
       "query": "What is the role of the director of student affairs?",
@@ -1255,10 +1654,10 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.69999694824219,
+      "confidence_score": 94.9,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:50:18.485510"
+      "timestamp": "2026-01-26T10:03:48.144361"
     },
     {
       "query": "What does the Director of Alumni & EXTERNAL AFFAIRS do??",
@@ -1286,24 +1685,45 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.30000305175781,
+      "confidence_score": 94.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:50:23.980864"
+      "timestamp": "2026-01-26T10:03:54.453378"
     },
     {
       "query": "What is the role of the Director of Quality ASSURANCE and CHANGE MANAGEMENT? ?",
-      "answer": "The role of the Director of Quality Assurance and Change Management is to ensure that processes and procedures within an organization meet quality standards, identify areas for improvement, and manage changes effectively to enhance overall performance and efficiency.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "The Director of Quality Assurance and Change Management takes charge of the quality assurance program, process of accreditation, and institutional planning procedures. They provide advice and guidance to college staff concerning the implementation of a quality management system, serve as a liaison between the college and accreditation agencies to facilitate the process, act as a self-survey executive in charge of the operation of the various committees that make up the self-survey team, and ensure that quality processes and procedures serve the institution’s purposes, objectives, policies, procedures, systems, and processes. (Source: Campus documents, Director of Quality Assurance and Change Management section)",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 54
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 55
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 64
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "External Auditor",
+          "chunk_id": 45
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 73.9,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:50:27.920314"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:03:59.923115"
     },
     {
       "query": "How does the Vice President for Finance & ADMINISTRATIVE SERVICES handle the planning, operation, administration, development and evaluation of all the offices under him/her? ?",
-      "answer": "The Vice President for Finance & Administrative Services handles the planning, operation, administration, development, and evaluation of all the offices under him/her by coordinating these aspects. This information can be found in the document under the section for the Vice President for Finance & Administrative Services.",
+      "answer": "I don't have verified campus information to answer that question.",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -1322,25 +1742,46 @@
         },
         {
           "document_name": "2022_student_manual_latest.pdf",
-          "section": "General Information",
-          "chunk_id": 70
+          "section": "28.  TREASURER",
+          "chunk_id": 78
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 93.9000015258789,
+      "confidence_score": 93.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:50:33.716902"
+      "timestamp": "2026-01-26T10:04:04.827930"
     },
     {
       "query": "What does the Director of RESEARCH, INNOVATION, AND KNOWLEDGE DEVELOPMENT do?",
-      "answer": "The Director of Research, Innovation, and Knowledge Development is responsible for overseeing and leading initiatives related to research, innovation, and the development of knowledge within an organization. This may include setting strategic goals, managing research projects, fostering collaboration, and promoting a culture of innovation.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "The role of the Director of Research, Innovation, and Knowledge Development includes promoting the research culture in the college, supervising the operations of the office, undertaking institutional research, providing technical assistance to facilitate research development by faculty and departments, and publishing a research journal containing the researches undertaken by the college, and the Zambales Museum of Natural History. This information can be found in the document \"Director of Research, Innovation, and Knowledge Development.\"",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 347
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 56
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "External Auditor",
+          "chunk_id": 45
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 55
+        }
+      ],
+      "confidence_level": "High",
+      "confidence_score": 94.9,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:50:38.116040"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:04:10.508986"
     },
     {
       "query": "Why did the Diocese of Iba reassume the administration of Columban College?",
@@ -1368,30 +1809,51 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.30000305175781,
+      "confidence_score": 95.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:50:44.243593"
+      "timestamp": "2026-01-26T10:04:15.289367"
     },
     {
       "query": "What is the role of the Board of Trustees?",
-      "answer": "The role of the Board of Trustees is to provide governance, oversight, and strategic direction for an organization. They are responsible for making important decisions, setting policies, and ensuring the organization's mission and goals are being met.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "The Board of Trustees serves as the highest policy-making body of the school, subject only to the provisions of Philippine laws and to the vision and mission of the school. (Source: Organization and Administration of Columban College, Inc., Section 13)",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 51
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 47
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 50
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 49
+        }
+      ],
+      "confidence_level": "High",
+      "confidence_score": 94.5,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:50:47.986146"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:04:20.846820"
     },
     {
       "query": "What is the purpose of this program?",
-      "answer": "The purpose of this program is to provide students with the knowledge and skills needed to succeed in their chosen field or career.\n\n[Based on general AI knowledge]",
+      "answer": "[RAG-Only Mode] I couldn't find relevant campus information about purpose program. Please try rephrasing your question or ask about a different topic.",
       "sources": [],
-      "confidence_level": "N/A",
+      "confidence_level": "LOW",
       "confidence_score": 0.0,
-      "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:50:52.116777"
+      "rejected": true,
+      "mode": "rag_only",
+      "timestamp": "2026-01-26T10:04:24.135465"
     },
     {
       "query": "what is the role of the director of guidance and testing center???????",
@@ -1419,20 +1881,41 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.19999694824219,
+      "confidence_score": 95.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:50:57.639464"
+      "timestamp": "2026-01-26T10:04:29.964364"
     },
     {
       "query": "Why not ask a few questions?",
-      "answer": "Asking questions can help clarify information and deepen understanding.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "I don't have verified campus information to answer that question.",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 228
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 119
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 386
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "C. Research",
+          "chunk_id": 335
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 68.7,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:51:01.502645"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:04:34.807732"
     },
     {
       "query": "How does the Vice President for Finance & ADMINISTRATIVE SERVICES handle the planning, operation, administration, development and evaluation of all offices under him/her?",
@@ -1460,14 +1943,14 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 93.9000015258789,
+      "confidence_score": 93.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:51:07.857260"
+      "timestamp": "2026-01-26T10:04:41.115266"
     },
     {
       "query": "what are the main objectives of the college?",
-      "answer": "The main objectives of Columban College, Inc. are attained through collaborative and co-responsible efforts of administrators who coordinate and facilitate the total development of the educand, implement the policies and decisions of the school’s board of trustees for efficient operations, and ensure continuous quality assurance and improvement of the college’s educational programs, systems, structures, and processes towards accreditation and internationalization. (Source: Institutional Thrusts)",
+      "answer": "The main objectives of Columban College, Inc. are attained through collaborative and co-responsible efforts of administrators who coordinate and facilitate the total development of the educand, implement the policies and decisions of the school’s board of trustees for efficient administrative operations, and ensure continuous quality assurance and improvement of the college’s educational programs, systems, structures, and processes towards accreditation and internationalization. (Source: Institutional Thrusts section)",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -1491,14 +1974,14 @@
         }
       ],
       "confidence_level": "Medium",
-      "confidence_score": 75.0,
+      "confidence_score": 71.2,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:51:13.123733"
+      "timestamp": "2026-01-26T10:04:47.205528"
     },
     {
       "query": "What is the college of nursing?",
-      "answer": "The College of Nursing at Columban College, Inc. is headed by Dr. Leilani E. Capili, who is the dean of the college. This information can be found in the document \"9 Special Provision.\"",
+      "answer": "The College of Nursing offers a Bachelor of Science in Nursing (BSN) program. This information is based on the verified campus document \"9 Special Provision\" under the section \"Dr. Leilani E. Capili Dean, College of Nursing & Asst. SAO Director.\"",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -1522,10 +2005,10 @@
         }
       ],
       "confidence_level": "Medium",
-      "confidence_score": 75.0,
+      "confidence_score": 74.7,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:51:18.255786"
+      "timestamp": "2026-01-26T10:04:52.511447"
     },
     {
       "query": "How many questions does St. Columban have?",
@@ -1552,11 +2035,11 @@
           "chunk_id": 1
         }
       ],
-      "confidence_level": "Medium",
-      "confidence_score": 75.0,
+      "confidence_level": "High",
+      "confidence_score": 94.6,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:51:23.446728"
+      "timestamp": "2026-01-26T10:04:57.415086"
     },
     {
       "query": "What is the role of the Director of PHYSICAL PLANT AND FACILITIES?",
@@ -1584,10 +2067,10 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.0,
+      "confidence_score": 94.4,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:51:28.976688"
+      "timestamp": "2026-01-26T10:05:03.099777"
     },
     {
       "query": "How does he/she manage the procurement, management and improvement of the materials and equipment in the libraries?",
@@ -1614,35 +2097,77 @@
           "chunk_id": 46
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 93.0,
+      "confidence_level": "Medium",
+      "confidence_score": 71.7,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:51:33.996514"
+      "timestamp": "2026-01-26T10:05:07.851041"
     },
     {
       "query": "what is the role of a leader?",
-      "answer": "The role of a leader is to provide direction, guidance, and inspiration to a group of individuals in order to achieve a common goal. Leaders are responsible for making decisions, setting objectives, and motivating their team members to work towards success.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "A leader acts as a steward of God’s creation and His people, extends support for the social amelioration of the underprivileged, demonstrates leadership qualities, civic-mindedness, and responsible citizenship, and promotes social development to uphold the common good and uplift the quality of life of the people in the community. This information is based on the campus document provided.",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "God’s creation and His people;",
+          "chunk_id": 33
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 48
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 338
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 61
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 69.0,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:51:38.166519"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:05:13.514270"
     },
     {
       "query": "Who was appointed as Treasurer in 1999?",
-      "answer": "I should answer campus-specific questions using verified documents. Please ask me about campus information.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "I don't have verified campus information to answer that question.",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "28.  TREASURER",
+          "chunk_id": 78
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 11
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "Plant & Facilities",
+          "chunk_id": 46
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 15
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 71.8,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:51:42.277168"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:05:19.007090"
     },
     {
       "query": "What does the Director do to ensure the development of the campus to support the mission of the college?",
-      "answer": "The Director provides strategic and technical guidance to the management to ensure appropriate development of the campus to support the mission of the college. (Source: Document name: Campus Organization Structure, Section: director of campus development)",
+      "answer": "The Director provides strategic and technical guidance to the management to ensure appropriate development of the campus to support the mission of the college. (Source: Document Name: Campus Organization Structure, Section: director of campus development)",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -1665,15 +2190,15 @@
           "chunk_id": 64
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 94.4000015258789,
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:51:47.581261"
+      "timestamp": "2026-01-26T10:05:24.442334"
     },
     {
       "query": "What is the college of nursing?",
-      "answer": "The College of Nursing at Columban College, Inc. is headed by Dr. Leilani E. Capili, who is the dean of the college. This information can be found in the document \"Special Provision\" under the section \"9 special provision.\"",
+      "answer": "The College of Nursing offers a Bachelor of Science in Nursing (BSN) program. This information can be found in the document \"9 Special Provision\" under the section where Dr. Leilani E. Capili is mentioned as the Dean of the College of Nursing.",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -1697,14 +2222,14 @@
         }
       ],
       "confidence_level": "Medium",
-      "confidence_score": 75.0,
+      "confidence_score": 74.7,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:51:52.449464"
+      "timestamp": "2026-01-26T10:05:29.543658"
     },
     {
       "query": "What is the purpose of a COLUMBAN COLLEGE?",
-      "answer": "Columban College commits herself to teach not merely for the attainment of knowledge but for the acquisition of values and the discovery of truth necessary to be able to translate one’s faith into daily life and be able to celebrate it in prayer and worship. (Vision, Mission, Strategic Goals and Core Values of Columban College, Inc.)",
+      "answer": "Columban College commits herself to teach not merely for the attainment of knowledge but for the acquisition of values and the discovery of truth necessary to be able to translate one’s faith into daily life and be able to celebrate it in prayer and worship. (Source: 5 vision, mission, strategic goals and core values of columban college, inc.)",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -1718,8 +2243,132 @@
         },
         {
           "document_name": "2022_student_manual_latest.pdf",
+          "section": "LOCAL OFF-CAMPUS POLICY FOR COLUMBAN",
+          "chunk_id": 380
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
           "section": "General Information",
           "chunk_id": 22
+        }
+      ],
+      "confidence_level": "High",
+      "confidence_score": 95.0,
+      "rejected": false,
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:05:34.591790"
+    },
+    {
+      "query": "What is a Bachelor of Arts in Architecture?",
+      "answer": "I don't have verified campus information to answer that question.",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 37
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 41
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 36
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 160
+        }
+      ],
+      "confidence_level": "High",
+      "confidence_score": 94.1,
+      "rejected": false,
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:05:42.287266"
+    },
+    {
+      "query": "What does the Director of RESEARCH, INNOVATION and KNOWLEDGE DEVELOPMENT do??",
+      "answer": "The Director of Research, Innovation, and Knowledge Development promotes the research culture in the college, supervises the operations of the office, undertakes institutional research, provides technical assistance to facilitate research development by faculty and departments, and publishes the research journal containing the researches undertaken by the college, and the Zambales Museum of Natural History. This information is from the document \"Director of Research, Innovation, and Knowledge Development.\"",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 347
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 56
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "External Auditor",
+          "chunk_id": 45
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 55
+        }
+      ],
+      "confidence_level": "High",
+      "confidence_score": 94.7,
+      "rejected": false,
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:05:47.802227"
+    },
+    {
+      "query": "What is the purpose of the program?",
+      "answer": "The purpose of the program led by the Director of Research, Innovation, and Knowledge Development is to promote the research culture in the college, supervise the operations of the office, undertake institutional research, provide technical assistance to facilitate the development of research by the faculty and various departments or units, and publish the research journal containing the researches undertaken by the college, and the Zambales Museum of Natural History. (Document: Director of Research, Innovation, and Knowledge Development, Section: the director takes charge)",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 347
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 56
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 55
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 20
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
+      "rejected": false,
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:05:54.959511"
+    },
+    {
+      "query": "Why do we need a diocesan education system?",
+      "answer": "The diocesan education system aims to upskill administrators, faculty, and non-teaching personnel, and harmonize policies, practices, standards, and structures to make member schools fully operated as a solid diocesan education system. This is to enhance the value of financial, material, information, and learning resources, and rationalize costs of all member schools (source: Campus documents, section on the value of financial, material, information, and learning resources).",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 21
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 18
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 19
         },
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -1727,55 +2376,15 @@
           "chunk_id": 23
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 95.0,
+      "confidence_level": "Medium",
+      "confidence_score": 70.7,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:51:57.735354"
-    },
-    {
-      "query": "What is a Bachelor of Arts in Architecture?",
-      "answer": "A Bachelor of Arts in Architecture is an undergraduate degree program that focuses on the study of architectural design, theory, history, and practice. It typically prepares students for careers in architecture or related fields.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
-      "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:52:01.442831"
-    },
-    {
-      "query": "What does the Director of RESEARCH, INNOVATION and KNOWLEDGE DEVELOPMENT do??",
-      "answer": "The Director of Research, Innovation, and Knowledge Development is responsible for overseeing and leading efforts to advance research initiatives, promote innovation, and enhance knowledge development within an organization.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
-      "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:52:05.766508"
-    },
-    {
-      "query": "What is the purpose of the program?",
-      "answer": "I'm not sure if you're asking about:\n1. **Columban College, Inc. campus information** (library, dining, parking, campus services, etc.)\n2. **General knowledge** (math, facts, definitions)\n\nCould you please clarify? For example:\n- \"What are the library hours?\" → Campus information\n- \"What is 15 + 27?\" → General knowledge",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
-      "rejected": false,
-      "mode": "clarification",
-      "timestamp": "2026-01-25T19:52:08.846308"
-    },
-    {
-      "query": "Why do we need a diocesan education system?",
-      "answer": "A diocesan education system helps to integrate faith and values into the academic curriculum, providing a holistic approach to education that nurtures the spiritual, moral, and intellectual development of students.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
-      "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:52:12.913410"
+      "timestamp": "2026-01-26T10:06:01.223177"
     },
     {
       "query": "what is the role of the director of guidance and testing center??????",
-      "answer": "The director of the guidance and testing center oversees the organization, supervision, and administration of the guidance programs and services for students, faculty, and parents. Additionally, the director takes full responsibility for student records and files. (Source: Campus documents, director of guidance and testing center)",
+      "answer": "The role of the Director of Guidance and Testing Center is to oversee the organization, supervision, and administration of the guidance programs and services for students, faculty, and parents. This information can be found in the campus document under section 16.",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -1799,24 +2408,45 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.19999694824219,
+      "confidence_score": 95.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:53:13.670083"
+      "timestamp": "2026-01-26T10:06:07.610709"
     },
     {
       "query": "what is the role of a leader?",
-      "answer": "The role of a leader is to provide direction, guidance, and inspiration to a group of individuals in order to achieve a common goal. Leaders are responsible for making decisions, setting objectives, and motivating their team members to work towards success.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "A leader acts as a steward of God’s creation and His people, extends support for the social amelioration of the underprivileged, demonstrates leadership qualities, civic-mindedness, and responsible citizenship, and promotes social development to uphold the common good and uplift the quality of life of the people in the community. This information is based on the campus document provided.",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "God’s creation and His people;",
+          "chunk_id": 33
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 48
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 338
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 61
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 69.0,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:53:17.572074"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:06:14.631285"
     },
     {
       "query": "Who is the chief financial officer of the college? ??",
-      "answer": "The chief financial officer of the college is the director of finance & administrative services council. (Source: Campus Document)",
+      "answer": "The chief financial officer of the college is the director of finance & administrative services council. (Source: Campus Organizational Structure)",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -1840,10 +2470,10 @@
         }
       ],
       "confidence_level": "Medium",
-      "confidence_score": 75.0,
+      "confidence_score": 70.9,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:53:23.294918"
+      "timestamp": "2026-01-26T10:06:20.218789"
     },
     {
       "query": "How many monasteries did St. Columban establish in Bregenz, Austria? ?",
@@ -1871,14 +2501,14 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 93.5,
+      "confidence_score": 93.1,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:53:29.656290"
+      "timestamp": "2026-01-26T10:06:25.728782"
     },
     {
       "query": "what is the role of the director of admissions and registration?",
-      "answer": "The director of admissions and registration is responsible for the entire operations concerning admissions and registration of students in the entire college. They take charge of the development of policies, procedures, and systems to improve the services of the office, keep the college updated on new government policies relative to student admission, retention, registration, and promotion, and ensure that the school’s practices are consistent with these policies. Additionally, they take full responsibility for student records and files. (Source: Campus document, Section 15)",
+      "answer": "The director of admissions and registration is responsible for the entire operations concerning admissions and registration of students in the entire college. They take charge of the development of policies, procedures, and systems to improve the services of the office, keep the college updated on new government policies relative to student admission, retention, registration, and promotion, and ensure that the school’s practices are consistent with these policies. Additionally, they take full responsibility for student records and files (source: Campus documents, Director of Admissions and Registration section).",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -1902,14 +2532,14 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.69999694824219,
+      "confidence_score": 95.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:53:36.640337"
+      "timestamp": "2026-01-26T10:06:31.410890"
     },
     {
       "query": "Why did St. Columban and his companions leave and begin their journey? Why did St. Columban and his companions leave?",
-      "answer": "St. Columban and his companions left and began their journey to spread the message of the gospel among the peoples of Europe who barbarians had overrun. This information can be found in the document \"Chapter 1 Introduction The Life of St. Columban.\"",
+      "answer": "St. Columban and his companions left and began their journey because there grew in him a desire to travel outside Ireland to spread the message of the gospel among the peoples of Europe who barbarians had overrun. His abbot, St. Comgall, gave him and his companions permission to leave and begin their journey. (Chapter 1 Introduction - The Life of St. Columban)",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -1932,21 +2562,42 @@
           "chunk_id": 0
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 94.19999694824219,
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:53:42.245605"
+      "timestamp": "2026-01-26T10:06:36.638383"
     },
     {
       "query": "What did ometimes say about him? 'Let us be of Christ, not of ourselves'?",
-      "answer": "\"Let us be of Christ, not of ourselves\" is a quote attributed to St. Columban.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "St. Columban sometimes said, \"Let us be of Christ, not of ourselves.\" This summarizes his life and work. (Source: Campus documents, St. Columban's life and work)",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 6
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 29
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 5
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 32
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 73.1,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:53:47.066920"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:06:41.548434"
     },
     {
       "query": "Why did the Vincentian Fathers take over the administration of the College in 1983?",
@@ -1973,11 +2624,11 @@
           "chunk_id": 17
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 93.4000015258789,
+      "confidence_level": "Medium",
+      "confidence_score": 72.8,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:53:52.796431"
+      "timestamp": "2026-01-26T10:06:46.537088"
     },
     {
       "query": "Who is in charge of the overall organization, administration, supervision and development of the libraries in the Main and Barre College?",
@@ -2004,11 +2655,11 @@
           "chunk_id": 62
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 93.5999984741211,
+      "confidence_level": "Medium",
+      "confidence_score": 74.3,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:53:58.822223"
+      "timestamp": "2026-01-26T10:06:51.608146"
     },
     {
       "query": "What are the core values of Columban College?",
@@ -2035,11 +2686,11 @@
           "chunk_id": 89
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 95.0,
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:54:05.532073"
+      "timestamp": "2026-01-26T10:06:56.623279"
     },
     {
       "query": "How does the St. Columban spirit work?",
@@ -2066,15 +2717,15 @@
           "chunk_id": 28
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 93.69999694824219,
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:54:10.697391"
+      "timestamp": "2026-01-26T10:07:01.544439"
     },
     {
       "query": "What does the Director of Alumni and EXTERNAL AFFAIRS do??",
-      "answer": "The Director of Alumni and External Affairs takes charge of the job placement, marketing programs of the institution, the creation and management of institutional linkages and networks, and is responsible for the maintenance and development of an effective working relationship between the college and its alumni. (Source: Administrative Services - Director, Alumni & External Affairs)",
+      "answer": "The Director of Alumni and External Affairs takes charge of job placement, marketing programs of the institution, creation and management of institutional linkages and networks, and is responsible for maintaining and developing an effective working relationship between the college and its alumni. (Source: Administrative Services - Dr. Anatalia S. Sy, Director, Alumni & External Affairs Office)",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -2098,14 +2749,14 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 94.30000305175781,
+      "confidence_score": 94.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:54:15.797024"
+      "timestamp": "2026-01-26T10:07:06.708252"
     },
     {
       "query": "What are the core values of COLUMBAN COLLEGE, INC.??",
-      "answer": "The core values of Columban College, Inc. are Christian character, competence, service, compassion, and integrity. These values are reflected in the attributes of a Columban College graduate as stated in the campus documents. (Source: School Motto and Attributes of a Columban College Graduate)",
+      "answer": "The core values of Columban College, Inc. are Christian character, competence, service, compassion, and integrity. These values are reflected in the attributes of a Columban College graduate as stated in the document \"The School Motto 'We are Christ's not our own.'\"",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -2128,11 +2779,11 @@
           "chunk_id": 89
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 95.0,
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:54:21.587989"
+      "timestamp": "2026-01-26T10:07:11.953391"
     },
     {
       "query": "What are the core values of COLUMBAN COLLEGE, INC??",
@@ -2159,11 +2810,11 @@
           "chunk_id": 89
         }
       ],
-      "confidence_level": "High",
-      "confidence_score": 95.0,
+      "confidence_level": "Medium",
+      "confidence_score": 75.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:54:26.769508"
+      "timestamp": "2026-01-26T10:07:16.961259"
     },
     {
       "query": "Who is the chief financial officer of the college?",
@@ -2191,14 +2842,14 @@
         }
       ],
       "confidence_level": "Medium",
-      "confidence_score": 75.0,
+      "confidence_score": 71.0,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:54:32.026946"
+      "timestamp": "2026-01-26T10:07:22.289969"
     },
     {
       "query": "How did the College improve its processes, systems, human assets, and facilities to guarantee quality education and services?",
-      "answer": "The College improved its processes, systems, human assets, and facilities to guarantee quality education and services by implementing strategies such as enhancing administrative operations and financial management, innovating curriculum and instruction, enforcing highly differentiated student services and welfare activities, sustaining responsible stewardship of human resources, and maintaining responsible management of physical plant, libraries, laboratories, technology, and other learning resources. These efforts were part of the College's goal to ensure continuous quality assurance and improvement of its educational programs, systems, structures, and processes towards accreditation and internationalization. (Source: Campus documents, section on \"delivery of quality education and services\")",
+      "answer": "The College improved its processes, systems, human assets, and facilities to guarantee quality education and services by enforcing highly differentiated student services and welfare activities, sustaining responsible stewardship of human resources, and maintaining responsible management of the physical plant, libraries, laboratories, technology, and other learning resources. This information can be found in the document \"Quality Assurance and Improvement of Educational Programs\" under the section \"Maintain Responsible Management of the Physical Plant, Libraries, Laboratories, Technology, and Other Learning Resources.\"",
       "sources": [
         {
           "document_name": "2022_student_manual_latest.pdf",
@@ -2221,21 +2872,42 @@
           "chunk_id": 55
         }
       ],
-      "confidence_level": "Medium",
-      "confidence_score": 75.0,
+      "confidence_level": "High",
+      "confidence_score": 94.2,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:54:38.279373"
+      "timestamp": "2026-01-26T10:07:27.754304"
     },
     {
       "query": "What is the role of the administrative council??",
-      "answer": "The administrative council is responsible for making decisions and setting policies for an organization or institution.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "The administrative council is a consultative and advisory body to the vice president for administration in all major operations and other services matters, without legislative or consultative authority. They supervise the organization, management, and continuous improvement of various student services to ensure total customer satisfaction and significant contribution to the attainment of the various departments' vision, mission, and goals and the entire college. (Source: Organization and Administration of Columban College, Inc., Section 22)",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 71
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 59
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 49
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 47
+        }
+      ],
+      "confidence_level": "High",
+      "confidence_score": 93.6,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:54:41.865454"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:07:32.998679"
     },
     {
       "query": "How did the College improve its processes, systems, human assets, and facilities to guarantee quality education to its clientele?",
@@ -2263,40 +2935,82 @@
         }
       ],
       "confidence_level": "High",
-      "confidence_score": 93.5999984741211,
+      "confidence_score": 92.7,
       "rejected": false,
       "mode": "campus",
-      "timestamp": "2026-01-25T19:54:48.164115"
+      "timestamp": "2026-01-26T10:07:38.254927"
     },
     {
       "query": "What is a Bachelor of Science in Computer Science (BSCS)? ?",
-      "answer": "A Bachelor of Science in Computer Science (BSCS) is a undergraduate degree program that focuses on the study of computer systems, software development, algorithms, and programming languages.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "A Bachelor of Science in Computer Science (BSCS) is a program offered by Columban College, Inc. under the College of Computer Studies. (Source: Campus documents)",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 41
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 37
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "College of Nursing",
+          "chunk_id": 42
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "Major in Financial Management (BSBA-FM)",
+          "chunk_id": 40
+        }
+      ],
+      "confidence_level": "High",
+      "confidence_score": 95.0,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:54:51.953801"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:07:42.964254"
     },
     {
       "query": "What is the purpose of this program?",
-      "answer": "The purpose of this program is to provide education and training in a specific field or subject area.\n\n[Based on general AI knowledge]",
+      "answer": "[RAG-Only Mode] I couldn't find relevant campus information about purpose program. Please try rephrasing your question or ask about a different topic.",
       "sources": [],
-      "confidence_level": "N/A",
+      "confidence_level": "LOW",
       "confidence_score": 0.0,
-      "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:54:55.443277"
+      "rejected": true,
+      "mode": "rag_only",
+      "timestamp": "2026-01-26T10:07:45.910373"
     },
     {
       "query": "What is the role of the Director of Quality ASSURANCE and CHANGE MANAGEMENT?",
-      "answer": "The role of the Director of Quality Assurance and Change Management is to ensure that processes and procedures within an organization meet quality standards, identify areas for improvement, and manage changes effectively to enhance overall performance and efficiency.\n\n[Based on general AI knowledge]",
-      "sources": [],
-      "confidence_level": "N/A",
-      "confidence_score": 0.0,
+      "answer": "The Director of Quality Assurance and Change Management takes charge of the quality assurance program, process of accreditation, and institutional planning procedures. They provide advice and guidance to college staff concerning the implementation of a quality management system, serve as a liaison between the college and accreditation agencies to facilitate the process, act as self-survey executive in charge of the operation of the various committees that make up the self-survey team, and ensure that quality processes and procedures serve the institution’s purposes, objectives, policies, procedures, systems, and processes. (Source: Campus documents, Director of Quality Assurance and Change Management section)",
+      "sources": [
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 54
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 55
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "General Information",
+          "chunk_id": 64
+        },
+        {
+          "document_name": "2022_student_manual_latest.pdf",
+          "section": "External Auditor",
+          "chunk_id": 45
+        }
+      ],
+      "confidence_level": "Medium",
+      "confidence_score": 73.9,
       "rejected": false,
-      "mode": "general",
-      "timestamp": "2026-01-25T19:54:59.083773"
+      "mode": "campus",
+      "timestamp": "2026-01-26T10:07:51.471475"
     }
   ]
 }

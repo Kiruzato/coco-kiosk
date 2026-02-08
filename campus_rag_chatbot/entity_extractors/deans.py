@@ -102,37 +102,73 @@ def extract_deans_from_text(text: str) -> List[Dict[str, str]]:
     """
     deans = []
     seen_names = set()  # For deduplication
-    
+
+    # Remove chunk markers that may be in the context
+    text = re.sub(r'\[chunk[^\]]*\]', ' ', text)
+
+    # First try splitting on newlines
     lines = text.split('\n')
-    
+
+    # If text is single-line or has few meaningful lines with titles, split on title patterns instead
+    # This handles cases where content is concatenated without line breaks
+    lines_with_titles = [l for l in lines if re.search(r'(Dr\.|Engr\.|Arch\.)', l, re.IGNORECASE)]
+    # Check if any single line has multiple deans (concatenated content)
+    # If so, always do title splitting regardless of line count
+    has_concatenated_deans = any(
+        len(re.findall(r'(?:dr\.|engr\.|arch\.)', l, re.IGNORECASE)) > 1
+        for l in lines if l.strip()
+    )
+    if len(lines_with_titles) <= 3 or has_concatenated_deans:
+        # Split on title patterns (Dr., Engr., Arch., etc.) while keeping the delimiter
+        title_pattern = r'(?=(?:dr\.|engr\.|arch\.|prof\.|mr\.|ms\.|mrs\.)\s+[a-z])'
+        lines = re.split(title_pattern, text, flags=re.IGNORECASE)
+
     for line in lines:
         line = line.strip()
-        
+
         # Skip empty lines or very short lines
         if not line or len(line) < 10:
             continue
-        
+
         # Skip section headers (all caps, short)
         if line.upper() == line and len(line) < 30 and line.replace(' ', '').isalpha():
             continue
-        
+
         # Check if line contains person title (required for dean entry)
         if not re.search(r'(Dr\.|Engr\.|Arch\.|Prof\.|Mr\.|Ms\.|Mrs\.)', line, re.IGNORECASE):
             continue
-        
+
         # Extract dean entry
         dean = _parse_dean_line(line)
-        
+
         if dean:
+            # Filter: Only include if it looks like a dean entry
+            # Must have dean role indicator OR parenthetical college info
+            line_lower = line.lower()
+
+            # Pattern 1: "Dean, X" or "Dean of X" - role indicator
+            has_dean_role = bool(re.search(r'\bdean[,\s]+(?:of\s+)?[a-z]', line_lower))
+
+            # Pattern 2: "(College of X)" - parenthetical college info
+            has_paren_college = '(college' in line_lower
+
+            # Pattern 3: "College of X)" - closing paren with college
+            has_college_paren = bool(re.search(r'college\s+of\s+[a-z]+[^)]*\)', line_lower))
+
+            is_dean_entry = has_dean_role or has_paren_college or has_college_paren
+
+            if not is_dean_entry:
+                continue
+
             # Deduplicate by normalized name
             name_key = dean['full_name'].lower()
             if name_key not in seen_names:
                 seen_names.add(name_key)
                 dean['raw_line'] = line
                 deans.append(dean)
-    
+
     logger.info(f"Extracted {len(deans)} deans from text")
-    
+
     return deans
 
 
@@ -179,20 +215,25 @@ def _parse_dean_line(line: str) -> Dict[str, str]:
     # Extract name portion (everything before delimiter)
     name = remaining[:name_end_pos].strip()
     remaining = remaining[name_end_pos:].strip()
-    
+
+    # Truncate remaining at the next title pattern (to handle concatenated entries)
+    next_title = re.search(r'\b(?:dr\.|engr\.|arch\.|prof\.|mr\.|ms\.|mrs\.)\s+[a-z]', remaining, re.IGNORECASE)
+    if next_title:
+        remaining = remaining[:next_title.start()].strip()
+
     # Validate name
     if not name or len(name) < 2:
         return None
-    
+
     # Normalize title casing
     title_normalized = _normalize_title(title)
-    
+
     # Combine title + name
     full_name = f"{title_normalized} {name}"
-    
+
     # Normalize name casing (Title Case)
     full_name = _normalize_name_casing(full_name)
-    
+
     # Extract college info from remaining text
     college = _parse_college_info(remaining)
     

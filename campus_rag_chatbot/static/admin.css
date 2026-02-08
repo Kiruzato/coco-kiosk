@@ -779,3 +779,1276 @@ footer p {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==============================================================================
+   PHASE 36: ADMIN SIDEBAR LAYOUT
+   ============================================================================== */
+
+.admin-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f5f6fa;
+}
+
+body {
+    padding: 0;
+    background: #f5f6fa;
+}
+
+/* Admin Header */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    height: 60px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.admin-header h1 {
+    color: white;
+    font-size: 24px;
+    margin: 0;
+}
+
+.header-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+}
+
+.admin-header .btn-logout {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.admin-header .btn-logout:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Admin Layout - Sidebar + Main */
+.admin-layout {
+    display: flex;
+    flex: 1;
+    min-height: calc(100vh - 60px);
+}
+
+/* Sidebar */
+.admin-sidebar {
+    width: 250px;
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 60px;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+}
+
+.admin-nav {
+    padding: 20px 0;
+    flex: 1;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 24px;
+    color: #a0a0b0;
+    text-decoration: none;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #e0e0e0;
+}
+
+.nav-item.active {
+    background: rgba(102, 126, 234, 0.2);
+    color: white;
+    border-left-color: #667eea;
+}
+
+.nav-icon {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+}
+
+.nav-label {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Nav Group (for sub-items) */
+.nav-group {
+    margin: 8px 0;
+}
+
+.nav-group-label {
+    display: block;
+    padding: 12px 24px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #666;
+}
+
+.nav-group .nav-item {
+    padding-left: 36px;
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.version-tag {
+    font-size: 11px;
+    color: #666;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* Main Content Area */
+.admin-main {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    background: #f5f6fa;
+}
+
+/* Admin Sections */
+.admin-section {
+    display: none;
+}
+
+.admin-section.active {
+    display: block;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.section-header h2 {
+    font-size: 24px;
+    color: #333;
+    margin: 0;
+}
+
+/* Cards in sections */
+.admin-section .card {
+    margin-bottom: 20px;
+}
+
+/* ==============================================================================
+   PHASE 36: VOICE CONFIGURATION STYLES
+   ============================================================================== */
+
+.voice-config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.voice-provider-card {
+    padding: 24px;
+}
+
+.voice-provider-card h3 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.card-description {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.provider-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.provider-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f8f9fa;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.provider-item:hover {
+    border-color: #667eea;
+    background: #f8f9ff;
+}
+
+.provider-item.selected {
+    border-color: #667eea;
+    background: #f0f2ff;
+}
+
+.provider-item.unavailable {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.provider-item.unavailable:hover {
+    border-color: #e0e0e0;
+    background: #f8f9fa;
+}
+
+.provider-radio {
+    width: 20px;
+    height: 20px;
+    accent-color: #667eea;
+}
+
+.provider-info {
+    flex: 1;
+}
+
+.provider-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.provider-type {
+    font-size: 12px;
+    color: #666;
+}
+
+.provider-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.provider-status.online {
+    background: #d4edda;
+    color: #155724;
+}
+
+.provider-status.offline {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-dot.online {
+    background: #28a745;
+}
+
+.status-dot.offline {
+    background: #dc3545;
+}
+
+.provider-loading {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+}
+
+/* Voice Actions */
+.voice-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.config-status {
+    font-size: 14px;
+    color: #666;
+}
+
+.config-status.success {
+    color: #28a745;
+}
+
+.config-status.error {
+    color: #dc3545;
+}
+
+/* File Icon in Upload */
+.file-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+/* ==============================================================================
+   PHASE 37: PRICING BADGES, STATUS LABELS, FALLBACK SELECTION
+   ============================================================================== */
+
+/* Pricing Badges */
+.pricing-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.pricing-badge.free {
+    background: #d4edda;
+    color: #155724;
+}
+
+.pricing-badge.paid {
+    background: #fff3cd;
+    color: #856404;
+}
+
+/* Non-selectable Provider Styling */
+.provider-item.not-selectable {
+    opacity: 0.6;
+    cursor: not-allowed;
+    border-style: dashed;
+    border-color: #ccc;
+}
+
+.provider-item.not-selectable:hover {
+    border-color: #ccc;
+    background: #f8f9fa;
+    transform: none;
+}
+
+.provider-item.not-selectable .provider-radio {
+    display: none;
+}
+
+/* Status Label (for non-selectable providers) */
+.status-label {
+    display: inline-block;
+    font-size: 11px;
+    color: #856404;
+    background: #fff3cd;
+    padding: 4px 10px;
+    border-radius: 12px;
+    margin-left: auto;
+    font-weight: 500;
+}
+
+/* Fallback Section */
+.fallback-section {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px dashed #e0e0e0;
+}
+
+.fallback-section h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.fallback-description {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 12px;
+}
+
+.fallback-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.fallback-select:hover {
+    border-color: #667eea;
+}
+
+.fallback-select:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.fallback-select:disabled {
+    background: #f5f5f5;
+    cursor: not-allowed;
+    color: #999;
+}
+
+/* ==============================================================================
+   PHASE 38: USAGE MONITORING
+   ============================================================================== */
+
+.usage-card {
+    margin-top: 24px;
+}
+
+.usage-display {
+    padding: 16px 0;
+}
+
+.usage-bar-container {
+    width: 100%;
+    height: 12px;
+    background: #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.usage-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #5568d3 100%);
+    border-radius: 6px;
+    transition: width 0.5s ease;
+}
+
+.usage-bar.warning {
+    background: linear-gradient(90deg, #f0ad4e 0%, #ec971f 100%);
+}
+
+.usage-bar.danger {
+    background: linear-gradient(90deg, #d9534f 0%, #c9302c 100%);
+}
+
+.usage-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.usage-time {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.usage-percent {
+    font-size: 24px;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.usage-percent.warning {
+    color: #f0ad4e;
+}
+
+.usage-percent.danger {
+    color: #d9534f;
+}
+
+.usage-note {
+    font-size: 12px;
+    color: #888;
+    margin: 0;
+    font-style: italic;
+}
+
+/* ==============================================================================
+   PHASE 38: CREDENTIALS MANAGEMENT
+   ============================================================================== */
+
+.credentials-card {
+    margin-top: 24px;
+}
+
+.credentials-list {
+    margin: 16px 0;
+}
+
+.credential-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.credential-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.credential-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.credential-value {
+    font-size: 12px;
+    color: #666;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+}
+
+.credential-status .status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.valid {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.invalid {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-badge.not-configured {
+    background: #e9ecef;
+    color: #6c757d;
+}
+
+.credentials-note {
+    font-size: 12px;
+    color: #888;
+    margin: 16px 0 0 0;
+}
+
+.credentials-note code {
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+/* ==============================================================================
+   PHASE 39A: CREDENTIAL INPUT FORMS
+   ============================================================================== */
+
+.credential-form {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.credential-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.credential-current {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed #ddd;
+}
+
+.credential-meta {
+    font-size: 11px;
+    color: #888;
+}
+
+.credential-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.credential-input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+}
+
+.credential-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn-icon {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background: #f0f0f0;
+}
+
+.eye-icon {
+    font-size: 16px;
+}
+
+.credential-upload-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.filename-display {
+    font-size: 13px;
+    color: #666;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+}
+
+.credential-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+/* ==============================================================================
+   PHASE 36: RESPONSIVE SIDEBAR
+   ============================================================================== */
+
+@media (max-width: 1024px) {
+    .admin-sidebar {
+        width: 220px;
+    }
+
+    .nav-item {
+        padding: 12px 20px;
+    }
+
+    .nav-group .nav-item {
+        padding-left: 32px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-layout {
+        flex-direction: column;
+    }
+
+    .admin-sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        top: 0;
+    }
+
+    .admin-nav {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 10px;
+        gap: 5px;
+    }
+
+    .nav-item {
+        padding: 10px 16px;
+        border-left: none;
+        border-radius: 8px;
+        border-bottom: 2px solid transparent;
+    }
+
+    .nav-item.active {
+        border-left: none;
+        border-bottom-color: #667eea;
+    }
+
+    .nav-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin: 0;
+    }
+
+    .nav-group-label {
+        display: none;
+    }
+
+    .nav-group .nav-item {
+        padding-left: 16px;
+    }
+
+    .sidebar-footer {
+        display: none;
+    }
+
+    .admin-main {
+        padding: 16px;
+    }
+
+    .section-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+    }
+
+    .header-actions {
+        flex-wrap: wrap;
+    }
+
+    .voice-config-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================================================
+   PHASE 39B: DEVELOPER SECTION & TOGGLE SWITCH STYLES
+   ============================================================================ */
+
+.developer-card {
+    max-width: 600px;
+}
+
+.developer-card h3 {
+    margin-bottom: 8px;
+    color: #1f2937;
+}
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 20px 0;
+    padding: 16px;
+    background: #f3f4f6;
+    border-radius: 8px;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 56px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #d1d5db;
+    transition: 0.3s;
+    border-radius: 28px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: #059669;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(28px);
+}
+
+.toggle-switch input:focus + .toggle-slider {
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
+}
+
+.toggle-label {
+    font-size: 15px;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.toggle-label.active {
+    color: #059669;
+}
+
+.developer-note {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.5;
+    padding: 12px 16px;
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 6px;
+    margin-top: 16px;
+}
+
+/* ==============================================================================
+   TEST HARNESS - Phase 42
+   ============================================================================== */
+
+/* Main Layout */
+.test-harness-layout {
+    display: grid;
+    grid-template-columns: 60% 40%;
+    gap: 20px;
+    min-height: 500px;
+}
+
+.test-harness-right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Panel Base Styles */
+.results-panel,
+.questions-panel,
+.summary-panel {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    background: #f8f9fa;
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+    font-weight: 600;
+}
+
+.panel-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.panel-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #e0e0e0;
+    background: #f8f9fa;
+    font-size: 13px;
+    color: #666;
+}
+
+/* Results Panel */
+.results-panel {
+    flex: 1;
+    overflow: visible;
+}
+
+.results-list {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    max-height: calc(100vh - 280px);
+}
+
+.result-item {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-left: 4px solid #e0e0e0;
+    transition: all 0.2s;
+}
+
+.result-item.passed {
+    border-left-color: #28a745;
+    background: #f0fdf4;
+}
+
+.result-item.failed {
+    border-left-color: #dc3545;
+    background: #fef2f2;
+}
+
+.result-item.pending {
+    border-left-color: #ffc107;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.result-query {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.result-answer {
+    font-size: 13px;
+    color: #555;
+    line-height: 1.5;
+    max-height: 120px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+.result-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: #666;
+    flex-wrap: wrap;
+}
+
+.result-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.result-failures {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #dc3545;
+    padding: 8px 12px;
+    background: #fef2f2;
+    border-radius: 4px;
+    border: 1px solid #fecaca;
+}
+
+.result-failures div {
+    margin-bottom: 4px;
+}
+
+.result-failures div:last-child {
+    margin-bottom: 0;
+}
+
+/* Result Response Formatting */
+.result-response {
+    font-size: 13px;
+    color: #333;
+    line-height: 1.6;
+    margin-bottom: 10px;
+    padding: 12px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.result-response p {
+    margin: 0 0 0.8em 0;
+}
+
+.result-response p:last-child {
+    margin-bottom: 0;
+}
+
+.result-response .answer-list {
+    margin: 0.5em 0 1em 0;
+    padding-left: 1.5em;
+}
+
+.result-response .answer-list li {
+    margin: 0.4em 0;
+    line-height: 1.6;
+}
+
+.result-response ol.answer-list {
+    list-style-type: decimal;
+}
+
+.result-response ul.answer-list {
+    list-style-type: disc;
+}
+
+.result-response strong {
+    font-weight: 600;
+    color: #1e3c72;
+}
+
+/* Questions Panel */
+.questions-panel {
+    flex: 1;
+    min-height: 0;
+}
+
+.add-question-form {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.add-question-form .question-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.add-question-form .question-input:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.questions-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    max-height: 300px;
+}
+
+.question-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    gap: 8px;
+}
+
+.question-item:hover {
+    background: #f0f0f0;
+}
+
+.question-text {
+    flex: 1;
+    font-size: 13px;
+    color: #333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.question-category {
+    font-size: 11px;
+    color: #666;
+    background: #e9ecef;
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.question-item .btn-danger {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-width: auto;
+}
+
+/* Summary Panel */
+.summary-panel {
+    padding: 16px 20px;
+}
+
+.summary-panel h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: #333;
+    font-weight: 600;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.summary-stat {
+    text-align: center;
+    padding: 16px 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stat-label {
+    display: block;
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.stat-value {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+}
+
+.stat-value.success {
+    color: #28a745;
+}
+
+.stat-value.danger {
+    color: #dc3545;
+}
+
+/* Progress Badge */
+.progress-badge {
+    background: #667eea;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Category Breakdown */
+.category-breakdown {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.category-breakdown h4 {
+    font-size: 13px;
+    color: #666;
+    margin: 0 0 8px 0;
+}
+
+.category-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+}
+
+.category-name {
+    color: #333;
+}
+
+.category-stats {
+    color: #666;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 14px;
+}
+
+/* Header Actions */
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .test-harness-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .results-panel {
+        min-height: 400px;
+    }
+
+    .test-harness-right {
+        flex-direction: row;
+    }
+
+    .questions-panel,
+    .summary-panel {
+        flex: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .test-harness-right {
+        flex-direction: column;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .summary-stat {
+        padding: 12px 8px;
+    }
+
+    .stat-value {
+        font-size: 20px;
+    }
+}

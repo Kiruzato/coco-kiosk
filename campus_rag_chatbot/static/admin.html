@@ -3,157 +3,452 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoCo Admin — Document Management</title>
+    <title>CoCo Admin - Columban College</title>
     <link rel="stylesheet" href="/static/admin.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="header-content">
-                <div class="header-title">
-                    <h1>CoCo Admin</h1>
-                    <p class="subtitle">Document Management — Columban College, Inc.</p>
-                </div>
-                <button id="logoutBtn" class="btn-logout">Logout</button>
+    <div class="admin-wrapper">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-brand">
+                <h1>CoCo Admin</h1>
+                <span class="header-subtitle">Columban College, Inc.</span>
             </div>
+            <button id="logoutBtn" class="btn-logout">Logout</button>
         </header>
 
-        <!-- Notification Area -->
-        <div id="notification" class="notification hidden"></div>
+        <div class="admin-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="admin-sidebar">
+                <nav class="admin-nav">
+                    <a href="#analytics" class="nav-item active" data-section="analytics">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-label">System Analytics</span>
+                    </a>
 
-        <!-- File Upload Section -->
-        <section class="card">
-            <h2>Upload Document</h2>
-            <form id="uploadForm">
-                <div class="upload-area">
-                    <input
-                        type="file"
-                        id="fileInput"
-                        accept=".pdf,.docx,.txt"
-                        class="file-input"
-                    >
-                    <label for="fileInput" class="file-label">
-                        <span id="fileName">Choose a file</span>
-                        <span class="file-types">Supported: PDF, DOCX, TXT</span>
-                    </label>
-                    <button type="submit" id="uploadBtn" class="btn-primary" disabled>
-                        Upload Document
-                    </button>
+                    <div class="nav-group">
+                        <span class="nav-group-label">Documents</span>
+                        <a href="#upload" class="nav-item" data-section="upload">
+                            <span class="nav-icon">📤</span>
+                            <span class="nav-label">Upload</span>
+                        </a>
+                        <a href="#documents" class="nav-item" data-section="documents">
+                            <span class="nav-icon">📁</span>
+                            <span class="nav-label">Manage</span>
+                        </a>
+                    </div>
+
+                    <a href="#entities" class="nav-item" data-section="entities">
+                        <span class="nav-icon">📍</span>
+                        <span class="nav-label">Directory Entities</span>
+                    </a>
+
+                    <a href="#voice" class="nav-item" data-section="voice">
+                        <span class="nav-icon">🎤</span>
+                        <span class="nav-label">Voice Config</span>
+                    </a>
+
+                    <a href="#developer" class="nav-item" data-section="developer">
+                        <span class="nav-icon">🔧</span>
+                        <span class="nav-label">Developer</span>
+                    </a>
+
+                    <a href="#test-harness" class="nav-item" data-section="test-harness">
+                        <span class="nav-icon">🧪</span>
+                        <span class="nav-label">Test Harness</span>
+                    </a>
+                </nav>
+
+                <div class="sidebar-footer">
+                    <span class="version-tag">Phase 42</span>
                 </div>
-            </form>
-        </section>
+            </aside>
 
-        <!-- Documents Table Section -->
-        <section class="card">
-            <div class="table-header">
-                <h2>Ingested Documents</h2>
-                <button id="refreshBtn" class="btn-secondary">🔄 Refresh</button>
-            </div>
+            <!-- Main Content Area -->
+            <main class="admin-main">
+                <!-- Notification Area -->
+                <div id="notification" class="notification hidden"></div>
 
-            <div id="loadingIndicator" class="loading hidden">Loading documents...</div>
+                <!-- Section: System Analytics (Default) -->
+                <section id="section-analytics" class="admin-section active">
+                    <div class="section-header">
+                        <h2>System Analytics</h2>
+                        <button id="refreshAnalyticsBtn" class="btn-secondary">🔄 Refresh</button>
+                    </div>
 
-            <div class="table-container">
-                <table id="documentsTable">
-                    <thead>
-                        <tr>
-                            <th>Filename</th>
-                            <th>Type</th>
-                            <th>Chunks</th>
-                            <th>Ingested Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="documentsBody">
-                        <tr>
-                            <td colspan="5" class="empty-state">No documents loaded. Upload a document to get started.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+                    <div id="analyticsLoadingIndicator" class="loading hidden">Loading analytics...</div>
 
-        <!-- Directory Entities Section (Phase 10) -->
-        <section class="card">
-            <div class="table-header">
-                <h2>Directory Entities</h2>
-                <div class="header-actions">
-                    <button id="addEntityBtn" class="btn-primary">+ Add Entity</button>
-                    <button id="exportEntitiesBtn" class="btn-secondary">📥 Export CSV</button>
-                    <button id="importEntitiesTrigger" class="btn-secondary">📤 Import CSV</button>
-                    <input type="file" id="importEntitiesInput" accept=".csv" class="hidden">
-                    <button id="refreshEntitiesBtn" class="btn-secondary">🔄 Refresh</button>
-                </div>
-            </div>
+                    <div class="stats-grid" id="analyticsGrid">
+                        <div class="stat-card">
+                            <h3>Total Queries</h3>
+                            <span id="stat-total-queries" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Clarification Rate</h3>
+                            <span id="stat-clarification-rate" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Refusal Rate</h3>
+                            <span id="stat-refusal-rate" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Clarification Success</h3>
+                            <span id="stat-clarification-success" class="stat-value">-</span>
+                        </div>
+                    </div>
 
-            <div id="entitiesLoadingIndicator" class="loading hidden">Loading entities...</div>
+                    <div class="analytics-breakdown">
+                        <div class="breakdown-section">
+                            <h4>Query Types</h4>
+                            <div id="query-type-breakdown" class="breakdown-grid"></div>
+                        </div>
+                        <div class="breakdown-section">
+                            <h4>Confidence Levels</h4>
+                            <div id="confidence-breakdown" class="breakdown-grid"></div>
+                        </div>
+                        <div class="breakdown-section">
+                            <h4>Refusal Reasons</h4>
+                            <div id="refusal-reasons-breakdown" class="breakdown-grid"></div>
+                        </div>
+                    </div>
+                </section>
 
-            <div class="table-container">
-                <table id="entitiesTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Building</th>
-                            <th>Floor</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="entitiesBody">
-                        <tr>
-                            <td colspan="6" class="empty-state">No entities loaded. Click "Refresh" to load directory entities.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div id="entitiesStats" class="table-stats"></div>
-        </section>
+                <!-- Section: Upload Document -->
+                <section id="section-upload" class="admin-section">
+                    <div class="section-header">
+                        <h2>Upload Document</h2>
+                    </div>
 
-        <!-- Analytics Section (Phase 16) -->
-        <section class="card">
-            <div class="table-header">
-                <h2>System Analytics</h2>
-                <button id="refreshAnalyticsBtn" class="btn-secondary">🔄 Refresh</button>
-            </div>
+                    <div class="card">
+                        <form id="uploadForm">
+                            <div class="upload-area">
+                                <input
+                                    type="file"
+                                    id="fileInput"
+                                    accept=".pdf,.docx,.txt"
+                                    class="file-input"
+                                >
+                                <label for="fileInput" class="file-label">
+                                    <span class="file-icon">📄</span>
+                                    <span id="fileName">Choose a file or drag & drop</span>
+                                    <span class="file-types">Supported: PDF, DOCX, TXT</span>
+                                </label>
+                                <button type="submit" id="uploadBtn" class="btn-primary" disabled>
+                                    Upload Document
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
 
-            <div id="analyticsLoadingIndicator" class="loading hidden">Loading analytics...</div>
+                <!-- Section: Manage Documents -->
+                <section id="section-documents" class="admin-section">
+                    <div class="section-header">
+                        <h2>Manage Documents</h2>
+                        <button id="refreshBtn" class="btn-secondary">🔄 Refresh</button>
+                    </div>
 
-            <div class="stats-grid" id="analyticsGrid">
-                <div class="stat-card">
-                    <h3>Total Queries</h3>
-                    <span id="stat-total-queries" class="stat-value">-</span>
-                </div>
-                <div class="stat-card">
-                    <h3>Clarification Rate</h3>
-                    <span id="stat-clarification-rate" class="stat-value">-</span>
-                </div>
-                <div class="stat-card">
-                    <h3>Refusal Rate</h3>
-                    <span id="stat-refusal-rate" class="stat-value">-</span>
-                </div>
-                <div class="stat-card">
-                    <h3>Clarification Success</h3>
-                    <span id="stat-clarification-success" class="stat-value">-</span>
-                </div>
-            </div>
+                    <div id="loadingIndicator" class="loading hidden">Loading documents...</div>
 
-            <div class="analytics-breakdown">
-                <div class="breakdown-section">
-                    <h4>Query Types</h4>
-                    <div id="query-type-breakdown" class="breakdown-grid"></div>
-                </div>
-                <div class="breakdown-section">
-                    <h4>Confidence Levels</h4>
-                    <div id="confidence-breakdown" class="breakdown-grid"></div>
-                </div>
-                <div class="breakdown-section">
-                    <h4>Refusal Reasons</h4>
-                    <div id="refusal-reasons-breakdown" class="breakdown-grid"></div>
-                </div>
-            </div>
-        </section>
+                    <div class="card">
+                        <div class="table-container">
+                            <table id="documentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Filename</th>
+                                        <th>Type</th>
+                                        <th>Chunks</th>
+                                        <th>Ingested Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="documentsBody">
+                                    <tr>
+                                        <td colspan="5" class="empty-state">No documents loaded. Upload a document to get started.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
 
-        <!-- Entity Modal -->
+                <!-- Section: Directory Entities -->
+                <section id="section-entities" class="admin-section">
+                    <div class="section-header">
+                        <h2>Directory Entities</h2>
+                        <div class="header-actions">
+                            <button id="addEntityBtn" class="btn-primary">+ Add Entity</button>
+                            <button id="exportEntitiesBtn" class="btn-secondary">📥 Export CSV</button>
+                            <button id="importEntitiesTrigger" class="btn-secondary">📤 Import CSV</button>
+                            <input type="file" id="importEntitiesInput" accept=".csv" class="hidden">
+                            <button id="refreshEntitiesBtn" class="btn-secondary">🔄 Refresh</button>
+                        </div>
+                    </div>
+
+                    <div id="entitiesLoadingIndicator" class="loading hidden">Loading entities...</div>
+
+                    <div class="card">
+                        <div class="table-container">
+                            <table id="entitiesTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Building</th>
+                                        <th>Floor</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="entitiesBody">
+                                    <tr>
+                                        <td colspan="6" class="empty-state">No entities loaded. Click "Refresh" to load directory entities.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="entitiesStats" class="table-stats"></div>
+                    </div>
+                </section>
+
+                <!-- Section: Voice Configuration (Phase 36) -->
+                <section id="section-voice" class="admin-section">
+                    <div class="section-header">
+                        <h2>Voice Configuration</h2>
+                        <button id="refreshVoiceBtn" class="btn-secondary">🔄 Refresh</button>
+                    </div>
+
+                    <div id="voiceLoadingIndicator" class="loading hidden">Loading voice configuration...</div>
+
+                    <div class="voice-config-grid">
+                        <!-- STT Providers -->
+                        <div class="card voice-provider-card">
+                            <h3>Speech-to-Text (STT)</h3>
+                            <p class="card-description">Select the engine for converting speech to text</p>
+                            <div id="sttProviders" class="provider-list">
+                                <div class="provider-loading">Loading providers...</div>
+                            </div>
+                            <!-- Phase 37: Fallback Selection -->
+                            <div class="fallback-section">
+                                <h4>Fallback Engine</h4>
+                                <p class="fallback-description">Used when primary engine fails or has low confidence</p>
+                                <select id="sttFallbackSelect" class="fallback-select">
+                                    <option value="">Auto-select</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- TTS Providers -->
+                        <div class="card voice-provider-card">
+                            <h3>Text-to-Speech (TTS)</h3>
+                            <p class="card-description">Select the engine for converting text to speech</p>
+                            <div id="ttsProviders" class="provider-list">
+                                <div class="provider-loading">Loading providers...</div>
+                            </div>
+                            <!-- Phase 37: Fallback Selection -->
+                            <div class="fallback-section">
+                                <h4>Fallback Engine</h4>
+                                <p class="fallback-description">Used when primary engine fails</p>
+                                <select id="ttsFallbackSelect" class="fallback-select">
+                                    <option value="">Auto-select</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phase 38: Usage Monitoring -->
+                    <div class="card usage-card">
+                        <h3>Google STT Monthly Usage</h3>
+                        <p class="card-description">Track usage against the 60-minute free tier quota</p>
+                        <div id="usageDisplay" class="usage-display">
+                            <div class="usage-bar-container">
+                                <div id="usageBar" class="usage-bar" style="width: 0%"></div>
+                            </div>
+                            <div class="usage-stats">
+                                <span class="usage-time">
+                                    <span id="usageUsed">0:00</span> / <span id="usageQuota">60:00</span>
+                                </span>
+                                <span id="usagePercent" class="usage-percent">0%</span>
+                            </div>
+                            <p class="usage-note">Resets automatically on the 1st of each month</p>
+                        </div>
+                    </div>
+
+                    <!-- Phase 39A: Cloud Credentials with Input Forms -->
+                    <div class="card credentials-card">
+                        <h3>Cloud Credentials</h3>
+                        <p class="card-description">Configure API credentials for cloud services</p>
+
+                        <!-- OpenAI API Key -->
+                        <div class="credential-form">
+                            <div class="credential-header">
+                                <span class="credential-name">OpenAI API Key</span>
+                                <span id="openaiCredentialStatus" class="status-badge">--</span>
+                            </div>
+                            <div class="credential-current" id="openaiCurrentStatus">
+                                <span id="openaiCredentialKey" class="credential-value">Not configured</span>
+                                <span id="openaiUpdatedAt" class="credential-meta"></span>
+                            </div>
+                            <div class="credential-input-row">
+                                <input type="password"
+                                       id="openaiApiKeyInput"
+                                       placeholder="sk-..."
+                                       class="credential-input"
+                                       autocomplete="off">
+                                <button type="button"
+                                        id="toggleOpenaiKeyBtn"
+                                        class="btn-icon"
+                                        title="Show/Hide">
+                                    <span class="eye-icon">&#128065;</span>
+                                </button>
+                            </div>
+                            <div class="credential-actions">
+                                <button type="button" id="saveOpenaiKeyBtn" class="btn-primary btn-small">Save</button>
+                                <button type="button" id="verifyOpenaiKeyBtn" class="btn-secondary btn-small">Verify</button>
+                            </div>
+                        </div>
+
+                        <!-- Google Cloud Service Account -->
+                        <div class="credential-form">
+                            <div class="credential-header">
+                                <span class="credential-name">Google Cloud Service Account</span>
+                                <span id="googleCredentialStatus" class="status-badge">--</span>
+                            </div>
+                            <div class="credential-current" id="googleCurrentStatus">
+                                <span id="googleCredentialPath" class="credential-value">Not configured</span>
+                                <span id="googleProjectId" class="credential-meta"></span>
+                                <span id="googleUpdatedAt" class="credential-meta"></span>
+                            </div>
+                            <div class="credential-upload-row">
+                                <input type="file"
+                                       id="googleCredentialFileInput"
+                                       accept=".json"
+                                       class="hidden">
+                                <button type="button"
+                                        id="uploadGoogleCredBtn"
+                                        class="btn-secondary">
+                                    Upload JSON File
+                                </button>
+                                <span id="googleCredentialFilename" class="filename-display">
+                                    No file selected
+                                </span>
+                            </div>
+                            <div class="credential-actions">
+                                <button type="button" id="saveGoogleCredBtn" class="btn-primary btn-small" disabled>Save</button>
+                                <button type="button" id="verifyGoogleCredBtn" class="btn-secondary btn-small" disabled>Verify</button>
+                            </div>
+                        </div>
+
+                        <p class="credentials-note">
+                            <strong>Secure Storage:</strong> Credentials are encrypted at rest and persist across restarts.
+                        </p>
+                    </div>
+
+                    <div class="voice-actions">
+                        <button id="saveVoiceConfigBtn" class="btn-primary" disabled>Save Configuration</button>
+                        <span id="voiceConfigStatus" class="config-status"></span>
+                    </div>
+                </section>
+
+                <!-- Section: Developer Settings (Phase 39B) -->
+                <section id="section-developer" class="admin-section">
+                    <div class="section-header">
+                        <h2>Developer Settings</h2>
+                    </div>
+
+                    <div class="card developer-card">
+                        <h3>Debug Panel</h3>
+                        <p class="card-description">
+                            Show real-time debug information in the chatbot UI for all users.
+                            Useful for demonstrations and troubleshooting.
+                        </p>
+
+                        <div class="toggle-row">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="debugModeToggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-label" id="debugModeLabel">Debug Panel Hidden</span>
+                        </div>
+
+                        <p class="developer-note">
+                            When enabled, all users will see technical details about each response including:
+                            LLM provider, retrieval mode, chunks retrieved, grounding status, and timing.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Section: Test Harness (Phase 42) -->
+                <section id="section-test-harness" class="admin-section">
+                    <div class="section-header">
+                        <h2>Test Harness</h2>
+                        <div class="header-actions">
+                            <button id="runTestsBtn" class="btn-primary">🚀 Run Tests</button>
+                            <button id="downloadResultsBtn" class="btn-secondary" disabled>📥 Download Results</button>
+                        </div>
+                    </div>
+
+                    <div class="test-harness-layout">
+                        <!-- Left: Results Viewer (60%) -->
+                        <div class="results-panel">
+                            <div class="panel-header">
+                                <h3>Results</h3>
+                                <span id="testProgressBadge" class="progress-badge hidden">0/0</span>
+                            </div>
+                            <div id="testResultsContainer" class="results-list">
+                                <div class="empty-state">Run tests to see results</div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column (40%) -->
+                        <div class="test-harness-right">
+                            <!-- Upper: Question List -->
+                            <div class="questions-panel">
+                                <div class="panel-header">
+                                    <h3>Test Questions</h3>
+                                    <div class="panel-actions">
+                                        <button id="importQuestionsBtn" class="btn-secondary btn-small">Import CSV</button>
+                                        <input type="file" id="importQuestionsInput" accept=".csv" class="hidden">
+                                    </div>
+                                </div>
+                                <div class="add-question-form">
+                                    <input type="text" id="newQuestionInput" placeholder="Enter a test question..." class="question-input">
+                                    <button id="addQuestionBtn" class="btn-primary btn-small">+ Add</button>
+                                </div>
+                                <div id="testQuestionsList" class="questions-list">
+                                    <div class="empty-state">No questions added</div>
+                                </div>
+                            </div>
+
+                            <!-- Lower: Summary Panel -->
+                            <div class="summary-panel">
+                                <h3>Test Summary</h3>
+                                <div class="summary-grid">
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Total</span>
+                                        <span id="testTotalCount" class="stat-value">0</span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Passed</span>
+                                        <span id="testPassedCount" class="stat-value passed">0</span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Failed</span>
+                                        <span id="testFailedCount" class="stat-value failed">0</span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Pass Rate</span>
+                                        <span id="testPassRate" class="stat-value">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- Entity Modal (shared across sections) -->
         <div id="entityModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">
@@ -221,10 +516,6 @@
                 </form>
             </div>
         </div>
-
-        <footer>
-            <p>CoCo — Columban College, Inc. | Admin Panel</p>
-        </footer>
     </div>
 
     <script src="/static/admin.js"></script>

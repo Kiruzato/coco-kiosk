@@ -1,0 +1,49 @@
+# Windows null device artifacts
+nul
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+venv311/
+ENV/
+.venv/
+
+# Environment files
+.env
+*.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+server.log
+
+# Audio files (test artifacts)
+*.wav
+test_audio*.wav
+question_audio*.wav
+
+# Credentials (never commit)
+*.json.backup*
+credentials.enc
+.google_sa_temp.json
+sa_stt.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Whisper.cpp build (large)
+whisper.cpp/
+
+# Temporary files
+*.tmp
+*.temp

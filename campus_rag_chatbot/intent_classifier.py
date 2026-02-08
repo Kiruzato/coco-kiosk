@@ -7,7 +7,7 @@ This module classifies user query intent to enable dual-mode answering:
 - Ambiguous queries → Ask for clarification
 - Directory queries → Strict location/wayfinding with high confidence (Phase 8)
 
-Intent classification uses the existing LLM (gpt-3.5-turbo) with a structured prompt.
+Intent classification uses the existing LLM (gpt-4o-mini) with a structured prompt.
 """
 
 import re

@@ -1,0 +1,207 @@
+================================================================================
+PHASE 32: VOICE INFRASTRUCTURE FOUNDATION - COMPLETION REPORT
+================================================================================
+Date: 2026-02-03
+Status: COMPLETE
+
+================================================================================
+OVERVIEW
+================================================================================
+
+Phase 32 implements the voice infrastructure for the CoCo campus kiosk,
+enabling speech-to-text (STT) and text-to-speech (TTS) capabilities.
+
+Key Design Principle:
+    Voice is a MODALITY LAYER, not a decision layer.
+    All RAG guarantees (grounding, confidence, determinism) are preserved.
+    Voice just handles I/O transformation (audio <-> text).
+
+================================================================================
+NEW FILES CREATED
+================================================================================
+
+campus_rag_chatbot/voice/
+    __init__.py              Package exports and documentation
+    config.py                Voice configuration with environment variables
+    audio_utils.py           Audio format conversion and validation
+    stt_service.py           Speech-to-Text service abstraction
+    tts_service.py           Text-to-Speech service with text optimization
+    voice_orchestrator.py    Coordinates STT -> Chat -> TTS flow
+
+campus_rag_chatbot/voice/engines/
+    __init__.py              Engine package exports
+    whisper_cpp.py           Offline STT using Whisper.cpp (ARM64 optimized)
+    whisper_openai.py        Cloud fallback using OpenAI Whisper API
+    piper_tts.py             Offline TTS using Piper (neural network voices)
+    espeak_tts.py            Fast fallback TTS using espeak-ng
+
+campus_rag_chatbot/voice_routes.py   FastAPI voice endpoints
+
+================================================================================
+API ENDPOINTS
+================================================================================
+
+GET  /voice/status          Check voice service availability
+POST /voice/transcribe      Transcribe audio to text (STT)
+POST /voice/synthesize      Synthesize text to speech (TTS)
+POST /voice/chat            Complete voice interaction (STT -> Chat -> TTS)
+GET  /voice/audio/{id}      Retrieve temporarily stored audio
+
+================================================================================
+CONFIGURATION
+================================================================================
+
+Environment Variables:
+    VOICE_ENABLED           Enable/disable voice features (default: true)
+    WHISPER_MODEL_PATH      Path to Whisper.cpp model file
+    PIPER_MODEL_PATH        Path to Piper TTS model file
+    WHISPER_THREADS         Number of CPU threads for Whisper (default: 4)
+    WHISPER_CLOUD_FALLBACK  Enable cloud fallback for low confidence
+    STT_MIN_CONFIDENCE      Minimum confidence threshold (default: 0.7)
+    TTS_MAX_CHARS           Maximum characters for TTS (default: 500)
+
+================================================================================
+KEY FEATURES
+================================================================================
+
+1. Offline-First Design
+   - Primary STT: Whisper.cpp (ARM64 NEON optimized for RPi5)
+   - Primary TTS: Piper (ONNX neural network voices)
+   - No internet required for basic operation
+
+2. Automatic Fallback
+   - Low confidence STT -> retry with cloud API
+   - Primary engine failure -> use fallback engine
+   - TTS failure -> text response still available
+
+3. Confidence-Based Routing
+   - Confidence threshold: 0.7
+   - Low confidence triggers text input fallback prompt
+   - Preserves user intent even with poor audio quality
+
+4. Temporary Audio Storage
+   - TTS audio stored with 5-minute TTL
+   - Auto-cleanup of expired entries
+   - Maximum 100 entries to limit memory usage
+
+5. Voice Event Logging
+   - Integrated with existing EventTracker
+   - Tracks: STT success/confidence, chat success, TTS success
+   - Latency metrics for each phase
+
+================================================================================
+TECHNOLOGY STACK
+================================================================================
+
+Speech-to-Text (STT):
+    Primary:  Whisper.cpp (tiny.en model, ~75MB)
+    Fallback: OpenAI Whisper API (cloud)
+
+Text-to-Speech (TTS):
+    Primary:  Piper TTS (en_US-amy-medium voice, ~63MB)
+    Fallback: espeak-ng (system package)
+
+Audio Formats:
+    Input:  WAV, WebM, MP3, OGG (auto-detected)
+    Output: WAV (16-bit PCM)
+
+================================================================================
+INTEGRATION
+================================================================================
+
+Modified Files:
+    - campus_rag_chatbot/app.py
+      - Added voice_routes import
+      - Added voice router to FastAPI app
+      - Added voice service initialization in startup event
+
+Flow:
+    1. Browser captures audio via Web Audio API
+    2. Audio uploaded to /voice/transcribe or /voice/chat
+    3. STT converts audio to text
+    4. Text sent through existing /chat pipeline (unchanged)
+    5. Response synthesized to audio via TTS
+    6. Audio returned to browser for playback
+
+================================================================================
+TESTING RESULTS
+================================================================================
+
+Voice Status Endpoint:
+    curl http://localhost:8000/voice/status
+    {
+        "voice_enabled": true,
+        "stt_available": false,
+        "stt_engine": "whisper.cpp",
+        "tts_available": false,
+        "tts_engine": "piper (en_US-amy-medium)",
+        "confidence_threshold": 0.7
+    }
+
+    Note: stt_available and tts_available are false because models
+    are not yet downloaded. This is expected for Phase 32.
+
+Golden Tests:
+    28-29/32 passing (~90%)
+    No regression from voice integration
+
+================================================================================
+NEXT STEPS (PHASES 33-36)
+================================================================================
+
+Phase 33: Voice API Layer
+    - Full endpoint implementation with error handling
+    - WebSocket streaming support
+    - Rate limiting and security
+
+Phase 34: Frontend Voice UI
+    - Mic button with state machine
+    - Waveform visualization
+    - Visual feedback (LISTENING, PROCESSING, RESPONDING)
+    - Text fallback UI for low confidence
+
+Phase 35: Kiosk Hardening
+    - RPi5 hardware testing
+    - Performance optimization
+    - Wake word detection (optional)
+    - Auto-recovery from audio device errors
+
+Phase 36: Multilingual Support
+    - Filipino language support
+    - Language detection
+    - Multilingual TTS voices
+
+================================================================================
+MODEL INSTALLATION (Required for Voice to Work)
+================================================================================
+
+1. Whisper.cpp (STT):
+   git clone https://github.com/ggerganov/whisper.cpp
+   cd whisper.cpp
+   make -j4
+   ./models/download-ggml-model.sh tiny.en
+
+   Copy ggml-tiny.en.bin to:
+   campus_rag_chatbot/voice/models/whisper/
+
+2. Piper TTS:
+   pip install piper-tts
+   Download voice model from:
+   https://github.com/rhasspy/piper/releases
+
+   Copy .onnx and .onnx.json files to:
+   campus_rag_chatbot/voice/models/piper/
+
+3. espeak-ng (fallback):
+   Windows: Download from https://github.com/espeak-ng/espeak-ng/releases
+   Linux:   sudo apt-get install espeak-ng
+
+================================================================================
+DOCUMENTATION UPDATED
+================================================================================
+
+- PROJECT_CONTEXT.md: Added Phase 32 to completed phases and details
+- CLAUDE.md: Updated phase history and architecture diagram
+- reports/voice_integration_proposal.md: Full engineering proposal
+
+================================================================================

@@ -1,0 +1,260 @@
+================================================================================
+PHASE 38: GOOGLE CLOUD STT WITH USAGE MONITORING
+================================================================================
+Date: 2026-02-06
+Status: COMPLETE
+
+================================================================================
+OVERVIEW
+================================================================================
+
+Phase 38 adds Google Cloud Speech-to-Text V1 as an STT engine with backend-
+authoritative usage tracking to monitor the 60-minute monthly free tier quota.
+
+Key Features:
+- Google Cloud STT using Standard model with data logging (free tier eligible)
+- Backend-authoritative usage tracking (60-minute monthly quota)
+- Usage rounded UP to next full second per Google billing rules
+- Automatic monthly reset on the 1st of each month (lazy reset)
+- Admin UI showing usage progress bar and credential status
+- Hot reload support for credentials without server restart
+
+================================================================================
+FILES CREATED
+================================================================================
+
+1. voice/usage_tracker.py
+   - STTUsageTracker class with monthly reset logic
+   - UsageStats dataclass for structured usage data
+   - Thread-safe file persistence with threading.Lock()
+   - round_up_seconds() for Google billing compliance
+   - Lazy reset: checks month on each usage update
+   - Data stored in: data/stt_usage.json
+
+2. voice/engines/google_cloud_stt.py
+   - GoogleCloudSTTEngine class implementing STTEngine interface
+   - Uses 'default' model with data logging for free tier
+   - Credential validation via GOOGLE_APPLICATION_CREDENTIALS
+   - Async transcribe() method returning TranscriptionResult
+   - is_available() checks credentials and package availability
+
+================================================================================
+FILES MODIFIED
+================================================================================
+
+1. voice/engines/__init__.py
+   - Added GoogleCloudSTTEngine to __all__ exports
+
+2. voice/provider_registry.py
+   - Extended ProviderInfo with quota fields:
+     - monthly_quota_seconds: Optional[int]
+     - has_usage_tracking: bool
+   - Added Google Cloud STT to STT_PROVIDERS:
+     - id: "google-cloud-stt"
+     - pricing_tier: "free-tier"
+     - monthly_quota_seconds: 3600
+     - has_usage_tracking: True
+
+3. voice/stt_service.py
+   - Added Google Cloud STT initialization in _init_engines()
+   - Support for 'google-cloud-stt' engine type
+
+4. voice/config.py
+   - Added google_cloud_stt configuration section
+   - Added usage_tracking configuration section
+
+5. app.py
+   - GET /admin/voice/usage - Get STT usage statistics
+   - GET /admin/voice/credentials/status - Get masked credential status
+   - get_stt_usage_tracker() singleton function
+
+6. static/admin.html
+   - Added usage monitoring card with progress bar:
+     - #usageBar, #usageUsed, #usageQuota, #usagePercent
+   - Added credentials display section:
+     - #googleCredentialPath, #googleCredentialStatus
+     - #openaiCredentialKey, #openaiCredentialStatus
+
+7. static/admin.css
+   - Usage bar styles with gradient backgrounds
+   - Warning state (80%+): yellow/orange gradient
+   - Danger state (90%+): red gradient
+   - Credential status badge styles (valid/invalid)
+
+8. static/admin.js
+   - loadSTTUsage() - Fetches from /admin/voice/usage
+   - displaySTTUsage() - Renders progress bar with time formatting
+   - loadCredentialsStatus() - Fetches from /admin/voice/credentials/status
+   - displayCredentialsStatus() - Renders credential status badges
+   - Integration into loadVoiceConfig()
+
+9. requirements.txt
+   - Added: google-cloud-speech>=2.21.0
+
+10. .env.example
+    - Added Google Cloud credentials documentation
+    - Added all voice configuration variables
+
+11. CLAUDE.md
+    - Updated to Phase 38
+    - Added Phases 35-38 to history
+    - Updated architecture diagram
+    - Updated environment variables section
+
+================================================================================
+API ENDPOINTS
+================================================================================
+
+GET /admin/voice/usage
+Response:
+{
+  "google_cloud_stt": {
+    "current_month": "2026-02",
+    "used_seconds": 1847,
+    "quota_seconds": 3600,
+    "remaining_seconds": 1753,
+    "usage_percent": 51.3,
+    "transcription_count": 42
+  }
+}
+
+GET /admin/voice/credentials/status
+Response:
+{
+  "google_cloud_stt": {
+    "is_configured": true,
+    "is_valid": true,
+    "masked_path": "/path/to/**********.json",
+    "project_id": "my-project-123"
+  },
+  "openai": {
+    "is_configured": true,
+    "is_valid": true,
+    "masked_key": "sk-...****"
+  }
+}
+
+================================================================================
+DATA SCHEMA
+================================================================================
+
+data/stt_usage.json:
+{
+  "current_month": "2026-02",
+  "used_seconds": 1847,
+  "quota_seconds": 3600,
+  "transcription_count": 42,
+  "last_updated": "2026-02-06T14:23:00Z",
+  "monthly_history": [
+    {"month": "2026-01", "used_seconds": 2340, "transcription_count": 55}
+  ]
+}
+
+================================================================================
+DESIGN DECISIONS
+================================================================================
+
+| Decision               | Choice                        | Rationale                    |
+|------------------------|-------------------------------|------------------------------|
+| Credentials storage    | Service account JSON in .env  | Standard Google pattern      |
+| Usage tracking storage | Separate stt_usage.json       | Clear separation, easy reset |
+| Monthly reset          | Lazy reset on first request   | No cron deps, RPi-friendly   |
+| Billing granularity    | Round UP to next second       | Matches Google Cloud billing |
+| Free tier model        | 'default' with data logging   | Required for free tier       |
+
+================================================================================
+ADMIN UI COMPONENTS
+================================================================================
+
+Usage Display:
++--------------------------------------------------+
+| Google STT Monthly Usage                         |
+| [████████████░░░░░░░░░░░░░░░░░] 51%             |
+| 30:47 / 60:00 used                               |
+| Resets on the 1st of each month                  |
++--------------------------------------------------+
+
+Credential Management:
++--------------------------------------------------+
+| Cloud Credentials                                |
+|                                                  |
+| Google Cloud Service Account                     |
+| /home/pi/**********.json  [Valid]               |
+|                                                  |
+| OpenAI API Key                                   |
+| sk-...****  [Valid]                             |
++--------------------------------------------------+
+
+================================================================================
+ENVIRONMENT VARIABLES
+================================================================================
+
+# Google Cloud STT
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+GOOGLE_STT_ENABLED=true
+GOOGLE_STT_QUOTA_SECONDS=3600
+
+# Usage tracking
+USAGE_TRACKING_ENABLED=true
+USAGE_WARN_THRESHOLD=80
+
+================================================================================
+SETUP INSTRUCTIONS
+================================================================================
+
+1. Create Google Cloud Project:
+   https://console.cloud.google.com
+
+2. Enable Speech-to-Text API:
+   APIs & Services > Enable APIs > Speech-to-Text API
+
+3. Create Service Account:
+   IAM & Admin > Service Accounts > Create
+   Grant: Cloud Speech-to-Text API User role
+
+4. Download JSON Key:
+   Service Account > Keys > Add Key > Create new key > JSON
+
+5. Configure Environment:
+   GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json
+
+6. Install Dependencies:
+   pip install google-cloud-speech>=2.21.0
+
+================================================================================
+VERIFICATION CHECKLIST
+================================================================================
+
+[x] GoogleCloudSTTEngine created with STTEngine interface
+[x] Usage tracker with monthly reset logic
+[x] Provider registry integration with quota fields
+[x] STT service initialization for google-cloud-stt
+[x] Admin API endpoints for usage and credentials
+[x] Admin UI with usage progress bar
+[x] Admin UI with credential status display
+[x] Requirements.txt updated
+[x] .env.example updated
+[x] CLAUDE.md updated to Phase 38
+
+================================================================================
+TESTING
+================================================================================
+
+Manual Test Sequence:
+1. Configure GOOGLE_APPLICATION_CREDENTIALS in .env
+2. Start server: python app.py
+3. Navigate to Admin > Voice Config
+4. Verify usage bar shows 0:00 / 60:00 initially
+5. Verify Google credential shows "Valid" status
+6. Make a voice transcription via UI
+7. Verify usage increases in admin UI
+8. Check data/stt_usage.json for persisted data
+
+Monthly Reset Test:
+1. Manually edit stt_usage.json: set current_month to previous month
+2. Make a transcription request
+3. Verify usage resets to 0, history preserved
+
+================================================================================
+END OF REPORT
+================================================================================

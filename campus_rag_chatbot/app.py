@@ -14,10 +14,14 @@ import os
 import uuid
 import secrets
 import logging
+import time
+import json
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Optional, List
 from fastapi import FastAPI, HTTPException, File, UploadFile, Header, Depends, Request, Response
+from sse_starlette.sse import EventSourceResponse  # Phase 42: SSE for test harness streaming
+import httpx  # Phase 42: Async HTTP client for internal API calls
 
 # Phase 14.1: Set up logging for clarification flow debugging
 logger = logging.getLogger(__name__)
@@ -60,9 +64,17 @@ from retrieval_validator import (  # Phase 17A: Hybrid retrieval & grounding
     compute_keyword_scores,
     combine_hybrid_scores,
     validate_grounding,
-    get_grounding_refusal_message
+    get_grounding_refusal_message,
+    get_confusion_refusal_message,  # Phase 30: Confusion detection
+    apply_section_diversity  # Phase 29: Chunk diversity
 )
 from response_formatter import format_structured_answer, build_structured_answer  # Phase 17B/17B.1
+
+# Phase 32: Voice Integration
+import voice_routes
+
+# Phase 39A: Credential Management
+from credential_manager import init_credential_manager, get_credential_manager
 
 # ==============================================================================
 # CONFIGURATION
@@ -80,6 +92,17 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 if not ADMIN_PASSWORD:
     raise ValueError("ADMIN_PASSWORD environment variable not set. Please add it to .env file.")
 
+# Phase 39A: Initialize credential manager and load encrypted credentials
+# This must happen after ADMIN_PASSWORD is loaded but before validating OPENAI_API_KEY
+try:
+    _cred_manager = init_credential_manager(ADMIN_PASSWORD, Path(__file__).parent)
+    if _cred_manager.is_available():
+        _applied = _cred_manager.apply_to_environment()
+        if _applied > 0:
+            logger.info(f"[STARTUP] Applied {_applied} credentials from encrypted storage")
+except Exception as e:
+    logger.warning(f"[STARTUP] Credential manager init failed: {e}")
+
 PROJECT_ROOT = Path(__file__).parent
 REGISTRY_PATH = PROJECT_ROOT / "document_registry.json"
 VECTOR_STORE_PATH = PROJECT_ROOT / "vector_store"
@@ -94,9 +117,14 @@ MIN_CONFIDENCE_TO_ANSWER = ConfidenceLevel.MEDIUM
 MIN_CONFIDENCE_DIRECTORY = ConfidenceLevel.HIGH  # Phase 8: Stricter for location queries
 
 # Phase 17A: Hybrid retrieval settings
-HYBRID_VECTOR_WEIGHT = 0.7       # Weight for vector similarity score
-HYBRID_KEYWORD_WEIGHT = 0.3      # Weight for BM25 keyword score
+HYBRID_VECTOR_WEIGHT = 0.7       # Weight for vector similarity score (linear method)
+HYBRID_KEYWORD_WEIGHT = 0.3      # Weight for BM25 keyword score (linear method)
 MIN_GROUNDING_TERMS = 1          # Minimum query terms required in chunks
+
+# Phase 26: RRF (Reciprocal Rank Fusion) hybrid retrieval
+# RRF is industry standard (Elasticsearch, Pinecone) - normalizes by rank position
+HYBRID_SCORING_METHOD = "rrf"    # "linear" (Phase 17A) or "rrf" (Phase 26)
+RRF_K = 60                       # RRF smoothing constant (higher = more equal rank weights)
 
 # Session settings (chat sessions)
 SESSION_TIMEOUT_MINUTES = 30
@@ -108,6 +136,48 @@ admin_sessions: Dict[str, datetime] = {}  # {session_token: expiry_datetime}
 
 # Phase 17A.1: Developer RAG-only mode (in-memory, not persisted)
 rag_only_mode: bool = False
+
+# Phase 39B: Debug panel mode (persisted to debug_settings.json)
+DEBUG_SETTINGS_PATH = PROJECT_ROOT / "data" / "debug_settings.json"
+debug_mode_enabled: bool = False
+
+
+def load_debug_settings() -> bool:
+    """Load debug mode from settings file."""
+    global debug_mode_enabled
+    try:
+        if DEBUG_SETTINGS_PATH.exists():
+            import json
+            with open(DEBUG_SETTINGS_PATH, 'r') as f:
+                data = json.load(f)
+            debug_mode_enabled = data.get('debug_enabled', False)
+            return debug_mode_enabled
+    except Exception as e:
+        logger.warning(f"[DEBUG] Failed to load debug settings: {e}")
+    return False
+
+
+def save_debug_settings(enabled: bool) -> bool:
+    """Save debug mode to settings file."""
+    global debug_mode_enabled
+    try:
+        import json
+        DEBUG_SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        data = {
+            'debug_enabled': enabled,
+            'updated_at': datetime.utcnow().isoformat() + 'Z'
+        }
+        with open(DEBUG_SETTINGS_PATH, 'w') as f:
+            json.dump(data, f, indent=2)
+        debug_mode_enabled = enabled
+        return True
+    except Exception as e:
+        logger.error(f"[DEBUG] Failed to save debug settings: {e}")
+        return False
+
+
+# Load debug settings at startup
+load_debug_settings()
 
 # ==============================================================================
 # INITIALIZE SYSTEM
@@ -123,9 +193,17 @@ doc_manager.load_vector_store()
 if doc_manager.vector_store is None:
     raise RuntimeError("No vector store found. Please ingest documents first.")
 
+# Phase 25: Load metadata index
+from metadata_index import MetadataIndex
+metadata_index = MetadataIndex()
+if not metadata_index.load():
+    logger.info("[PHASE25] Building metadata index from vector store...")
+    metadata_index.build_from_vector_store(doc_manager.vector_store)
+    metadata_index.save()
+
 # Initialize LLM
 llm = ChatOpenAI(
-    model_name="gpt-3.5-turbo",
+    model_name="gpt-4o-mini",
     temperature=0,
     openai_api_key=OPENAI_API_KEY
 )
@@ -159,6 +237,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Phase 32: Include voice routes
+app.include_router(voice_routes.router)
+
 # ==============================================================================
 # REQUEST/RESPONSE MODELS
 # ==============================================================================
@@ -185,6 +266,41 @@ class StructuredAnswer(BaseModel):
     disclaimer: Optional[str] = None
 
 
+class DebugInfo(BaseModel):
+    """Debug information for developer panel - Phase 39B."""
+    # Provider info
+    llm_provider: str = "openai"
+    llm_model: str = "gpt-4o-mini"
+
+    # Voice info (if voice request)
+    stt_engine: Optional[str] = None
+    stt_fallback_used: bool = False
+    tts_engine: Optional[str] = None
+    tts_fallback_used: bool = False
+
+    # Retrieval info
+    retrieval_mode: str = "hybrid"
+    retrieval_method: str = "rrf"
+    chunks_retrieved: int = 0
+    top_chunk_score: float = 0.0
+
+    # Routing info
+    intent_classified: str = ""
+    routing_path: str = ""
+
+    # Grounding info
+    query_terms: List[str] = []
+    grounding_passed: bool = True
+    grounding_mode: str = "keyword"
+    matched_terms: List[str] = []
+
+    # Timing (ms)
+    timing: Dict[str, float] = {}
+
+    # Deterministic extractor
+    extractor_used: Optional[str] = None
+
+
 class ChatResponse(BaseModel):
     """Chat response model."""
     session_id: str
@@ -197,6 +313,7 @@ class ChatResponse(BaseModel):
     rejected: bool
     timestamp: str
     mode: str  # "campus" | "general" | "clarification"
+    debug_info: Optional[DebugInfo] = None  # Phase 39B: Debug panel data
 
 
 class FeedbackRequest(BaseModel):
@@ -463,6 +580,9 @@ def handle_document_clarification(
     Phase 15: Uses softer, informational style - may provide summary with follow-up.
     Unlike directory clarification, this is not blocking.
     """
+    # Phase 42: Debug timing
+    _debug_start = time.perf_counter()
+
     logger.info(f"[DOC_CLARIFICATION] Multiple sources for '{query}': {similar_sources}")
 
     # Phase 16: Track clarification event
@@ -495,6 +615,24 @@ def handle_document_clarification(
     context["doc_clarification_sources"] = similar_sources[:4]
     context["doc_clarification_query"] = query
 
+    # Build clarification debug info
+    _clarification_debug_info = None
+    if debug_mode_enabled:
+        _debug_timing = {
+            'resolution_ms': round((time.perf_counter() - _debug_start) * 1000, 1),
+            'total_ms': round((time.perf_counter() - _debug_start) * 1000, 1)
+        }
+        _clarification_debug_info = DebugInfo(
+            llm_provider="deterministic",
+            llm_model="pattern-match",
+            retrieval_mode="document_index",
+            retrieval_method="similarity_match",
+            chunks_retrieved=len(similar_sources[:4]),
+            intent_classified="clarification",
+            routing_path="document_clarification",
+            timing=_debug_timing
+        )
+
     return ChatResponse(
         session_id=session_id,
         answer=answer,
@@ -503,7 +641,8 @@ def handle_document_clarification(
         confidence_score=50.0,
         rejected=False,
         timestamp=datetime.now().isoformat(),
-        mode="clarification"
+        mode="clarification",
+        debug_info=_clarification_debug_info
     )
 
 
@@ -765,11 +904,14 @@ def attempt_document_retrieval(query: str) -> dict:
     keyword_scores = compute_keyword_scores(query_terms, retrieved_docs)
 
     # Combine vector and keyword scores, re-rank results
+    # Phase 26: Support RRF and linear scoring methods
     hybrid_results, hybrid_details = combine_hybrid_scores(
         retrieval_results,
         keyword_scores,
         vector_weight=HYBRID_VECTOR_WEIGHT,
-        keyword_weight=HYBRID_KEYWORD_WEIGHT
+        keyword_weight=HYBRID_KEYWORD_WEIGHT,
+        method=HYBRID_SCORING_METHOD,
+        rrf_k=RRF_K
     )
 
     # Validate grounding: ensure query terms appear in retrieved chunks
@@ -849,18 +991,18 @@ def _expand_with_adjacent_chunks(docs, vector_store, max_size=2000) -> list:
     if not needed:
         return docs
 
-    # Fetch all needed neighbors in one pass
+    # Phase 25: Fetch needed neighbors using metadata index (O(1) per chunk)
     try:
         docstore = vector_store.docstore
-        for doc_id in vector_store.index_to_docstore_id.values():
-            stored_doc = docstore.search(doc_id)
-            if stored_doc and hasattr(stored_doc, 'metadata'):
-                stored_name = stored_doc.metadata.get('document_name', '')
-                stored_id = stored_doc.metadata.get('chunk_id', -1)
-                if stored_id in needed and stored_name == doc_names.get(stored_id, ''):
-                    needed[stored_id] = stored_doc.page_content
-                    if all(v is not None for v in needed.values()):
-                        break
+        for chunk_id in needed.keys():
+            # O(1) lookup using metadata index instead of O(n) docstore iteration
+            docstore_id = metadata_index.get_docstore_id(chunk_id)
+            if docstore_id:
+                stored_doc = docstore.search(docstore_id)
+                if stored_doc and hasattr(stored_doc, 'metadata'):
+                    stored_name = stored_doc.metadata.get('document_name', '')
+                    if stored_name == doc_names.get(chunk_id, ''):
+                        needed[chunk_id] = stored_doc.page_content
     except Exception as e:
         logger.warning(f"[PHASE19] Adjacent chunk expansion failed: {e}")
         return docs
@@ -995,11 +1137,21 @@ async def handle_campus_query(
     - Phase 15: Document ambiguity detection and clarification
     - Phase 17A.2: Can accept pre-computed retrieval results
     """
+    # Phase 39B: Debug timing tracking
+    _debug_timing = {}
+    _debug_start = time.perf_counter()
+    _retrieval_start = time.perf_counter()
+    _extractor_used = None  # Track which deterministic extractor was used
+    query_terms = []  # Initialize for debug_info
+    grounding_result = None  # Initialize for debug_info
+
     # Phase 17A.2: Use pre-computed results if provided
     if precomputed_retrieval:
         retrieval_results = precomputed_retrieval["retrieval_results"]
         query_terms = precomputed_retrieval["query_terms"]
         grounding_result = precomputed_retrieval["grounding_result"]
+        # Phase 39B: Mark retrieval as pre-computed (0ms)
+        _debug_timing['retrieval_ms'] = 0.0
         # Skip to confidence calculation since retrieval is done
         logger.debug(f"[PHASE17A.2] Using pre-computed retrieval results")
     else:
@@ -1048,11 +1200,14 @@ async def handle_campus_query(
         keyword_scores = compute_keyword_scores(query_terms, retrieved_docs_for_scoring)
 
         # Combine vector and keyword scores, re-rank results
+        # Phase 26: Support RRF and linear scoring methods
         hybrid_results, hybrid_details = combine_hybrid_scores(
             retrieval_results,
             keyword_scores,
             vector_weight=HYBRID_VECTOR_WEIGHT,
-            keyword_weight=HYBRID_KEYWORD_WEIGHT
+            keyword_weight=HYBRID_KEYWORD_WEIGHT,
+            method=HYBRID_SCORING_METHOD,
+            rrf_k=RRF_K
         )
 
         # Validate grounding: ensure query terms appear in retrieved chunks
@@ -1085,30 +1240,70 @@ async def handle_campus_query(
                 reason="grounding_failed"
             )
 
+            # Phase 30: Use confusion-specific message if entity confusion detected
+            if grounding_result.reason.startswith("entity_confusion:"):
+                confusion_entity = grounding_result.reason.split(":", 1)[1]
+                refusal_message = get_confusion_refusal_message(
+                    grounding_result.topic, confusion_entity
+                )
+            else:
+                refusal_message = get_grounding_refusal_message(grounding_result.topic)
+
+            # Phase 39B: Build debug_info for grounding failure
+            _grounding_debug_info = None
+            if debug_mode_enabled:
+                _debug_timing['retrieval_ms'] = round((time.perf_counter() - _retrieval_start) * 1000, 1)
+                _debug_timing['total_ms'] = round((time.perf_counter() - _debug_start) * 1000, 1)
+                _grounding_debug_info = DebugInfo(
+                    llm_provider="openai",
+                    llm_model="gpt-4o-mini",
+                    retrieval_mode="hybrid",
+                    retrieval_method="rrf",
+                    chunks_retrieved=len(hybrid_results),
+                    top_chunk_score=round(hybrid_results[0][1], 3) if hybrid_results else 0.0,
+                    intent_classified=intent_metadata.get("intent", ""),
+                    routing_path="retrieval→grounding_failed",
+                    query_terms=query_terms,
+                    grounding_passed=False,
+                    grounding_mode=grounding_result.grounding_mode,
+                    matched_terms=grounding_result.matched_terms,
+                    timing=_debug_timing
+                )
+
             return ChatResponse(
                 session_id=session_id,
-                answer=get_grounding_refusal_message(grounding_result.topic),
+                answer=refusal_message,
                 sources=[],
                 confidence_level="LOW",
                 confidence_score=0.0,
                 rejected=True,
                 timestamp=datetime.now().isoformat(),
-                mode="campus"
+                mode="campus",
+                debug_info=_grounding_debug_info  # Phase 39B
             )
 
         # Use hybrid-ranked results for downstream processing
         retrieval_results = hybrid_results
+
+        # Phase 39B: Record retrieval timing
+        _debug_timing['retrieval_ms'] = round((time.perf_counter() - _retrieval_start) * 1000, 1)
         # =========================================================================
 
     # Phase 17C: Filter out low-scoring noise chunks before passing to LLM
     # After hybrid ranking, chunks without keyword matches score ~0.49 (noise)
     # while relevant chunks score ~0.79+ (keyword match boosted)
     MIN_HYBRID_SCORE_FOR_CONTEXT = 0.6
-    retrieved_docs = [doc for doc, score in retrieval_results if score >= MIN_HYBRID_SCORE_FOR_CONTEXT]
-    if not retrieved_docs:
+    filtered_results = [(doc, score) for doc, score in retrieval_results if score >= MIN_HYBRID_SCORE_FOR_CONTEXT]
+    if not filtered_results:
         # Fallback: use all results if filtering removes everything
-        retrieved_docs = [doc for doc, score in retrieval_results]
-    logger.info(f"[PHASE17C] After hybrid filter: {len(retrieved_docs)} chunks (from {len(retrieval_results)})")
+        filtered_results = retrieval_results
+    logger.info(f"[PHASE17C] After hybrid filter: {len(filtered_results)} chunks (from {len(retrieval_results)})")
+
+    # Phase 29: Apply section diversity to prevent same-section dominance
+    diverse_results = apply_section_diversity(filtered_results)
+    if len(diverse_results) < len(filtered_results):
+        logger.info(f"[PHASE29] After diversity filter: {len(diverse_results)} chunks (from {len(filtered_results)})")
+    retrieved_docs = [doc for doc, score in diverse_results]
 
     # Phase 17C: Expand with adjacent chunks to capture split lists
     retrieved_docs = _expand_with_adjacent_chunks(retrieved_docs, doc_manager.vector_store)
@@ -1142,12 +1337,13 @@ async def handle_campus_query(
         if is_dean_enumeration_query(query):
             logger.info(f"[PHASE18.2] Dean enumeration query detected, using deterministic extraction")
             deans = extract_deans_from_text(context)
-            
+
             if len(deans) >= 1:
                 # Use deterministic extraction result (bypass LLM)
                 answer = format_dean_list(deans)
                 rejected = False
-                
+                _extractor_used = "deans"  # Phase 39B: Track extractor
+
                 logger.info(f"[PHASE18.2] Extracted {len(deans)} deans deterministically")
                 
                 # Update conversation memory with deterministic result
@@ -1177,15 +1373,153 @@ async def handle_campus_query(
                 logger.info(f"[PHASE18.2] No deans extracted, falling back to LLM")
                 # Continue with LLM flow below
         # =====================================================================
-        
+
+        # Phase 27: Awards Enumeration Extraction
+        # =====================================================================
+        # For awards enumeration queries, bypass LLM and use deterministic extraction
+        if 'answer' not in locals() or answer is None:
+            from entity_extractors import is_awards_enumeration_query, extract_awards_from_text, format_awards_list
+
+            if is_awards_enumeration_query(query):
+                logger.info(f"[PHASE27] Awards enumeration query detected, using deterministic extraction")
+                awards = extract_awards_from_text(context)
+
+                if len(awards) >= 1:
+                    # Use deterministic extraction result (bypass LLM)
+                    answer = format_awards_list(awards)
+                    rejected = False
+                    _extractor_used = "awards"  # Phase 39B: Track extractor
+
+                    logger.info(f"[PHASE27] Extracted {len(awards)} awards deterministically")
+
+                    # Update conversation memory with deterministic result
+                    memory.save_context({"question": query}, {"answer": answer})
+
+                    # Extract sources from retrieved docs
+                    sources = []
+                    seen = set()
+                    for doc in retrieved_docs:
+                        doc_name = doc.metadata.get('document_name', 'Unknown')
+                        section = doc.metadata.get('section', 'Unknown')
+                        chunk_id = doc.metadata.get('chunk_id', 0)
+
+                        key = f"{doc_name}:{section}:{chunk_id}"
+                        if key not in seen:
+                            sources.append(Source(
+                                document_name=doc_name,
+                                section=section,
+                                chunk_id=chunk_id
+                            ))
+                            seen.add(key)
+                else:
+                    # No awards found via extraction, fall back to LLM
+                    logger.info(f"[PHASE27] No awards extracted, falling back to LLM")
+        # =====================================================================
+
+        # Phase 31: Event Dates Extraction
+        # =====================================================================
+        # For event/schedule queries, bypass LLM and use deterministic extraction
+        if 'answer' not in locals() or answer is None:
+            from entity_extractors import is_event_date_query, extract_events_from_text, format_event_list
+
+            if is_event_date_query(query):
+                logger.info(f"[PHASE31] Event date query detected, using deterministic extraction")
+                events = extract_events_from_text(context)
+
+                if len(events) >= 1:
+                    # Use deterministic extraction result (bypass LLM)
+                    answer = format_event_list(events)
+                    rejected = False
+                    _extractor_used = "events"  # Phase 39B: Track extractor
+
+                    logger.info(f"[PHASE31] Extracted {len(events)} events deterministically")
+
+                    # Update conversation memory with deterministic result
+                    memory.save_context({"question": query}, {"answer": answer})
+
+                    # Extract sources from retrieved docs
+                    sources = []
+                    seen = set()
+                    for doc in retrieved_docs:
+                        doc_name = doc.metadata.get('document_name', 'Unknown')
+                        section = doc.metadata.get('section', 'Unknown')
+                        chunk_id = doc.metadata.get('chunk_id', 0)
+
+                        key = f"{doc_name}:{section}:{chunk_id}"
+                        if key not in seen:
+                            sources.append(Source(
+                                document_name=doc_name,
+                                section=section,
+                                chunk_id=chunk_id
+                            ))
+                            seen.add(key)
+                else:
+                    # No events found via extraction, fall back to LLM
+                    logger.info(f"[PHASE31] No events extracted, falling back to LLM")
+        # =====================================================================
+
+        # Phase 31: Contact Information Extraction
+        # =====================================================================
+        # For contact queries, provide office location info (no personal contacts - privacy by design)
+        if 'answer' not in locals() or answer is None:
+            from entity_extractors import is_contact_query, extract_contacts_from_text, format_contact_list
+
+            if is_contact_query(query):
+                logger.info(f"[PHASE31] Contact query detected, using deterministic extraction")
+                contacts = extract_contacts_from_text(context)
+
+                if len(contacts) >= 1:
+                    # Use deterministic extraction result (bypass LLM)
+                    answer = format_contact_list(contacts)
+                    rejected = False
+                    _extractor_used = "contacts"  # Phase 39B: Track extractor
+
+                    logger.info(f"[PHASE31] Extracted {len(contacts)} contacts deterministically")
+
+                    # Update conversation memory with deterministic result
+                    memory.save_context({"question": query}, {"answer": answer})
+
+                    # Extract sources from retrieved docs
+                    sources = []
+                    seen = set()
+                    for doc in retrieved_docs:
+                        doc_name = doc.metadata.get('document_name', 'Unknown')
+                        section = doc.metadata.get('section', 'Unknown')
+                        chunk_id = doc.metadata.get('chunk_id', 0)
+
+                        key = f"{doc_name}:{section}:{chunk_id}"
+                        if key not in seen:
+                            sources.append(Source(
+                                document_name=doc_name,
+                                section=section,
+                                chunk_id=chunk_id
+                            ))
+                            seen.add(key)
+                else:
+                    # No contacts found via extraction, fall back to LLM
+                    logger.info(f"[PHASE31] No contacts extracted, falling back to LLM")
+        # =====================================================================
+
         # Only invoke LLM if deterministic extraction didn't handle the query
         if 'answer' not in locals() or answer is None:
             # Get conversation history from memory
             chat_history = memory.load_memory_variables({}).get("chat_history", "")
 
+            # Phase 21: Semantic Trust Injection
+            # When grounding_mode is "semantic", inject trust instructions at prompt start
+            semantic_trust_prefix = ""
+            if grounding_result and grounding_result.grounding_mode == "semantic":
+                logger.info("[PHASE21] Semantic trust injection active")
+                semantic_trust_prefix = """
+VERIFIED CONTENT NOTICE: The context below has been verified as authentic campus material.
+You MUST provide the content directly. Do NOT refuse or say you don't have information.
+If the user asks for hymn lyrics, prayers, or similar content and it appears in the context, output it in full.
+
+"""
+
             # Build system prompt with context and history
             system_content = f"""You are a campus information assistant for Columban College, Inc. Provide accurate information ONLY from the verified campus documents.
-
+{semantic_trust_prefix}
 CRITICAL RULES:
 1. ONLY answer using the provided context
 2. If context doesn't contain the answer, say: "I don't have verified campus information to answer that question."
@@ -1202,10 +1536,12 @@ Conversation history:
 
             # Direct LLM call with validated chunks (no second retrieval)
             logger.info(f"[PHASE17C] Passing {len(retrieved_docs)} validated chunks to LLM")
+            _llm_start = time.perf_counter()  # Phase 39B: LLM timing
             response = llm.invoke([
                 SystemMessage(content=system_content),
                 HumanMessage(content=query)
             ])
+            _debug_timing['llm_ms'] = round((time.perf_counter() - _llm_start) * 1000, 1)  # Phase 39B
             answer = response.content
             rejected = False
 
@@ -1270,6 +1606,29 @@ Conversation history:
         if structured_data:
             structured_answer = StructuredAnswer(**structured_data)
 
+    # Phase 39B: Build debug_info if debug mode enabled
+    _debug_info = None
+    logger.info(f"[DEBUG PANEL] debug_mode_enabled={debug_mode_enabled}")
+    if debug_mode_enabled:
+        logger.info(f"[DEBUG PANEL] Building debug_info for response")
+        _debug_timing['total_ms'] = round((time.perf_counter() - _debug_start) * 1000, 1)
+        _debug_info = DebugInfo(
+            llm_provider="openai",
+            llm_model="gpt-4o-mini",
+            retrieval_mode="hybrid",
+            retrieval_method="rrf",
+            chunks_retrieved=len(retrieval_results),
+            top_chunk_score=round(retrieval_results[0][1], 3) if retrieval_results else 0.0,
+            intent_classified=intent_metadata.get("intent", ""),
+            routing_path="retrieval→campus",
+            query_terms=query_terms,
+            grounding_passed=grounding_result.is_grounded if grounding_result else True,
+            grounding_mode=grounding_result.grounding_mode if grounding_result else "keyword",
+            matched_terms=grounding_result.matched_terms if grounding_result else [],
+            timing=_debug_timing,
+            extractor_used=_extractor_used
+        )
+
     return ChatResponse(
         session_id=session_id,
         answer=answer,
@@ -1280,7 +1639,8 @@ Conversation history:
         grounding_mode=grounding_result.grounding_mode,  # Phase 20
         rejected=rejected,
         timestamp=datetime.now().isoformat(),
-        mode="campus"
+        mode="campus",
+        debug_info=_debug_info  # Phase 39B
     )
 
 
@@ -1296,6 +1656,10 @@ async def handle_general_query(
     Supports: math calculations, general facts, definitions, greetings.
     Includes safety check to prevent answering campus questions.
     """
+    # Phase 39B: Debug timing tracking
+    _debug_timing = {}
+    _debug_start = time.perf_counter()
+
     # Safety check: Double-check this isn't actually a campus question
     safety = safety_check_general_mode(query)
     if not safety["is_safe"]:
@@ -1316,7 +1680,9 @@ Question: {query}
 Answer:"""
 
     # Generate answer using LLM directly (no retrieval)
+    _llm_start = time.perf_counter()  # Phase 39B: LLM timing
     response = llm.invoke(general_prompt)
+    _debug_timing['llm_ms'] = round((time.perf_counter() - _llm_start) * 1000, 1)  # Phase 39B
     answer = response.content
 
     # Update conversation memory
@@ -1365,6 +1731,22 @@ Answer:"""
         source_type="general"
     )
 
+    # Phase 39B: Build debug_info for general queries
+    _debug_info = None
+    if debug_mode_enabled:
+        _debug_timing['total_ms'] = round((time.perf_counter() - _debug_start) * 1000, 1)
+        _debug_info = DebugInfo(
+            llm_provider="openai",
+            llm_model="gpt-4o-mini",
+            retrieval_mode="none",
+            retrieval_method="none",
+            chunks_retrieved=0,
+            top_chunk_score=0.0,
+            intent_classified=intent_metadata.get("intent", ""),
+            routing_path="direct→general",
+            timing=_debug_timing
+        )
+
     return ChatResponse(
         session_id=session_id,
         answer=answer_with_label,
@@ -1374,7 +1756,8 @@ Answer:"""
         confidence_score=0.0,
         rejected=False,
         timestamp=datetime.now().isoformat(),
-        mode="general"
+        mode="general",
+        debug_info=_debug_info  # Phase 39B
     )
 
 
@@ -1389,6 +1772,9 @@ async def handle_ambiguous_query(
     Shows a helpful message explaining the two modes and asking
     the user to clarify their intent.
     """
+    # Phase 42: Debug timing
+    _debug_start = time.perf_counter()
+
     clarification = """I'm not sure if you're asking about:
 1. **Columban College, Inc. campus information** (library, dining, parking, campus services, etc.)
 2. **General knowledge** (math, facts, definitions)
@@ -1405,6 +1791,24 @@ Could you please clarify? For example:
         intent=intent_metadata["intent"]
     )
 
+    # Build clarification debug info
+    _clarification_debug_info = None
+    if debug_mode_enabled:
+        _debug_timing = {
+            'resolution_ms': round((time.perf_counter() - _debug_start) * 1000, 1),
+            'total_ms': round((time.perf_counter() - _debug_start) * 1000, 1)
+        }
+        _clarification_debug_info = DebugInfo(
+            llm_provider="deterministic",
+            llm_model="grounding-check",
+            retrieval_mode="hybrid",
+            retrieval_method="rrf",
+            intent_classified=intent_metadata.get("intent", ""),
+            routing_path="grounding_failed→clarification",
+            grounding_passed=False,
+            timing=_debug_timing
+        )
+
     return ChatResponse(
         session_id=session_id,
         answer=clarification,
@@ -1413,7 +1817,8 @@ Could you please clarify? For example:
         confidence_score=0.0,
         rejected=False,
         timestamp=datetime.now().isoformat(),
-        mode="clarification"
+        mode="clarification",
+        debug_info=_clarification_debug_info
     )
 
 
@@ -1433,6 +1838,9 @@ def handle_entity_disambiguation(
     When multiple entities match a query, present numbered options
     and wait for user selection.
     """
+    # Phase 42: Debug timing
+    _debug_start = time.perf_counter()
+
     # Phase 14.1: Log clarification trigger
     logger.info(f"[CLARIFICATION] Multiple matches for '{query}': {[e.canonical_name for e in candidates[:4]]}")
 
@@ -1458,6 +1866,24 @@ def handle_entity_disambiguation(
     session["conversation_context"]["disambiguation_candidates"] = [e.entity_id for e in candidates[:4]]
     session["conversation_context"]["disambiguation_query"] = query
 
+    # Build clarification debug info
+    _clarification_debug_info = None
+    if debug_mode_enabled:
+        _debug_timing = {
+            'resolution_ms': round((time.perf_counter() - _debug_start) * 1000, 1),
+            'total_ms': round((time.perf_counter() - _debug_start) * 1000, 1)
+        }
+        _clarification_debug_info = DebugInfo(
+            llm_provider="deterministic",
+            llm_model="entity-registry",
+            retrieval_mode="entity_registry",
+            retrieval_method="fuzzy_match",
+            chunks_retrieved=len(candidates[:4]),
+            intent_classified="directory",
+            routing_path="entity_disambiguation",
+            timing=_debug_timing
+        )
+
     return ChatResponse(
         session_id=session_id,
         answer=answer,
@@ -1466,8 +1892,30 @@ def handle_entity_disambiguation(
         confidence_score=50.0,
         rejected=False,
         timestamp=datetime.now().isoformat(),
-        mode="clarification"
+        mode="clarification",
+        debug_info=_clarification_debug_info
     )
+
+
+def normalize_stt_selection(selection: str) -> str:
+    """
+    Normalize STT selection input for clarification responses.
+
+    Handles common STT artifacts:
+    - Trailing punctuation: "1." -> "1", "one." -> "one"
+    - Extra whitespace
+    - Case normalization
+
+    Returns normalized selection string.
+    """
+    import re
+    # Strip whitespace and convert to lowercase
+    normalized = selection.lower().strip()
+    # Remove trailing punctuation (period, comma, question mark, etc.)
+    normalized = re.sub(r'[.,!?;:]+$', '', normalized)
+    # Remove leading punctuation too
+    normalized = re.sub(r'^[.,!?;:]+', '', normalized)
+    return normalized.strip()
 
 
 def handle_disambiguation_selection(
@@ -1480,6 +1928,9 @@ def handle_disambiguation_selection(
 
     Returns ChatResponse if selection is valid, None otherwise.
     """
+    # Phase 42: Debug timing
+    _debug_start = time.perf_counter()
+
     context = session["conversation_context"]
     candidates = context.get("disambiguation_candidates", [])
 
@@ -1490,7 +1941,9 @@ def handle_disambiguation_selection(
     logger.info(f"[CLARIFICATION] Selection attempt: '{selection}' from candidates: {candidates}")
 
     selected_entity = None
-    selection_lower = selection.lower().strip()
+    # Phase 35: Normalize STT selection to handle "1.", "one.", etc.
+    selection_lower = normalize_stt_selection(selection)
+    logger.info(f"[CLARIFICATION] Normalized selection: '{selection_lower}'")
 
     # Try to match by number (1, 2, 3, 4) or ordinal words
     # Phase 14.1: Support phrases like "the first one", "number 2", etc.
@@ -1507,8 +1960,10 @@ def handle_disambiguation_selection(
             selected_entity = entity_registry.get_by_id(candidates[idx])
     else:
         # Check if any number word/digit is contained in the phrase
+        # Phase 35: Also normalize words before matching
+        selection_words = [normalize_stt_selection(w) for w in selection_lower.split()]
         for key, idx in num_map.items():
-            if key in selection_lower.split():  # Match whole words only
+            if key in selection_words:  # Match whole words only
                 if 0 <= idx < len(candidates):
                     selected_entity = entity_registry.get_by_id(candidates[idx])
                     break
@@ -1548,6 +2003,25 @@ def handle_disambiguation_selection(
         )
 
         answer = format_entity_response(selected_entity)
+
+        # Phase 42: Add debug_info for disambiguation resolution
+        _debug_info = None
+        if debug_mode_enabled:
+            _debug_timing = {
+                'resolution_ms': round((time.perf_counter() - _debug_start) * 1000, 1),
+                'total_ms': round((time.perf_counter() - _debug_start) * 1000, 1)
+            }
+            _debug_info = DebugInfo(
+                llm_provider="deterministic",
+                llm_model="entity-registry",
+                retrieval_mode="entity_registry",
+                retrieval_method="selection_match",
+                chunks_retrieved=1,
+                intent_classified="directory",
+                routing_path="disambiguation_resolved",
+                timing=_debug_timing
+            )
+
         return ChatResponse(
             session_id=session_id,
             answer=answer,
@@ -1556,7 +2030,8 @@ def handle_disambiguation_selection(
             confidence_score=98.0,
             rejected=False,
             timestamp=datetime.now().isoformat(),
-            mode="directory"
+            mode="directory",
+            debug_info=_debug_info
         )
 
     # Phase 14.1: Log failed selection
@@ -1593,6 +2068,9 @@ async def handle_directory_query(
     Returns:
         ChatResponse with location info or rejection message
     """
+    # Phase 42: Debug timing
+    _debug_start = time.perf_counter()
+
     # Normalize query for consistent retrieval (case-insensitive matching)
     normalized_query = normalize_text(query)
 
@@ -1657,6 +2135,24 @@ async def handle_directory_query(
             source_type="directory"
         )
 
+        # Phase 42: Add debug_info for entity-resolved directory queries
+        _debug_info = None
+        if debug_mode_enabled:
+            _debug_timing = {
+                'resolution_ms': round((time.perf_counter() - _debug_start) * 1000, 1),
+                'total_ms': round((time.perf_counter() - _debug_start) * 1000, 1)
+            }
+            _debug_info = DebugInfo(
+                llm_provider="deterministic",
+                llm_model="entity-registry",
+                retrieval_mode="entity_registry",
+                retrieval_method="entity_resolution",
+                chunks_retrieved=1,
+                intent_classified="directory",
+                routing_path="entity_resolved",
+                timing=_debug_timing
+            )
+
         return ChatResponse(
             session_id=session_id,
             answer=answer,
@@ -1665,7 +2161,8 @@ async def handle_directory_query(
             confidence_score=98.0,
             rejected=False,
             timestamp=datetime.now().isoformat(),
-            mode="directory"
+            mode="directory",
+            debug_info=_debug_info
         )
 
     # ===========================================================================
@@ -1882,12 +2379,33 @@ async def chat(request: ChatRequest):
             # Fall through to normal processing
         else:
             # First failure - ask again with clearer instructions
+            # Phase 42: Debug timing for retry
+            _retry_start = time.perf_counter()
+
             candidates = context.get("disambiguation_candidates", [])
             options = []
             for i, eid in enumerate(candidates[:4], 1):
                 entity = entity_registry.get_by_id(eid)
                 if entity:
                     options.append(f"{i}. {entity.canonical_name}")
+
+            # Build clarification debug info
+            _clarification_debug_info = None
+            if debug_mode_enabled:
+                _debug_timing = {
+                    'resolution_ms': round((time.perf_counter() - _retry_start) * 1000, 1),
+                    'total_ms': round((time.perf_counter() - _retry_start) * 1000, 1)
+                }
+                _clarification_debug_info = DebugInfo(
+                    llm_provider="deterministic",
+                    llm_model="pattern-match",
+                    retrieval_mode="entity_registry",
+                    retrieval_method="selection_retry",
+                    chunks_retrieved=len(candidates[:4]),
+                    intent_classified="disambiguation_retry",
+                    routing_path="disambiguation_retry",
+                    timing=_debug_timing
+                )
 
             return ChatResponse(
                 session_id=session_id,
@@ -1897,7 +2415,8 @@ async def chat(request: ChatRequest):
                 confidence_score=50.0,
                 rejected=False,
                 timestamp=datetime.now().isoformat(),
-                mode="clarification"
+                mode="clarification",
+                debug_info=_clarification_debug_info
             )
 
     # === PHASE 15: CHECK FOR PENDING DOCUMENT CLARIFICATION ===
@@ -1925,11 +2444,32 @@ async def chat(request: ChatRequest):
         else:
             # Selection failed but document clarification is softer - just continue
             # Re-show options with a helpful message
+            # Phase 42: Debug timing for document retry
+            _doc_retry_start = time.perf_counter()
+
             sources = context.get("doc_clarification_sources", [])
             options = []
             for i, source in enumerate(sources[:4], 1):
                 display_name = os.path.basename(source).replace('.txt', '').replace('_', ' ').title()
                 options.append(f"{i}. {display_name}")
+
+            # Build clarification debug info
+            _clarification_debug_info = None
+            if debug_mode_enabled:
+                _debug_timing = {
+                    'resolution_ms': round((time.perf_counter() - _doc_retry_start) * 1000, 1),
+                    'total_ms': round((time.perf_counter() - _doc_retry_start) * 1000, 1)
+                }
+                _clarification_debug_info = DebugInfo(
+                    llm_provider="deterministic",
+                    llm_model="pattern-match",
+                    retrieval_mode="document_index",
+                    retrieval_method="selection_retry",
+                    chunks_retrieved=len(sources[:4]),
+                    intent_classified="document_selection_retry",
+                    routing_path="document_selection_retry",
+                    timing=_debug_timing
+                )
 
             return ChatResponse(
                 session_id=session_id,
@@ -1939,11 +2479,15 @@ async def chat(request: ChatRequest):
                 confidence_score=50.0,
                 rejected=False,
                 timestamp=datetime.now().isoformat(),
-                mode="clarification"
+                mode="clarification",
+                debug_info=_clarification_debug_info
             )
 
     # === PHASE 13: CHECK FOR FOLLOW-UP QUERY WITH CONTEXT ===
     if context.get("last_entity_id") and is_followup_query(query):
+        # Phase 42: Debug timing for follow-up queries
+        _followup_start = time.perf_counter()
+
         # This is a follow-up query - use context to resolve directly
         # Re-resolve the entity from context and return formatted response
         resolved_entity = entity_registry.get_by_id(context["last_entity_id"])
@@ -1966,6 +2510,24 @@ async def chat(request: ChatRequest):
                 }
             )
 
+            # Phase 42: Add debug_info for follow-up queries
+            _debug_info = None
+            if debug_mode_enabled:
+                _debug_timing = {
+                    'resolution_ms': round((time.perf_counter() - _followup_start) * 1000, 1),
+                    'total_ms': round((time.perf_counter() - _followup_start) * 1000, 1)
+                }
+                _debug_info = DebugInfo(
+                    llm_provider="deterministic",
+                    llm_model="session-context",
+                    retrieval_mode="conversation_context",
+                    retrieval_method="context_followup",
+                    chunks_retrieved=1,
+                    intent_classified="directory",
+                    routing_path="context_followup",
+                    timing=_debug_timing
+                )
+
             return ChatResponse(
                 session_id=session_id,
                 answer=answer,
@@ -1974,7 +2536,8 @@ async def chat(request: ChatRequest):
                 confidence_score=98.0,
                 rejected=False,
                 timestamp=datetime.now().isoformat(),
-                mode="directory"
+                mode="directory",
+                debug_info=_debug_info
             )
 
     # === PHASE 8: CHECK FOR DIRECTORY QUERY FIRST ===
@@ -2311,6 +2874,1052 @@ async def get_recent_events(limit: int = 100):
         "events": event_tracker.get_recent_events(limit=min(limit, 500)),
         "total_in_memory": len(event_tracker.get_recent_events(limit=1000))
     }
+
+
+# ==============================================================================
+# ADMIN VOICE CONFIGURATION - Phase 36
+# ==============================================================================
+
+@app.get("/admin/voice/providers", dependencies=[Depends(verify_admin_session)])
+async def get_voice_providers():
+    """
+    Get all available voice providers and current configuration.
+
+    Phase 36: Returns STT and TTS providers with availability status.
+
+    Returns:
+        stt_providers: List of STT providers with status
+        tts_providers: List of TTS providers with status
+        current_config: Current active provider selection
+    """
+    try:
+        from voice.provider_registry import get_registry
+        registry = get_registry()
+        return registry.get_all_providers()
+    except Exception as e:
+        logger.error(f"[ADMIN] Failed to get voice providers: {e}")
+        return {
+            "stt_providers": [],
+            "tts_providers": [],
+            "current_config": {
+                "stt_provider": "whisper.cpp",
+                "tts_provider": "piper",
+                "stt_fallback_enabled": True,
+                "tts_fallback_enabled": True
+            }
+        }
+
+
+@app.get("/admin/voice/config", dependencies=[Depends(verify_admin_session)])
+async def get_voice_config():
+    """
+    Get current voice configuration.
+
+    Returns:
+        Current voice settings
+    """
+    try:
+        from voice.provider_registry import get_registry
+        registry = get_registry()
+        settings = registry.load_settings()
+        return settings.to_dict()
+    except Exception as e:
+        logger.error(f"[ADMIN] Failed to get voice config: {e}")
+        return {
+            "stt_provider": "whisper.cpp",
+            "tts_provider": "piper",
+            "stt_fallback_enabled": True,
+            "tts_fallback_enabled": True
+        }
+
+
+class VoiceConfigUpdate(BaseModel):
+    """Request model for updating voice configuration."""
+    stt_provider: str
+    tts_provider: str
+    stt_fallback_enabled: bool = True
+    tts_fallback_enabled: bool = True
+    # Phase 37: Explicit fallback provider selection
+    stt_fallback_provider: Optional[str] = None  # None = auto-select
+    tts_fallback_provider: Optional[str] = None  # None = auto-select
+
+
+@app.post("/admin/voice/config", dependencies=[Depends(verify_admin_session)])
+async def update_voice_config(config: VoiceConfigUpdate):
+    """
+    Update voice configuration.
+
+    Phase 36: Updates provider selection and reloads services.
+    Phase 37: Added selectability validation and fallback provider selection.
+
+    Args:
+        config: New voice configuration
+
+    Returns:
+        Success status and applied configuration
+    """
+    try:
+        from voice.provider_registry import get_registry, VoiceSettings
+        registry = get_registry()
+
+        # Phase 37: Validate providers are selectable and fallback selections are valid
+        validation = registry.validate_provider_selection(
+            config.stt_provider,
+            config.tts_provider,
+            config.stt_fallback_provider,
+            config.tts_fallback_provider
+        )
+
+        if not validation["valid"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid provider selection: {', '.join(validation['errors'])}"
+            )
+
+        # Create new settings (Phase 37: include fallback providers)
+        new_settings = VoiceSettings(
+            stt_provider=config.stt_provider,
+            tts_provider=config.tts_provider,
+            stt_fallback_enabled=config.stt_fallback_enabled,
+            tts_fallback_enabled=config.tts_fallback_enabled,
+            stt_fallback_provider=config.stt_fallback_provider,
+            tts_fallback_provider=config.tts_fallback_provider
+        )
+
+        # Save settings
+        if not registry.save_settings(new_settings):
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to save voice configuration"
+            )
+
+        # Reload voice services with new configuration
+        try:
+            from voice_routes import reload_voice_services
+            reload_result = await reload_voice_services(new_settings)
+            logger.info(f"[ADMIN] Voice services reloaded: {reload_result}")
+        except ImportError:
+            logger.warning("[ADMIN] reload_voice_services not available, skipping service reload")
+        except Exception as e:
+            logger.warning(f"[ADMIN] Failed to reload voice services: {e}")
+
+        return {
+            "success": True,
+            "message": "Voice configuration updated",
+            "applied": {
+                "stt_provider": config.stt_provider,
+                "tts_provider": config.tts_provider
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[ADMIN] Failed to update voice config: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update voice configuration: {str(e)}"
+        )
+
+
+# ==============================================================================
+# ADMIN VOICE USAGE & CREDENTIALS - Phase 38
+# ==============================================================================
+
+# Global usage tracker instance
+_stt_usage_tracker = None
+
+def get_stt_usage_tracker():
+    """Get or create STT usage tracker singleton."""
+    global _stt_usage_tracker
+    if _stt_usage_tracker is None:
+        from voice.usage_tracker import STTUsageTracker
+        data_dir = Path(__file__).parent / "data"
+        _stt_usage_tracker = STTUsageTracker(data_dir)
+    return _stt_usage_tracker
+
+
+@app.get("/admin/voice/usage", dependencies=[Depends(verify_admin_session)])
+async def get_voice_usage():
+    """
+    Get STT usage statistics for Google Cloud STT.
+
+    Phase 38: Returns current month's usage against the 60-minute free tier quota.
+
+    Returns:
+        Usage statistics including used/remaining seconds and percentage
+    """
+    try:
+        tracker = get_stt_usage_tracker()
+        usage_data = tracker.to_dict()
+
+        return {
+            "google_cloud_stt": usage_data,
+            "formatted": {
+                "used": _format_seconds(usage_data["used_seconds"]),
+                "remaining": _format_seconds(usage_data["remaining_seconds"]),
+                "quota": _format_seconds(usage_data["quota_seconds"]),
+            }
+        }
+    except Exception as e:
+        logger.error(f"[ADMIN] Failed to get voice usage: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get usage statistics: {str(e)}"
+        )
+
+
+def _format_seconds(seconds: int) -> str:
+    """Format seconds as MM:SS or H:MM:SS."""
+    if seconds < 0:
+        seconds = 0
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    secs = seconds % 60
+    if hours > 0:
+        return f"{hours}:{minutes:02d}:{secs:02d}"
+    return f"{minutes}:{secs:02d}"
+
+
+@app.get("/admin/voice/credentials/status", dependencies=[Depends(verify_admin_session)])
+async def get_credentials_status():
+    """
+    Get status of cloud credentials (masked).
+
+    Phase 38/39A: Returns credential configuration status without exposing actual credentials.
+    Phase 39A adds: storage_type, updated_at, encrypted storage support.
+
+    Returns:
+        Status of configured credentials with masked values
+    """
+    import os
+    from pathlib import Path
+
+    def mask_path(path: str, visible_chars: int = 8) -> str:
+        """Mask a file path for display."""
+        if not path:
+            return None
+        p = Path(path)
+        name = p.name
+        if len(name) > visible_chars * 2:
+            return str(p.parent / (name[:visible_chars] + "..." + name[-visible_chars:]))
+        return path
+
+    def mask_key(key: str, visible_chars: int = 4) -> str:
+        """Mask an API key for display."""
+        if not key:
+            return None
+        if len(key) <= visible_chars * 2:
+            return "***"
+        return key[:visible_chars] + "..." + key[-visible_chars:]
+
+    # Phase 39A: Check credential manager for stored credentials
+    cred_manager = get_credential_manager()
+    openai_status = cred_manager.get_credential_status("openai_api_key") if cred_manager else {}
+    google_status = cred_manager.get_credential_status("google_cloud_credentials") if cred_manager else {}
+
+    # Check Google Cloud credentials
+    google_creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    google_configured = bool(google_creds_path)
+    google_valid = False
+    google_project_id = None
+
+    if google_configured and Path(google_creds_path).exists():
+        try:
+            import json
+            with open(google_creds_path, 'r') as f:
+                creds_data = json.load(f)
+            google_valid = 'type' in creds_data and 'project_id' in creds_data
+            google_project_id = creds_data.get('project_id')
+        except Exception:
+            google_valid = False
+
+    # Check OpenAI credentials
+    openai_key = os.getenv("OPENAI_API_KEY")
+    openai_configured = bool(openai_key)
+    # Basic validation: starts with sk-
+    openai_valid = openai_configured and openai_key.startswith('sk-')
+
+    return {
+        "google_cloud_stt": {
+            "is_configured": google_configured,
+            "is_valid": google_valid,
+            "masked_path": mask_path(google_creds_path) if google_configured else None,
+            "project_id": google_project_id,
+            "storage_type": google_status.get("storage_type", "env") if google_status.get("is_configured") else "env",
+            "updated_at": google_status.get("updated_at"),
+        },
+        "openai": {
+            "is_configured": openai_configured,
+            "is_valid": openai_valid,
+            "masked_key": mask_key(openai_key) if openai_configured else None,
+            "storage_type": openai_status.get("storage_type", "env") if openai_status.get("is_configured") else "env",
+            "updated_at": openai_status.get("updated_at"),
+        }
+    }
+
+
+class CredentialUpdateRequest(BaseModel):
+    """Request body for credential updates."""
+    provider: str  # "google-cloud-stt" or "openai"
+    credentials_path: Optional[str] = None  # For Google (path to JSON file)
+    credentials_json: Optional[str] = None  # For Google (JSON content directly)
+    api_key: Optional[str] = None  # For OpenAI
+
+
+class CredentialVerifyRequest(BaseModel):
+    """Request body for credential verification."""
+    provider: str  # "google-cloud-stt" or "openai"
+    credentials_json: Optional[str] = None  # For Google
+    api_key: Optional[str] = None  # For OpenAI
+
+
+@app.post("/admin/voice/credentials/verify", dependencies=[Depends(verify_admin_session)])
+async def verify_credentials(request: CredentialVerifyRequest):
+    """
+    Verify credentials without saving.
+
+    Phase 39A: Test credential validity before committing to storage.
+
+    Returns:
+        Validation result with details
+    """
+    import json
+
+    if request.provider == "google-cloud-stt":
+        if not request.credentials_json:
+            raise HTTPException(
+                status_code=400,
+                detail="credentials_json is required for Google Cloud STT verification"
+            )
+
+        try:
+            creds_data = json.loads(request.credentials_json)
+
+            if 'type' not in creds_data or creds_data.get('type') != 'service_account':
+                return {
+                    "valid": False,
+                    "error": "Not a valid service account JSON (missing 'type' field or wrong type)"
+                }
+
+            if 'project_id' not in creds_data:
+                return {
+                    "valid": False,
+                    "error": "Missing 'project_id' field"
+                }
+
+            return {
+                "valid": True,
+                "project_id": creds_data.get('project_id'),
+                "client_email": creds_data.get('client_email', 'N/A')
+            }
+
+        except json.JSONDecodeError as e:
+            return {
+                "valid": False,
+                "error": f"Invalid JSON: {str(e)}"
+            }
+
+    elif request.provider == "openai":
+        if not request.api_key:
+            raise HTTPException(
+                status_code=400,
+                detail="api_key is required for OpenAI verification"
+            )
+
+        # Basic format validation
+        if not request.api_key.startswith('sk-'):
+            return {
+                "valid": False,
+                "error": "Invalid API key format (should start with 'sk-')"
+            }
+
+        if len(request.api_key) < 20:
+            return {
+                "valid": False,
+                "error": "API key appears too short"
+            }
+
+        # Note: We don't make an API call to verify - that would consume quota
+        return {
+            "valid": True,
+            "note": "Format validation passed. Key will be tested on first API call."
+        }
+
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown provider: {request.provider}"
+        )
+
+
+@app.post("/admin/voice/credentials", dependencies=[Depends(verify_admin_session)])
+async def update_credentials(request: CredentialUpdateRequest):
+    """
+    Update cloud credentials with encrypted persistence.
+
+    Phase 39A: Validates, encrypts, and persists credentials.
+    Credentials are stored encrypted and survive server restarts.
+
+    Args:
+        request: Credential update request with provider and credential value
+
+    Returns:
+        Success status and validation result
+    """
+    import os
+    import json
+    from pathlib import Path
+
+    cred_manager = get_credential_manager()
+
+    if request.provider == "google-cloud-stt":
+        # Accept either a path or direct JSON content
+        creds_data = None
+        project_id = None
+
+        if request.credentials_json:
+            # Direct JSON content provided
+            try:
+                creds_data = json.loads(request.credentials_json)
+            except json.JSONDecodeError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid credentials: not valid JSON"
+                )
+        elif request.credentials_path:
+            # Path to JSON file provided
+            creds_path = Path(request.credentials_path)
+            if not creds_path.exists():
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Credentials file not found: {request.credentials_path}"
+                )
+            try:
+                with open(creds_path, 'r') as f:
+                    creds_data = json.load(f)
+            except json.JSONDecodeError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid credentials file: not valid JSON"
+                )
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Either credentials_json or credentials_path is required"
+            )
+
+        # Validate service account structure
+        if 'type' not in creds_data or creds_data.get('type') != 'service_account':
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid credentials: not a service account JSON"
+            )
+
+        project_id = creds_data.get('project_id', 'unknown')
+
+        # Phase 39A: Save to encrypted storage
+        persisted = False
+        if cred_manager and cred_manager.is_available():
+            persisted = cred_manager.save_credential(
+                "google_cloud_credentials",
+                json.dumps(creds_data),
+                "service_account_json"
+            )
+            if persisted:
+                logger.info(f"[ADMIN] Google Cloud credentials saved to encrypted storage")
+
+        # Write to temp file and update environment
+        sa_path = PROJECT_ROOT / 'data' / '.google_sa_temp.json'
+        sa_path.parent.mkdir(parents=True, exist_ok=True)
+        sa_path.write_text(json.dumps(creds_data, indent=2))
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(sa_path)
+
+        # Try to reload Google STT engine if it exists
+        try:
+            from voice_routes import reload_voice_services
+            from voice.provider_registry import get_registry
+            settings = get_registry().load_settings()
+            await reload_voice_services(settings)
+            logger.info(f"[ADMIN] Google Cloud credentials updated: {project_id}")
+        except Exception as e:
+            logger.warning(f"[ADMIN] Could not reload voice services: {e}")
+
+        return {
+            "success": True,
+            "message": "Google Cloud credentials updated",
+            "persisted": persisted,
+            "storage": "encrypted_file" if persisted else "runtime_only",
+            "validation": {
+                "valid": True,
+                "project_id": project_id
+            }
+        }
+
+    elif request.provider == "openai":
+        if not request.api_key:
+            raise HTTPException(
+                status_code=400,
+                detail="api_key is required for OpenAI"
+            )
+
+        # Basic validation - should start with 'sk-'
+        if not request.api_key.startswith('sk-'):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid API key format (should start with 'sk-')"
+            )
+
+        # Phase 39A: Save to encrypted storage
+        persisted = False
+        if cred_manager and cred_manager.is_available():
+            persisted = cred_manager.save_credential(
+                "openai_api_key",
+                request.api_key,
+                "api_key"
+            )
+            if persisted:
+                logger.info("[ADMIN] OpenAI API key saved to encrypted storage")
+
+        # Update environment variable
+        os.environ["OPENAI_API_KEY"] = request.api_key
+        logger.info("[ADMIN] OpenAI API key updated")
+
+        return {
+            "success": True,
+            "message": "OpenAI API key updated",
+            "persisted": persisted,
+            "storage": "encrypted_file" if persisted else "runtime_only"
+        }
+
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown provider: {request.provider}"
+        )
+
+
+# ==============================================================================
+# ADMIN DEBUG ENDPOINTS - Phase 39B
+# ==============================================================================
+
+@app.get("/admin/debug/status", dependencies=[Depends(verify_admin_session)])
+async def get_debug_status():
+    """
+    Get current debug panel status.
+
+    Phase 39B: Returns whether debug mode is enabled.
+    """
+    return {
+        "debug_enabled": debug_mode_enabled,
+        "updated_at": None  # Could read from file if needed
+    }
+
+
+class DebugToggleRequest(BaseModel):
+    """Request body for debug mode toggle."""
+    enabled: bool
+
+
+@app.post("/admin/debug/toggle", dependencies=[Depends(verify_admin_session)])
+async def toggle_debug_mode(request: DebugToggleRequest):
+    """
+    Toggle debug panel visibility.
+
+    Phase 39B: Enables/disables debug info in chat responses.
+    """
+    global debug_mode_enabled
+
+    success = save_debug_settings(request.enabled)
+
+    if success:
+        logger.info(f"[ADMIN] Debug mode {'enabled' if request.enabled else 'disabled'}")
+        return {
+            "success": True,
+            "debug_enabled": debug_mode_enabled,
+            "message": f"Debug mode {'enabled' if request.enabled else 'disabled'}"
+        }
+    else:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to save debug settings"
+        )
+
+
+# ==============================================================================
+# ADMIN TEST HARNESS - Phase 42
+# ==============================================================================
+
+# Test Harness data storage paths
+_DATA_DIR = Path(__file__).parent / "data"
+TEST_HARNESS_QUESTIONS_PATH = _DATA_DIR / "test_harness_questions.json"
+TEST_HARNESS_RESULTS_PATH = _DATA_DIR / "test_harness_results.json"
+
+
+class TestQuestion(BaseModel):
+    """Test question model."""
+    id: str
+    question: str
+    category: str = "general"
+    created_at: str
+
+
+class TestQuestionCreate(BaseModel):
+    """Request to create a test question."""
+    question: str
+    category: str = "general"
+
+
+class TestResult(BaseModel):
+    """Test result model."""
+    id: str
+    query: str
+    passed: bool
+    failures: List[str] = []
+    response: Optional[Dict] = None
+
+
+def load_test_harness_questions() -> List[Dict]:
+    """Load test questions from storage."""
+    if not TEST_HARNESS_QUESTIONS_PATH.exists():
+        return []
+    try:
+        with open(TEST_HARNESS_QUESTIONS_PATH, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            return data.get("questions", [])
+    except Exception as e:
+        logger.error(f"[TEST-HARNESS] Failed to load questions: {e}")
+        return []
+
+
+def save_test_harness_questions(questions: List[Dict]) -> bool:
+    """Save test questions to storage."""
+    try:
+        with open(TEST_HARNESS_QUESTIONS_PATH, 'w', encoding='utf-8') as f:
+            json.dump({"questions": questions}, f, indent=2)
+        return True
+    except Exception as e:
+        logger.error(f"[TEST-HARNESS] Failed to save questions: {e}")
+        return False
+
+
+def load_test_harness_results() -> Optional[Dict]:
+    """Load latest test results from storage."""
+    if not TEST_HARNESS_RESULTS_PATH.exists():
+        return None
+    try:
+        with open(TEST_HARNESS_RESULTS_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        logger.error(f"[TEST-HARNESS] Failed to load results: {e}")
+        return None
+
+
+def save_test_harness_results(results: Dict) -> bool:
+    """Save test results to storage."""
+    try:
+        with open(TEST_HARNESS_RESULTS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(results, f, indent=2)
+        return True
+    except Exception as e:
+        logger.error(f"[TEST-HARNESS] Failed to save results: {e}")
+        return False
+
+
+@app.get("/admin/test-harness/questions", dependencies=[Depends(verify_admin_session)])
+async def get_test_harness_questions():
+    """Get all test questions."""
+    questions = load_test_harness_questions()
+    return {
+        "questions": questions,
+        "total": len(questions)
+    }
+
+
+@app.post("/admin/test-harness/questions", dependencies=[Depends(verify_admin_session)])
+async def add_test_harness_question(request: TestQuestionCreate):
+    """Add a single test question."""
+    questions = load_test_harness_questions()
+
+    new_question = {
+        "id": str(uuid.uuid4()),
+        "question": request.question.strip(),
+        "category": request.category.strip(),
+        "created_at": datetime.now().isoformat()
+    }
+
+    questions.append(new_question)
+
+    if save_test_harness_questions(questions):
+        logger.info(f"[TEST-HARNESS] Added question: {new_question['id']}")
+        return {"status": "success", "question": new_question}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to save question")
+
+
+@app.delete("/admin/test-harness/questions/{question_id}", dependencies=[Depends(verify_admin_session)])
+async def delete_test_harness_question(question_id: str):
+    """Delete a test question."""
+    questions = load_test_harness_questions()
+
+    original_count = len(questions)
+    questions = [q for q in questions if q["id"] != question_id]
+
+    if len(questions) == original_count:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    if save_test_harness_questions(questions):
+        logger.info(f"[TEST-HARNESS] Deleted question: {question_id}")
+        return {"status": "success", "deleted_id": question_id}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to delete question")
+
+
+@app.post("/admin/test-harness/questions/import", dependencies=[Depends(verify_admin_session)])
+async def import_test_harness_questions(file: UploadFile = File(...)):
+    """Import questions from CSV file."""
+    import csv
+    import io
+
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="File must be a CSV")
+
+    content = await file.read()
+    # Handle BOM from Excel-generated CSVs
+    text = content.decode('utf-8-sig')
+
+    questions = load_test_harness_questions()
+    imported = 0
+    skipped = 0
+    errors = []
+
+    reader = csv.DictReader(io.StringIO(text))
+
+    # Get fieldnames and create case-insensitive mapping
+    fieldnames = reader.fieldnames or []
+    logger.info(f"[TEST-HARNESS] CSV columns found: {fieldnames}")
+
+    # Find the question column (case-insensitive)
+    question_col = None
+    category_col = None
+    for col in fieldnames:
+        col_lower = col.lower().strip()
+        if col_lower in ('question', 'questions', 'query', 'text'):
+            question_col = col
+        if col_lower in ('category', 'categories', 'type'):
+            category_col = col
+
+    if not question_col:
+        # If no header found, try treating first column as questions
+        if fieldnames:
+            question_col = fieldnames[0]
+            logger.info(f"[TEST-HARNESS] No 'question' column found, using first column: {question_col}")
+        else:
+            raise HTTPException(status_code=400, detail="CSV has no columns. Expected 'question' column.")
+
+    for row_num, row in enumerate(reader, start=2):
+        try:
+            question_text = row.get(question_col, '').strip()
+            if not question_text:
+                skipped += 1
+                continue
+
+            category = 'general'
+            if category_col:
+                category = row.get(category_col, 'general').strip() or 'general'
+
+            new_question = {
+                "id": str(uuid.uuid4()),
+                "question": question_text,
+                "category": category,
+                "created_at": datetime.now().isoformat()
+            }
+            questions.append(new_question)
+            imported += 1
+
+        except Exception as e:
+            errors.append(f"Row {row_num}: {str(e)}")
+
+    if imported > 0:
+        save_test_harness_questions(questions)
+
+    logger.info(f"[TEST-HARNESS] Imported {imported} questions, skipped {skipped}")
+
+    return {
+        "status": "success",
+        "imported": imported,
+        "skipped": skipped,
+        "errors": errors
+    }
+
+
+async def execute_single_test(question: Dict) -> Dict:
+    """Execute a single test question against the chat endpoint."""
+    session_id = f"test-harness-{uuid.uuid4()}"
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                "http://localhost:8000/chat",
+                json={"message": question["question"], "session_id": session_id},
+                timeout=60.0
+            )
+            return response.json()
+        except Exception as e:
+            return {"error": str(e)}
+
+
+def evaluate_test_result(question: Dict, response: Dict) -> Dict:
+    """Evaluate a test result and return pass/fail status."""
+    failures = []
+
+    # Check for API error
+    if "error" in response:
+        failures.append(f"API error: {response['error']}")
+
+    # Build result
+    passed = len(failures) == 0
+
+    return {
+        "id": question["id"],
+        "query": question["question"],
+        "category": question.get("category", "general"),
+        "passed": passed,
+        "failures": failures,
+        "response": {
+            "mode": response.get("mode", "unknown"),
+            "confidence": response.get("confidence_level", "N/A"),
+            "grounding_mode": response.get("grounding_mode", "unknown"),
+            "rejected": response.get("rejected", False),
+            "answer": response.get("answer", "")
+        }
+    }
+
+
+@app.get("/admin/test-harness/execute/stream", dependencies=[Depends(verify_admin_session)])
+async def execute_test_harness_stream():
+    """Execute all test questions with SSE streaming."""
+
+    async def generate():
+        questions = load_test_harness_questions()
+
+        if not questions:
+            yield {
+                "event": "error",
+                "data": json.dumps({"message": "No questions to test"})
+            }
+            return
+
+        results = []
+        passed = 0
+        failed = 0
+        by_category = {}
+
+        for i, question in enumerate(questions):
+            # Send progress event
+            yield {
+                "event": "progress",
+                "data": json.dumps({"current": i + 1, "total": len(questions)})
+            }
+
+            # Execute test
+            try:
+                response = await execute_single_test(question)
+                result = evaluate_test_result(question, response)
+                results.append(result)
+
+                # Update counters
+                if result["passed"]:
+                    passed += 1
+                else:
+                    failed += 1
+
+                # Update category stats
+                cat = result.get("category", "general")
+                if cat not in by_category:
+                    by_category[cat] = {"passed": 0, "failed": 0}
+                if result["passed"]:
+                    by_category[cat]["passed"] += 1
+                else:
+                    by_category[cat]["failed"] += 1
+
+                # Send result event
+                yield {
+                    "event": "result",
+                    "data": json.dumps(result)
+                }
+
+            except Exception as e:
+                error_result = {
+                    "id": question["id"],
+                    "query": question["question"],
+                    "category": question.get("category", "general"),
+                    "passed": False,
+                    "failures": [f"Execution error: {str(e)}"],
+                    "response": None
+                }
+                results.append(error_result)
+                failed += 1
+
+                yield {
+                    "event": "result",
+                    "data": json.dumps(error_result)
+                }
+
+        # Calculate category rates
+        for cat, stats in by_category.items():
+            total = stats["passed"] + stats["failed"]
+            stats["rate"] = (stats["passed"] / total * 100) if total > 0 else 0
+
+        # Save results
+        total = len(questions)
+        pass_rate = (passed / total * 100) if total > 0 else 0
+
+        results_data = {
+            "timestamp": datetime.now().isoformat(),
+            "summary": {
+                "total": total,
+                "passed": passed,
+                "failed": failed,
+                "pass_rate": round(pass_rate, 1)
+            },
+            "by_category": by_category,
+            "results": results
+        }
+        save_test_harness_results(results_data)
+
+        # Send complete event
+        yield {
+            "event": "complete",
+            "data": json.dumps(results_data["summary"])
+        }
+
+    return EventSourceResponse(generate())
+
+
+@app.get("/admin/test-harness/results/latest", dependencies=[Depends(verify_admin_session)])
+async def get_test_harness_results_latest():
+    """Get the latest test run results."""
+    results = load_test_harness_results()
+    if not results:
+        return {"results": [], "summary": None}
+    return results
+
+
+@app.get("/admin/test-harness/results/download", dependencies=[Depends(verify_admin_session)])
+async def download_test_harness_results():
+    """Download test results as a text file."""
+    from fastapi.responses import PlainTextResponse
+
+    results = load_test_harness_results()
+    if not results:
+        raise HTTPException(status_code=404, detail="No test results available")
+
+    # Build text report
+    lines = []
+    lines.append("=" * 80)
+    lines.append("TEST HARNESS RESULTS - CoCo RAG Chatbot")
+    lines.append("=" * 80)
+    lines.append(f"Test Run: {results.get('timestamp', 'Unknown')}")
+    lines.append(f"Total Test Cases: {results['summary']['total']}")
+    lines.append("")
+
+    # Individual results
+    for i, result in enumerate(results.get("results", []), 1):
+        lines.append(f"Question No.: {i}")
+        lines.append(result["query"])
+        lines.append("")
+        lines.append("Response:")
+        if result.get("response"):
+            lines.append(result["response"].get("answer", "No answer"))
+        else:
+            lines.append("No response received")
+        lines.append("")
+
+        status = "PASS" if result["passed"] else "FAIL"
+        mode = result.get("response", {}).get("mode", "-")
+        confidence = result.get("response", {}).get("confidence", "-")
+        lines.append(f"Status: {status} | Mode: {mode} | Confidence: {confidence}")
+
+        if result.get("failures"):
+            for failure in result["failures"]:
+                lines.append(f"  - {failure}")
+
+        lines.append("")
+        lines.append("-" * 40)
+        lines.append("")
+
+    # Summary section
+    lines.append("=" * 80)
+    lines.append("TEST SUMMARY")
+    lines.append("=" * 80)
+    lines.append("")
+    summary = results["summary"]
+    lines.append(f"Total Tests:  {summary['total']}")
+    lines.append(f"Passed:       {summary['passed']}")
+    lines.append(f"Failed:       {summary['failed']}")
+    lines.append(f"Pass Rate:    {summary['pass_rate']}%")
+    lines.append("")
+
+    # Category breakdown
+    if results.get("by_category"):
+        lines.append("Results by Category:")
+        for cat, stats in results["by_category"].items():
+            total_cat = stats["passed"] + stats["failed"]
+            status = "OK" if stats["failed"] == 0 else "FAIL"
+            lines.append(f"  {cat:20s} {stats['passed']:3d}/{total_cat:3d} ({stats['rate']:5.1f}%) [{status}]")
+        lines.append("")
+
+    # Failed tests list
+    failed_tests = [r for r in results.get("results", []) if not r["passed"]]
+    if failed_tests:
+        lines.append("FAILED TESTS:")
+        lines.append("-" * 80)
+        for result in failed_tests:
+            lines.append(f"  [{result['id'][:8]}] {result['query'][:60]}")
+            for failure in result.get("failures", []):
+                lines.append(f"      Reason: {failure}")
+        lines.append("")
+
+    lines.append("=" * 80)
+    lines.append("")
+    lines.append("")
+    lines.append("=" * 80)
+    lines.append("CSV IMPORT FORMAT")
+    lines.append("=" * 80)
+    lines.append("")
+    lines.append("To import test questions via CSV, create a file with the following format:")
+    lines.append("")
+    lines.append("Required columns:")
+    lines.append("  - question    : The question text to test (required)")
+    lines.append("  - category    : Category for grouping (optional, defaults to 'general')")
+    lines.append("")
+    lines.append("Example CSV content:")
+    lines.append("-" * 40)
+    lines.append("question,category")
+    lines.append("Where is the library?,directory")
+    lines.append("What are the tuition fees?,academic")
+    lines.append("Who is the dean of engineering?,directory")
+    lines.append("When is the enrollment period?,event")
+    lines.append("-" * 40)
+    lines.append("")
+    lines.append("Notes:")
+    lines.append("  - First row must be the header row")
+    lines.append("  - Empty question rows will be skipped")
+    lines.append("  - File encoding should be UTF-8")
+    lines.append("  - Save as .csv extension")
+    lines.append("")
+    lines.append("=" * 80)
+
+    content = "\n".join(lines)
+
+    return PlainTextResponse(
+        content=content,
+        media_type="text/plain",
+        headers={
+            "Content-Disposition": f"attachment; filename=test_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        }
+    )
 
 
 # ==============================================================================
@@ -2715,11 +4324,93 @@ app.mount("/static", StaticFiles(directory=PROJECT_ROOT / "static"), name="stati
 async def startup_event():
     """Run on application startup."""
     print("="*80)
-    print("Campus Information Kiosk API - Phase 5")
+    print("Campus Information Kiosk API - Phase 32 (Voice Integration)")
     print("="*80)
     print(f"Documents loaded: {len(doc_manager.list_documents())}")
+
+    # Phase 32: Initialize voice services
+    try:
+        from voice.config import VOICE_CONFIG, is_voice_enabled, log_config_summary
+        from voice import STTService, TTSService, VoiceOrchestrator
+        from voice.provider_registry import ProviderRegistry
+
+        if is_voice_enabled():
+            # Load persisted voice settings and apply to VOICE_CONFIG
+            # This ensures admin-configured providers (e.g., Google STT) are used after restart
+            try:
+                registry = ProviderRegistry()
+                saved_settings = registry.load_settings()
+                if saved_settings.stt_provider:
+                    VOICE_CONFIG['stt']['primary']['engine'] = saved_settings.stt_provider
+                    logger.info(f"[VOICE] Applied saved STT provider: {saved_settings.stt_provider}")
+                if saved_settings.tts_provider:
+                    VOICE_CONFIG['tts']['primary']['engine'] = saved_settings.tts_provider
+                    logger.info(f"[VOICE] Applied saved TTS provider: {saved_settings.tts_provider}")
+            except Exception as e:
+                logger.warning(f"[VOICE] Could not load saved voice settings: {e}")
+
+            stt_service = STTService(VOICE_CONFIG.get('stt', {}))
+            tts_service = TTSService(VOICE_CONFIG.get('tts', {}))
+
+            # Create orchestrator with chat handler
+            async def voice_chat_handler(message: str, session_id: str):
+                """Handle chat for voice interactions - routes to existing chat logic."""
+                # Create a minimal request object
+                class VoiceChatRequest:
+                    def __init__(self, msg, sid):
+                        self.message = msg
+                        self.session_id = sid
+
+                request = VoiceChatRequest(message, session_id)
+                # Call the existing chat endpoint logic
+                response = await chat(request)
+                # Phase 35: Include structured_answer for unified rendering
+                structured = None
+                if response.structured_answer:
+                    structured = response.structured_answer.dict()
+                # Phase 39B: Include debug_info for debug panel
+                debug_info = None
+                if response.debug_info:
+                    debug_info = response.debug_info.dict()
+                return {
+                    "answer": response.answer,
+                    "mode": response.mode,
+                    "confidence": response.confidence_level,
+                    "confidence_score": response.confidence_score,
+                    "sources": [s.dict() for s in response.sources],
+                    "rejected": response.rejected,
+                    "structured_answer": structured,
+                    "debug_info": debug_info,
+                }
+
+            orchestrator = VoiceOrchestrator(
+                stt_service=stt_service,
+                tts_service=tts_service,
+                chat_handler=voice_chat_handler,
+                event_tracker=event_tracker
+            )
+
+            # Initialize voice routes with services
+            voice_routes.init_voice_services(
+                orchestrator=orchestrator,
+                stt=stt_service,
+                tts=tts_service
+            )
+
+            log_config_summary()
+            print(f"Voice services: ENABLED (STT: {stt_service.is_available()}, TTS: {tts_service.is_available()})")
+        else:
+            print("Voice services: DISABLED (set VOICE_ENABLED=true to enable)")
+
+    except ImportError as e:
+        print(f"Voice services: NOT AVAILABLE (missing dependencies: {e})")
+    except Exception as e:
+        print(f"Voice services: INITIALIZATION FAILED ({e})")
+        logger.exception("[VOICE] Failed to initialize voice services")
+
     print(f"API ready at: http://localhost:8000")
     print(f"Kiosk interface at: http://localhost:8000/")
+    print(f"Voice status at: http://localhost:8000/voice/status")
     print("="*80)
 
 

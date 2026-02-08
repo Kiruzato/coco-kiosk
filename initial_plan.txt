@@ -1,0 +1,4 @@
+AI and Natural Language Processing Module 
+The AI module serves as the central intelligence of the system. 
+CoCo utilizes the GPT-4o-mini-API, a cloud-based large language model, to interpret queries and generate coherent, context-aware responses. To support campus-specific questions, a Retrieval-Augmented Generation (RAG) system was implemented. 
+This combines GPT’s reasoning capabilities with a local knowledge base indexed through Sentence Transformers (all-MiniLM-L6-v2), which generate 384-dimensional embeddings for semantic search.

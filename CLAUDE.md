@@ -6,7 +6,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 
 ## Current State
 
-**Completed through Phase 17A.2** - Retrieval-First Routing
+**Completed through Phase 40** - Silent TTS with Implicit Interruption
 
 ### Phase History
 1. **Phase 1-3**: Core RAG pipeline, document management, multi-format support
@@ -26,6 +26,33 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 15. **Phase 17A**: Hybrid retrieval (BM25 + vector) & grounding validation
 16. **Phase 17A.1**: Developer RAG-only mode toggle for debugging
 17. **Phase 17A.2**: Retrieval-first routing (campus-default behavior)
+18. **Phase 17C**: Single retrieval pipeline, enumeration stability, k=8
+19. **Phase 18**: Layout-aware PDF parsing & entity consolidation
+20. **Phase 18.1**: Multi-stage text normalization pipeline
+21. **Phase 18.2**: Deterministic enumeration extraction (deans)
+22. **Phase 19**: Contiguous context reconstruction (neighbor chunk expansion)
+23. **Phase 20**: Semantic grounding override for long-form content
+24. **Phase 21**: Semantic trust injection for verified content
+25. **Phase 21.1**: Synthetic prayer consolidation
+26. **Phase 22**: Appendix-aware chunking (larger max_size for appendices)
+27. **Phase 23**: Metadata validation & observability
+28. **Phase 24**: Generic consolidation framework (config-driven engine)
+29. **Phase 25**: Metadata index for fast filtering (O(1) chunk lookups)
+30. **Phase 26**: RRF hybrid retrieval scoring
+31. **Phase 27**: Awards deterministic extractor & deans extractor fixes
+32. **Phase 28**: Query synonym expansion for improved retrieval
+33. **Phase 29**: Chunk diversity in results (max 3 per section)
+34. **Phase 30**: Negative examples to grounding (entity confusion detection)
+35. **Phase 31**: Event dates & office contact extractors
+36. **Phase 32**: Voice infrastructure foundation (STT/TTS services)
+37. **Phase 33**: Voice API layer (rate limiting, error codes, health monitoring)
+38. **Phase 34**: Frontend voice UI (mic button, state machine, audio recording/playback)
+39. **Phase 35**: Configurable voice provider selection (runtime engine switching)
+40. **Phase 36**: Admin voice configuration UI (provider cards, settings persistence)
+41. **Phase 37**: Voice provider fallback configuration (primary/fallback selection)
+42. **Phase 38**: Google Cloud STT with usage monitoring (60-min quota tracking)
+43. **Phase 39**: Admin-configurable cloud credentials & real-time debugging panel
+44. **Phase 40**: Silent TTS with implicit interruption (background audio, auto-stop on input)
 
 ## Architecture
 
@@ -43,6 +70,27 @@ campus_rag_chatbot/
 ├── query_logger.py           # Query logging
 ├── event_tracker.py          # Phase 16: Observability & analytics
 ├── retrieval_validator.py    # Phase 17A: Hybrid retrieval & grounding
+├── entity_consolidation.py   # DEPRECATED: Use consolidation_engine.py
+├── consolidation_engine.py   # Phase 24: Config-driven consolidation
+├── metadata_index.py         # Phase 25: Fast chunk lookups by metadata
+├── entity_extractors/        # Phase 18.2/27/31: Deterministic extractors
+│   ├── deans.py              # Dean enumeration extraction
+│   ├── awards.py             # Awards enumeration extraction
+│   ├── dates.py              # Event dates extraction (Phase 31)
+│   └── contacts.py           # Office contacts extraction (Phase 31)
+├── voice/                    # Phase 32-38: Voice integration
+│   ├── config.py             # Voice configuration
+│   ├── stt_service.py        # Speech-to-Text service
+│   ├── tts_service.py        # Text-to-Speech service
+│   ├── voice_orchestrator.py # STT -> Chat -> TTS coordination
+│   ├── provider_registry.py  # Phase 35: Available STT/TTS providers
+│   ├── usage_tracker.py      # Phase 38: Google STT usage monitoring
+│   └── engines/              # Engine implementations
+│       ├── whisper_cpp.py    # Offline STT (Whisper.cpp)
+│       ├── whisper_openai.py # Cloud STT fallback (OpenAI)
+│       ├── google_cloud_stt.py  # Cloud STT (Google, Phase 38)
+│       └── piper_tts.py      # Offline TTS (Piper)
+├── voice_routes.py           # Phase 32: Voice API endpoints
 ├── admin.py                  # CLI admin interface
 ├── static/                   # Web frontend (index.html, admin.html, etc.)
 ├── data/                     # Source documents
@@ -92,10 +140,11 @@ campus_rag_chatbot/
 - Admin analytics dashboard at `/admin/analytics`
 - Rolling log limit prevents unbounded growth
 
-### Hybrid Retrieval & Grounding (Phase 17A)
-- Combines vector similarity (0.7 weight) with BM25 keyword matching (0.3 weight)
+### Hybrid Retrieval & Grounding (Phase 17A/26/28)
+- Combines vector similarity with BM25 keyword matching via RRF (Phase 26)
 - Prevents semantic neighbor confusion (e.g., "Dean's Lister" returning "Team Leadership Award")
 - Query term extraction filters stopwords, identifies key concepts
+- Query synonym expansion (Phase 28): "lib"→"library", "tuition"→"payment,fees"
 - Grounding validation requires query terms in retrieved chunks
 - Refuses gracefully if grounding fails: "I couldn't confidently find information about [topic]"
 
@@ -106,35 +155,105 @@ campus_rag_chatbot/
 - Toggle events logged via EventTracker
 - In-memory flag (not persisted to disk)
 
+### Deterministic Extractors (Phase 18.2/27)
+- Three-layer architecture: Intent Detection → Extraction → Formatting
+- Bypasses LLM for enumeration queries (100% accuracy, no variability)
+- Deans extractor: `is_dean_enumeration_query()`, `extract_deans_from_text()`, `format_dean_list()`
+- Awards extractor: `is_awards_enumeration_query()`, `extract_awards_from_text()`, `format_awards_list()`
+- Handles concatenated single-line content via title pattern splitting
+- Filters false positives with role/college pattern matching
+
+### Voice Integration (Phase 32-40)
+- Modular STT/TTS architecture with automatic fallback
+- Offline-first design: Whisper.cpp for STT, Piper for TTS
+- Voice is a MODALITY LAYER - all RAG guarantees preserved
+- Endpoints: `/voice/status`, `/voice/transcribe`, `/voice/synthesize`, `/voice/chat`
+- Models require separate download (not included in repo)
+- Phase 35-37: Runtime provider selection via admin UI
+- Phase 38: Google Cloud STT with usage tracking
+  - 60-minute monthly free tier quota monitoring
+  - Automatic monthly reset on 1st of each month
+  - Usage rounded UP to next second per Google billing
+  - Admin UI: usage progress bar, credential status display
+  - Endpoints: `/admin/voice/usage`, `/admin/voice/credentials/status`
+- Phase 39: Admin cloud credential management & debug panel
+  - Secure encrypted credential storage (AES-256-GCM)
+  - Real-time debug info panel showing LLM/retrieval/grounding details
+  - Admin toggle to enable/disable debug visibility
+- Phase 40: Silent TTS with implicit interruption
+  - TTS plays silently in background (no overlay/modal)
+  - Speech auto-stops when user interacts with input controls
+  - No explicit "Stop" button required
+
 ## Running the Application
 
 ```bash
 cd campus_rag_chatbot
 
-# Start the server (runs on 0.0.0.0:8000)
-python app.py
+# IMPORTANT: Use Python 3.11 virtual environment (Piper TTS requires Python 3.11)
+# Option 1: Use full path
+"C:\Users\chann\OneDrive\Desktop\restartcoco\vibecoding_coco\venv311\Scripts\python.exe" app.py
+
+# Option 2: Activate virtual environment first
+# cd C:\Users\chann\OneDrive\Desktop\restartcoco\vibecoding_coco
+# venv311\Scripts\activate
+# cd campus_rag_chatbot
+# python app.py
 
 # Access points:
 # - User interface: http://localhost:8000/
 # - Admin interface: http://localhost:8000/admin
 # - Developer tools: http://localhost:8000/dev
+# - Voice status: http://localhost:8000/voice/status
 ```
+
+## Python Version Requirements
+
+**Python 3.11 is required** for full voice functionality (Piper TTS).
+
+- Python 3.13: Piper TTS broken (`espeakbridge` import error)
+- Python 3.11: All voice engines working (Piper, Whisper.cpp, Google Cloud STT, edge-tts)
+
+Virtual environment: `venv311/` (Python 3.11.9)
+Requirements file: `requirements_py311.txt`
 
 ## Environment Variables (.env)
 
 ```
 OPENAI_API_KEY=sk-...
 ADMIN_API_KEY=<uuid for admin authentication>
+ADMIN_PASSWORD=<admin password>
+
+# Voice settings (optional)
+VOICE_ENABLED=true
+WHISPER_MODEL_PATH=/path/to/ggml-tiny.en.bin
+PIPER_MODEL_PATH=/path/to/en_US-amy-medium.onnx
+
+# Google Cloud STT (Phase 38)
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+GOOGLE_STT_ENABLED=true
+GOOGLE_STT_QUOTA_SECONDS=3600
+USAGE_TRACKING_ENABLED=true
 ```
 
 ## Current Work / Next Steps
 
-The project has implemented Phase 17A (hybrid retrieval & grounding validation). Potential future work:
-- Phase 17B: Multi-word phrase detection for improved term extraction
-- Background job queue for long document operations
-- HTTPS support
-- Enhanced security features
-- Document preview in admin interface
+The project has completed Phase 41 (Voice Bug Fixes & Python 3.11 Migration). Recent additions:
+- Phase 38: Google Cloud STT integration with 60-minute quota tracking
+- Phase 39: Admin cloud credential management & real-time debug panel
+- Phase 40: Silent TTS - audio plays in background, auto-stops on user input
+- Phase 41: Voice bug fixes & Python 3.11 migration
+  - Fixed Google STT not loading saved settings at startup
+  - Fixed Piper TTS `synthesize_wav` to use proper `wave.open()` wrapper
+  - Fixed `voice_routes.py` attribute access (`_chat_handler` → `chat_handler`)
+  - Migrated to Python 3.11 for Piper TTS compatibility
+- Golden test suite: 32 test cases, 87.5% pass rate (28/32)
+
+Potential future work (Phases 42+):
+- Kiosk hardening (RPi5 optimization, error recovery)
+- Multilingual support (Filipino)
+- Multi-document namespace support
+- Observability dashboard enhancement
 
 ## Session Notes
 

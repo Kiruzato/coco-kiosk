@@ -509,5 +509,491 @@ body {
     font-size: 20px;
     line-height: 1.7;
     color: #333;
-    white-space: pre-wrap;
+}
+
+/* Phase 35: Answer list formatting */
+.full-answer p {
+    margin: 0 0 1em 0;
+}
+
+.full-answer p:last-child {
+    margin-bottom: 0;
+}
+
+.answer-list {
+    margin: 0.5em 0 1em 0;
+    padding-left: 1.5em;
+}
+
+.answer-list li {
+    margin: 0.4em 0;
+    line-height: 1.6;
+}
+
+.full-answer ol.answer-list {
+    list-style-type: decimal;
+}
+
+.full-answer ul.answer-list {
+    list-style-type: disc;
+}
+
+.full-answer strong {
+    font-weight: 600;
+    color: #1e3c72;
+}
+
+/* ============================================================================
+   Phase 34: Voice UI Components
+   ============================================================================ */
+
+/* Voice Button */
+.voice-btn {
+    position: relative;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 3px solid #1e3c72;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.voice-btn:hover {
+    background: #f0f4f8;
+    transform: scale(1.05);
+}
+
+.voice-btn:active {
+    transform: scale(0.95);
+}
+
+.voice-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.voice-btn .mic-icon {
+    fill: #1e3c72;
+    transition: fill 0.3s;
+}
+
+/* Voice Button States */
+.voice-btn.listening {
+    background: #4caf50;
+    border-color: #4caf50;
+    animation: pulse-green 1.5s ease-in-out infinite;
+}
+
+.voice-btn.listening .mic-icon {
+    fill: white;
+}
+
+.voice-btn.processing {
+    background: #ff9800;
+    border-color: #ff9800;
+}
+
+.voice-btn.processing .mic-icon {
+    fill: white;
+}
+
+.voice-btn.error {
+    background: #f44336;
+    border-color: #f44336;
+}
+
+.voice-btn.error .mic-icon {
+    fill: white;
+}
+
+.voice-btn.speaking {
+    background: #2196f3;
+    border-color: #2196f3;
+}
+
+.voice-btn.speaking .mic-icon {
+    fill: white;
+}
+
+/* Pulse Animation for Listening State */
+.voice-pulse {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(76, 175, 80, 0.3);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.voice-btn.listening .voice-pulse {
+    animation: pulse-ring 1.5s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+    0% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+@keyframes pulse-green {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 15px rgba(76, 175, 80, 0);
+    }
+}
+
+/* Voice Status Display */
+.voice-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 12px 20px;
+    background: #e8f5e9;
+    border-radius: 8px;
+    font-size: 18px;
+    color: #2e7d32;
+}
+
+.voice-status.processing {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.voice-status.error {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.voice-status.speaking {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.voice-status-icon::before {
+    content: "🎤";
+}
+
+.voice-status.processing .voice-status-icon::before {
+    content: "⏳";
+}
+
+.voice-status.error .voice-status-icon::before {
+    content: "❌";
+}
+
+.voice-status.speaking .voice-status-icon::before {
+    content: "🔊";
+}
+
+/* Transcription Preview */
+.transcription-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 15px 20px;
+    background: #f5f5f5;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+}
+
+.transcription-preview .preview-text {
+    flex: 1;
+    font-size: 18px;
+    color: #333;
+    font-style: italic;
+}
+
+.transcription-preview button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.transcription-preview .preview-edit {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.transcription-preview .preview-send {
+    background: #4caf50;
+    color: white;
+}
+
+.transcription-preview .preview-cancel {
+    background: #f44336;
+    color: white;
+}
+
+.transcription-preview button:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+
+/* Phase 40: Voice indicator and stop button removed
+   TTS now plays silently in background without visual overlay
+   Styles removed: .voice-indicator, .voice-waveform, .stop-speaking-btn, @keyframes waveform
+*/
+
+/* Voice Unavailable Notice */
+.voice-unavailable {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    background: #fff3e0;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #f57c00;
+    margin-top: 10px;
+}
+
+/* Audio Visualizer */
+.audio-visualizer-container {
+    margin-top: 15px;
+    padding: 15px;
+    background: #1a1a2e;
+    border-radius: 12px;
+    border: 2px solid #4caf50;
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+}
+
+.audio-visualizer {
+    width: 100%;
+    height: 80px;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
+}
+
+.visualizer-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 16px;
+    color: #4caf50;
+    font-weight: 600;
+}
+
+.recording-dot {
+    width: 12px;
+    height: 12px;
+    background: #f44336;
+    border-radius: 50%;
+    animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* Volume meter bars style (alternative) */
+.volume-meter {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 4px;
+    height: 60px;
+    padding: 10px;
+}
+
+.volume-bar {
+    width: 8px;
+    background: linear-gradient(180deg, #4caf50 0%, #8bc34a 50%, #cddc39 100%);
+    border-radius: 4px;
+    transition: height 0.05s ease;
+    min-height: 4px;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+    .voice-btn {
+        width: 60px;
+        height: 60px;
+    }
+
+    .voice-status {
+        font-size: 16px;
+    }
+
+    .transcription-preview {
+        flex-wrap: wrap;
+    }
+
+    .transcription-preview .preview-text {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .audio-visualizer {
+        height: 60px;
+    }
+
+    .audio-visualizer-container {
+        padding: 10px;
+    }
+}
+
+/* ============================================================================
+   PHASE 39B: DEBUG PANEL STYLES
+   ============================================================================ */
+
+.debug-panel {
+    margin-top: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #f9fafb;
+    overflow: hidden;
+    font-size: 13px;
+}
+
+.debug-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #f3f4f6;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.debug-header:hover {
+    background: #e5e7eb;
+}
+
+.debug-icon {
+    font-size: 14px;
+}
+
+.debug-title {
+    font-weight: 600;
+    color: #374151;
+    flex: 1;
+}
+
+.debug-expand {
+    color: #6b7280;
+    font-size: 10px;
+    transition: transform 0.2s ease;
+}
+
+.debug-panel.collapsed .debug-content {
+    display: none;
+}
+
+.debug-content {
+    padding: 14px;
+}
+
+.debug-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.debug-column {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+
+.debug-column-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.debug-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+    font-size: 12px;
+    color: #374151;
+}
+
+.debug-label {
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.debug-label.grounding-passed {
+    color: #059669;
+}
+
+.debug-label.grounding-failed {
+    color: #dc2626;
+}
+
+.debug-terms {
+    padding-top: 10px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.debug-terms-label {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 11px;
+    margin-right: 8px;
+}
+
+.debug-term {
+    display: inline-block;
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin: 2px 4px 2px 0;
+    font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+.debug-term.none {
+    background: #f3f4f6;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+/* Mobile Responsive for Debug Panel */
+@media (max-width: 768px) {
+    .debug-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .debug-panel {
+        font-size: 12px;
+    }
+
+    .debug-row {
+        font-size: 11px;
+    }
 }

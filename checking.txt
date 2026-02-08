@@ -1,0 +1,166 @@
+PS C:\Users\chann\OneDrive\Desktop\restartcoco\vibecoding_coco>   git remote -v
+origin  https://github.com/Kiruzato/coco-kiosk.git (fetch)
+origin  https://github.com/Kiruzato/coco-kiosk.git (push)
+PS C:\Users\chann\OneDrive\Desktop\restartcoco\vibecoding_coco>   git add .
+>>   git commit -m "RPi5 deployment preparation - updated setup script"
+>>   git push -u origin antigravity-dev-2
+warning: in the working copy of '.claude/settings.local.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'CLAUDE.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'campus_rag_chatbot/.env.example', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'campus_rag_chatbot/intent_classifier.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'campus_rag_chatbot/main.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'campus_rag_chatbot/static/admin.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'campus_rag_chatbot/static/admin.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'campus_rag_chatbot/static/admin.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'campus_rag_chatbot/static/app.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'campus_rag_chatbot/static/index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'campus_rag_chatbot/static/style.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/pi-setup.sh', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backups/python313_env_backup/data_backup/test_directory_entities.csv', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backups/python313_env_backup/data_backup/test_directory_entities.json', LF will be replaced by CRLF the next time Git touches it
+error: open("campus_rag_chatbot/nul"): No such file or directory
+error: unable to index file 'campus_rag_chatbot/nul'
+fatal: adding files failed
+On branch antigravity-dev-2
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   .claude/settings.local.json
+        modified:   CLAUDE.md
+        modified:   campus_rag_chatbot/.env.example
+        modified:   campus_rag_chatbot/app.py
+        modified:   campus_rag_chatbot/data/directory_entities.json
+        modified:   campus_rag_chatbot/document_manager.py
+        modified:   campus_rag_chatbot/document_registry_backup.json
+        deleted:    campus_rag_chatbot/documents_to_ingest/2022_student_manual_latest.pdf
+        deleted:    campus_rag_chatbot/documents_to_ingest/events.txt
+        modified:   campus_rag_chatbot/entity_consolidation.py
+        modified:   campus_rag_chatbot/entity_extractors/__init__.py
+        modified:   campus_rag_chatbot/entity_extractors/deans.py
+        modified:   campus_rag_chatbot/event_tracker.py
+        modified:   campus_rag_chatbot/intent_classifier.py
+        modified:   campus_rag_chatbot/main.py
+        modified:   campus_rag_chatbot/requirements.txt
+        modified:   campus_rag_chatbot/retrieval_validator.py
+        modified:   campus_rag_chatbot/static/admin.css
+        modified:   campus_rag_chatbot/static/admin.html
+        modified:   campus_rag_chatbot/static/admin.js
+        modified:   campus_rag_chatbot/static/app.js
+        modified:   campus_rag_chatbot/static/index.html
+        modified:   campus_rag_chatbot/static/style.css
+        modified:   campus_rag_chatbot/vector_store_backup_pre_phase18/index.faiss
+        modified:   campus_rag_chatbot/vector_store_backup_pre_phase18/index.pkl
+        deleted:    fix_report_truncated_responses.txt
+        deleted:    inconsistent_responses_report.txt
+        deleted:    instruction-prompt.txt
+        deleted:    iteration_13.7.txt
+        deleted:    phase17A_changes_report.txt
+        deleted:    phase17c_report.txt
+        modified:   question_generator/document_test_results.json
+        deleted:    response_format_summary.txt
+        deleted:    rpi-error.txt
+        modified:   run_commands.txt
+        modified:   scripts/pi-setup.sh
+        deleted:    test_upload.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        PROJECT_CONTEXT.md
+        PYTHON311_MIGRATION_REPORT.txt
+        RPI5_DEPLOYMENT_EVALUATION.txt
+        RPI5_DEPLOYMENT_INSTRUCTIONS.txt
+        UserschannOneDriveDesktoprestartcocovibecoding_cococampus_rag_chatbottest_audio.wav
+        __pycache__/
+        backups/
+        campus_rag_chatbot/consolidation_engine.py
+        campus_rag_chatbot/credential_manager.py
+        campus_rag_chatbot/data/.google_sa_temp.json
+        campus_rag_chatbot/data/consolidation_rules.json
+        campus_rag_chatbot/data/credentials.enc
+        campus_rag_chatbot/data/debug_settings.json
+        campus_rag_chatbot/data/directory_entities.json.backup_20260131_163452
+        campus_rag_chatbot/data/metadata_index.json
+        campus_rag_chatbot/data/stt_usage.json
+        campus_rag_chatbot/data/test_harness_questions.json
+        campus_rag_chatbot/data/test_harness_results.json
+        campus_rag_chatbot/data/voice_settings.json
+        campus_rag_chatbot/document_registry.json.backup_pre_phase21
+        campus_rag_chatbot/document_registry.json.backup_pre_phase22
+        campus_rag_chatbot/documents_to_ingest/2022_student_manual-test.pdf
+        campus_rag_chatbot/documents_to_ingest/2026_Columban Info-test.pdf
+        campus_rag_chatbot/entity_extractors/awards.py
+        campus_rag_chatbot/entity_extractors/contacts.py
+        campus_rag_chatbot/entity_extractors/dates.py
+        campus_rag_chatbot/metadata_index.py
+        campus_rag_chatbot/nul
+        campus_rag_chatbot/question_audio.wav
+        campus_rag_chatbot/question_audio_normalized.wav
+        campus_rag_chatbot/requirements_py311.txt
+        campus_rag_chatbot/test_audio.wav
+        campus_rag_chatbot/test_audio_normalized.wav
+        campus_rag_chatbot/test_audio_normalized_normalized.wav
+        campus_rag_chatbot/tests/
+        campus_rag_chatbot/vector_store_backup_pre_phase21/
+        campus_rag_chatbot/vector_store_backup_pre_phase22/
+        campus_rag_chatbot/voice/
+        campus_rag_chatbot/voice_routes.py
+        change_report.txt
+        claude-code-prompt.txt
+        cookies.txt
+        debug-prompt.txt
+        initial_plan.txt
+        investigate-prompt.txt
+        nul
+        question_generator/test_archive/
+        reports/
+        rpi-deployment_error.txt
+        sa_stt.json
+        scripts/analyze_chunk653_artifacts.py
+        scripts/check_capili_extraction.py
+        scripts/check_chunks_645_655.py
+        scripts/check_prayer_chunks.py
+        scripts/check_prayer_detection.py
+        scripts/check_prayer_neighbors.py
+        scripts/check_top_chunks.py
+        scripts/clear_directory_entities.py
+        scripts/debug_dean_sections.py
+        scripts/debug_deans_extraction.py
+        scripts/debug_extraction.py
+        scripts/debug_filtering.py
+        scripts/debug_problematic_lines.py
+        scripts/debug_title_only.py
+        scripts/demo_phase18.2.py
+        scripts/diagnose_dean_regression.py
+        scripts/diagnose_phase19_content.py
+        scripts/diagnose_phase19_retrieval.py
+        scripts/find_deans_section.py
+        scripts/find_multi_dean_chunks.py
+        scripts/inspect_dean_chunks.py
+        scripts/quick_reingest.py
+        scripts/reingest_for_phase21.py
+        scripts/run_golden_tests.py
+        scripts/search_dean_patterns.py
+        scripts/show_dean_samples.py
+        scripts/show_synthetic_chunk.py
+        scripts/test_dean_enumeration.py
+        scripts/test_dean_fix.py
+        scripts/test_dean_query.py
+        scripts/test_directory_queries.py
+        scripts/test_phase18.2_integration.py
+        scripts/test_phase19_acceptance.py
+        scripts/test_phase19_initial.py
+        scripts/test_phase20_acceptance.py
+        scripts/validate_phase18.py
+        scripts/verify_capili_chunks.py
+        scripts/verify_structural_fix.py
+        server.log
+        test_audio.wav
+        test_tts.wav
+        tests/
+        ui_design/
+        venv311/
+        whisper.cpp/
+
+no changes added to commit (use "git add" and/or "git commit -a")
+branch 'antigravity-dev-2' set up to track 'origin/antigravity-dev-2'.
+Everything up-to-date

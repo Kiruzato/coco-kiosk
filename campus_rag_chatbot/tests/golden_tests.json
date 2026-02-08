@@ -1,0 +1,365 @@
+{
+  "version": "1.0",
+  "description": "Golden test cases for CoCo RAG chatbot regression testing",
+  "created": "2026-01-31",
+  "test_cases": [
+    {
+      "id": "SYNTH_001",
+      "category": "synthetic_chunks",
+      "name": "Prayer - Complete Content",
+      "query": "Prayer to Saint Columban",
+      "expected": {
+        "mode": ["campus"],
+        "must_contain": ["Help Us", "beloved Columban", "through Christ our Lord", "Amen"],
+        "must_not_contain": ["I don't have verified"],
+        "min_confidence": "Medium",
+        "expected_source_chunks": [-2]
+      }
+    },
+    {
+      "id": "SYNTH_002",
+      "category": "synthetic_chunks",
+      "name": "Prayer - Alternative Phrasing",
+      "query": "What is the prayer to St. Columban?",
+      "expected": {
+        "mode": ["campus"],
+        "must_contain": ["O blessed Columban", "missionary"],
+        "must_not_contain": ["I don't have verified"],
+        "min_confidence": "Medium"
+      }
+    },
+    {
+      "id": "SYNTH_003",
+      "category": "synthetic_chunks",
+      "name": "Deans - Complete Enumeration",
+      "query": "Who are the deans?",
+      "expected": {
+        "mode": ["campus"],
+        "must_contain": ["Almazan", "Capili", "Matriano", "Yap", "Gonzales", "Gutierrez"],
+        "must_not_contain": ["I don't have verified"],
+        "entity_count": 6,
+        "min_confidence": "Medium"
+      }
+    },
+    {
+      "id": "SYNTH_004",
+      "category": "synthetic_chunks",
+      "name": "Deans - List Request",
+      "query": "List all the deans of Columban College",
+      "expected": {
+        "mode": ["campus"],
+        "must_contain": ["Almazan", "Capili"],
+        "entity_count": 6
+      }
+    },
+    {
+      "id": "SYNTH_005",
+      "category": "synthetic_chunks",
+      "name": "Hymn - Complete Lyrics",
+      "query": "Lyrics of Columban Hymn",
+      "expected": {
+        "mode": ["campus"],
+        "must_contain": ["Step together", "brave and free", "Family of Columban", "Mary helps us"],
+        "must_not_contain": ["I don't have verified"],
+        "min_confidence": "Medium"
+      }
+    },
+    {
+      "id": "SYNTH_006",
+      "category": "synthetic_chunks",
+      "name": "Hymn - Alternative Query",
+      "query": "What is the Columban Hymn?",
+      "expected": {
+        "mode": ["campus"],
+        "must_contain": ["Step together", "Columban"],
+        "must_not_contain": ["I don't have verified"]
+      }
+    },
+    {
+      "id": "CAMPUS_001",
+      "category": "campus_info",
+      "name": "School Motto",
+      "query": "What is the school motto?",
+      "expected": {
+        "mode": ["campus"],
+        "must_contain": ["Christi simus non nostri"],
+        "must_not_contain": ["I don't have verified"]
+      }
+    },
+    {
+      "id": "CAMPUS_002",
+      "category": "campus_info",
+      "name": "School Patron",
+      "query": "Who is the patron saint of Columban College?",
+      "expected": {
+        "mode": ["campus"],
+        "must_contain": ["Columban", "saint"],
+        "must_not_contain": ["I don't have verified"]
+      }
+    },
+    {
+      "id": "CAMPUS_003",
+      "category": "campus_info",
+      "name": "School Seal",
+      "query": "What does the school seal represent?",
+      "expected": {
+        "mode": ["campus"],
+        "must_contain": ["Celtic cross", "circle"],
+        "must_not_contain": ["I don't have verified"]
+      }
+    },
+    {
+      "id": "CAMPUS_004",
+      "category": "campus_info",
+      "name": "Graduate Attributes",
+      "query": "What are the attributes of a Columban College graduate?",
+      "expected": {
+        "mode": ["campus"],
+        "must_not_contain": ["I don't have verified"],
+        "min_confidence": "Medium"
+      }
+    },
+    {
+      "id": "DIR_001",
+      "category": "directory",
+      "name": "Directory - Library Query",
+      "query": "Where is the library?",
+      "expected": {
+        "mode": ["directory", "clarification"],
+        "must_not_contain": ["error", "exception"]
+      }
+    },
+    {
+      "id": "DIR_002",
+      "category": "directory",
+      "name": "Directory - Registrar Query",
+      "query": "Where is the registrar's office?",
+      "expected": {
+        "mode": ["directory", "clarification"],
+        "must_not_contain": ["error", "exception"]
+      }
+    },
+    {
+      "id": "DIR_003",
+      "category": "directory",
+      "name": "Directory - Clinic Query",
+      "query": "Where is the clinic?",
+      "expected": {
+        "mode": ["directory", "clarification"],
+        "must_not_contain": ["error", "exception"]
+      }
+    },
+    {
+      "id": "DIR_004",
+      "category": "directory",
+      "name": "Directory - How Do I Get To",
+      "query": "How do I get to the gym?",
+      "expected": {
+        "mode": ["directory", "clarification"],
+        "must_not_contain": ["error", "exception"]
+      }
+    },
+    {
+      "id": "DIR_005",
+      "category": "directory",
+      "name": "Directory - Location Of",
+      "query": "Location of the cafeteria",
+      "expected": {
+        "mode": ["directory", "clarification"],
+        "must_not_contain": ["error", "exception"]
+      }
+    },
+    {
+      "id": "ALIAS_001",
+      "category": "aliases",
+      "name": "Alias - Common Nickname",
+      "query": "Where is the CR?",
+      "expected": {
+        "mode": ["directory", "clarification"],
+        "must_not_contain": ["error", "exception"]
+      },
+      "notes": "CR is common alias for comfort room/restroom"
+    },
+    {
+      "id": "ALIAS_002",
+      "category": "aliases",
+      "name": "Alias - Shortened Name",
+      "query": "Where is the admin office?",
+      "expected": {
+        "mode": ["directory", "clarification"],
+        "must_not_contain": ["error", "exception"]
+      }
+    },
+    {
+      "id": "ALIAS_003",
+      "category": "aliases",
+      "name": "Alias - Informal Name",
+      "query": "Where do I pay my tuition?",
+      "expected": {
+        "mode": ["directory", "clarification"],
+        "must_not_contain": ["error", "exception"]
+      },
+      "notes": "Should resolve to cashier/treasurer's office"
+    },
+    {
+      "id": "EDGE_001",
+      "category": "edge_cases",
+      "name": "Edge - Typo in Query",
+      "query": "Where is the libary?",
+      "expected": {
+        "mode": ["directory", "clarification", "campus"],
+        "must_not_contain": ["error", "exception"]
+      },
+      "notes": "Typo: libary instead of library"
+    },
+    {
+      "id": "EDGE_002",
+      "category": "edge_cases",
+      "name": "Edge - All Caps",
+      "query": "WHERE IS THE LIBRARY?",
+      "expected": {
+        "mode": ["directory", "clarification"],
+        "must_not_contain": ["error", "exception"]
+      }
+    },
+    {
+      "id": "EDGE_003",
+      "category": "edge_cases",
+      "name": "Edge - All Lowercase",
+      "query": "where is the library",
+      "expected": {
+        "mode": ["directory", "clarification"],
+        "must_not_contain": ["error", "exception"]
+      }
+    },
+    {
+      "id": "EDGE_004",
+      "category": "edge_cases",
+      "name": "Edge - Minimal Query",
+      "query": "library",
+      "expected": {
+        "mode": ["directory", "clarification", "campus"],
+        "must_not_contain": ["error", "exception"]
+      }
+    },
+    {
+      "id": "EDGE_005",
+      "category": "edge_cases",
+      "name": "Edge - Non-Existent Location",
+      "query": "Where is the swimming pool?",
+      "expected": {
+        "mode": ["directory", "clarification", "campus"],
+        "must_not_contain": ["error", "exception"]
+      },
+      "notes": "Should gracefully handle unknown locations"
+    },
+    {
+      "id": "EDGE_006",
+      "category": "edge_cases",
+      "name": "Edge - Ambiguous Query",
+      "query": "Where is the office?",
+      "expected": {
+        "mode": ["directory", "clarification"],
+        "must_not_contain": ["error", "exception"]
+      },
+      "notes": "Multiple offices exist, should clarify or list"
+    },
+    {
+      "id": "GROUND_001",
+      "category": "grounding",
+      "name": "Grounding - Semantic Override",
+      "query": "Show me the prayer",
+      "expected": {
+        "mode": ["campus"],
+        "grounding_mode": "semantic",
+        "must_not_contain": ["I don't have verified"]
+      }
+    },
+    {
+      "id": "GROUND_002",
+      "category": "grounding",
+      "name": "Grounding - Keyword Mode",
+      "query": "Who are the deans of Columban College?",
+      "expected": {
+        "mode": ["campus"],
+        "grounding_mode": "keyword"
+      }
+    },
+    {
+      "id": "GROUND_003",
+      "category": "grounding",
+      "name": "Grounding - Out of Scope",
+      "query": "What is the weather today?",
+      "expected": {
+        "mode": ["general", "campus"],
+        "rejected": false
+      },
+      "notes": "Should handle gracefully, either general response or refusal"
+    },
+    {
+      "id": "CONTEXT_001",
+      "category": "context",
+      "name": "Context - St. Columban History",
+      "query": "Tell me about St. Columban",
+      "expected": {
+        "mode": ["campus"],
+        "must_contain": ["monastery", "Ireland"],
+        "must_not_contain": ["I don't have verified"]
+      }
+    },
+    {
+      "id": "CONTEXT_002",
+      "category": "context",
+      "name": "Context - School History",
+      "query": "History of Columban College",
+      "expected": {
+        "mode": ["campus"],
+        "must_not_contain": ["I don't have verified"]
+      }
+    },
+    {
+      "id": "GREETING_001",
+      "category": "greetings",
+      "name": "Greeting - Hello",
+      "query": "Hello",
+      "expected": {
+        "mode": ["greeting", "general"],
+        "must_not_contain": ["error", "exception"],
+        "rejected": false
+      }
+    },
+    {
+      "id": "GREETING_002",
+      "category": "greetings",
+      "name": "Greeting - Good Morning",
+      "query": "Good morning!",
+      "expected": {
+        "mode": ["greeting", "general"],
+        "must_not_contain": ["error", "exception"],
+        "rejected": false
+      }
+    },
+    {
+      "id": "REFUSE_001",
+      "category": "refusals",
+      "name": "Refusal - Ungrounded Topic",
+      "query": "What is quantum physics?",
+      "expected": {
+        "mode": ["general", "campus"],
+        "must_not_contain": ["error", "exception"]
+      },
+      "notes": "Should either refuse gracefully or give general response"
+    }
+  ],
+  "categories": {
+    "synthetic_chunks": "Tests for synthetic consolidated chunks (deans, prayer, hymn)",
+    "campus_info": "Tests for general campus information retrieval",
+    "directory": "Tests for directory/location queries",
+    "aliases": "Tests for alias-based entity resolution",
+    "edge_cases": "Tests for unusual inputs (typos, caps, minimal queries)",
+    "grounding": "Tests for grounding validation behavior",
+    "context": "Tests for contextual campus content",
+    "greetings": "Tests for greeting handling",
+    "refusals": "Tests for graceful refusal behavior"
+  }
+}

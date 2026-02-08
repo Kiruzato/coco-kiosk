@@ -1,0 +1,745 @@
+======================================================================
+DIRECTORY QUERY TEST SUITE - CoCo Chatbot
+======================================================================
+API URL: http://localhost:8000/chat
+Test Started: 2026-01-31 19:05:29
+Directory Entities Loaded: 220
+
+
+======================================================================
+SECTION 1: QUERY PATTERN RECOGNITION
+======================================================================
+Testing if the system recognizes various directory query patterns.
+
+──────────────────────────────────────────────────────────────────────
+TEST: Where is pattern
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is the library?
+
+RESPONSE:
+  Mode: clarification
+  Confidence: Medium
+  Rejected: False
+
+  Answer:
+    I found multiple locations that might match. Which one do you mean?
+    
+    1. Library Conference Room (E Building)
+    2. Basic Education Library (E Building)
+    3. Storage and Library (St. Augustine  Building)
+    4. College Library (V Building)
+    
+    Please reply with the number or name.
+
+STATUS: PASS (expected mode: directory|clarification, got: clarification)
+
+──────────────────────────────────────────────────────────────────────
+TEST: How do I get to pattern
+──────────────────────────────────────────────────────────────────────
+QUERY: How do I get to the gym?
+
+RESPONSE:
+  Mode: directory
+  Confidence: Medium
+  Rejected: True
+
+  Answer:
+    I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+──────────────────────────────────────────────────────────────────────
+TEST: Location of pattern
+──────────────────────────────────────────────────────────────────────
+QUERY: Location of the cafeteria
+
+RESPONSE:
+  Mode: directory
+  Confidence: Medium
+  Rejected: True
+
+  Answer:
+    I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+──────────────────────────────────────────────────────────────────────
+TEST: Find pattern
+──────────────────────────────────────────────────────────────────────
+QUERY: Find the registrar office
+
+RESPONSE:
+  Mode: clarification
+  Confidence: Medium
+  Rejected: False
+
+  Answer:
+    I found multiple locations that might match. Which one do you mean?
+    
+    1. Basic Education Registrar’s Office (E Building)
+    2. Registrar’s Office (P Building)
+    
+    Please reply with the number or name.
+
+STATUS: PASS (expected mode: directory|clarification, got: clarification)
+
+──────────────────────────────────────────────────────────────────────
+TEST: Looking for pattern
+──────────────────────────────────────────────────────────────────────
+QUERY: I'm looking for the clinic
+
+RESPONSE:
+  Mode: directory
+  Confidence: Medium
+  Rejected: True
+
+  Answer:
+    I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+──────────────────────────────────────────────────────────────────────
+TEST: Which floor pattern
+──────────────────────────────────────────────────────────────────────
+QUERY: Which floor is the dean's office?
+
+RESPONSE:
+  Mode: directory
+  Confidence: Medium
+  Rejected: True
+
+  Answer:
+    I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+──────────────────────────────────────────────────────────────────────
+TEST: What building pattern
+──────────────────────────────────────────────────────────────────────
+QUERY: What building is the library in?
+
+RESPONSE:
+  Mode: clarification
+  Confidence: Medium
+  Rejected: False
+
+  Answer:
+    I found multiple locations that might match. Which one do you mean?
+    
+    1. Library Conference Room (E Building)
+    2. Basic Education Library (E Building)
+    3. Storage and Library (St. Augustine  Building)
+    4. College Library (V Building)
+    
+    Please reply with the number or name.
+
+STATUS: PASS (expected mode: directory|clarification, got: clarification)
+
+──────────────────────────────────────────────────────────────────────
+TEST: Directions pattern
+──────────────────────────────────────────────────────────────────────
+QUERY: Can you give me directions to the chapel?
+
+RESPONSE:
+  Mode: directory
+  Confidence: Medium
+  Rejected: True
+
+  Answer:
+    I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+
+======================================================================
+SECTION 2: CANONICAL NAME QUERIES
+======================================================================
+Testing queries using official entity names.
+
+  Entity: Basic Education Conference Room
+  Expected Location: St. Augustine  Building, Ground Floor, Room A100
+
+──────────────────────────────────────────────────────────────────────
+TEST: Canonical: Basic Education Conference Room
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is Basic Education Conference Room?
+
+RESPONSE:
+  Mode: directory
+  Confidence: High
+  Rejected: False
+
+  Answer:
+    The Basic Education Conference Room is located in the St. Augustine  Building, Ground Floor (Room A100). Administrative offices area.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+  Entity: Electric Room
+  Expected Location: A Building, Ground Floor, Room A101
+
+──────────────────────────────────────────────────────────────────────
+TEST: Canonical: Electric Room
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is Electric Room?
+
+RESPONSE:
+  Mode: directory
+  Confidence: High
+  Rejected: False
+
+  Answer:
+    The Electric Room is located in the A Building, Ground Floor (Room A101). Ground floor of A Building near offices.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+  Entity: Treasurer’s Office
+  Expected Location: St. Augustine  Building, Ground Floor, Room A101
+
+──────────────────────────────────────────────────────────────────────
+TEST: Canonical: Treasurer’s Office
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is Treasurer’s Office?
+
+RESPONSE:
+  Mode: clarification
+  Confidence: Medium
+  Rejected: False
+
+  Answer:
+    I found multiple locations that might match. Which one do you mean?
+    
+    1. Treasurer’s Office (St. Augustine  Building)
+    2. Treasurer’s Office (C Building)
+    
+    Please reply with the number or name.
+
+STATUS: PASS (expected mode: directory|clarification, got: clarification)
+
+  Entity: CBA Office
+  Expected Location: A Building, Ground Floor, Room A102
+
+──────────────────────────────────────────────────────────────────────
+TEST: Canonical: CBA Office
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is CBA Office?
+
+RESPONSE:
+  Mode: directory
+  Confidence: High
+  Rejected: False
+
+  Answer:
+    The CBA Office is located in the A Building, Ground Floor (Room A102). Beside classrooms on the ground floor.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+  Entity: Faculty Room
+  Expected Location: St. Augustine  Building, Ground Floor, Room A102
+
+──────────────────────────────────────────────────────────────────────
+TEST: Canonical: Faculty Room
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is Faculty Room?
+
+RESPONSE:
+  Mode: clarification
+  Confidence: Medium
+  Rejected: False
+
+  Answer:
+    I found multiple locations that might match. Which one do you mean?
+    
+    1. Faculty Room (St. Augustine  Building)
+    2. Faculty Room (E Building)
+    3. Faculty Room (E Building)
+    4. Faculty Room (E Building)
+    
+    Please reply with the number or name.
+
+STATUS: PASS (expected mode: directory|clarification, got: clarification)
+
+
+======================================================================
+SECTION 3: ALIAS-BASED QUERIES
+======================================================================
+Testing queries using entity aliases (alternative names).
+
+  Canonical Name: Basic Education Conference Room
+  Testing Alias: conference room, meeting room, bed conference
+  All Aliases: conference room, meeting room, bed conference
+
+──────────────────────────────────────────────────────────────────────
+TEST: Alias: 'conference room, meeting room, bed conference'
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is the conference room, meeting room, bed conference?
+
+RESPONSE:
+  Mode: directory
+  Confidence: High
+  Rejected: False
+
+  Answer:
+    The Basic Education Conference Room is located in the St. Augustine  Building, Ground Floor (Room A100). Administrative offices area.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+  Canonical Name: Electric Room
+  Testing Alias: electric room
+  All Aliases: electric room
+
+──────────────────────────────────────────────────────────────────────
+TEST: Alias: 'electric room'
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is the electric room?
+
+RESPONSE:
+  Mode: directory
+  Confidence: High
+  Rejected: False
+
+  Answer:
+    The Electric Room is located in the A Building, Ground Floor (Room A101). Ground floor of A Building near offices.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+  Canonical Name: Treasurer’s Office
+  Testing Alias: treasurer office, finance office, cashier office
+  All Aliases: treasurer office, finance office, cashier office
+
+──────────────────────────────────────────────────────────────────────
+TEST: Alias: 'treasurer office, finance office, cashier office'
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is the treasurer office, finance office, cashier office?
+
+RESPONSE:
+  Mode: directory
+  Confidence: High
+  Rejected: False
+
+  Answer:
+    The Treasurer’s Office is located in the St. Augustine  Building, Ground Floor (Room A101). Near conference room.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+  Canonical Name: CBA Office
+  Testing Alias: cba office
+  All Aliases: cba office
+
+──────────────────────────────────────────────────────────────────────
+TEST: Alias: 'cba office'
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is the cba office?
+
+RESPONSE:
+  Mode: directory
+  Confidence: High
+  Rejected: False
+
+  Answer:
+    The CBA Office is located in the A Building, Ground Floor (Room A102). Beside classrooms on the ground floor.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+  Canonical Name: Faculty Room
+  Testing Alias: faculty room, teachers room, instructors room
+  All Aliases: faculty room, teachers room, instructors room
+
+──────────────────────────────────────────────────────────────────────
+TEST: Alias: 'faculty room, teachers room, instructors room'
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is the faculty room, teachers room, instructors room?
+
+RESPONSE:
+  Mode: clarification
+  Confidence: Medium
+  Rejected: False
+
+  Answer:
+    I found multiple locations that might match. Which one do you mean?
+    
+    1. Faculty Room (St. Augustine  Building)
+    2. Faculty Room (E Building)
+    3. Faculty Room (E Building)
+    4. Faculty Room (E Building)
+    
+    Please reply with the number or name.
+
+STATUS: PASS (expected mode: directory|clarification, got: clarification)
+
+
+======================================================================
+SECTION 4: DIFFERENT QUERY PHRASINGS
+======================================================================
+Testing the same location with different question styles.
+
+──────────────────────────────────────────────────────────────────────
+TEST: Phrasing 1: Basic Education Conference Room
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is Basic Education Conference Room?
+
+RESPONSE:
+  Mode: directory
+  Confidence: High
+  Rejected: False
+
+  Answer:
+    The Basic Education Conference Room is located in the St. Augustine  Building, Ground Floor (Room A100). Administrative offices area.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+──────────────────────────────────────────────────────────────────────
+TEST: Phrasing 2: Basic Education Conference Room
+──────────────────────────────────────────────────────────────────────
+QUERY: Where can I find Basic Education Conference Room?
+
+RESPONSE:
+  Mode: directory
+  Confidence: High
+  Rejected: False
+
+  Answer:
+    The Basic Education Conference Room is located in the St. Augustine  Building, Ground Floor (Room A100). Administrative offices area.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+──────────────────────────────────────────────────────────────────────
+TEST: Phrasing 3: Basic Education Conference Room
+──────────────────────────────────────────────────────────────────────
+QUERY: How do I get to Basic Education Conference Room?
+
+RESPONSE:
+  Mode: directory
+  Confidence: High
+  Rejected: False
+
+  Answer:
+    The Basic Education Conference Room is located in the St. Augustine  Building, Ground Floor (Room A100). Administrative offices area.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+──────────────────────────────────────────────────────────────────────
+TEST: Phrasing 4: Basic Education Conference Room
+──────────────────────────────────────────────────────────────────────
+QUERY: I need to go to Basic Education Conference Room
+
+RESPONSE:
+  Mode: campus
+  Confidence: Medium
+  Rejected: False
+
+  Answer:
+    I don't have verified campus information to answer that question.
+
+STATUS: FAIL (expected mode: directory|clarification, got: campus)
+
+──────────────────────────────────────────────────────────────────────
+TEST: Phrasing 5: Basic Education Conference Room
+──────────────────────────────────────────────────────────────────────
+QUERY: Location of Basic Education Conference Room
+
+RESPONSE:
+  Mode: directory
+  Confidence: High
+  Rejected: False
+
+  Answer:
+    The Basic Education Conference Room is located in the St. Augustine  Building, Ground Floor (Room A100). Administrative offices area.
+
+STATUS: PASS (expected mode: directory|clarification, got: directory)
+
+──────────────────────────────────────────────────────────────────────
+TEST: Phrasing 6: Basic Education Conference Room
+──────────────────────────────────────────────────────────────────────
+QUERY: Can you tell me where Basic Education Conference Room is?
+
+RESPONSE:
+  Mode: campus
+  Confidence: Medium
+  Rejected: False
+
+  Answer:
+    I don't have verified campus information to answer that question.
+
+STATUS: FAIL (expected mode: directory|clarification, got: campus)
+
+
+======================================================================
+SECTION 5: FOLLOW-UP QUERIES (CONTEXT)
+======================================================================
+Testing context-aware follow-up questions.
+
+  Initial query about: Basic Education Conference Room
+
+──────────────────────────────────────────────────────────────────────
+TEST: Initial Query
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is Basic Education Conference Room?
+
+RESPONSE:
+  Mode: directory
+  Confidence: High
+  Rejected: False
+
+  Answer:
+    The Basic Education Conference Room is located in the St. Augustine  Building, Ground Floor (Room A100). Administrative offices area.
+
+STATUS: OBSERVED
+
+──────────────────────────────────────────────────────────────────────
+FOLLOW-UP TEST: Follow-up
+──────────────────────────────────────────────────────────────────────
+QUERY: What floor is it on?
+SESSION: dac13e95-875e-400c-9...
+
+RESPONSE:
+  Mode: directory
+  Confidence: High
+
+  Answer:
+    The Basic Education Conference Room is located in the St. Augustine  Building, Ground Floor (Room A100). Administrative offices area.
+
+STATUS: OBSERVED
+
+──────────────────────────────────────────────────────────────────────
+FOLLOW-UP TEST: Follow-up
+──────────────────────────────────────────────────────────────────────
+QUERY: What building?
+SESSION: dac13e95-875e-400c-9...
+
+RESPONSE:
+  Mode: directory
+  Confidence: High
+
+  Answer:
+    The Basic Education Conference Room is located in the St. Augustine  Building, Ground Floor (Room A100). Administrative offices area.
+
+STATUS: OBSERVED
+
+──────────────────────────────────────────────────────────────────────
+FOLLOW-UP TEST: Follow-up
+──────────────────────────────────────────────────────────────────────
+QUERY: Are there any landmarks nearby?
+SESSION: dac13e95-875e-400c-9...
+
+RESPONSE:
+  Mode: general
+  Confidence: N/A
+
+  Answer:
+    I should answer campus-specific questions using verified documents. Please ask me about campus information.
+    
+    [Based on general AI knowledge]
+
+STATUS: OBSERVED
+
+──────────────────────────────────────────────────────────────────────
+FOLLOW-UP TEST: Follow-up
+──────────────────────────────────────────────────────────────────────
+QUERY: What's the room number?
+SESSION: dac13e95-875e-400c-9...
+
+RESPONSE:
+  Mode: directory
+  Confidence: Medium
+
+  Answer:
+    I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance.
+
+STATUS: OBSERVED
+
+
+======================================================================
+SECTION 6: BUILDING-BASED QUERIES
+======================================================================
+Testing queries about buildings.
+
+──────────────────────────────────────────────────────────────────────
+TEST: Building: P Building
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is P Building?
+
+RESPONSE:
+  Mode: directory
+  Confidence: Medium
+  Rejected: True
+
+  Answer:
+    I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance.
+
+STATUS: OBSERVED
+
+──────────────────────────────────────────────────────────────────────
+TEST: Building: E Building
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is E Building?
+
+RESPONSE:
+  Mode: directory
+  Confidence: Medium
+  Rejected: True
+
+  Answer:
+    I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance.
+
+STATUS: OBSERVED
+
+──────────────────────────────────────────────────────────────────────
+TEST: Building: IP Building
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is IP Building?
+
+RESPONSE:
+  Mode: directory
+  Confidence: Medium
+  Rejected: True
+
+  Answer:
+    I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance.
+
+STATUS: OBSERVED
+
+
+======================================================================
+SECTION 7: EDGE CASES
+======================================================================
+Testing edge cases and unusual inputs.
+
+──────────────────────────────────────────────────────────────────────
+TEST: Non-existent location
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is the swimming pool?
+
+RESPONSE:
+  Mode: directory
+  Confidence: Medium
+  Rejected: True
+
+  Answer:
+    I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance.
+
+STATUS: OBSERVED
+
+──────────────────────────────────────────────────────────────────────
+TEST: Typo in query
+──────────────────────────────────────────────────────────────────────
+QUERY: Where is the libary?
+
+RESPONSE:
+  Mode: directory
+  Confidence: Medium
+  Rejected: True
+
+  Answer:
+    I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance.
+
+STATUS: OBSERVED
+
+──────────────────────────────────────────────────────────────────────
+TEST: All caps
+──────────────────────────────────────────────────────────────────────
+QUERY: WHERE IS THE LIBRARY?
+
+RESPONSE:
+  Mode: clarification
+  Confidence: Medium
+  Rejected: False
+
+  Answer:
+    I found multiple locations that might match. Which one do you mean?
+    
+    1. Library Conference Room (E Building)
+    2. Basic Education Library (E Building)
+    3. Storage and Library (St. Augustine  Building)
+    4. College Library (V Building)
+    
+    Please reply with the number or name.
+
+STATUS: OBSERVED
+
+──────────────────────────────────────────────────────────────────────
+TEST: All lowercase
+──────────────────────────────────────────────────────────────────────
+QUERY: where is the library
+
+RESPONSE:
+  Mode: clarification
+  Confidence: Medium
+  Rejected: False
+
+  Answer:
+    I found multiple locations that might match. Which one do you mean?
+    
+    1. Library Conference Room (E Building)
+    2. Basic Education Library (E Building)
+    3. Storage and Library (St. Augustine  Building)
+    4. College Library (V Building)
+    
+    Please reply with the number or name.
+
+STATUS: OBSERVED
+
+──────────────────────────────────────────────────────────────────────
+TEST: Very short query
+──────────────────────────────────────────────────────────────────────
+QUERY: library location
+
+RESPONSE:
+  Mode: campus
+  Confidence: Medium
+  Rejected: False
+
+  Answer:
+    I don't have verified campus information to answer that question.
+
+STATUS: OBSERVED
+
+──────────────────────────────────────────────────────────────────────
+TEST: Vague query
+──────────────────────────────────────────────────────────────────────
+QUERY: Where do I pay?
+
+RESPONSE:
+  Mode: campus
+  Confidence: Medium
+  Rejected: False
+
+  Answer:
+    You can pay the required fee at the Cashier's Office, as stated in the "Procedures in Filing an Application for Re-admission" section of the campus document.
+
+STATUS: OBSERVED
+
+──────────────────────────────────────────────────────────────────────
+TEST: Multiple locations
+──────────────────────────────────────────────────────────────────────
+QUERY: Where are the restrooms?
+
+RESPONSE:
+  Mode: general
+  Confidence: N/A
+  Rejected: False
+
+  Answer:
+    Restrooms are typically located near the main entrance or in common areas of buildings.
+    
+    [Based on general AI knowledge]
+
+STATUS: OBSERVED
+
+
+======================================================================
+TEST SUMMARY
+======================================================================
+Total Tests: 39
+Passed: 37
+Failed: 2
+
+FAILED TESTS:
+  - Phrasing 4: Basic Education Conference Room
+    Query: I need to go to Basic Education Conference Room
+    Mode: campus
+  - Phrasing 6: Basic Education Conference Room
+    Query: Can you tell me where Basic Education Conference Room is?
+    Mode: campus
+
+Test Completed: 2026-01-31 19:07:04
+======================================================================

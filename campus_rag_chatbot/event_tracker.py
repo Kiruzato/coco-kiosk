@@ -41,6 +41,8 @@ class EventType(Enum):
     ROUTING_DOCUMENT_ATTEMPTED = "routing_document_attempted"
     ROUTING_DOCUMENT_SUCCESS = "routing_document_success"
     ROUTING_GENERAL_FALLBACK = "routing_general_fallback"
+    # Phase 32: Voice integration events
+    VOICE_INTERACTION = "voice_interaction"
 
 
 @dataclass

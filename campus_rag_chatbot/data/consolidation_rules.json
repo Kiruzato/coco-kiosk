@@ -1,0 +1,62 @@
+{
+  "version": "1.0",
+  "description": "Phase 24: Declarative consolidation rules for synthetic chunk creation",
+  "rules": [
+    {
+      "entity_type": "deans",
+      "chunk_id": -1,
+      "phase": "18",
+      "enabled": true,
+      "pattern_type": "semantic",
+      "semantic_config": {
+        "required_patterns": ["dean"],
+        "anchor_patterns": ["Dr.", "Engr.", "Arch.", "Prof.", "Mr.", "Ms.", "Mrs."],
+        "exclude_patterns": ["dean's office", "is tasked", "responsibilities"],
+        "exclude_in_first_n_chars": 150,
+        "exclude_office_patterns": ["office", "building", "room"]
+      },
+      "content_config": {
+        "section_title": "Deans",
+        "separator": "\n\n---\n\n",
+        "sort_by": "page_number",
+        "deduplicate": true,
+        "cleanup_patterns": [
+          "^[A-Z][A-Z\\s&]+$",
+          "^\\d+\\.\\s+[A-Z][A-Z\\s]+$",
+          "^Provision\\s+\\d+",
+          "^Article\\s+[IVXLC]+",
+          "^Section\\s+\\d+"
+        ]
+      }
+    },
+    {
+      "entity_type": "prayer",
+      "chunk_id": -2,
+      "phase": "21.1",
+      "enabled": true,
+      "pattern_type": "anchor_continuation",
+      "anchor_config": {
+        "patterns": ["prayer to st. columban", "prayer to st columban"],
+        "match_in": ["section_title", "content"]
+      },
+      "continuation_config": {
+        "max_distance": 3,
+        "patterns": [
+          "o beloved columban",
+          "o blessed columban",
+          "through christ our lord",
+          "amen",
+          "because of your love for christ",
+          "fullness of life"
+        ],
+        "short_match_threshold": 100
+      },
+      "content_config": {
+        "section_title": "Prayer to St. Columban",
+        "separator": " ",
+        "normalize_whitespace": true,
+        "deduplicate": true
+      }
+    }
+  ]
+}

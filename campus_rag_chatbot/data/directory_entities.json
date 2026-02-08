@@ -1,6 +1,6 @@
 {
   "version": "1.1",
-  "last_updated": "2026-01-30T05:53:36.292829",
+  "last_updated": "2026-02-06T14:36:14.059006",
   "entities": [
     {
       "entity_id": "A100_CONF_ROOM",
@@ -16,7 +16,7 @@
       "landmarks": "Administrative offices area",
       "description": "Room used for meetings conferences and academic discussions of the Basic Education Department.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173188"
+      "last_updated": "2026-01-31T16:37:00.179040"
     },
     {
       "entity_id": "A101_ELECTRIC",
@@ -32,7 +32,7 @@
       "landmarks": "Ground floor of A Building near offices",
       "description": "Electrical control and utility room for A Building.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.171378"
+      "last_updated": "2026-01-31T16:37:00.178497"
     },
     {
       "entity_id": "A101_TREASURER",
@@ -48,7 +48,7 @@
       "landmarks": "Near conference room",
       "description": "Office responsible for financial transactions and payments.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173190"
+      "last_updated": "2026-01-31T16:37:00.179043"
     },
     {
       "entity_id": "A102_CBA",
@@ -64,7 +64,7 @@
       "landmarks": "Beside classrooms on the ground floor",
       "description": "Office of the College of Business Administration.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172316"
+      "last_updated": "2026-01-31T16:37:00.178514"
     },
     {
       "entity_id": "A102_FACULTY_ROOM",
@@ -80,7 +80,7 @@
       "landmarks": "Along administrative hallway",
       "description": "Room designated for faculty members for preparation and rest.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173192"
+      "last_updated": "2026-01-31T16:37:00.179044"
     },
     {
       "entity_id": "A103_106_CLASS",
@@ -96,7 +96,7 @@
       "landmarks": "Ground floor classroom wing",
       "description": "General purpose classrooms for college students.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172326"
+      "last_updated": "2026-01-31T16:37:00.178520"
     },
     {
       "entity_id": "A103_PRINCIPAL_OFFICE",
@@ -112,7 +112,7 @@
       "landmarks": "Central administrative area",
       "description": "Main office of the school principal for academic and administrative management.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173193"
+      "last_updated": "2026-01-31T16:37:00.179046"
     },
     {
       "entity_id": "A104_CLASSROOM",
@@ -128,13 +128,16 @@
       "landmarks": "Near principal office",
       "description": "Classroom used for teaching and academic activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173195"
+      "last_updated": "2026-01-31T16:37:00.179048"
     },
     {
       "entity_id": "A105_CLINIC",
       "canonical_name": "Barretto Clinic",
       "aliases": [
-        "school clinic, medical room, health office, clinic, barretto clinic"
+        "school clinic",
+        "medical room",
+        "clinic",
+        "barretto clinic"
       ],
       "building": "St. Augustine  Building",
       "floor": "Ground Floor",
@@ -144,7 +147,7 @@
       "landmarks": "Near classrooms",
       "description": "Clinic providing basic health services to students and staff.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173197"
+      "last_updated": "2026-02-06T14:36:14.052799"
     },
     {
       "entity_id": "A106_HOME_ECON",
@@ -160,7 +163,7 @@
       "landmarks": "End of administrative offices area",
       "description": "Room used for home economics and practical activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173199"
+      "last_updated": "2026-01-31T16:37:00.179053"
     },
     {
       "entity_id": "A107_SUPPLIES",
@@ -176,7 +179,7 @@
       "landmarks": "Near administrative offices",
       "description": "Storage and distribution of office supplies.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172329"
+      "last_updated": "2026-01-31T16:37:00.178523"
     },
     {
       "entity_id": "A108_CESO",
@@ -192,7 +195,7 @@
       "landmarks": "Adjacent to Physical Plant Office",
       "description": "Community Extension Services Office.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172331"
+      "last_updated": "2026-01-31T16:37:00.178527"
     },
     {
       "entity_id": "A109_PP",
@@ -208,7 +211,7 @@
       "landmarks": "Near maintenance areas",
       "description": "Office managing campus facilities and maintenance.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172333"
+      "last_updated": "2026-01-31T16:37:00.178530"
     },
     {
       "entity_id": "A110_CRM",
@@ -224,7 +227,7 @@
       "landmarks": "Near maintenance room",
       "description": "Male comfort room for students and staff.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172335"
+      "last_updated": "2026-01-31T16:37:00.178533"
     },
     {
       "entity_id": "A111_MAINT",
@@ -240,7 +243,7 @@
       "landmarks": "End of ground floor hallway",
       "description": "Room for maintenance personnel and tools.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172337"
+      "last_updated": "2026-01-31T16:37:00.178536"
     },
     {
       "entity_id": "A201_GSO",
@@ -256,7 +259,7 @@
       "landmarks": "Second floor administrative area",
       "description": "Office handling graduate school programs.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172339"
+      "last_updated": "2026-01-31T16:37:00.178539"
     },
     {
       "entity_id": "A202_204_CLASS",
@@ -272,7 +275,7 @@
       "landmarks": "Second floor classroom wing",
       "description": "Lecture rooms for college courses.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172341"
+      "last_updated": "2026-01-31T16:37:00.178541"
     },
     {
       "entity_id": "A205_MIS",
@@ -288,7 +291,7 @@
       "landmarks": "Near HR Department",
       "description": "Management Information Systems office.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172343"
+      "last_updated": "2026-01-31T16:37:00.178544"
     },
     {
       "entity_id": "A206_HR",
@@ -304,7 +307,7 @@
       "landmarks": "Second floor offices",
       "description": "Human Resources Department.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172345"
+      "last_updated": "2026-01-31T16:37:00.178547"
     },
     {
       "entity_id": "A207_VPAASS",
@@ -320,7 +323,7 @@
       "landmarks": "Administrative wing",
       "description": "Office of the Vice President for Academic Affairs and Support Services.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172347"
+      "last_updated": "2026-01-31T16:37:00.178550"
     },
     {
       "entity_id": "A208_QA",
@@ -336,7 +339,7 @@
       "landmarks": "Beside VP-AASS office",
       "description": "Office ensuring academic quality standards.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172349"
+      "last_updated": "2026-01-31T16:37:00.178553"
     },
     {
       "entity_id": "A301_TTB",
@@ -352,7 +355,7 @@
       "landmarks": "Third floor front section",
       "description": "Training and operations room for tourism programs.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172351"
+      "last_updated": "2026-01-31T16:37:00.178555"
     },
     {
       "entity_id": "A302_TESDA",
@@ -368,7 +371,7 @@
       "landmarks": "Near classrooms",
       "description": "TESDA coordination and training office.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172355"
+      "last_updated": "2026-01-31T16:37:00.178558"
     },
     {
       "entity_id": "A303_306_CLASS",
@@ -384,7 +387,7 @@
       "landmarks": "Third floor classroom wing",
       "description": "Lecture rooms for college subjects.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172567"
+      "last_updated": "2026-01-31T16:37:00.178560"
     },
     {
       "entity_id": "A401_CONVERY",
@@ -400,44 +403,7 @@
       "landmarks": "Top floor of A Building",
       "description": "Multi-purpose hall for large academic events.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172575"
-    },
-    {
-      "entity_id": "ACCOUNTING",
-      "canonical_name": "Accounting Office",
-      "aliases": [
-        "accounting",
-        "accounting office",
-        "finance office"
-      ],
-      "building": "Administration Building",
-      "floor": "2nd Floor",
-      "room": "AD-210",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Located on the 2nd floor of the Administration Building, near the Student Affairs Office",
-      "description": "The Accounting Office handles financial records, budget matters, and employee payroll.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626600"
-    },
-    {
-      "entity_id": "AV_ROOM",
-      "canonical_name": "Audio-Visual Room",
-      "aliases": [
-        "av room",
-        "audio visual",
-        "av",
-        "multimedia room"
-      ],
-      "building": "Saint Peter Building",
-      "floor": "4th Floor",
-      "room": "SP-401",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Take the elevator or stairs to the 4th floor, first room on the left",
-      "description": "The Audio-Visual Room is equipped with projectors, sound systems, and presentation equipment.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626608"
+      "last_updated": "2026-01-31T16:37:00.178563"
     },
     {
       "entity_id": "B101A_CRM",
@@ -453,7 +419,7 @@
       "landmarks": "Near main hallway",
       "description": "Male comfort room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172580"
+      "last_updated": "2026-01-31T16:37:00.178569"
     },
     {
       "entity_id": "B101B_CRPWD",
@@ -469,7 +435,7 @@
       "landmarks": "Near male CR",
       "description": "Accessible comfort room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172582"
+      "last_updated": "2026-01-31T16:37:00.178572"
     },
     {
       "entity_id": "B101_103_CLASS",
@@ -485,7 +451,7 @@
       "landmarks": "Ground floor academic wing",
       "description": "College classrooms for lectures.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172577"
+      "last_updated": "2026-01-31T16:37:00.178566"
     },
     {
       "entity_id": "B103A_CRF",
@@ -501,7 +467,7 @@
       "landmarks": "End of classroom row",
       "description": "Female comfort room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172586"
+      "last_updated": "2026-01-31T16:37:00.178574"
     },
     {
       "entity_id": "B103B_CRPWD",
@@ -517,7 +483,7 @@
       "landmarks": "Beside female CR",
       "description": "Accessible comfort room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172588"
+      "last_updated": "2026-01-31T16:37:00.178578"
     },
     {
       "entity_id": "B201_COMLAB4",
@@ -533,7 +499,7 @@
       "landmarks": "Second floor near stairs",
       "description": "Computer laboratory for CCS courses.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172589"
+      "last_updated": "2026-01-31T16:37:00.178581"
     },
     {
       "entity_id": "B202_BLIS",
@@ -549,7 +515,7 @@
       "landmarks": "Beside Computer Lab 4",
       "description": "Simulation room for Library and Information Science.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172591"
+      "last_updated": "2026-01-31T16:37:00.178584"
     },
     {
       "entity_id": "B203_CONSULT",
@@ -565,7 +531,7 @@
       "landmarks": "Faculty area",
       "description": "Room for faculty consultations.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172593"
+      "last_updated": "2026-01-31T16:37:00.178588"
     },
     {
       "entity_id": "B204_CLASS",
@@ -581,7 +547,7 @@
       "landmarks": "Near consultation room",
       "description": "Lecture room for college classes.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172596"
+      "last_updated": "2026-01-31T16:37:00.178591"
     },
     {
       "entity_id": "B204_CRF",
@@ -597,7 +563,7 @@
       "landmarks": "Near classrooms",
       "description": "Female comfort room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172597"
+      "last_updated": "2026-01-31T16:37:00.178594"
     },
     {
       "entity_id": "B301_CRS",
@@ -613,13 +579,13 @@
       "landmarks": "Staff area",
       "description": "Comfort room for staff.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172611"
+      "last_updated": "2026-01-31T16:37:00.178614"
     },
     {
       "entity_id": "B301_DEAN",
-      "canonical_name": "CCS Deanâ€™s Office",
+      "canonical_name": "CCS Deans Office",
       "aliases": [
-        "ccs deanâ€™s office"
+        "ccs deans office"
       ],
       "building": "B Building",
       "floor": "Third Floor",
@@ -629,7 +595,7 @@
       "landmarks": "Administrative wing",
       "description": "Office of the CCS Dean.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172599"
+      "last_updated": "2026-01-31T16:40:40.121174"
     },
     {
       "entity_id": "B302_FAC",
@@ -645,7 +611,7 @@
       "landmarks": "Beside Deanâ€™s Office",
       "description": "Faculty workspace for CCS instructors.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172601"
+      "last_updated": "2026-01-31T16:37:00.178600"
     },
     {
       "entity_id": "B303_CHAIR",
@@ -661,7 +627,7 @@
       "landmarks": "Administrative offices",
       "description": "Office of the program chairperson.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172603"
+      "last_updated": "2026-01-31T16:37:00.178602"
     },
     {
       "entity_id": "B304_CISCO",
@@ -677,7 +643,7 @@
       "landmarks": "Third floor laboratory area",
       "description": "Networking laboratory for Cisco courses.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172605"
+      "last_updated": "2026-01-31T16:37:00.178605"
     },
     {
       "entity_id": "B305_CRF",
@@ -693,7 +659,7 @@
       "landmarks": "Near War Room",
       "description": "Female comfort room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172609"
+      "last_updated": "2026-01-31T16:37:00.178611"
     },
     {
       "entity_id": "B305_WAR",
@@ -709,7 +675,7 @@
       "landmarks": "Near Cisco Lab",
       "description": "Strategic planning and project room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172607"
+      "last_updated": "2026-01-31T16:37:00.178608"
     },
     {
       "entity_id": "B401_COMLAB1",
@@ -725,7 +691,7 @@
       "landmarks": "Top floor computer labs",
       "description": "Computer laboratory for CCS students.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172613"
+      "last_updated": "2026-01-31T16:37:00.178617"
     },
     {
       "entity_id": "B401_CRM",
@@ -741,7 +707,7 @@
       "landmarks": "Near labs",
       "description": "Male comfort room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172619"
+      "last_updated": "2026-01-31T16:37:00.178625"
     },
     {
       "entity_id": "B402_COMLAB2",
@@ -757,7 +723,7 @@
       "landmarks": "Adjacent to Lab 1",
       "description": "Computer laboratory for programming classes.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172615"
+      "last_updated": "2026-01-31T16:37:00.178620"
     },
     {
       "entity_id": "B403_COMLAB3",
@@ -773,7 +739,7 @@
       "landmarks": "End of laboratory row",
       "description": "Advanced computer laboratory.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172616"
+      "last_updated": "2026-01-31T16:37:00.178623"
     },
     {
       "entity_id": "B403_CRF",
@@ -789,42 +755,7 @@
       "landmarks": "Near labs",
       "description": "Female comfort room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172621"
-    },
-    {
-      "entity_id": "BASKETBALL_COURT",
-      "canonical_name": "Basketball Court",
-      "aliases": [
-        "court"
-      ],
-      "building": "Outdoor Facility",
-      "floor": "Ground Level",
-      "room": null,
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Go at the back of the school near the back gate",
-      "description": "The place where there are balls.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626643"
-    },
-    {
-      "entity_id": "BOOKSTORE",
-      "canonical_name": "Bookstore",
-      "aliases": [
-        "bookstore",
-        "school supplies",
-        "book store",
-        "textbooks"
-      ],
-      "building": "Student Center Building",
-      "floor": "Ground Floor",
-      "room": "SC-101",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Located in the Student Center Building, beside the entrance to the Canteen",
-      "description": "The Campus Bookstore sells textbooks, school supplies, uniforms, and official school merchandise.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626611"
+      "last_updated": "2026-01-31T16:37:00.178628"
     },
     {
       "entity_id": "C100_MAINT",
@@ -840,7 +771,7 @@
       "landmarks": "Ground floor of C Building",
       "description": "Area for maintenance tools, supplies, and operations.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172655"
+      "last_updated": "2026-01-31T16:37:00.178685"
     },
     {
       "entity_id": "C101_CR_F",
@@ -856,7 +787,7 @@
       "landmarks": "Ground floor near common areas",
       "description": "Female restroom facility.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172657"
+      "last_updated": "2026-01-31T16:37:00.178688"
     },
     {
       "entity_id": "C102_BUS_CENTER",
@@ -872,7 +803,7 @@
       "landmarks": "Ground floor near canteen",
       "description": "Center offering printing, photocopying, and related services.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172912"
+      "last_updated": "2026-01-31T16:37:00.178691"
     },
     {
       "entity_id": "C103_CANTEEN",
@@ -888,7 +819,7 @@
       "landmarks": "Central ground floor of C Building",
       "description": "Campus dining area for students and staff.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172917"
+      "last_updated": "2026-01-31T16:37:00.178693"
     },
     {
       "entity_id": "C104_CASHIER",
@@ -904,7 +835,7 @@
       "landmarks": "Ground floor near business center",
       "description": "Office handling tuition and other payments.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172921"
+      "last_updated": "2026-01-31T16:37:00.178696"
     },
     {
       "entity_id": "C105_JUBILEE",
@@ -920,7 +851,7 @@
       "landmarks": "Large hall on ground floor",
       "description": "Multi-purpose hall for events and gatherings.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172924"
+      "last_updated": "2026-01-31T16:37:00.178699"
     },
     {
       "entity_id": "C106_PRESIDENT",
@@ -936,7 +867,7 @@
       "landmarks": "Ground floor administrative wing",
       "description": "Office of the school president.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172926"
+      "last_updated": "2026-01-31T16:37:00.178703"
     },
     {
       "entity_id": "C107_SEWING",
@@ -952,7 +883,7 @@
       "landmarks": "Ground floor near maintenance area",
       "description": "Department for sewing and garment-related instruction.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172927"
+      "last_updated": "2026-01-31T16:37:00.178705"
     },
     {
       "entity_id": "C201_TREASURER",
@@ -968,7 +899,7 @@
       "landmarks": "Second floor of C Building",
       "description": "Office managing school funds and treasury operations.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172929"
+      "last_updated": "2026-01-31T16:37:00.178709"
     },
     {
       "entity_id": "C202_VP_FIN",
@@ -984,7 +915,7 @@
       "landmarks": "Second floor near admission offices",
       "description": "Office overseeing finance and student registration.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172931"
+      "last_updated": "2026-01-31T16:37:00.178712"
     },
     {
       "entity_id": "C203_204_ADMIS",
@@ -1000,7 +931,7 @@
       "landmarks": "Second floor of C Building",
       "description": "Office handling student admissions and enrollment.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172933"
+      "last_updated": "2026-01-31T16:37:00.178714"
     },
     {
       "entity_id": "C205_MIS",
@@ -1016,7 +947,7 @@
       "landmarks": "Second floor near administrative offices",
       "description": "Office managing campus information systems.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172935"
+      "last_updated": "2026-01-31T16:37:00.178717"
     },
     {
       "entity_id": "C206_DIEFI_FIN",
@@ -1032,7 +963,7 @@
       "landmarks": "Second floor of C Building",
       "description": "Finance office dedicated to DIEFI operations.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172936"
+      "last_updated": "2026-01-31T16:37:00.178721"
     },
     {
       "entity_id": "C207_MASSCOMM",
@@ -1048,7 +979,7 @@
       "landmarks": "Second floor near classrooms",
       "description": "Laboratory and classroom for mass communication students.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172938"
+      "last_updated": "2026-01-31T16:37:00.178723"
     },
     {
       "entity_id": "C208_CLASS",
@@ -1064,7 +995,7 @@
       "landmarks": "Second floor of C Building",
       "description": "Standard classroom for instruction.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172940"
+      "last_updated": "2026-01-31T16:37:00.178726"
     },
     {
       "entity_id": "C209_210_PRINT",
@@ -1080,7 +1011,7 @@
       "landmarks": "Second floor service area",
       "description": "Office for printing and document reproduction.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172942"
+      "last_updated": "2026-01-31T16:37:00.178729"
     },
     {
       "entity_id": "C301_303_CLASS",
@@ -1096,7 +1027,7 @@
       "landmarks": "Third floor of C Building",
       "description": "Multiple classrooms for academic use.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172944"
+      "last_updated": "2026-01-31T16:37:00.178732"
     },
     {
       "entity_id": "C304_SIM",
@@ -1112,204 +1043,7 @@
       "landmarks": "Third floor near classrooms",
       "description": "Room designed for simulated learning activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172947"
-    },
-    {
-      "entity_id": "CANTEEN",
-      "canonical_name": "Canteen",
-      "aliases": [
-        "cafeteria",
-        "food court",
-        "dining area",
-        "food stall"
-      ],
-      "building": "Student Center Building",
-      "floor": "Ground Floor",
-      "room": null,
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Located behind the Saint Peter Building, accessible via the covered walkway",
-      "description": "The Campus Canteen offers affordable meals, snacks, and beverages for students and staff.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626613"
-    },
-    {
-      "entity_id": "CASHIER",
-      "canonical_name": "Cashier's Office",
-      "aliases": [
-        "cashier",
-        "payment",
-        "fees",
-        "tuition",
-        "cashier's window"
-      ],
-      "building": "Administration Building",
-      "floor": "Ground Floor",
-      "room": "AD-102",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Main entrance of the Administration Building, to the right of the lobby, beside the Registrar's Office",
-      "description": "The Cashier's Office processes tuition payments, miscellaneous fees, refunds, and financial clearances.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626614"
-    },
-    {
-      "entity_id": "CHAPEL",
-      "canonical_name": "Campus Chapel",
-      "aliases": [
-        "chapel",
-        "church",
-        "prayer room"
-      ],
-      "building": "Standalone Building",
-      "floor": "Ground Floor",
-      "room": null,
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Located at the center of the campus quadrangle, facing the main flagpole",
-      "description": "The Campus Chapel is open daily for prayer, reflection, and religious services.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626616"
-    },
-    {
-      "entity_id": "CLASSROOM_SP101",
-      "canonical_name": "Classroom SP-101",
-      "aliases": [
-        "sp101",
-        "sp-101",
-        "room 101",
-        "room sp101",
-        "room sp-101"
-      ],
-      "building": "Saint Peter Building",
-      "floor": "Ground Floor",
-      "room": "SP-101",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Ground floor of Saint Peter Building, first classroom on the left from the main entrance",
-      "description": "General purpose classroom with capacity for 40 students.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626617"
-    },
-    {
-      "entity_id": "CLASSROOM_SP102",
-      "canonical_name": "Classroom SP-102",
-      "aliases": [
-        "sp102",
-        "sp-102",
-        "room 102",
-        "room sp102",
-        "room sp-102"
-      ],
-      "building": "Saint Peter Building",
-      "floor": "Ground Floor",
-      "room": "SP-102",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Ground floor of Saint Peter Building, second classroom on the left from the main entrance",
-      "description": "General purpose classroom with capacity for 40 students.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626619"
-    },
-    {
-      "entity_id": "CLASSROOM_SP103",
-      "canonical_name": "Classroom SP-103",
-      "aliases": [
-        "sp103",
-        "sp-103",
-        "room 103",
-        "room sp103",
-        "room sp-103"
-      ],
-      "building": "Saint Peter Building",
-      "floor": "Ground Floor",
-      "room": "SP-103",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Ground floor of Saint Peter Building, third classroom on the left from the main entrance",
-      "description": "General purpose classroom with capacity for 40 students.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626620"
-    },
-    {
-      "entity_id": "CLASSROOM_SP303",
-      "canonical_name": "Classroom SP-303",
-      "aliases": [
-        "sp303",
-        "sp-303",
-        "room 303",
-        "room sp303",
-        "room sp-303",
-        "computer lab 3"
-      ],
-      "building": "Saint Peter Building",
-      "floor": "3rd Floor",
-      "room": "SP-303",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "3rd floor of Saint Peter Building, part of the Computer Laboratory complex",
-      "description": "Computer Laboratory Room 3, equipped with 30 desktop computers for programming and IT classes.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626622"
-    },
-    {
-      "entity_id": "CLINIC",
-      "canonical_name": "Health Clinic",
-      "aliases": [
-        "clinic",
-        "health clinic",
-        "nurse",
-        "infirmary",
-        "health services",
-        "medical"
-      ],
-      "building": "Administration Building",
-      "floor": "Ground Floor",
-      "room": "AD-105",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Located at the back of the Administration Building ground floor, near the emergency exit",
-      "description": "The Campus Clinic provides first aid, basic medical consultations, and health assessments.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626623"
-    },
-    {
-      "entity_id": "COMPUTER_LAB",
-      "canonical_name": "Computer Laboratory",
-      "aliases": [
-        "computer lab",
-        "comlab",
-        "computer room",
-        "it lab"
-      ],
-      "building": "Saint Peter Building",
-      "floor": "3rd Floor",
-      "room": "SP-301 to SP-305",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Take the main staircase to the 3rd floor, laboratories are on the left wing",
-      "description": "The Computer Laboratory provides desktop computers with internet access for student use, programming classes, and IT-related coursework.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626625"
-    },
-    {
-      "entity_id": "COVERED_COURTS",
-      "canonical_name": "Covered Courts",
-      "aliases": [
-        "covered courts",
-        "outdoor courts",
-        "volleyball court",
-        "badminton court"
-      ],
-      "building": "Outdoor Facility",
-      "floor": "Ground Level",
-      "room": null,
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Located between the Gymnasium and the Saint Peter Building",
-      "description": "The Covered Courts provide space for outdoor basketball, volleyball, and badminton.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626626"
+      "last_updated": "2026-01-31T16:37:00.178736"
     },
     {
       "entity_id": "E101_STOCK",
@@ -1325,7 +1059,7 @@
       "landmarks": "Ground floor of E Building near utility areas",
       "description": "Storage room for school supplies and equipment.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172970"
+      "last_updated": "2026-01-31T16:37:00.178769"
     },
     {
       "entity_id": "E102_ELECTRIC",
@@ -1341,7 +1075,7 @@
       "landmarks": "Ground floor of E Building near stock room",
       "description": "Room housing electrical panels and power controls.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172972"
+      "last_updated": "2026-01-31T16:37:00.178772"
     },
     {
       "entity_id": "E103_CLASS",
@@ -1357,7 +1091,7 @@
       "landmarks": "Ground floor academic area",
       "description": "Standard classroom for basic education instruction.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172974"
+      "last_updated": "2026-01-31T16:37:00.178776"
     },
     {
       "entity_id": "E104_105_CLINIC",
@@ -1373,7 +1107,7 @@
       "landmarks": "Ground floor near classrooms",
       "description": "Medical clinic providing basic health services to students.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172976"
+      "last_updated": "2026-01-31T16:37:00.178779"
     },
     {
       "entity_id": "E106_109_CLASS",
@@ -1389,7 +1123,7 @@
       "landmarks": "Ground floor academic wing",
       "description": "Multiple classrooms used for basic education classes.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172978"
+      "last_updated": "2026-01-31T16:37:00.178782"
     },
     {
       "entity_id": "E110_PUMP",
@@ -1405,7 +1139,7 @@
       "landmarks": "Ground floor utility section",
       "description": "Room containing water pump and plumbing equipment.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172979"
+      "last_updated": "2026-01-31T16:37:00.178785"
     },
     {
       "entity_id": "E111_FACULTY",
@@ -1421,7 +1155,7 @@
       "landmarks": "Ground floor near classrooms",
       "description": "Common room for basic education faculty members.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172981"
+      "last_updated": "2026-01-31T16:37:00.178788"
     },
     {
       "entity_id": "E201_202_SCI",
@@ -1437,7 +1171,7 @@
       "landmarks": "Second floor academic area",
       "description": "Classroom and laboratory used for science instruction.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172983"
+      "last_updated": "2026-01-31T16:37:00.178791"
     },
     {
       "entity_id": "E203_ALUMNI",
@@ -1453,7 +1187,7 @@
       "landmarks": "Second floor administrative offices",
       "description": "Office handling alumni relations and external partnerships.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172985"
+      "last_updated": "2026-01-31T16:37:00.178793"
     },
     {
       "entity_id": "E204A_REG",
@@ -1469,7 +1203,7 @@
       "landmarks": "Second floor near principal’s office",
       "description": "Office managing academic records for basic education.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172987"
+      "last_updated": "2026-01-31T16:37:00.178795"
     },
     {
       "entity_id": "E204B_PRINCIPAL",
@@ -1485,7 +1219,7 @@
       "landmarks": "Second floor administrative area",
       "description": "Administrative office of the school principal.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172989"
+      "last_updated": "2026-01-31T16:37:00.178797"
     },
     {
       "entity_id": "E205_CONF",
@@ -1501,7 +1235,7 @@
       "landmarks": "Second floor near offices",
       "description": "Conference room for meetings and academic discussions.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172990"
+      "last_updated": "2026-01-31T16:37:00.178799"
     },
     {
       "entity_id": "E206_LIB_CONF",
@@ -1517,7 +1251,7 @@
       "landmarks": "Second floor near library",
       "description": "Meeting room attached to the library facilities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172992"
+      "last_updated": "2026-01-31T16:37:00.178800"
     },
     {
       "entity_id": "E207_BE_LIB",
@@ -1533,7 +1267,7 @@
       "landmarks": "Second floor central area",
       "description": "Library serving basic education students and teachers.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172994"
+      "last_updated": "2026-01-31T16:37:00.178802"
     },
     {
       "entity_id": "E208_GUIDANCE",
@@ -1549,7 +1283,7 @@
       "landmarks": "Second floor near administrative offices",
       "description": "Room for student guidance and counseling services.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172996"
+      "last_updated": "2026-01-31T16:37:00.178804"
     },
     {
       "entity_id": "E301_FACULTY",
@@ -1565,7 +1299,7 @@
       "landmarks": "Third floor academic area",
       "description": "Faculty room for basic education teachers.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172997"
+      "last_updated": "2026-01-31T16:37:00.178806"
     },
     {
       "entity_id": "E302_COMLAB2",
@@ -1581,7 +1315,7 @@
       "landmarks": "Third floor ICT wing",
       "description": "Computer laboratory used for ICT classes.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172999"
+      "last_updated": "2026-01-31T16:37:00.178808"
     },
     {
       "entity_id": "E303_COMLAB1",
@@ -1597,7 +1331,7 @@
       "landmarks": "Third floor ICT wing",
       "description": "Primary computer laboratory for basic education.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173001"
+      "last_updated": "2026-01-31T16:37:00.178809"
     },
     {
       "entity_id": "E304_307_CLASS",
@@ -1613,7 +1347,7 @@
       "landmarks": "Third floor academic wing",
       "description": "Multiple classrooms for basic education levels.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173003"
+      "last_updated": "2026-01-31T16:37:00.178811"
     },
     {
       "entity_id": "E308_310_CLASS",
@@ -1629,7 +1363,7 @@
       "landmarks": "Third floor academic wing",
       "description": "Additional classrooms for instruction.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173004"
+      "last_updated": "2026-01-31T16:37:00.178813"
     },
     {
       "entity_id": "E311_CR",
@@ -1645,7 +1379,7 @@
       "landmarks": "Third floor near classrooms",
       "description": "Shared comfort room for students and staff.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173006"
+      "last_updated": "2026-01-31T16:37:00.178815"
     },
     {
       "entity_id": "E401_FACULTY",
@@ -1661,7 +1395,7 @@
       "landmarks": "Fourth floor academic area",
       "description": "Faculty room for upper-level basic education.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173009"
+      "last_updated": "2026-01-31T16:37:00.178817"
     },
     {
       "entity_id": "E402_410_CLASS",
@@ -1677,84 +1411,7 @@
       "landmarks": "Fourth floor academic wing",
       "description": "Multiple classrooms for basic education classes.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173011"
-    },
-    {
-      "entity_id": "FACULTY_ROOM",
-      "canonical_name": "Faculty Room",
-      "aliases": [
-        "faculty room",
-        "faculty",
-        "teachers room",
-        "teachers lounge"
-      ],
-      "building": "Saint Peter Building",
-      "floor": "2nd Floor",
-      "room": "SP-220",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Located at the end of the 2nd floor hallway, near the library",
-      "description": "The Faculty Room is the workspace for professors and instructors.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626627"
-    },
-    {
-      "entity_id": "GUARD_HOUSE",
-      "canonical_name": "Guard House",
-      "aliases": [
-        "guard house",
-        "security",
-        "security office",
-        "gate",
-        "main gate"
-      ],
-      "building": "Standalone Structure",
-      "floor": "Ground Floor",
-      "room": null,
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Located at the main entrance gate of the campus",
-      "description": "The Guard House manages campus security, visitor registration, and emergency response. Security personnel are on duty 24/7.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626629"
-    },
-    {
-      "entity_id": "GUIDANCE",
-      "canonical_name": "Guidance and Counseling Office",
-      "aliases": [
-        "guidance",
-        "counseling",
-        "guidance office",
-        "counselor"
-      ],
-      "building": "Administration Building",
-      "floor": "2nd Floor",
-      "room": "AD-205",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Located at the end of the 2nd floor hallway, past the Student Affairs Office",
-      "description": "The Guidance Office provides academic counseling, career guidance, psychological support, and personal counseling services.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626631"
-    },
-    {
-      "entity_id": "GYM",
-      "canonical_name": "Gymnasium",
-      "aliases": [
-        "gym",
-        "gymnasium",
-        "sports hall",
-        "basketball court"
-      ],
-      "building": "Gymnasium Building",
-      "floor": "Ground Floor",
-      "room": null,
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Located at the far end of the campus, past the covered courts",
-      "description": "The Gymnasium hosts physical education classes, sports events, and school programs.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626632"
+      "last_updated": "2026-01-31T16:37:00.178819"
     },
     {
       "entity_id": "H101_CBA_CHAIR",
@@ -1770,7 +1427,7 @@
       "landmarks": "Ground floor of H Building near administrative offices",
       "description": "Office of the Chairperson of the College of Business Administration.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172623"
+      "last_updated": "2026-01-31T16:37:00.178631"
     },
     {
       "entity_id": "H102_AV_ROOM",
@@ -1786,7 +1443,7 @@
       "landmarks": "Ground floor of H Building near faculty offices",
       "description": "Room equipped with audio-visual facilities for presentations and lectures.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172625"
+      "last_updated": "2026-01-31T16:37:00.178634"
     },
     {
       "entity_id": "H103_ACAD_COUNS",
@@ -1802,7 +1459,7 @@
       "landmarks": "Near administrative offices on ground floor",
       "description": "Office providing academic guidance and counseling to students.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172627"
+      "last_updated": "2026-01-31T16:37:00.178639"
     },
     {
       "entity_id": "H104_EXEC_ROOM",
@@ -1818,7 +1475,7 @@
       "landmarks": "Ground floor of H Building beside offices",
       "description": "Classroom designed for executive and business-related sessions.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172629"
+      "last_updated": "2026-01-31T16:37:00.178643"
     },
     {
       "entity_id": "H105_SCHOOL_ORG",
@@ -1834,7 +1491,7 @@
       "landmarks": "Near student services offices",
       "description": "Office handling school-recognized organizations and activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172631"
+      "last_updated": "2026-01-31T16:37:00.178646"
     },
     {
       "entity_id": "H106_ASEN_DEAN",
@@ -1850,7 +1507,7 @@
       "landmarks": "Ground floor of H Building near academic offices",
       "description": "Administrative office of the ASEN Dean.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172632"
+      "last_updated": "2026-01-31T16:37:00.178649"
     },
     {
       "entity_id": "H107_ASEN_FAC",
@@ -1866,7 +1523,7 @@
       "landmarks": "Second floor of H Building",
       "description": "Common room for ASEN faculty members.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172634"
+      "last_updated": "2026-01-31T16:37:00.178652"
     },
     {
       "entity_id": "H108A_IDCC",
@@ -1882,7 +1539,7 @@
       "landmarks": "Second floor near faculty rooms",
       "description": "Office responsible for data, IT, and computing concerns.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172636"
+      "last_updated": "2026-01-31T16:37:00.178655"
     },
     {
       "entity_id": "H108B_SECURITY",
@@ -1898,7 +1555,7 @@
       "landmarks": "Third floor of H Building",
       "description": "Office responsible for campus safety and security operations.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172653"
+      "last_updated": "2026-01-31T16:37:00.178681"
     },
     {
       "entity_id": "H109_STUD_AFF",
@@ -1914,7 +1571,7 @@
       "landmarks": "Second floor of H Building near counseling offices",
       "description": "Office managing student welfare, activities, and discipline.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172638"
+      "last_updated": "2026-01-31T16:37:00.178657"
     },
     {
       "entity_id": "H110_GUID_TEST",
@@ -1930,7 +1587,7 @@
       "landmarks": "Second floor near counseling offices",
       "description": "Center for student testing, assessment, and guidance services.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172640"
+      "last_updated": "2026-01-31T16:37:00.178660"
     },
     {
       "entity_id": "H111_GUID_COUNS",
@@ -1946,7 +1603,7 @@
       "landmarks": "Adjacent to Guidance & Testing Center",
       "description": "Offices of licensed guidance counselors.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172642"
+      "last_updated": "2026-01-31T16:37:00.178663"
     },
     {
       "entity_id": "H112_PE_SPORTS",
@@ -1962,7 +1619,7 @@
       "landmarks": "Second floor of H Building",
       "description": "Office handling physical education and athletic programs.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172643"
+      "last_updated": "2026-01-31T16:37:00.178666"
     },
     {
       "entity_id": "H113_CLINIC",
@@ -1978,7 +1635,7 @@
       "landmarks": "Second floor near student services",
       "description": "Campus medical clinic for first aid and health concerns.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172645"
+      "last_updated": "2026-01-31T16:37:00.178669"
     },
     {
       "entity_id": "H114_MINISTRY",
@@ -1994,7 +1651,7 @@
       "landmarks": "Second floor near chapel access",
       "description": "Office supporting spiritual and religious activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172647"
+      "last_updated": "2026-01-31T16:37:00.178672"
     },
     {
       "entity_id": "H115_CATECH",
@@ -2010,7 +1667,7 @@
       "landmarks": "Second floor of H Building",
       "description": "Center for religious instruction and catechesis.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172649"
+      "last_updated": "2026-01-31T16:37:00.178675"
     },
     {
       "entity_id": "H116_CLASS",
@@ -2026,26 +1683,7 @@
       "landmarks": "Second floor of H Building",
       "description": "Standard classroom for academic instruction.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172651"
-    },
-    {
-      "entity_id": "HR",
-      "canonical_name": "Human Resources Office",
-      "aliases": [
-        "hr",
-        "human resources",
-        "hr office",
-        "personnel"
-      ],
-      "building": "Administration Building",
-      "floor": "3rd Floor",
-      "room": "AD-305",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Located on the 3rd floor of the Administration Building, past the Principal's Office",
-      "description": "The Human Resources Office manages employee records, hiring, and personnel matters.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626633"
+      "last_updated": "2026-01-31T16:37:00.178678"
     },
     {
       "entity_id": "IP100_FACULTY_LOUNGE",
@@ -2061,7 +1699,7 @@
       "landmarks": "Near faculty rooms on the ground floor",
       "description": "Lounge area designated for faculty members for rest and informal meetings.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173119"
+      "last_updated": "2026-01-31T16:37:00.178963"
     },
     {
       "entity_id": "IP101_FACULTY_ROOM",
@@ -2077,7 +1715,7 @@
       "landmarks": "Adjacent to the faculty lounge",
       "description": "Room assigned for faculty members for work and preparation.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173121"
+      "last_updated": "2026-01-31T16:37:00.178965"
     },
     {
       "entity_id": "IP102_ELECTRIC_ROOM",
@@ -2093,7 +1731,7 @@
       "landmarks": "Ground floor utility section",
       "description": "Room that houses electrical controls and power systems of the building.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173122"
+      "last_updated": "2026-01-31T16:37:00.178967"
     },
     {
       "entity_id": "IP103_ADMIN_OFFICE",
@@ -2109,7 +1747,7 @@
       "landmarks": "Near consultation and faculty rooms",
       "description": "Office handling administrative functions of the college.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173124"
+      "last_updated": "2026-01-31T16:37:00.178968"
     },
     {
       "entity_id": "IP104_CONSULTATION_ROOM",
@@ -2125,7 +1763,7 @@
       "landmarks": "Near admin office",
       "description": "Room used for student consultations and academic meetings.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173126"
+      "last_updated": "2026-01-31T16:37:00.178970"
     },
     {
       "entity_id": "IP105_IE_EQUIP_ROOM",
@@ -2141,7 +1779,7 @@
       "landmarks": "Along the engineering equipment rooms",
       "description": "Room used for storing and maintaining industrial engineering equipment.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173128"
+      "last_updated": "2026-01-31T16:37:00.178971"
     },
     {
       "entity_id": "IP106_SURVEY_EQUIP_ROOM",
@@ -2157,7 +1795,7 @@
       "landmarks": "Near engineering laboratories",
       "description": "Room for surveying engineering tools and equipment.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173130"
+      "last_updated": "2026-01-31T16:37:00.178973"
     },
     {
       "entity_id": "IP107_ECE_EQUIP_ROOM",
@@ -2173,7 +1811,7 @@
       "landmarks": "Beside electronics laboratories",
       "description": "Storage and preparation room for electronics and circuits equipment.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173131"
+      "last_updated": "2026-01-31T16:37:00.178978"
     },
     {
       "entity_id": "IP108_ECE_LAB",
@@ -2189,7 +1827,7 @@
       "landmarks": "Near electronics equipment room",
       "description": "Laboratory used for electronics and circuits experiments.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173133"
+      "last_updated": "2026-01-31T16:37:00.178981"
     },
     {
       "entity_id": "IP109_CLASSROOM",
@@ -2205,7 +1843,7 @@
       "landmarks": "Central area of the ground floor",
       "description": "Standard classroom used for lectures and discussions.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173135"
+      "last_updated": "2026-01-31T16:37:00.178983"
     },
     {
       "entity_id": "IP110_HYDRAULICS_LAB",
@@ -2221,7 +1859,7 @@
       "landmarks": "Near engineering laboratories",
       "description": "Laboratory for hydraulics and fluid mechanics experiments.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173138"
+      "last_updated": "2026-01-31T16:37:00.178986"
     },
     {
       "entity_id": "IP111_SOIL_MECH_LAB",
@@ -2237,7 +1875,7 @@
       "landmarks": "Adjacent to hydraulics laboratory",
       "description": "Laboratory for soil testing and geotechnical experiments.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173140"
+      "last_updated": "2026-01-31T16:37:00.178989"
     },
     {
       "entity_id": "IP112_MAINTENANCE_ROOM",
@@ -2253,7 +1891,7 @@
       "landmarks": "Service area of the ground floor",
       "description": "Room used by maintenance personnel for building upkeep.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173142"
+      "last_updated": "2026-01-31T16:37:00.178993"
     },
     {
       "entity_id": "IP113_GUIDANCE_CENTER",
@@ -2269,7 +1907,7 @@
       "landmarks": "Near guidance testing room",
       "description": "Center providing guidance counseling and testing services.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173144"
+      "last_updated": "2026-01-31T16:37:00.178996"
     },
     {
       "entity_id": "IP114_GUIDANCE_TEST_ROOM",
@@ -2285,7 +1923,7 @@
       "landmarks": "Beside guidance center",
       "description": "Room dedicated to assessments and psychological testing.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173146"
+      "last_updated": "2026-01-31T16:37:00.178998"
     },
     {
       "entity_id": "IP200_207_CLASSROOMS",
@@ -2301,7 +1939,7 @@
       "landmarks": "Along the second floor corridor",
       "description": "Series of classrooms used for regular academic lectures.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173147"
+      "last_updated": "2026-01-31T16:37:00.179000"
     },
     {
       "entity_id": "IP208_CR_MALE",
@@ -2317,7 +1955,7 @@
       "landmarks": "End of second floor hallway",
       "description": "Male designated restroom.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173149"
+      "last_updated": "2026-01-31T16:37:00.179003"
     },
     {
       "entity_id": "IP209_CR_FEMALE",
@@ -2333,7 +1971,7 @@
       "landmarks": "Near male comfort room",
       "description": "Female designated restroom.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173151"
+      "last_updated": "2026-01-31T16:37:00.179004"
     },
     {
       "entity_id": "IP301_304_CLASSROOMS",
@@ -2349,7 +1987,7 @@
       "landmarks": "Along the third floor corridor",
       "description": "Classrooms used for higher level courses.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173153"
+      "last_updated": "2026-01-31T16:37:00.179006"
     },
     {
       "entity_id": "IP305_PHYSICS_LAB",
@@ -2365,7 +2003,7 @@
       "landmarks": "Near chemistry laboratory",
       "description": "Laboratory for physics experiments and demonstrations.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173155"
+      "last_updated": "2026-01-31T16:37:00.179008"
     },
     {
       "entity_id": "IP306_CHEMISTRY_LAB",
@@ -2381,7 +2019,7 @@
       "landmarks": "Adjacent to physics laboratory",
       "description": "Laboratory for chemistry experiments and practical activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173156"
+      "last_updated": "2026-01-31T16:37:00.179009"
     },
     {
       "entity_id": "IP307_CR_MALE",
@@ -2397,7 +2035,7 @@
       "landmarks": "End of third floor hallway",
       "description": "Male designated restroom.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173158"
+      "last_updated": "2026-01-31T16:37:00.179011"
     },
     {
       "entity_id": "IP308_CR_FEMALE",
@@ -2413,7 +2051,7 @@
       "landmarks": "Near male comfort room",
       "description": "Female designated restroom.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173160"
+      "last_updated": "2026-01-31T16:37:00.179012"
     },
     {
       "entity_id": "IP400_401_CLASSROOMS",
@@ -2429,7 +2067,7 @@
       "landmarks": "Front section of fourth floor",
       "description": "Classrooms used for lectures and academic activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173162"
+      "last_updated": "2026-01-31T16:37:00.179014"
     },
     {
       "entity_id": "IP402_COMP_LAB1",
@@ -2445,7 +2083,7 @@
       "landmarks": "Near technical room",
       "description": "Computer laboratory equipped for instructional use.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173164"
+      "last_updated": "2026-01-31T16:37:00.179016"
     },
     {
       "entity_id": "IP403_COMP_LAB2",
@@ -2461,7 +2099,7 @@
       "landmarks": "Beside computer laboratory 1",
       "description": "Computer laboratory for programming and system activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173165"
+      "last_updated": "2026-01-31T16:37:00.179017"
     },
     {
       "entity_id": "IP404_TECH_ROOM",
@@ -2477,7 +2115,7 @@
       "landmarks": "Central utility area of fourth floor",
       "description": "Room housing technical and support systems.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173167"
+      "last_updated": "2026-01-31T16:37:00.179019"
     },
     {
       "entity_id": "IP405_COMP_LAB3",
@@ -2493,7 +2131,7 @@
       "landmarks": "Near drawing laboratory",
       "description": "Additional computer laboratory for academic use.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173169"
+      "last_updated": "2026-01-31T16:37:00.179022"
     },
     {
       "entity_id": "IP406_DRAWING_LAB",
@@ -2509,7 +2147,7 @@
       "landmarks": "Near classrooms",
       "description": "Laboratory used for engineering drawing and drafting activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173171"
+      "last_updated": "2026-01-31T16:37:00.179024"
     },
     {
       "entity_id": "IP407_409_CLASSROOMS",
@@ -2525,46 +2163,7 @@
       "landmarks": "End of fourth floor corridor",
       "description": "Classrooms for lectures and academic sessions.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173173"
-    },
-    {
-      "entity_id": "IT_DEPT",
-      "canonical_name": "IT Department",
-      "aliases": [
-        "it department",
-        "it",
-        "tech support",
-        "ict",
-        "it office"
-      ],
-      "building": "Saint Peter Building",
-      "floor": "4th Floor",
-      "room": "SP-405",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Take the elevator to the 4th floor, office is at the end of the hallway",
-      "description": "The IT Department manages campus network, Wi-Fi access, student email accounts, and technical support.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626635"
-    },
-    {
-      "entity_id": "LIBRARY",
-      "canonical_name": "Main Library",
-      "aliases": [
-        "library",
-        "reading room",
-        "study area",
-        "reference section"
-      ],
-      "building": "Saint Peter Building",
-      "floor": "2nd Floor",
-      "room": "SP-201 to SP-210",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Located above the Main Lobby, accessible via the main staircase or elevator",
-      "description": "The Main Library houses the reference section, circulation desk, study areas, reading rooms, and computer stations for student research.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626636"
+      "last_updated": "2026-01-31T16:37:00.179026"
     },
     {
       "entity_id": "NB100_CR",
@@ -2580,7 +2179,7 @@
       "landmarks": "Near nursing classrooms",
       "description": "Comfort room designated for nursing students and staff including male and female users.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173175"
+      "last_updated": "2026-01-31T16:37:00.179027"
     },
     {
       "entity_id": "NB101_ELECTRIC_ROOM",
@@ -2596,7 +2195,7 @@
       "landmarks": "Service area of ground floor",
       "description": "Room that houses electrical systems and utilities for the nursing building.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173177"
+      "last_updated": "2026-01-31T16:37:00.179029"
     },
     {
       "entity_id": "NB102_NURSING_OFFICE",
@@ -2612,7 +2211,7 @@
       "landmarks": "Near dean's office",
       "description": "Office handling administrative and academic concerns of the nursing department.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173178"
+      "last_updated": "2026-01-31T16:37:00.179031"
     },
     {
       "entity_id": "NB103_DEANS_OFFICE",
@@ -2628,7 +2227,7 @@
       "landmarks": "Central administrative area",
       "description": "Official office of the nursing dean for leadership and academic management.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173180"
+      "last_updated": "2026-01-31T16:37:00.179033"
     },
     {
       "entity_id": "NB104_CLASSROOM",
@@ -2644,7 +2243,7 @@
       "landmarks": "Along ground floor corridor",
       "description": "Classroom used for nursing lectures and academic discussions.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173182"
+      "last_updated": "2026-01-31T16:37:00.179035"
     },
     {
       "entity_id": "NB105_CLASSROOM",
@@ -2660,7 +2259,7 @@
       "landmarks": "Adjacent to other classrooms",
       "description": "Classroom used for nursing instruction and learning activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173185"
+      "last_updated": "2026-01-31T16:37:00.179036"
     },
     {
       "entity_id": "NB106_CLASSROOM",
@@ -2676,7 +2275,7 @@
       "landmarks": "End of ground floor hallway",
       "description": "Classroom designated for nursing courses and lectures.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173186"
+      "last_updated": "2026-01-31T16:37:00.179038"
     },
     {
       "entity_id": "P100_STOCK",
@@ -2692,7 +2291,7 @@
       "landmarks": "Ground floor of P Building",
       "description": "Storage area for supplies and equipment.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173013"
+      "last_updated": "2026-01-31T16:37:00.178821"
     },
     {
       "entity_id": "P101_LAB",
@@ -2708,7 +2307,7 @@
       "landmarks": "Ground floor near classrooms",
       "description": "Laboratory for practical experiments and activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173015"
+      "last_updated": "2026-01-31T16:37:00.178824"
     },
     {
       "entity_id": "P106_107_FACULTY",
@@ -2724,7 +2323,7 @@
       "landmarks": "Ground floor academic area",
       "description": "Faculty room for basic education teachers.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173016"
+      "last_updated": "2026-01-31T16:37:00.178825"
     },
     {
       "entity_id": "P108_ASST_PRINCIPAL",
@@ -2740,7 +2339,7 @@
       "landmarks": "Ground floor administrative wing",
       "description": "Office of the Assistant Principal.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173018"
+      "last_updated": "2026-01-31T16:37:00.178827"
     },
     {
       "entity_id": "P109_ELECTRIC",
@@ -2756,7 +2355,7 @@
       "landmarks": "Ground floor utility area",
       "description": "Room housing electrical controls.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173020"
+      "last_updated": "2026-01-31T16:37:00.178830"
     },
     {
       "entity_id": "P110_WORKSHOP",
@@ -2772,7 +2371,7 @@
       "landmarks": "Ground floor near labs",
       "description": "Room for hands-on and technical activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173022"
+      "last_updated": "2026-01-31T16:37:00.178833"
     },
     {
       "entity_id": "P200_206_CLASS",
@@ -2788,7 +2387,7 @@
       "landmarks": "Second floor academic wing",
       "description": "Multiple classrooms for instruction.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173024"
+      "last_updated": "2026-01-31T16:37:00.178836"
     },
     {
       "entity_id": "P207_209_REG",
@@ -2804,7 +2403,7 @@
       "landmarks": "Second floor administrative area",
       "description": "Office managing student records and enrollment.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173025"
+      "last_updated": "2026-01-31T16:37:00.178864"
     },
     {
       "entity_id": "P301_307_CLASS",
@@ -2820,7 +2419,7 @@
       "landmarks": "Third floor academic wing",
       "description": "Classrooms for various basic education levels.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173027"
+      "last_updated": "2026-01-31T16:37:00.178868"
     },
     {
       "entity_id": "P308_SERVER",
@@ -2836,7 +2435,7 @@
       "landmarks": "Third floor restricted area",
       "description": "Room housing servers and Junior High School coordination office.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173029"
+      "last_updated": "2026-01-31T16:37:00.178871"
     },
     {
       "entity_id": "P401_407_CLASS",
@@ -2852,7 +2451,7 @@
       "landmarks": "Fourth floor academic wing",
       "description": "Classrooms and robotics learning spaces.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173031"
+      "last_updated": "2026-01-31T16:37:00.178874"
     },
     {
       "entity_id": "P408_CR_M",
@@ -2868,7 +2467,7 @@
       "landmarks": "Fourth floor near classrooms",
       "description": "Male comfort room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173033"
+      "last_updated": "2026-01-31T16:37:00.178877"
     },
     {
       "entity_id": "P409_CR_F",
@@ -2884,27 +2483,7 @@
       "landmarks": "Fourth floor near classrooms",
       "description": "Female comfort room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173035"
-    },
-    {
-      "entity_id": "PARKING",
-      "canonical_name": "Parking Area",
-      "aliases": [
-        "parking",
-        "car park",
-        "parking lot",
-        "parking area",
-        "motorcycle parking"
-      ],
-      "building": "Outdoor Facility",
-      "floor": "Ground Level",
-      "room": null,
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Located at the front of the campus, before the main gate",
-      "description": "The campus parking area is available for faculty, staff, and students with parking permits.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626637"
+      "last_updated": "2026-01-31T16:37:00.178879"
     },
     {
       "entity_id": "PBEXT_2F_CLASS",
@@ -2920,7 +2499,7 @@
       "landmarks": "Second floor academic area",
       "description": "Standard classroom for instruction.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173042"
+      "last_updated": "2026-01-31T16:37:00.178888"
     },
     {
       "entity_id": "PBEXT_3F_HE",
@@ -2936,7 +2515,7 @@
       "landmarks": "Third floor skills area",
       "description": "Room for home economics and life skills classes.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173043"
+      "last_updated": "2026-01-31T16:37:00.178890"
     },
     {
       "entity_id": "PBEXT_4F_ROBOT",
@@ -2952,7 +2531,7 @@
       "landmarks": "Fourth floor academic area",
       "description": "Classroom and robotics learning space.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173045"
+      "last_updated": "2026-01-31T16:37:00.178892"
     },
     {
       "entity_id": "PBEXT_GF_CR",
@@ -2968,7 +2547,7 @@
       "landmarks": "Ground floor of P Building Extension",
       "description": "Comfort room facility.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173037"
+      "last_updated": "2026-01-31T16:37:00.178883"
     },
     {
       "entity_id": "PBEXT_GF_MAINT",
@@ -2984,45 +2563,7 @@
       "landmarks": "Ground floor utility area",
       "description": "Storage room for maintenance tools and supplies.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173040"
-    },
-    {
-      "entity_id": "PRINCIPAL",
-      "canonical_name": "Principal's Office",
-      "aliases": [
-        "principal",
-        "principal's office",
-        "principal office",
-        "head office"
-      ],
-      "building": "Administration Building",
-      "floor": "3rd Floor",
-      "room": "AD-301",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Take the elevator to the 3rd floor, main office at the center of the hallway",
-      "description": "The Principal's Office handles administrative matters, academic policies, and institutional concerns.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626638"
-    },
-    {
-      "entity_id": "REGISTRAR",
-      "canonical_name": "Registrar's Office",
-      "aliases": [
-        "registrar",
-        "enrollment",
-        "enrollment office",
-        "records office"
-      ],
-      "building": "Administration Building",
-      "floor": "Ground Floor",
-      "room": "AD-101",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Main entrance of the Administration Building, to the left of the lobby, beside the Cashier's Window",
-      "description": "The Registrar's Office handles student enrollment, academic records, transcript requests, grade inquiries, and course registration.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626639"
+      "last_updated": "2026-01-31T16:37:00.178886"
     },
     {
       "entity_id": "SA101_102_CLASSROOMS",
@@ -3038,7 +2579,7 @@
       "landmarks": "Along ground floor corridor",
       "description": "Classrooms used for basic education instruction.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173203"
+      "last_updated": "2026-01-31T16:37:00.179056"
     },
     {
       "entity_id": "SA101_STORAGE_LIB",
@@ -3054,7 +2595,7 @@
       "landmarks": "Near ground floor entrance",
       "description": "Room used for storage of materials and library resources.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173201"
+      "last_updated": "2026-01-31T16:37:00.179054"
     },
     {
       "entity_id": "SA103_106_STORAGE",
@@ -3070,7 +2611,7 @@
       "landmarks": "Rear section of ground floor",
       "description": "Rooms used for storing school supplies and equipment.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173204"
+      "last_updated": "2026-01-31T16:37:00.179058"
     },
     {
       "entity_id": "SA107_CLASSROOM",
@@ -3086,7 +2627,7 @@
       "landmarks": "Near storage rooms",
       "description": "Classroom used for teaching and learning activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173206"
+      "last_updated": "2026-01-31T16:37:00.179059"
     },
     {
       "entity_id": "SA201_COMP_LAB",
@@ -3102,7 +2643,7 @@
       "landmarks": "Second floor academic wing",
       "description": "Laboratory equipped with computers for ICT instruction.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173208"
+      "last_updated": "2026-01-31T16:37:00.179061"
     },
     {
       "entity_id": "SA202_206_CLASSROOMS",
@@ -3118,7 +2659,7 @@
       "landmarks": "Along second floor hallway",
       "description": "Classrooms used for regular academic classes.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173210"
+      "last_updated": "2026-01-31T16:37:00.179062"
     },
     {
       "entity_id": "SA300_CR",
@@ -3134,7 +2675,7 @@
       "landmarks": "Near stairway",
       "description": "Male and female restroom facility for students and staff.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173212"
+      "last_updated": "2026-01-31T16:37:00.179064"
     },
     {
       "entity_id": "SA301_306_CLASSROOMS",
@@ -3150,7 +2691,7 @@
       "landmarks": "Along third floor corridor",
       "description": "Classrooms designated for academic instruction.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173213"
+      "last_updated": "2026-01-31T16:37:00.179065"
     },
     {
       "entity_id": "SA307_MIMEO",
@@ -3166,7 +2707,7 @@
       "landmarks": "Near classrooms",
       "description": "Room used for printing and duplication of learning materials.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173215"
+      "last_updated": "2026-01-31T16:37:00.179067"
     },
     {
       "entity_id": "SA401_SCI_LAB",
@@ -3182,7 +2723,7 @@
       "landmarks": "Science wing of fourth floor",
       "description": "Laboratory used for science experiments and practical activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173217"
+      "last_updated": "2026-01-31T16:37:00.179069"
     },
     {
       "entity_id": "SA402_SCI_DEMO",
@@ -3198,7 +2739,7 @@
       "landmarks": "Adjacent to science laboratory",
       "description": "Classroom used for science demonstrations and guided experiments.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173219"
+      "last_updated": "2026-01-31T16:37:00.179070"
     },
     {
       "entity_id": "SA403_AV_ROOM",
@@ -3214,27 +2755,7 @@
       "landmarks": "End of fourth floor corridor",
       "description": "Room equipped for multimedia presentations and audio visual instruction.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173220"
-    },
-    {
-      "entity_id": "SCIENCE_LAB",
-      "canonical_name": "Science Laboratory",
-      "aliases": [
-        "science lab",
-        "laboratory",
-        "chem lab",
-        "bio lab",
-        "physics lab"
-      ],
-      "building": "Saint Peter Building",
-      "floor": "3rd Floor",
-      "room": "SP-310 to SP-315",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Take the main staircase to the 3rd floor, laboratories are on the right wing",
-      "description": "The Science Laboratory is equipped for biology, chemistry, and physics experiments.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626641"
+      "last_updated": "2026-01-31T16:37:00.179072"
     },
     {
       "entity_id": "SP101_CLASS",
@@ -3250,7 +2771,7 @@
       "landmarks": "Ground floor academic area",
       "description": "Standard classroom for engineering lectures.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173047"
+      "last_updated": "2026-01-31T16:37:00.178894"
     },
     {
       "entity_id": "SP102_CLASS",
@@ -3266,7 +2787,7 @@
       "landmarks": "Ground floor academic area",
       "description": "Standard classroom for engineering lectures.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173049"
+      "last_updated": "2026-01-31T16:37:00.178897"
     },
     {
       "entity_id": "SP103_CHAIR",
@@ -3282,7 +2803,7 @@
       "landmarks": "Ground floor near faculty rooms",
       "description": "Office of the College of Engineering Chairperson.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173051"
+      "last_updated": "2026-01-31T16:37:00.178899"
     },
     {
       "entity_id": "SP104_FACULTY",
@@ -3298,7 +2819,7 @@
       "landmarks": "Ground floor near classrooms",
       "description": "Common room for engineering faculty members.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173054"
+      "last_updated": "2026-01-31T16:37:00.178901"
     },
     {
       "entity_id": "SP105_CONSULT",
@@ -3314,7 +2835,7 @@
       "landmarks": "Ground floor near faculty room",
       "description": "Room for student and faculty consultations.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173056"
+      "last_updated": "2026-01-31T16:37:00.178903"
     },
     {
       "entity_id": "SP106_DEAN",
@@ -3330,7 +2851,7 @@
       "landmarks": "Ground floor administrative section",
       "description": "Office of the College of Engineering Dean.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173057"
+      "last_updated": "2026-01-31T16:37:00.178904"
     },
     {
       "entity_id": "SP107_ELECTRIC",
@@ -3346,7 +2867,7 @@
       "landmarks": "Ground floor utility area",
       "description": "Room housing electrical panels and controls.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173059"
+      "last_updated": "2026-01-31T16:37:00.178906"
     },
     {
       "entity_id": "SP108_CR_F",
@@ -3362,7 +2883,7 @@
       "landmarks": "Ground floor near classrooms",
       "description": "Female comfort room facility.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173061"
+      "last_updated": "2026-01-31T16:37:00.178909"
     },
     {
       "entity_id": "SP109_CR_M",
@@ -3378,7 +2899,7 @@
       "landmarks": "Ground floor near classrooms",
       "description": "Male comfort room facility.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173063"
+      "last_updated": "2026-01-31T16:37:00.178912"
     },
     {
       "entity_id": "SP110_CR_PWD",
@@ -3394,7 +2915,7 @@
       "landmarks": "Ground floor near restrooms",
       "description": "Accessible comfort room for persons with disabilities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173065"
+      "last_updated": "2026-01-31T16:37:00.178914"
     },
     {
       "entity_id": "SP201_SURVEY",
@@ -3410,7 +2931,7 @@
       "landmarks": "Second floor academic wing",
       "description": "Room used for surveying classes and activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173066"
+      "last_updated": "2026-01-31T16:37:00.178916"
     },
     {
       "entity_id": "SP202_ELECTRIC",
@@ -3426,7 +2947,7 @@
       "landmarks": "Second floor utility area",
       "description": "Electrical control and distribution room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173068"
+      "last_updated": "2026-01-31T16:37:00.178918"
     },
     {
       "entity_id": "SP203_ELEC_STOCK",
@@ -3442,7 +2963,7 @@
       "landmarks": "Second floor near electrical room",
       "description": "Storage room for electrical equipment and materials.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173070"
+      "last_updated": "2026-01-31T16:37:00.178920"
     },
     {
       "entity_id": "SP204_ELEX_STOCK",
@@ -3458,7 +2979,7 @@
       "landmarks": "Second floor near electronics room",
       "description": "Storage room for electronics tools and components.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173072"
+      "last_updated": "2026-01-31T16:37:00.178922"
     },
     {
       "entity_id": "SP205_ELEX_ROOM",
@@ -3474,7 +2995,7 @@
       "landmarks": "Second floor laboratory area",
       "description": "Room used for electronics instruction and experiments.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173073"
+      "last_updated": "2026-01-31T16:37:00.178924"
     },
     {
       "entity_id": "SP206_UTILITY",
@@ -3490,7 +3011,7 @@
       "landmarks": "Second floor service area",
       "description": "Room for utility and maintenance functions.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173075"
+      "last_updated": "2026-01-31T16:37:00.178925"
     },
     {
       "entity_id": "SP207_ELECTRIC",
@@ -3506,7 +3027,7 @@
       "landmarks": "Second floor utility area",
       "description": "Additional electrical control room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173077"
+      "last_updated": "2026-01-31T16:37:00.178927"
     },
     {
       "entity_id": "SP208_CR_F",
@@ -3522,7 +3043,7 @@
       "landmarks": "Second floor near classrooms",
       "description": "Female comfort room facility.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173081"
+      "last_updated": "2026-01-31T16:37:00.178929"
     },
     {
       "entity_id": "SP209_CR_M",
@@ -3538,7 +3059,7 @@
       "landmarks": "Second floor near classrooms",
       "description": "Male comfort room facility.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173083"
+      "last_updated": "2026-01-31T16:37:00.178932"
     },
     {
       "entity_id": "SP210_CR_PWD",
@@ -3554,7 +3075,7 @@
       "landmarks": "Second floor near restrooms",
       "description": "Accessible comfort room for persons with disabilities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173085"
+      "last_updated": "2026-01-31T16:37:00.178934"
     },
     {
       "entity_id": "SP301_DRAWING",
@@ -3570,7 +3091,7 @@
       "landmarks": "Third floor academic wing",
       "description": "Room for engineering drawing and drafting classes.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173087"
+      "last_updated": "2026-01-31T16:37:00.178935"
     },
     {
       "entity_id": "SP302_COMLAB1",
@@ -3586,7 +3107,7 @@
       "landmarks": "Third floor ICT area",
       "description": "Computer laboratory for engineering applications.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173088"
+      "last_updated": "2026-01-31T16:37:00.178937"
     },
     {
       "entity_id": "SP303_COMLAB2",
@@ -3602,7 +3123,7 @@
       "landmarks": "Third floor ICT area",
       "description": "Secondary computer laboratory for students.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173090"
+      "last_updated": "2026-01-31T16:37:00.178938"
     },
     {
       "entity_id": "SP304_UTILITY",
@@ -3618,7 +3139,7 @@
       "landmarks": "Third floor service area",
       "description": "Room for building utilities and maintenance.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173092"
+      "last_updated": "2026-01-31T16:37:00.178940"
     },
     {
       "entity_id": "SP305_ELECTRIC",
@@ -3634,7 +3155,7 @@
       "landmarks": "Third floor utility area",
       "description": "Electrical distribution and control room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173094"
+      "last_updated": "2026-01-31T16:37:00.178942"
     },
     {
       "entity_id": "SP306_CR_F",
@@ -3650,7 +3171,7 @@
       "landmarks": "Third floor near classrooms",
       "description": "Female comfort room facility.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173096"
+      "last_updated": "2026-01-31T16:37:00.178943"
     },
     {
       "entity_id": "SP307_CR_M",
@@ -3666,7 +3187,7 @@
       "landmarks": "Third floor near classrooms",
       "description": "Male comfort room facility.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173099"
+      "last_updated": "2026-01-31T16:37:00.178945"
     },
     {
       "entity_id": "SP308_CR_PWD",
@@ -3682,7 +3203,7 @@
       "landmarks": "Third floor near restrooms",
       "description": "Accessible comfort room for persons with disabilities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173101"
+      "last_updated": "2026-01-31T16:37:00.178947"
     },
     {
       "entity_id": "SP401_PHYSICS",
@@ -3698,7 +3219,7 @@
       "landmarks": "Fourth floor science wing",
       "description": "Room used for physics lectures and experiments.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173102"
+      "last_updated": "2026-01-31T16:37:00.178948"
     },
     {
       "entity_id": "SP402_PHYS_STOCK",
@@ -3714,7 +3235,7 @@
       "landmarks": "Fourth floor near physics room",
       "description": "Storage room for physics equipment.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173104"
+      "last_updated": "2026-01-31T16:37:00.178950"
     },
     {
       "entity_id": "SP403_CHEM_STOCK",
@@ -3730,7 +3251,7 @@
       "landmarks": "Fourth floor near chemistry room",
       "description": "Storage room for chemistry materials and supplies.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173106"
+      "last_updated": "2026-01-31T16:37:00.178952"
     },
     {
       "entity_id": "SP404_CHEM_ROOM",
@@ -3746,7 +3267,7 @@
       "landmarks": "Fourth floor science wing",
       "description": "Laboratory for chemistry instruction and experiments.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173108"
+      "last_updated": "2026-01-31T16:37:00.178954"
     },
     {
       "entity_id": "SP405_UTILITY",
@@ -3762,7 +3283,7 @@
       "landmarks": "Fourth floor service area",
       "description": "Utility and maintenance room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173110"
+      "last_updated": "2026-01-31T16:37:00.178956"
     },
     {
       "entity_id": "SP406_ELECTRIC",
@@ -3778,7 +3299,7 @@
       "landmarks": "Fourth floor utility area",
       "description": "Electrical control and distribution room.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173112"
+      "last_updated": "2026-01-31T16:37:00.178957"
     },
     {
       "entity_id": "SP407_CR_F",
@@ -3794,7 +3315,7 @@
       "landmarks": "Fourth floor near classrooms",
       "description": "Female comfort room facility.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173113"
+      "last_updated": "2026-01-31T16:37:00.178959"
     },
     {
       "entity_id": "SP408_CR_M",
@@ -3810,7 +3331,7 @@
       "landmarks": "Fourth floor near classrooms",
       "description": "Male comfort room facility.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173115"
+      "last_updated": "2026-01-31T16:37:00.178960"
     },
     {
       "entity_id": "SP409_CR_PWD",
@@ -3826,42 +3347,7 @@
       "landmarks": "Fourth floor near restrooms",
       "description": "Accessible comfort room for persons with disabilities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.173117"
-    },
-    {
-      "entity_id": "STUDENT_AFFAIRS",
-      "canonical_name": "Student Affairs Office",
-      "aliases": [
-        "student affairs",
-        "osa",
-        "student office",
-        "student activities"
-      ],
-      "building": "Administration Building",
-      "floor": "2nd Floor",
-      "room": "AD-201",
-      "campus": "Main Campus",
-      "department": null,
-      "landmarks": "Take the stairs or elevator to the 2nd floor, first office on the right",
-      "description": "The Student Affairs Office coordinates student activities, organizations, events, ID processing, and scholarship programs.",
-      "status": "active",
-      "last_updated": "2026-01-16T16:32:54.626642"
-    },
-    {
-      "entity_id": "TEST_ENTITY",
-      "canonical_name": "Test Location",
-      "aliases": [
-        "test"
-      ],
-      "building": "Test Building",
-      "floor": "1st Floor",
-      "room": null,
-      "campus": "Annex Campus",
-      "department": "Administration",
-      "landmarks": null,
-      "description": null,
-      "status": "inactive",
-      "last_updated": "2026-01-20T15:15:34.383608"
+      "last_updated": "2026-01-31T16:37:00.178962"
     },
     {
       "entity_id": "V101_102_CHAPEL",
@@ -3877,7 +3363,7 @@
       "landmarks": "Ground floor central area",
       "description": "Chapel used for worship, masses, and religious activities.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172949"
+      "last_updated": "2026-01-31T16:37:00.178740"
     },
     {
       "entity_id": "V103_SOC_WORK",
@@ -3893,7 +3379,7 @@
       "landmarks": "Ground floor near classrooms",
       "description": "Office of the Social Work program coordinator.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172951"
+      "last_updated": "2026-01-31T16:37:00.178744"
     },
     {
       "entity_id": "V104_108_CLASS",
@@ -3909,7 +3395,7 @@
       "landmarks": "Ground floor academic wing",
       "description": "Multiple classrooms for general instruction.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172953"
+      "last_updated": "2026-01-31T16:37:00.178746"
     },
     {
       "entity_id": "V200_LIBRARY",
@@ -3925,7 +3411,7 @@
       "landmarks": "Entire second floor",
       "description": "Main academic library for students and faculty.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172954"
+      "last_updated": "2026-01-31T16:37:00.178748"
     },
     {
       "entity_id": "V301_CHEM_LAB",
@@ -3941,7 +3427,7 @@
       "landmarks": "Third floor science wing",
       "description": "Laboratory for chemistry experiments.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172957"
+      "last_updated": "2026-01-31T16:37:00.178750"
     },
     {
       "entity_id": "V302_STOCK",
@@ -3957,7 +3443,7 @@
       "landmarks": "Third floor near laboratories",
       "description": "Storage room for laboratory supplies.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172958"
+      "last_updated": "2026-01-31T16:37:00.178752"
     },
     {
       "entity_id": "V303_SCI_LECT",
@@ -3973,7 +3459,7 @@
       "landmarks": "Third floor near laboratories",
       "description": "Lecture room for science subjects.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172960"
+      "last_updated": "2026-01-31T16:37:00.178754"
     },
     {
       "entity_id": "V304_BIO_LAB",
@@ -3989,7 +3475,7 @@
       "landmarks": "Third floor science wing",
       "description": "Laboratory for biology experiments.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172962"
+      "last_updated": "2026-01-31T16:37:00.178756"
     },
     {
       "entity_id": "V305_MICRO_LAB",
@@ -4005,7 +3491,7 @@
       "landmarks": "Third floor near biology lab",
       "description": "Laboratory for microbiology studies.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172965"
+      "last_updated": "2026-01-31T16:37:00.178757"
     },
     {
       "entity_id": "V306_SERVER",
@@ -4021,7 +3507,7 @@
       "landmarks": "Restricted area on third floor",
       "description": "Room housing servers and network equipment.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172967"
+      "last_updated": "2026-01-31T16:37:00.178760"
     },
     {
       "entity_id": "V307_INTERNET",
@@ -4037,7 +3523,7 @@
       "landmarks": "Third floor near server room",
       "description": "Computer laboratory with internet access.",
       "status": "active",
-      "last_updated": "2026-01-30T05:53:36.172968"
+      "last_updated": "2026-01-31T16:37:00.178763"
     }
   ]
 }

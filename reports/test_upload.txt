@@ -1,0 +1,15 @@
+Test Document for Phase 7 Admin Upload
+
+This is a test document to verify the admin document management system functionality.
+
+Key features being tested:
+- File upload via POST /admin/upload
+- Document ingestion into vector store
+- Automatic chunking and embedding
+- Document listing in admin UI
+- Document deletion functionality
+
+Springfield University Test Information:
+The new Career Services office is located in Building C, Room 301.
+Office hours are Monday-Friday, 9:00 AM - 5:00 PM.
+Students can schedule appointments online or walk in during business hours.

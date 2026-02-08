@@ -1,0 +1,44 @@
+Iteration 1
+This iteration established the foundation of the project by delivering the Minimum Viable Product (MVP). The primary goal was to validate the core RAG architecture: ingesting campus documents, storing them in a vector database, and retrieving them relevantly to answer user queries using an LLM. This phase successfully proved that a localized knowledge base could answer domain-specific questions, although it lacked advanced validation or conversational nuance at this stage.
+
+Iteration 2
+Focused on trust and accuracy, this iteration introduced the "Grounding" and "Confidence" layers. The critical problem addressed was hallucination—the tendency of LLMs to invent plausible but incorrect answers. By implementing a strict validation mechanism that verified if the answer was actually supported by the retrieved text, and assigning a confidence score (High/Medium/Low), the system transitioned from a specialized text generator to a reliable information retrieval tool.
+
+Iteration 3
+This iteration defined the system's operational boundaries. The goal was to strictly distinguish between "Campus" queries (which should be answered by RAG) and "General" queries (which should be handled by a general model or refused). This routing logic was essential for maintaining the product's identity as a specialized campus kiosk and preventing it from being used as a generic chatbot, aligning user expectations with the system's intended purpose.
+
+Iteration 4
+To support ongoing maintenance, this iteration built the administrative infrastructure. The requirement was to allow non-technical staff to update the knowledge base without developer intervention. This was achieved by creating a dedicated Admin UI for document management (upload, delete, re-ingest), ensuring the system's content could evolve dynamically alongside campus changes.
+
+Iteration 5
+This iteration addressed the "Directory Problem," where users required precise, deterministic answers for location-based queries (e.g., "Where is the registrar?"). Standard RAG was found to be too variable for these fact-based questions. The solution was the introduction of a structured Entity System, relying on a JSON-backed registry of buildings and offices. This hybrid approach allowed the system to bypass the LLM for directory queries, guaranteeing 100% accuracy for critical wayfinding tasks.
+
+Iteration 6
+This iteration enabled natural, multi-turn interactions. Previously stateless, the system could not handle follow-up questions like "What time does it close?". By implementing conversation memory with a sliding window, the system gained the ability to maintain context across turns, significantly improving the user experience and making interactions feel more like a dialogue and less like a series of isolated search queries.
+
+Iteration 7
+Conversational robustness was the focus here, specifically handling ambiguity and flow control. Users often ask vague questions or switch topics mid-stream. This iteration introduced disambiguation workflows (asking clarifying questions when a query matches multiple entities) and topic-change detection. This ensured the system didn't get "stuck" in a previous context and could gracefully handle the unpredictability of real-world user input.
+
+Iteration 8
+This iteration implemented comprehensive observability to shine a light on system performance. The goal was to move beyond anecdotal testing to data-driven improvement. By building event tracking and analytics logging, the team gained visibility into usage patterns, failure rates, and retrieval quality, establishing a feedback loop that would guide future optimizations.
+
+Iteration 9
+A major architectural overhaul, this iteration replaced the simple vector search with a "Hybrid Retrieval" pipeline. The problem was that vector search occasionally missed exact keyword matches (like specific acronyms). By combining vector similarity with BM25-style keyword scoring, and strictly enforcing a "Retrieval-First" routing logic, the system dramatically improved recall. This iteration also enforced a single-pipeline constraint, ensuring the LLM only ever saw validated, high-quality chunks.
+
+Iteration 10
+This iteration tackled the reliability of structured data extraction from unstructured text. Queries like "List all the deans" were yielding incomplete results due to fragmentation. The solution was "Entity-Centric Consolidation," where synthetic chunks were pre-calculated to contain complete lists, and a multi-stage text normalization pipeline was added to clean PDF artifacts. This ensured that enumeration queries became deterministic and complete, rather than probabilistic.
+
+Iteration 11
+Focused on "Semantic" content, this iteration solved the problem of long-form retrieval for humanities-style documents (hymns, prayers, mission statements). The strict keyword grounding capability from Iteration 2 was too aggressive, rejecting valid answers that didn't share exact vocabulary. This iteration introduced "Semantic Grounding" (overriding keyword checks for high-similarity long text) and "Contiguous Context Reconstruction" to stitch together fragmented paragraphs, allowing the system to recite full prayers or policies accurately.
+
+Iteration 12
+This iteration shifted focus to non-functional requirements: scalability and stability. As the codebase grew, maintenance became difficult. The solution involved decoupling the consolidation logic into a generic, config-driven engine and implementing a metadata index for O(1) lookups. These changes didn't alter the user experience but significantly reduced technical debt and optimized the retrieval pipeline's performance, preparing the system for larger datasets.
+
+Iteration 13
+Aiming for "Google-quality" search relevance, this iteration deployed advanced retrieval techniques. The introduction of Reciprocal Rank Fusion (RRF) standardized how vector and keyword scores were combined, removing the fragility of manual weighting. Additionally, query synonym expansion and result diversity filters were added. These upgrades ensured that users could use varied vocabulary ("restroom" vs "CR") and receive a diverse set of results, rather than multiple chunks from the same document.
+
+Iteration 14
+This iteration expanded the system's deterministic capabilities into new domains. building on the patterns established in Iteration 10. Specific extractors were built for "Awards/Honors" and "Event Dates/Office Contacts". This allowed the system to provide precise, structured answers for temporal and contact-based queries, further reducing the reliance on LLM generation for factual data.
+
+Iteration 15
+This final iteration introduced a completely new interaction modality: Voice. The goal was to deploy the system on a kiosk where typing is secondary. A modular "Voice Architecture" was built, integrating offline-first Speech-to-Text (Whisper) and Text-to-Speech (Piper) services. This transformed the text-based chatbot into a fully vocal assistant, inclusive of a dedicated frontend voice UI with state management and visual feedback.

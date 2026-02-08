@@ -44,8 +44,35 @@
                     autocomplete="off"
                     autofocus
                 >
+                <button type="button" id="voiceBtn" class="voice-btn" title="Click to speak">
+                    <svg class="mic-icon" viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                    <div class="voice-pulse"></div>
+                </button>
                 <button type="submit" id="sendBtn">Send</button>
             </form>
+            <!-- Audio Visualizer -->
+            <div id="audioVisualizerContainer" class="audio-visualizer-container" style="display: none;">
+                <canvas id="audioVisualizer" class="audio-visualizer"></canvas>
+                <div class="visualizer-label">
+                    <span class="recording-dot"></span>
+                    <span>Recording...</span>
+                </div>
+            </div>
+            <!-- Voice Status Display -->
+            <div id="voiceStatus" class="voice-status" style="display: none;">
+                <span class="voice-status-icon"></span>
+                <span class="voice-status-text">Listening...</span>
+            </div>
+            <!-- Transcription Preview -->
+            <div id="transcriptionPreview" class="transcription-preview" style="display: none;">
+                <span class="preview-text"></span>
+                <button type="button" class="preview-edit" title="Edit">Edit</button>
+                <button type="button" class="preview-send" title="Send">Send</button>
+                <button type="button" class="preview-cancel" title="Cancel">Cancel</button>
+            </div>
         </div>
 
         <!-- Footer -->
@@ -57,8 +84,12 @@
     <!-- Loading indicator (hidden by default) -->
     <div id="loadingIndicator" class="loading-indicator" style="display: none;">
         <div class="spinner"></div>
-        <p>Searching campus information...</p>
+        <p id="loadingText">Searching campus information...</p>
     </div>
+
+    <!-- Phase 40: Voice indicator removed - TTS plays silently in background -->
+    <!-- Hidden audio element for TTS playback -->
+    <audio id="ttsAudio" style="display: none;"></audio>
 
     <script src="/static/app.js"></script>
 </body>

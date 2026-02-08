@@ -2,36 +2,52 @@
 Entity-Centric Chunk Consolidation for Enumeration Roles
 =========================================================
 
+DEPRECATED: This module is superseded by consolidation_engine.py (Phase 24).
+The functions are kept for backward compatibility but now delegate to the engine.
+
+Original Purpose:
 This module provides post-chunking consolidation for scattered entity information.
 Specifically designed for enumeration queries like "Who are the deans".
 """
 
+import warnings
+
 import re
+import logging
 from typing import List, Dict, Set
 from langchain_core.documents import Document
 from text_normalizer import normalize_text
 
+logger = logging.getLogger(__name__)
+
 def consolidate_dean_chunks(documents: List[Document]) -> List[Document]:
     """
+    DEPRECATED: Use ConsolidationEngine from consolidation_engine.py instead.
+
     Consolidate scattered dean information into ONE synthetic chunk.
-    
+
     Phase 18 Entity Consolidation: Addresses PDF structures where dean information
     is scattered across multiple sections/pages. Creates a single authoritative
     "Deans" chunk containing all dean entities for deterministic enumeration.
-    
+
     Design:
     - Semantic detection: role ("Dean") + person name patterns
     - Avoids false positives ("dean's office", etc.)
     - Deterministic ordering (document order)
     - Preserves provenance via source_chunk_ids metadata
     - Synthetic chunk injected at top, original chunks preserved for citation
-    
+
     Args:
         documents: List of Document objects from chunk_document()
-    
+
     Returns:
         List of Document objects with synthetic Deans chunk prepended
     """
+    warnings.warn(
+        "consolidate_dean_chunks is deprecated. Use ConsolidationEngine instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     
     # Collect dean chunks - must have BOTH "dean" AND person title indicators
     dean_chunks = []
@@ -162,3 +178,145 @@ def consolidate_dean_chunks(documents: List[Document]) -> List[Document]:
     
     # No dean information found, return original documents
     return documents
+
+
+def consolidate_prayer_chunks(documents: List[Document]) -> List[Document]:
+    """
+    DEPRECATED: Use ConsolidationEngine from consolidation_engine.py instead.
+
+    Phase 21.1: Consolidate scattered prayer content into ONE synthetic chunk.
+
+    Fixes fragmented "Prayer to St. Columban" which was split across chunks 647-650
+    during PDF ingestion.
+
+    Args:
+        documents: List of Document objects from chunk_document()
+
+    Returns:
+        List of Document objects with synthetic Prayer chunk prepended
+    """
+    warnings.warn(
+        "consolidate_prayer_chunks is deprecated. Use ConsolidationEngine instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    # Detect prayer chunks using two-pass approach
+    prayer_chunks = []
+    anchor_chunk_id = None
+
+    # First pass: Find the anchor chunk (main prayer chunk)
+    for i, doc in enumerate(documents):
+        content = doc.metadata.get('original_text', doc.page_content)
+        content_lower = content.lower()
+        section = doc.metadata.get('section', '').lower()
+
+        # Primary detection: section title or explicit prayer header
+        is_anchor = (
+            'prayer to st. columban' in section or
+            'prayer to st columban' in section or
+            'prayer to st. columban' in content_lower or
+            'prayer to st columban' in content_lower
+        )
+
+        if is_anchor:
+            chunk_id = doc.metadata.get('chunk_id', i)
+            anchor_chunk_id = chunk_id
+            prayer_chunks.append({
+                'chunk_id': chunk_id,
+                'content': content,
+                'pages': doc.metadata.get('page_numbers', []),
+                'document': doc
+            })
+
+    # If no anchor found, return unchanged
+    if anchor_chunk_id is None:
+        return documents
+
+    # Second pass: Find continuation chunks (adjacent to anchor, with prayer content)
+    for i, doc in enumerate(documents):
+        content = doc.metadata.get('original_text', doc.page_content)
+        content_lower = content.lower()
+        chunk_id = doc.metadata.get('chunk_id', i)
+
+        # Skip if already added or not adjacent to anchor
+        if chunk_id == anchor_chunk_id:
+            continue
+
+        # Check if this is a likely continuation (within +3 chunks of anchor)
+        if isinstance(chunk_id, int) and isinstance(anchor_chunk_id, int):
+            if anchor_chunk_id < chunk_id <= anchor_chunk_id + 3:
+                # Check for prayer continuation content
+                is_continuation = (
+                    'o beloved columban' in content_lower or
+                    'o blessed columban' in content_lower or
+                    'through christ our lord' in content_lower or
+                    ('amen' in content_lower and len(content) < 100) or
+                    ('because of your love for christ' in content_lower) or
+                    ('fullness of life' in content_lower)
+                )
+
+                if is_continuation:
+                    prayer_chunks.append({
+                        'chunk_id': chunk_id,
+                        'content': content,
+                        'pages': doc.metadata.get('page_numbers', []),
+                        'document': doc
+                    })
+
+    # If only anchor found (no continuations), still create synthetic chunk
+    if len(prayer_chunks) < 1:
+        return documents
+
+    logger.info(f"[PHASE21.1] Consolidating {len(prayer_chunks)} prayer chunks")
+
+    # Sort by chunk_id to maintain document order
+    prayer_chunks.sort(key=lambda x: x['chunk_id'])
+
+    # Combine content (deduplicated)
+    combined_content = []
+    source_chunk_ids = []
+    source_pages = []
+
+    for chunk in prayer_chunks:
+        content = chunk['content'].strip()
+        if content and content not in combined_content:
+            combined_content.append(content)
+            source_chunk_ids.append(chunk['chunk_id'])
+            source_pages.extend(chunk['pages'])
+
+    # Create synthetic content - join with space to form continuous text
+    synthetic_content = "Prayer to St. Columban\n\n" + " ".join(combined_content)
+
+    # Clean up whitespace artifacts
+    synthetic_content = re.sub(r'\s+', ' ', synthetic_content)
+    synthetic_content = synthetic_content.replace(' .', '.').replace(' ,', ',')
+    synthetic_content = synthetic_content.strip()
+
+    # Get template metadata from first chunk
+    template_metadata = prayer_chunks[0]['document'].metadata.copy()
+
+    # Create synthetic metadata
+    synthetic_metadata = {
+        **template_metadata,
+        'chunk_id': -2,  # Different from deans (-1)
+        'section': 'Prayer to St. Columban',
+        'section_title': 'Prayer to St. Columban',
+        'original_text': synthetic_content,
+        'is_synthetic': True,
+        'entity_type': 'prayer',
+        'source_chunk_ids': source_chunk_ids,
+        'page_numbers': sorted(list(set(source_pages))),
+        'element_types': ['Synthetic'],
+        'consolidation_phase': '21.1'
+    }
+
+    # Create synthetic document with normalized text
+    synthetic_doc = Document(
+        page_content=normalize_text(synthetic_content),
+        metadata=synthetic_metadata
+    )
+
+    logger.info(f"[PHASE21.1] Created synthetic prayer chunk: {len(synthetic_content)} chars from {len(source_chunk_ids)} chunks")
+
+    # Prepend synthetic chunk to documents list
+    return [synthetic_doc] + documents

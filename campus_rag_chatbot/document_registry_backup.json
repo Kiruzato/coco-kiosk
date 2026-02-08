@@ -1,21 +1,11 @@
 {
-  "834e9ab80037927b3686155a9435bba6": {
+  "3c0bbcd2eb6115d54249f51ca9db9339": {
     "document_name": "2022_student_manual_latest.pdf",
     "file_type": ".pdf",
     "file_hash": "dec97a13358be993736f3dcdced8ecdbdd51cd58e321a29ac047f2835f6b5a07",
-    "file_path": "C:\\Users\\chann\\OneDrive\\Desktop\\restartcoco\\vibecoding_coco\\campus_rag_chatbot\\data\\uploaded\\2022_student_manual_latest.pdf",
-    "ingestion_timestamp": "2026-01-29T12:26:03.034390",
-    "num_chunks": 752,
-    "chunk_size": 500,
-    "chunk_overlap": 50
-  },
-  "8374347cbadaa3976f9713ec4b93cef7": {
-    "document_name": "events.txt",
-    "file_type": ".txt",
-    "file_hash": "99a6a6f382579f9b11761f9b3741d7292c7852bf4746a5c8534cf4c5ebe7c885",
-    "file_path": "C:\\Users\\chann\\OneDrive\\Desktop\\restartcoco\\vibecoding_coco\\campus_rag_chatbot\\data\\uploaded\\events.txt",
-    "ingestion_timestamp": "2026-01-29T12:26:41.503247",
-    "num_chunks": 2,
+    "file_path": "C:\\Users\\chann\\OneDrive\\Desktop\\restartcoco\\vibecoding_coco\\campus_rag_chatbot\\documents_to_ingest\\2022_student_manual_latest.pdf",
+    "ingestion_timestamp": "2026-01-29T17:21:01.018977",
+    "num_chunks": 748,
     "chunk_size": 500,
     "chunk_overlap": 50
   }

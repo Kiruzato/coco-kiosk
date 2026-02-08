@@ -1,0 +1,16 @@
+Investigate the topic or issue I will provide within the context of this existing, ongoing project.
+
+Investigate the clarification flow using the Debugging Panel.
+Specifically, examine why both the clarification prompt and the post-clarification response show no LLM and no provider in the Provider panel, and why the Timing panel contains no data.
+Determine whether this behavior is expected by design or indicates a bug in the clarification pipeline.
+
+Act as a senior engineer and:
+•	Assess the current system behavior and structure
+•	Identify what is working and what is not
+•	Analyze underlying design decisions and causes
+•	Evaluate alignment with industry-standard practices
+•	Note risks, limitations, or important gaps
+Focus on structural and deterministic analysis.
+Do not modify code unless explicitly instructed.
+Produce a concise investigation report with clear findings and optional next steps.
+Wait for my next instruction.

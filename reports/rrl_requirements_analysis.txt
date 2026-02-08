@@ -1,0 +1,309 @@
+================================================================================
+REVIEW OF RELATED LITERATURE (RRL) REQUIREMENTS ANALYSIS
+CoCo Campus RAG Chatbot
+Date: 2026-02-07
+Status: Analysis for in-progress system documentation
+================================================================================
+
+This document identifies system components, design decisions, and architectural
+aspects that should be supported by a Review of Related Literature (RRL) for
+academic documentation purposes.
+
+Items are ordered from MOST academically critical to LEAST critical.
+
+================================================================================
+PRIORITY: CRITICAL (Must be supported by RRL)
+================================================================================
+
+--------------------------------------------------------------------------------
+1. RETRIEVAL-AUGMENTED GENERATION (RAG) ARCHITECTURE
+--------------------------------------------------------------------------------
+Why RRL is Required:
+  RAG is the foundational paradigm of the system. The decision to combine
+  retrieval with generation, rather than rely on pure generative models,
+  requires theoretical grounding to justify why this approach reduces
+  hallucination and improves factual accuracy for domain-specific applications.
+  Claims about RAG's superiority over zero-shot generation for institutional
+  knowledge must be supported.
+
+Relevant Literature Types:
+  - Original RAG papers (Lewis et al., 2020)
+  - Studies on LLM hallucination and factual grounding
+  - Comparative studies of pure-generative vs. retrieval-augmented approaches
+  - Domain-specific RAG implementations (education, enterprise)
+
+--------------------------------------------------------------------------------
+2. HYBRID RETRIEVAL: VECTOR + KEYWORD FUSION
+--------------------------------------------------------------------------------
+Why RRL is Required:
+  The system implements 70/30 weighted hybrid scoring and Reciprocal Rank
+  Fusion (RRF) to combine dense vector similarity with sparse keyword matching.
+  This design decision assumes that pure semantic search is insufficient for
+  domain-specific terminology (acronyms, proper nouns). This claim requires
+  empirical and theoretical backing from information retrieval literature.
+
+Relevant Literature Types:
+  - Dense-sparse hybrid retrieval studies
+  - Reciprocal Rank Fusion (RRF) foundational work
+  - BM25 and term-frequency scoring research
+  - Studies on vocabulary mismatch in semantic search
+  - Comparative evaluations of retrieval strategies
+
+--------------------------------------------------------------------------------
+3. GROUNDING AND ANSWER VALIDATION MECHANISMS
+--------------------------------------------------------------------------------
+Why RRL is Required:
+  The system enforces "grounding validation" requiring query terms to appear
+  in retrieved chunks before allowing LLM generation. This is a core safety
+  mechanism that defines when the system will answer vs. refuse. The semantic
+  override logic (similarity >= 0.75, content >= 300 chars) for long-form
+  content is a novel threshold-based decision that needs methodological
+  justification.
+
+Relevant Literature Types:
+  - Grounding in language models
+  - Attribution and citation in AI systems
+  - Factual consistency verification methods
+  - Confidence calibration in retrieval systems
+  - Threshold-based decision making in IR
+
+--------------------------------------------------------------------------------
+4. DETERMINISTIC EXTRACTION VS. LLM-BASED REASONING
+--------------------------------------------------------------------------------
+Why RRL is Required:
+  The system makes an explicit architectural choice to bypass LLM generation
+  for high-stakes factual queries (directory locations, event dates, personnel
+  listings) in favor of regex-based extraction. This hybrid human-AI approach
+  requires justification through literature on:
+  (a) limitations of generative models for structured data
+  (b) advantages of rule-based systems for specific retrieval tasks
+  (c) hybrid system architectures in applied AI
+
+Relevant Literature Types:
+  - Neuro-symbolic AI and hybrid architectures
+  - Rule-based vs. statistical NLP approaches
+  - Information extraction methodologies
+  - Precision vs. recall trade-offs in applied systems
+  - Pattern-based entity extraction
+
+--------------------------------------------------------------------------------
+5. CONFIDENCE SCORING AND REFUSE-TO-ANSWER BEHAVIOR
+--------------------------------------------------------------------------------
+Why RRL is Required:
+  The system assigns confidence levels (HIGH/MEDIUM/LOW) and refuses to answer
+  when confidence falls below threshold. This "I don't know" behavior is a
+  critical design choice for institutional trust. The methodology for computing
+  confidence (average similarity, max similarity, grounding mode) needs to be
+  grounded in literature on uncertainty quantification and calibrated AI.
+
+Relevant Literature Types:
+  - Uncertainty estimation in neural networks
+  - Calibrated confidence in AI systems
+  - Abstention and selective prediction
+  - Trust in AI systems
+  - Risk-aware question answering
+
+================================================================================
+PRIORITY: IMPORTANT (Strongly recommended for RRL)
+================================================================================
+
+--------------------------------------------------------------------------------
+6. VOICE INTERFACE INTEGRATION (STT/TTS)
+--------------------------------------------------------------------------------
+Why RRL is Required:
+  The system integrates Speech-to-Text (Whisper) and Text-to-Speech (Piper)
+  for kiosk accessibility. Voice is treated as a "modality layer" that does
+  not alter RAG guarantees. This design decision and the choice of offline-
+  first voice engines require justification through accessibility and HCI
+  literature.
+
+Relevant Literature Types:
+  - Voice user interfaces (VUI) design
+  - Accessibility in public kiosk systems
+  - Offline speech recognition systems
+  - Neural network-based TTS (Piper, etc.)
+  - Multi-modal interaction design
+
+--------------------------------------------------------------------------------
+7. PDF/DOCUMENT INGESTION AND LAYOUT-AWARE PARSING
+--------------------------------------------------------------------------------
+Why RRL is Required:
+  The system implements multi-stage text normalization (NFKC, hyphen cleanup,
+  artifact removal) and consolidation of fragmented content (prayers, lists).
+  Claims that PDF parsing artifacts degrade retrieval quality should be
+  supported by document understanding literature.
+
+Relevant Literature Types:
+  - Document layout understanding
+  - PDF text extraction challenges
+  - Text normalization and preprocessing
+  - Document chunking strategies
+  - Layout-aware information retrieval
+
+--------------------------------------------------------------------------------
+8. KIOSK DEPLOYMENT AND RASPBERRY PI CONSTRAINTS
+--------------------------------------------------------------------------------
+Why RRL is Required:
+  The system is designed for edge deployment on Raspberry Pi 5 with offline-
+  first operation. This addresses latency, cost, and reliability concerns
+  specific to public-facing kiosk environments. The trade-offs (local vs.
+  cloud inference, model size constraints) need embedded systems and edge
+  AI justification.
+
+Relevant Literature Types:
+  - Edge AI and on-device inference
+  - Embedded systems for machine learning
+  - Resource-constrained NLP
+  - Kiosk and public terminal design
+  - Offline-first system architectures
+
+--------------------------------------------------------------------------------
+9. ENTITY CONSOLIDATION AND SYNTHETIC CHUNK CREATION
+--------------------------------------------------------------------------------
+Why RRL is Required:
+  The system pre-aggregates related content (e.g., all deans, complete prayers)
+  into "synthetic chunks" at ingestion time to ensure complete retrieval. This
+  addresses the well-known "chunking problem" in RAG systems where entities
+  span multiple chunks. The consolidation framework (config-driven pattern
+  matching) is a methodological contribution.
+
+Relevant Literature Types:
+  - Chunking strategies for RAG systems
+  - Entity-centric document representation
+  - Knowledge compilation and pre-processing
+  - Multi-hop retrieval challenges
+  - Document structure exploitation
+
+--------------------------------------------------------------------------------
+10. CONVERSATION MEMORY AND MULTI-TURN INTERACTION
+--------------------------------------------------------------------------------
+Why RRL is Required:
+  The system implements session-scoped conversation memory with 5-turn windows
+  and 30-minute timeouts. Follow-up resolution ("What floor is it on?") and
+  disambiguation (numbered choice selection) are explicit design features that
+  require dialogue systems literature support.
+
+Relevant Literature Types:
+  - Conversational AI and dialogue management
+  - Context tracking in multi-turn systems
+  - Coreference resolution in dialogue
+  - Session management in chatbots
+  - Disambiguation strategies
+
+================================================================================
+PRIORITY: SUPPORTIVE (Optional but beneficial)
+================================================================================
+
+--------------------------------------------------------------------------------
+11. QUERY SYNONYM EXPANSION
+--------------------------------------------------------------------------------
+Why RRL is Beneficial:
+  The system implements domain-specific synonym expansion (~40 bidirectional
+  mappings) to improve recall for informal queries (e.g., "CR" -> "restroom").
+  While effective, this is a well-established technique that can be briefly
+  justified without extensive literature review.
+
+Relevant Literature Types:
+  - Query expansion techniques
+  - Synonym-based information retrieval
+  - Domain adaptation in NLP
+
+--------------------------------------------------------------------------------
+12. CHUNK DIVERSITY AND SECTION DEDUPLICATION
+--------------------------------------------------------------------------------
+Why RRL is Beneficial:
+  The system limits chunks per section (max 3) to prevent same-section
+  dominance. Maximal Marginal Relevance (MMR) is implemented for future use.
+  These are standard IR techniques with established literature.
+
+Relevant Literature Types:
+  - Result diversification in IR
+  - Maximal Marginal Relevance (MMR)
+  - Redundancy removal in retrieval
+
+--------------------------------------------------------------------------------
+13. NEGATIVE EXAMPLES AND ENTITY CONFUSION DETECTION
+--------------------------------------------------------------------------------
+Why RRL is Beneficial:
+  The system detects semantic neighbor confusion (e.g., "Dean's List" vs.
+  "Team Leadership Award") using predefined confusion pairs. This is a
+  practical guardrail that can reference literature on semantic similarity
+  failures and false positive handling.
+
+Relevant Literature Types:
+  - Semantic similarity pitfalls
+  - Negative sampling in retrieval
+  - False positive detection in IR
+
+--------------------------------------------------------------------------------
+14. ADMIN OBSERVABILITY AND ANALYTICS
+--------------------------------------------------------------------------------
+Why RRL is Beneficial:
+  The system logs query events, refusals, and confidence scores for admin
+  review. This is standard software engineering practice but can reference
+  literature on AI system monitoring and feedback loops for content
+  improvement.
+
+Relevant Literature Types:
+  - AI system observability
+  - Human-in-the-loop AI maintenance
+  - Feedback loops in production ML
+
+--------------------------------------------------------------------------------
+15. UX DESIGN FOR TRUST AND CLARITY
+--------------------------------------------------------------------------------
+Why RRL is Beneficial:
+  The kiosk UI shows confidence badges, source citations, and grounding mode
+  to build user trust. These design choices can reference HCI literature on
+  transparency and explainability in AI interfaces.
+
+Relevant Literature Types:
+  - Explainable AI interfaces
+  - Trust in AI systems
+  - Transparency in automated systems
+  - Kiosk UX design patterns
+
+================================================================================
+SUMMARY TABLE
+================================================================================
+
+| # | Component/Aspect                          | Priority   |
+|---|-------------------------------------------|------------|
+| 1 | RAG Architecture                          | CRITICAL   |
+| 2 | Hybrid Retrieval (Vector + Keyword/RRF)   | CRITICAL   |
+| 3 | Grounding and Answer Validation           | CRITICAL   |
+| 4 | Deterministic Extraction vs. LLM          | CRITICAL   |
+| 5 | Confidence Scoring and Refusal            | CRITICAL   |
+| 6 | Voice Interface Integration (STT/TTS)     | IMPORTANT  |
+| 7 | PDF Ingestion and Layout-Aware Parsing    | IMPORTANT  |
+| 8 | Kiosk Deployment / Raspberry Pi           | IMPORTANT  |
+| 9 | Entity Consolidation / Synthetic Chunks   | IMPORTANT  |
+|10 | Conversation Memory / Multi-Turn          | IMPORTANT  |
+|11 | Query Synonym Expansion                   | SUPPORTIVE |
+|12 | Chunk Diversity / Section Deduplication   | SUPPORTIVE |
+|13 | Entity Confusion Detection                | SUPPORTIVE |
+|14 | Admin Observability / Analytics           | SUPPORTIVE |
+|15 | UX Design for Trust and Clarity           | SUPPORTIVE |
+
+================================================================================
+NOTES FOR ACADEMIC WRITING
+================================================================================
+
+1. CRITICAL items should be addressed in the core methodology or theoretical
+   framework section of the paper. These define the research contribution.
+
+2. IMPORTANT items support the design rationale and should appear in system
+   design or implementation sections with appropriate citations.
+
+3. SUPPORTIVE items can be mentioned briefly with standard references or
+   omitted if space-constrained. They are "nice to have" citations.
+
+4. This analysis is based on the system as implemented through Phase 38.
+   Future phases may introduce additional components requiring RRL support.
+
+5. No specific citations are provided—only the types of literature needed.
+   The researcher should identify appropriate primary sources.
+
+================================================================================
+END OF ANALYSIS
+================================================================================

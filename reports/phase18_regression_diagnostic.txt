@@ -1,0 +1,164 @@
+Phase 18 Retrieval Regression - Diagnostic Report
+==================================================
+
+Date: 2026-01-29
+Issue: Missing deans (Almazan, Capili) in query results after Phase 18 layout-aware ingestion
+
+ROOT CAUSE IDENTIFIED
+=====================
+
+The missing deans (Almazan, Capili) ARE in the vector store and ARE being retrieved, 
+but there's a complex interaction between section merging and chunk ranking.
+
+CURRENT STATE
+=============
+
+Chunk Analysis:
+- ✓ Capili chunk exists (chunk 660, section "Student OIrganizations", rank #8, score 0.7414)
+- ✓ Almazan chunk exists (chunk 645, section "CHARPERSONS...", rank #2, score 0.7521)  
+- ✓ Main "Deans" chunk exists (chunk 69, section "Deans", rank #3, score 0.7445)
+- ✓ The "Deans" chunk contains 5/6 deans: Matriano, Yap, Gonzales, Gutierrez, Capili
+
+Top 10 Retrieval Results for "dean" query:
+[1] Score: 0.7698 | Section: Director, Guidance &Testing Center
+[2] Score: 0.7521 | Section: CHARPERSONS DR. CHRISTINE GIL O. ALMAZAN Dean, CASEd >>> Almazan
+[3] Score: 0.7445 | Section: Deans >>> Contains: Matriano, Yap, Gonzales, Gutierrez, Capili
+[4] Score: 0.7438 | Section: the bank
+[5] Score: 0.7422 | Section: faculty members, administrators or employees.
+[6] Score: 0.7422 | Section: faculty members, administrators or employees.
+[7] Score: 0.7416 | Section: IN
+[8] Score: 0.7414 | Section: Student OIrganizations >>> Capili
+[9] Score: 0.7404 | Section: DR. TINA PRESTO-DABU Director, Student Affairs Office
+[10] Score: 0.7400 | Section: academic
+
+THE PROBLEM
+===========
+
+1. Section merging combined multiple admin sections into one "Deans" chunk (chunk 69)
+   - Merged 17 administrative sections total (671 → 654 sections)
+   - Created 738 chunks (down from 752 in original Phase 18)
+
+2. The merged "Deans" chunk content starts with:
+   "Director, Alumni & External Affairs Director, Campus Ministry
+    Director, Community Extension Services
+    Director, Quality Assurance & Change Management
+    VP for Academic Affairs and Student Services
+    ..."
+   
+   The actual dean names (Matriano, Yap, Gonzales, Gutierrez, Capili) appear 
+   later in the chunk content.
+
+3. Current retrieval configuration:
+   - K=8 (retrieves top 8 chunks)
+   - Score threshold: 0.5
+   - Hybrid scoring: 70% vector + 30% keyword
+
+4. All relevant chunks ARE within top 8:
+   - Rank #2: Almazan (dedicated chunk)
+   - Rank #3: Main "Deans" chunk (contains 5 deans)
+   - Rank #8: Capili (separate chunk)
+
+5. LLM receives these chunks but only extracts 4/6 deans in the answer
+
+WHY ONLY 4/6 DEANS APPEAR
+==========================
+
+Analysis of LLM behavior:
+- The 4 deans (Matriano, Yap, Gonzales, Gutierrez) are clearly listed in the "Deans" chunk
+- Almazan has her own dedicated chunk (rank #2) ✓ but still missing from answer
+- Capili appears in BOTH:
+  * The merged "Deans" chunk (rank #3) 
+  * A separate chunk (rank #8)
+  But is still missing from answer
+
+Hypothesis:
+The LLM may not be extracting all dean names from the merged chunk because:
+1. The chunk content is diluted with director/VP information
+2. The dean names appear later in the chunk (not at the beginning)
+3. The chunk is large and the LLM may be focusing on early content
+
+SECTION MERGING BEHAVIOR
+=========================
+
+The merge_related_admin_sections() function:
+- Identifies sections containing admin keywords (dean, director, president, etc.)
+- Merges adjacent admin sections within 2 pages
+- Prioritizes "Deans" keyword in merged section titles
+- Successfully renamed merged section to "Deans" (clean title)
+
+However, the content ordering within merged chunks may be suboptimal for enumeration queries.
+
+POTENTIAL SOLUTIONS
+===================
+
+Option 1: Increase K from 8 to 10
+- Pros: Ensures all dean chunks are well within retrieval window
+- Cons: More noise, may affect other queries
+- Alignment: Standard RAG practice (K=10-20 common)
+
+Option 2: Improve chunk content ordering
+- Pros: Dean names appear first in merged chunks
+- Cons: Requires modifying create_chunks_from_sections logic
+- Alignment: Content-aware chunking best practice
+
+Option 3: Split overly-merged chunks
+- Pros: Each dean gets clearer context
+- Cons: May fragment related information
+- Alignment: Depends on chunk size constraints
+
+Option 4: Adjust section merging criteria
+- Pros: More selective merging, preserve dedicated dean sections
+- Cons: May lose benefits of consolidation
+- Alignment: Balance between structure and granularity
+
+Option 5: Improve hybrid scoring weights
+- Pros: Boost keyword matching for enumeration queries
+- Cons: May affect other query types
+- Alignment: Query-type-specific tuning
+
+RECOMMENDATION
+==============
+
+Recommended approach: Option 1 (Increase K to 10) + Option 4 (Refine merging)
+
+Rationale:
+1. K=8 is too tight for enumeration queries with 6+ entities
+2. Industry standard for RAG is K=10-20 for comprehensive retrieval
+3. Refine merging to avoid combining "Deans" section with unrelated directors
+4. This is a minimal, architecture-aligned change
+
+Implementation:
+1. Change RETRIEVAL_TOP_K from 8 to 10 in app.py
+2. Modify merge_related_admin_sections to NOT merge sections with "Deans" as exact title
+3. Re-ingest and verify all 6 deans appear
+
+TESTING CHECKLIST
+=================
+
+After fix:
+- [ ] "Who are the deans" returns all 6 deans
+- [ ] "Where is the library" still works (no regression)
+- [ ] "How to attain honorable mention" still works (no regression)
+- [ ] Verify chunk count is reasonable (not excessive fragmentation)
+- [ ] Verify retrieval scores are balanced (no single chunk dominates)
+
+FILES MODIFIED
+==============
+
+1. campus_rag_chatbot/document_manager.py
+   - Added merge_related_admin_sections() function (line ~405)
+   - Modified group_elements_by_section() to call merging (line ~398)
+   - Improved section title prioritization for "Deans" keyword (line ~488)
+
+2. Diagnostic scripts created:
+   - diagnose_dean_regression.py
+   - check_capili_extraction.py
+   - verify_capili_chunks.py
+   - test_dean_fix.py
+   - find_deans_section.py
+   - check_top_chunks.py
+
+NEXT STEPS
+==========
+
+Awaiting user decision on which solution to implement.

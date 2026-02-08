@@ -1,0 +1,291 @@
+================================================================================
+                    CoCo - RASPBERRY PI 5 DEPLOYMENT INSTRUCTIONS
+                              Git-Based Transfer Method
+================================================================================
+
+PREREQUISITES
+-------------
+- Raspberry Pi 5 (8GB recommended) with Raspberry Pi OS (64-bit)
+- RPi5 connected to same network as laptop
+- Git repository accessible from RPi5
+- OpenAI API key ready
+
+================================================================================
+PHASE 1: CLONE PROJECT WITH GIT
+================================================================================
+
+SSH into your Raspberry Pi 5:
+
+    ssh pi@<rpi5-ip>
+
+Create project directory and clone:
+
+    mkdir -p /home/pi/coco
+    cd /home/pi/coco
+    git clone <your-repo-url> .
+
+Or if already cloned, pull latest:
+
+    git pull origin main
+
+Verify files are present:
+
+    ls -la campus_rag_chatbot/
+
+================================================================================
+PHASE 2: RUN SETUP SCRIPT (AUTOMATED)
+================================================================================
+
+The setup script automatically handles:
+- System packages (apt install)
+- Python 3.11 detection/installation
+- Virtual environment creation
+- Dependency installation (requirements_py311.txt)
+- Environment file setup
+
+Run the setup script:
+
+    cd /home/pi/coco
+    chmod +x scripts/pi-setup.sh
+    ./scripts/pi-setup.sh
+
+IMPORTANT: When prompted:
+- "Re-ingest documents?" -> Answer N (you'll ingest via admin UI from laptop)
+- Configure .env file with your OPENAI_API_KEY and ADMIN_PASSWORD
+
+The script will take 15-30 minutes to install all dependencies.
+
+================================================================================
+PHASE 2 (ALTERNATIVE): MANUAL SETUP
+================================================================================
+
+If the setup script doesn't work, do it manually:
+
+Install system packages:
+
+    sudo apt update && sudo apt install -y \
+        python3-dev python3-pip python3-venv \
+        python3.11 python3.11-venv python3.11-dev \
+        libmagic-dev poppler-utils ffmpeg \
+        libffi-dev libssl-dev libjpeg-dev zlib1g-dev \
+        espeak-ng espeak-ng-data curl
+
+Create virtual environment with Python 3.11:
+
+    cd /home/pi/coco
+    python3.11 -m venv venv
+    source venv/bin/activate
+
+Install Python dependencies:
+
+    pip install --upgrade pip
+    pip install -r campus_rag_chatbot/requirements_py311.txt
+
+================================================================================
+PHASE 4: CONFIGURE SWAP (IMPORTANT!)
+================================================================================
+
+Check current swap:
+
+    free -m
+
+Create 4GB swap file (required for document ingestion):
+
+    sudo fallocate -l 4G /swapfile
+    sudo chmod 600 /swapfile
+    sudo mkswap /swapfile
+    sudo swapon /swapfile
+
+Make swap permanent (add to fstab):
+
+    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+Verify swap is active:
+
+    free -m
+
+================================================================================
+PHASE 5: CONFIGURE ENVIRONMENT VARIABLES
+================================================================================
+
+Create .env file:
+
+    nano /home/pi/coco/campus_rag_chatbot/.env
+
+Add the following (replace with your actual values):
+
+    OPENAI_API_KEY=sk-your-openai-api-key
+    ADMIN_PASSWORD=your_admin_password
+    ADMIN_API_KEY=your-uuid-api-key
+    VOICE_ENABLED=true
+
+Save and exit (Ctrl+X, Y, Enter).
+
+================================================================================
+PHASE 6: START THE APPLICATION
+================================================================================
+
+Navigate to app directory:
+
+    cd /home/pi/coco/campus_rag_chatbot
+
+Activate virtual environment (if not already):
+
+    source /home/pi/coco/venv/bin/activate
+
+Start the server:
+
+    python app.py
+
+You should see:
+    INFO:     Uvicorn running on http://0.0.0.0:8000
+
+================================================================================
+PHASE 7: CONNECT FROM LAPTOP
+================================================================================
+
+Find RPi5 IP address (on RPi5):
+
+    hostname -I
+
+On your laptop browser, open:
+
+    Main chat:      http://<rpi5-ip>:8000/
+    Admin panel:    http://<rpi5-ip>:8000/admin
+    Developer:      http://<rpi5-ip>:8000/dev
+
+Example:
+    http://192.168.1.100:8000/admin
+
+================================================================================
+PHASE 8: INGEST DOCUMENTS VIA ADMIN UI
+================================================================================
+
+1. Open admin panel in laptop browser
+2. Login with your ADMIN_PASSWORD
+3. Navigate to Documents section
+4. Upload files (TXT or PDF)
+
+IMPORTANT - Monitor memory during ingestion:
+
+    Open another SSH terminal and run:
+    watch -n 2 free -m
+
+    If "available" drops below 500MB, ingestion may fail.
+
+Ingestion time estimates:
+    - TXT files: 30 seconds - 2 minutes
+    - Small PDF (<1MB): 1-3 minutes
+    - Large PDF (>1MB): 5-15 minutes
+
+================================================================================
+PHASE 9: VERIFY EVERYTHING WORKS
+================================================================================
+
+Test checklist (from laptop browser):
+
+[ ] Homepage loads at http://<rpi5-ip>:8000/
+[ ] Can send a text query and get response
+[ ] Admin panel loads and shows documents
+[ ] Response time is under 3 seconds
+
+On RPi5 terminal, check:
+
+[ ] Memory usage: free -m (should have >500MB available)
+[ ] CPU temperature: vcgencmd measure_temp (should be <75C)
+
+================================================================================
+PHASE 10: RUN AS BACKGROUND SERVICE (OPTIONAL)
+================================================================================
+
+To keep server running after SSH disconnect, use screen or tmux:
+
+    sudo apt install screen
+    screen -S coco
+    cd /home/pi/coco/campus_rag_chatbot
+    source /home/pi/coco/venv/bin/activate
+    python app.py
+
+Detach with: Ctrl+A, then D
+Reattach with: screen -r coco
+
+Or create a systemd service for auto-start on boot:
+
+    sudo nano /etc/systemd/system/coco.service
+
+Paste:
+
+    [Unit]
+    Description=CoCo Campus RAG Chatbot
+    After=network.target
+
+    [Service]
+    Type=simple
+    User=pi
+    WorkingDirectory=/home/pi/coco/campus_rag_chatbot
+    ExecStart=/home/pi/coco/venv/bin/python app.py
+    Restart=always
+    RestartSec=10
+    Environment=OPENAI_API_KEY=sk-your-key
+    Environment=ADMIN_PASSWORD=your-password
+
+    [Install]
+    WantedBy=multi-user.target
+
+Enable and start:
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable coco
+    sudo systemctl start coco
+    sudo systemctl status coco
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Problem: "ModuleNotFoundError" when starting app
+Solution: Activate venv first: source /home/pi/coco/venv/bin/activate
+
+Problem: App crashes during document ingestion
+Solution: Ensure swap is configured. Ingest smaller files. Use 8GB RPi5.
+
+Problem: Very slow responses
+Solution: Check network connection. Ensure wired Ethernet if possible.
+
+Problem: "Permission denied" errors
+Solution: Check file ownership: sudo chown -R pi:pi /home/pi/coco
+
+Problem: Can't connect from laptop browser
+Solution: Check RPi5 IP with 'hostname -I'. Ensure both on same network.
+
+Problem: High CPU temperature (>80C)
+Solution: Add active cooling (fan). Reduce ambient temperature.
+
+================================================================================
+QUICK REFERENCE - COMMON COMMANDS
+================================================================================
+
+Start server:
+    cd /home/pi/coco/campus_rag_chatbot
+    source /home/pi/coco/venv/bin/activate
+    python app.py
+
+Check memory:
+    free -m
+
+Check temperature:
+    vcgencmd measure_temp
+
+Check service status:
+    sudo systemctl status coco
+
+View logs:
+    tail -f /home/pi/coco/campus_rag_chatbot/server.log
+
+Pull latest code:
+    cd /home/pi/coco
+    git pull origin main
+
+================================================================================
+                                 END OF GUIDE
+================================================================================

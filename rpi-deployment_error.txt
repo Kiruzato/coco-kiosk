@@ -1,0 +1,10 @@
+(venv) pi@coco-kiosk:~/coco/coco-kiosk/campus_rag_chatbot $ source /home/pi/coco/coco-kiosk/venv/bin/activate
+cd /home/pi/coco/coco-kiosk/campus_rag_chatbot
+python app.py
+2026-02-08 18:30:29.294915015 [W:onnxruntime:Default, device_discovery.cc:211 DiscoverDevicesForPlatform] GPU device discovery failed: device_discovery.cc:91 ReadFileContents Failed to open file: "/sys/class/drm/card1/device/vendor"
+2026-02-08 18:30:31,627 - WARNING - No existing vector store found.
+Traceback (most recent call last):
+  File "/home/pi/coco/coco-kiosk/campus_rag_chatbot/app.py", line 124, in <module>
+    raise RuntimeError("No vector store found. Please ingest documents first.")
+RuntimeError: No vector store found. Please ingest documents first.
+(venv) pi@coco-kiosk:~/coco/coco-kiosk/campus_rag_chatbot $ 
