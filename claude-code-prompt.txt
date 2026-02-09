@@ -1,17 +1,5 @@
-.gitignore Review for RPI5 Testing
-You are working on an existing web app that will be tested on Raspberry Pi 5 via git remote.
-Task
-Review the project and design a proper .gitignore so that only files required to run and test the app on RPI5 are tracked.
-Goals
-•	Keep the repository clean and deployment-ready
-•	Exclude development-only, local, and non-essential files
-•	Follow industry-standard practices for production and edge-device deployment
-Guidance
-•	Identify which files are truly required on RPI5
-•	Ignore scripts, reports, docs, logs, temp files, and local artifacts not needed for testing
-•	Be careful not to exclude anything required for runtime
-•	Explain your decisions briefly and clearly
-Deliverable
-•	A proposed .gitignore
-•	A short explanation of what is included vs excluded and why
-Wait for my next instruction before applying changes.
+Changes and updates to be implemented:
+1. Add a fullscreen toggle for the chatbot UI.
+Place a fullscreen button in the upper-right corner of the chatbot interface. This feature should apply only to the chatbot UI and not affect admin or other views.
+2. Disable automatic textbox focus.
+Remove the chatbot textbox’s auto-focus behavior, including on initial load (localhost UI) and after any type of response, to prevent the virtual keyboard on Raspberry Pi OS from obstructing the view.

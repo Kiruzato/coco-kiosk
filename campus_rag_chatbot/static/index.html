@@ -12,7 +12,12 @@
         <header class="kiosk-header">
             <h1>CoCo</h1>
             <h2>Columban College, Inc. Campus Information Assistant</h2>
-            <button id="resetBtn" class="reset-btn">Start New Conversation</button>
+            <div class="header-buttons">
+                <button id="fullscreenBtn" class="fullscreen-btn" title="Toggle fullscreen">
+                    <span class="fullscreen-icon">&#x26F6;</span>
+                </button>
+                <button id="resetBtn" class="reset-btn">Start New Conversation</button>
+            </div>
         </header>
 
         <!-- Chat Container -->
@@ -42,7 +47,6 @@
                     id="userInput"
                     placeholder="Type your question here..."
                     autocomplete="off"
-                    autofocus
                 >
                 <button type="button" id="voiceBtn" class="voice-btn" title="Click to speak">
                     <svg class="mic-icon" viewBox="0 0 24 24" width="24" height="24">

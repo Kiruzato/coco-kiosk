@@ -32,6 +32,8 @@ const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
 const resetBtn = document.getElementById('resetBtn');
 const loadingIndicator = document.getElementById('loadingIndicator');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const kioskContainer = document.querySelector('.kiosk-container');
 
 // ============================================================================
 // INITIALIZATION
@@ -42,8 +44,16 @@ document.addEventListener('DOMContentLoaded', () => {
     chatForm.addEventListener('submit', handleSubmit);
     resetBtn.addEventListener('click', handleReset);
 
-    // Focus input
-    userInput.focus();
+    // Set up fullscreen toggle
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+    }
+
+    // Listen for fullscreen changes to update button icon
+    document.addEventListener('fullscreenchange', updateFullscreenButton);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+
+    // Note: Auto-focus disabled to prevent virtual keyboard from obstructing view on RPi
 });
 
 // ============================================================================
@@ -322,8 +332,7 @@ async function resetConversation() {
             }
         });
 
-        // Focus input
-        userInput.focus();
+        // Note: Auto-focus disabled to prevent virtual keyboard from obstructing view on RPi
     } catch (error) {
         console.error('Error resetting conversation:', error);
     }
@@ -416,7 +425,7 @@ async function handleSubmit(event) {
         isWaiting = false;
         userInput.disabled = false;
         sendBtn.disabled = false;
-        userInput.focus();
+        // Note: Auto-focus disabled to prevent virtual keyboard from obstructing view on RPi
     }
 }
 
@@ -501,6 +510,52 @@ function formatAnswerText(text) {
  * Make submitFeedback available globally for onclick handlers
  */
 window.submitFeedback = submitFeedback;
+
+// ============================================================================
+// FULLSCREEN TOGGLE
+// ============================================================================
+
+/**
+ * Toggle fullscreen mode for the kiosk container
+ */
+function toggleFullscreen() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        // Enter fullscreen
+        const elem = kioskContainer || document.documentElement;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+        }
+    } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        }
+    }
+}
+
+/**
+ * Update fullscreen button icon based on current state
+ */
+function updateFullscreenButton() {
+    const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+    const icon = fullscreenBtn?.querySelector('.fullscreen-icon');
+
+    if (icon) {
+        // &#x26F6; = square with corners (expand), &#x2716; = X mark (exit)
+        // Using different symbols: ⛶ for expand, ⮌ for minimize
+        icon.innerHTML = isFullscreen ? '&#x2716;' : '&#x26F6;';
+    }
+
+    // Update container class for fullscreen-specific styling
+    if (kioskContainer) {
+        kioskContainer.classList.toggle('fullscreen-mode', isFullscreen);
+    }
+    document.body.classList.toggle('fullscreen-active', isFullscreen);
+}
 
 // ============================================================================
 // PHASE 39B: DEBUG PANEL
@@ -1396,7 +1451,7 @@ function handlePreviewEdit() {
     userInput.value = pendingTranscription;
     transcriptionPreview.style.display = 'none';
     pendingTranscription = '';
-    userInput.focus();
+    // Note: Auto-focus disabled to prevent virtual keyboard from obstructing view on RPi
     setVoiceState(VoiceState.IDLE);
 }
 
