@@ -798,8 +798,8 @@ async def synthesize_speech(request: Request, body: SynthesizeRequest):
         _request_metrics["synthesize_errors"] += 1
         raise VoiceError(400, VoiceErrorCode.TEXT_REQUIRED, "Text is required")
 
-    # Check text length
-    max_text_length = 2000  # Characters
+    # Check text length (increased to support full response reading)
+    max_text_length = 10000  # Characters - allows full chatbot responses
     if len(body.text) > max_text_length:
         _request_metrics["synthesize_errors"] += 1
         raise VoiceError(

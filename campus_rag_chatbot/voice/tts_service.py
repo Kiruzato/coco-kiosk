@@ -269,10 +269,11 @@ class TTSService:
         """
         Optimize text for natural speech output.
 
-        - Truncate very long responses
         - Expand abbreviations
         - Remove markdown formatting
         - Add pauses at appropriate points
+
+        Note: Text is no longer truncated - TTS reads the entire response.
         """
         # Remove markdown formatting
         text = self._strip_markdown(text)
@@ -283,10 +284,6 @@ class TTSService:
 
         # Expand numbered lists for natural reading
         text = self._expand_numbered_lists(text)
-
-        # Truncate if too long
-        if len(text) > self.max_chars:
-            text = self._truncate_at_sentence(text)
 
         # Clean up whitespace
         text = ' '.join(text.split())
@@ -330,19 +327,3 @@ class TTSService:
         text = re.sub(r'^(\d+)\.\s*', replace_number, text, flags=re.MULTILINE)
         return text
 
-    def _truncate_at_sentence(self, text: str) -> str:
-        """Truncate text at a sentence boundary."""
-        truncated = text[:self.max_chars]
-
-        # Find last sentence boundary
-        last_period = max(
-            truncated.rfind('.'),
-            truncated.rfind('!'),
-            truncated.rfind('?')
-        )
-
-        # Only truncate at sentence if we're keeping at least half the content
-        if last_period > self.max_chars * 0.5:
-            truncated = truncated[:last_period + 1]
-
-        return truncated + " For more details, please see the screen."

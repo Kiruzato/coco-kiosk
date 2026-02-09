@@ -119,7 +119,7 @@ VOICE_CONFIG: Dict[str, Any] = {
             "model": "tts-1",
             "enabled": _get_bool_env("TTS_CLOUD_FALLBACK", False),
         },
-        "max_chars": _get_int_env("TTS_MAX_CHARS", 500),  # Limit TTS length
+        "max_chars": _get_int_env("TTS_MAX_CHARS", 10000),  # No truncation - reads full response
     },
 
     # Audio format configuration
