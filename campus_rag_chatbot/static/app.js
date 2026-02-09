@@ -387,13 +387,12 @@ async function handleSubmit(event) {
 
             // Synthesize TTS (keep loading indicator visible)
             console.log('[Phase 41] Synthesizing TTS for typed input...');
-            const audioBlob = await synthesizeTTSOnly(data.answer);
-            console.log('[Phase 41] TTS synthesis result:', audioBlob ? `Blob size: ${audioBlob.size}` : 'null');
+            const ttsResult = await synthesizeTTSOnly(data.answer);
+            console.log('[Phase 41] TTS synthesis result:', ttsResult ? `Blob size: ${ttsResult.blob.size}, Engine: ${ttsResult.engine}` : 'null');
 
-            // Add TTS engine info to debug_info for text input (mirrors voice input behavior)
-            if (audioBlob && data.debug_info) {
-                data.debug_info.tts_engine = 'edge-tts';
-                data.debug_info.tts_fallback_used = false;
+            // Add TTS engine info to debug_info from synthesis response header
+            if (ttsResult && data.debug_info) {
+                data.debug_info.tts_engine = ttsResult.engine;
             }
 
             // Hide loading indicator
@@ -401,9 +400,9 @@ async function handleSubmit(event) {
 
             // Show text and play audio together
             addAssistantMessage(data);
-            if (audioBlob) {
+            if (ttsResult) {
                 console.log('[Phase 41] Playing audio blob...');
-                playAudioBlob(audioBlob);
+                playAudioBlob(ttsResult.blob);
             } else {
                 console.log('[Phase 41] No audio blob to play');
             }
@@ -645,7 +644,7 @@ function renderDebugPanel(debugInfo) {
         : 'N/A (text input)';
     const ttsDisplay = debugInfo.tts_engine
         ? `${escapeHtml(debugInfo.tts_engine)}${debugInfo.tts_fallback_used ? ' (fallback)' : ''}`
-        : (ttsEnabled ? 'edge-tts' : 'Disabled');
+        : (ttsEnabled ? 'Active' : 'Disabled');
 
     const voiceHtml = `
         <div class="debug-column">
@@ -1305,7 +1304,7 @@ function cleanupAudioUrl() {
  * Includes timeout to prevent infinite loading
  * @param {string} text - Text to synthesize
  * @param {number} timeoutMs - Timeout in milliseconds (default 8000)
- * @returns {Promise<Blob|null>} Audio blob or null on failure/timeout
+ * @returns {Promise<{blob: Blob, engine: string}|null>} Object with audio blob and engine name, or null on failure/timeout
  */
 async function synthesizeTTSOnly(text, timeoutMs = 8000) {
     if (!text) return null;
@@ -1329,7 +1328,11 @@ async function synthesizeTTSOnly(text, timeoutMs = 8000) {
             return null;
         }
 
-        return await response.blob();
+        // Get engine from response header
+        const engine = response.headers.get('X-TTS-Engine') || 'unknown';
+        const blob = await response.blob();
+
+        return { blob, engine };
     } catch (error) {
         if (error.name === 'AbortError') {
             console.log('[Phase 41] TTS synthesis timeout after', timeoutMs, 'ms');
