@@ -22,15 +22,16 @@ Create project directory and clone:
 
     mkdir -p /home/pi/coco
     cd /home/pi/coco
-    git clone <your-repo-url> .
+    git clone -b antigravity-dev-2 https://github.com/Kiruzato/coco-kiosk.git .
 
 Or if already cloned, pull latest:
 
-    git pull origin main
+    git pull origin antigravity-dev-2
 
 Verify files are present:
 
     ls -la campus_rag_chatbot/
+    ls pi-setup.sh
 
 ================================================================================
 PHASE 2: RUN SETUP SCRIPT (AUTOMATED)
@@ -284,7 +285,7 @@ View logs:
 
 Pull latest code:
     cd /home/pi/coco
-    git pull origin main
+    git pull origin antigravity-dev-2
 
 ================================================================================
                                  END OF GUIDE

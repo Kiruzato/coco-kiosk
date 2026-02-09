@@ -165,7 +165,7 @@ function addAssistantMessage(data) {
     if (data.rejected) {
         html += `
             <div class="warning-message">
-                ⚠ This answer was generated with low confidence. Please try rephrasing your question or ask about a different topic.
+                &#9888; This answer was generated with low confidence. Please try rephrasing your question or ask about a different topic.
             </div>
         `;
     }
@@ -178,10 +178,10 @@ function addAssistantMessage(data) {
                 <div class="feedback-question">Was this answer helpful?</div>
                 <div class="feedback-buttons">
                     <button class="feedback-btn helpful" onclick="submitFeedback('${feedbackId}', true)">
-                        👍 Yes, helpful
+                        &#10003; Yes, helpful
                     </button>
                     <button class="feedback-btn not-helpful" onclick="submitFeedback('${feedbackId}', false)">
-                        👎 Not helpful
+                        &#10007; Not helpful
                     </button>
                 </div>
             </div>
@@ -212,7 +212,7 @@ function addErrorMessage(message) {
     messageDiv.innerHTML = `
         <div class="message-content">
             <p class="large-text" style="color: #f44336;">
-                ❌ ${escapeHtml(message)}
+                &#10007; ${escapeHtml(message)}
             </p>
         </div>
     `;
@@ -603,7 +603,7 @@ function renderDebugPanel(debugInfo) {
     return `
         <div class="debug-panel collapsed">
             <div class="debug-header" onclick="toggleDebugPanel(this)">
-                <span class="debug-icon">🔧</span>
+                <span class="debug-icon">&#9881;</span>
                 <span class="debug-title">Debug Info</span>
                 <span class="debug-expand">▼</span>
             </div>

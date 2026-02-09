@@ -686,19 +686,19 @@ body {
 }
 
 .voice-status-icon::before {
-    content: "🎤";
+    content: "\25CF";  /* Filled circle - widely supported */
 }
 
 .voice-status.processing .voice-status-icon::before {
-    content: "⏳";
+    content: "\2026";  /* Ellipsis ... */
 }
 
 .voice-status.error .voice-status-icon::before {
-    content: "❌";
+    content: "\2716";  /* Heavy X mark */
 }
 
 .voice-status.speaking .voice-status-icon::before {
-    content: "🔊";
+    content: "\266A";  /* Music note */
 }
 
 /* Transcription Preview */

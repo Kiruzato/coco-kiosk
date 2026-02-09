@@ -1,19 +1,3 @@
-Please debug and fix the issues listed below.
+bugs foung on RPI deployment:
 
-Verify correct AI model integration.
-Confirm that the system is actually using the intended gpt-4o-mini model, as the Debugging Panel currently shows gpt-3.5-turbo. Ensure the model is not hardcoded in the system or the Debugging Panel and that the AI model is properly integrated end to end.
-
-Investigate root causes thoroughly, design fixes that are robust, maintainable, and aligned with industry best practices, and implement solutions that improve system correctness and reliability.
-Validate the fixes yourself, ensure consistent behavior, and check for regressions in related functionality.
-Favor structural and deterministic solutions where appropriate, and preserve existing system behavior unless directly related to the issue.
-After completing the fixes, report:
-•	Root cause analysis
-•	Fix rationale
-•	Validation results
-•	Any remaining risks or follow-up recommendations
-
-After making the changes, generate a high-level .txt report describing what was changed and why.
-The report should avoid technical details and be suitable for non-developers.
-Name the file change_report.txt.
-
-Then wait for my next instruction.
+1. Icon for "Yes, helpful" and "Not helpful" and "Debug Info" are not showing properly, it shows box.
