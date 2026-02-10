@@ -1,3 +1,0 @@
-Changes and updates to be implemented:
-1. TTS does not fully read long responses.
-When the chatbot response is lengthy, TTS stops early and prompts the user to view the screen for more information. TTS should read the entire response regardless of length.

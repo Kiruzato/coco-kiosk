@@ -1,3 +1,0 @@
-bugs foung on RPI deployment:
-
-1. Icon for "Yes, helpful" and "Not helpful" and "Debug Info" are not showing properly, it shows box.
