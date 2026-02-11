@@ -38,6 +38,9 @@ ________________________________________
 •	question_generator/ : Tools for generating synthetic Q&A pairs for testing
 •	ui_design/ : Kiosk UI sandbox for frontend design iteration
 •	PROJECT_CONTEXT.md : Primary architectural documentation
+•	pi-setup.sh : Raspberry Pi setup script (primary deployment)
+•	win-setup.ps1 : Windows setup script (development/testing)
+•	WINDOWS_SETUP_INSTRUCTIONS.txt : Windows setup guide
 ________________________________________
 3. High-Level Architecture
 Request Flow
@@ -216,6 +219,7 @@ ________________________________________
 •	Phase 39: Admin-configurable cloud credentials & real-time debugging panel
 •	Phase 40: Silent TTS with implicit interruption (background audio, auto-stop on input)
 •	Phase 41: Voice bug fixes & Python 3.11 migration
+•	Phase 42: Windows setup & UI enhancements (fullscreen, auto-focus, TTS full response)
 ________________________________________
 11. Recent Phases Details
 Phase 19 — Contiguous Context Reconstruction
@@ -715,6 +719,33 @@ o	campus_rag_chatbot/voice_routes.py (attribute name fixes)
 o	venv311/ (Python 3.11 virtual environment)
 o	requirements_py311.txt (Python 3.11 compatible requirements)
 o	PYTHON311_MIGRATION_REPORT.txt (migration documentation)
+
+Phase 42 — Windows Setup & UI Enhancements
+•	Goal: Enable Windows development/testing and improve kiosk UI for RPi deployment
+•	Implementation:
+o	Created win-setup.ps1 PowerShell setup script (mirrors pi-setup.sh)
+o	Created WINDOWS_SETUP_INSTRUCTIONS.txt with prerequisites and troubleshooting
+o	Added fullscreen toggle button to kiosk UI (upper-right corner)
+o	Disabled auto-focus on textbox to prevent virtual keyboard obstruction on RPi
+o	Removed TTS 500-character truncation - TTS now reads full responses
+o	Fixed debug panel to show actual TTS engine from X-TTS-Engine response header
+o	Added platform-specific dependencies to requirements_py311.txt:
+	python-magic-bin (Windows only, via sys_platform marker)
+	edge-tts (cross-platform, was missing from requirements)
+•	Key Features:
+o	Cross-platform: Same codebase works on RPi and Windows
+o	Fullscreen API for kiosk-mode display
+o	TTS reads complete responses regardless of length
+o	Debug panel accurately reflects which TTS engine synthesized audio
+•	Files:
+o	win-setup.ps1 (Windows setup script)
+o	WINDOWS_SETUP_INSTRUCTIONS.txt (setup guide)
+o	campus_rag_chatbot/static/index.html (fullscreen button, autofocus removed)
+o	campus_rag_chatbot/static/style.css (fullscreen styles)
+o	campus_rag_chatbot/static/app.js (fullscreen toggle, TTS engine from header)
+o	campus_rag_chatbot/voice/tts_service.py (removed truncation)
+o	campus_rag_chatbot/voice_routes.py (increased max_text_length to 10000)
+o	campus_rag_chatbot/requirements_py311.txt (edge-tts, python-magic-bin)
 ________________________________________
 12. Phase 18 Details (Entity Consolidation)
 Phase 18.0 — Entity-Centric Chunk Consolidation
@@ -775,16 +806,19 @@ python app.py
 •	Dev tools: /dev
 ________________________________________
 13. Current Production Status
-Version: Phase 41 (Voice Bug Fixes & Python 3.11 Migration)
+Version: Phase 42 (Windows Setup & UI Enhancements)
 Python: 3.11.9 (required for Piper TTS - Python 3.13 has compatibility issues)
 Virtual Environment: venv311/
 Golden Tests: 32 test cases, 87.5% pass rate (28/32)
+RAG Architecture: Hybrid RAG (vector + BM25 via RRF)
+Cross-Platform: Windows (win-setup.ps1) + Raspberry Pi (pi-setup.sh)
 Voice: Full frontend UI + API layer OPERATIONAL
 •	STT: Google Cloud STT (primary), Whisper.cpp (fallback)
 •	TTS: Piper (primary, offline), edge-tts (fallback)
 •	Audio: WebM → 16-bit WAV conversion fixed
 •	Admin: Provider selection, credential management, debug panel toggle
 •	UX: Silent TTS playback with implicit interruption (Phase 40)
+•	TTS: Full response reading without truncation (Phase 42)
 Known Issues:
 •	404 "General Information" section warnings (detection gaps in PDF parsing)
 •	3-4 golden test failures (prayer content, school motto, tuition query routing - LLM variability)
@@ -805,4 +839,4 @@ Debug Panel (Phase 39B):
 •	Shows: LLM model, retrieval mode, chunks retrieved, grounding status, timing
 •	Works for both text and voice requests
 •	STT/TTS engine info shown for voice requests
-Last Updated: 2026-02-07 (Phase 41 - Python 3.11 Migration)
+Last Updated: 2026-02-10 (Phase 42 - Windows Setup & UI Enhancements)

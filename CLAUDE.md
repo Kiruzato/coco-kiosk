@@ -6,7 +6,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 
 ## Current State
 
-**Completed through Phase 40** - Silent TTS with Implicit Interruption
+**Completed through Phase 42** - Windows Setup & UI Enhancements
 
 ### Phase History
 1. **Phase 1-3**: Core RAG pipeline, document management, multi-format support
@@ -53,6 +53,8 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 42. **Phase 38**: Google Cloud STT with usage monitoring (60-min quota tracking)
 43. **Phase 39**: Admin-configurable cloud credentials & real-time debugging panel
 44. **Phase 40**: Silent TTS with implicit interruption (background audio, auto-stop on input)
+45. **Phase 41**: Voice bug fixes & Python 3.11 migration
+46. **Phase 42**: Windows setup & UI enhancements (fullscreen toggle, auto-focus disabled, TTS full response)
 
 ## Architecture
 
@@ -89,7 +91,8 @@ campus_rag_chatbot/
 │       ├── whisper_cpp.py    # Offline STT (Whisper.cpp)
 │       ├── whisper_openai.py # Cloud STT fallback (OpenAI)
 │       ├── google_cloud_stt.py  # Cloud STT (Google, Phase 38)
-│       └── piper_tts.py      # Offline TTS (Piper)
+│       ├── piper_tts.py      # Offline TTS (Piper)
+│       └── edge_tts.py       # Cloud TTS (Microsoft Edge, free)
 ├── voice_routes.py           # Phase 32: Voice API endpoints
 ├── admin.py                  # CLI admin interface
 ├── static/                   # Web frontend (index.html, admin.html, etc.)
@@ -238,18 +241,33 @@ USAGE_TRACKING_ENABLED=true
 
 ## Current Work / Next Steps
 
-The project has completed Phase 41 (Voice Bug Fixes & Python 3.11 Migration). Recent additions:
-- Phase 38: Google Cloud STT integration with 60-minute quota tracking
-- Phase 39: Admin cloud credential management & real-time debug panel
+The project has completed Phase 42 (Windows Setup & UI Enhancements). Recent additions:
 - Phase 40: Silent TTS - audio plays in background, auto-stops on user input
 - Phase 41: Voice bug fixes & Python 3.11 migration
-  - Fixed Google STT not loading saved settings at startup
-  - Fixed Piper TTS `synthesize_wav` to use proper `wave.open()` wrapper
-  - Fixed `voice_routes.py` attribute access (`_chat_handler` → `chat_handler`)
-  - Migrated to Python 3.11 for Piper TTS compatibility
+- Phase 42: Windows setup & UI enhancements
+  - Fullscreen toggle button for kiosk UI (upper-right corner)
+  - Auto-focus disabled to prevent virtual keyboard obstruction on RPi
+  - TTS reads full responses without truncation (removed 500-char limit)
+  - Debug panel now shows actual TTS engine from response header
+  - Windows setup script (`win-setup.ps1`) and instructions
+  - Added `edge-tts` and `python-magic-bin` to requirements
 - Golden test suite: 32 test cases, 87.5% pass rate (28/32)
 
-Potential future work (Phases 42+):
+## RAG Architecture
+
+**Hybrid RAG** - Combines multiple retrieval methods:
+- Vector similarity (FAISS/OpenAI embeddings) - 70% weight
+- BM25 keyword matching - 30% weight
+- RRF (Reciprocal Rank Fusion) for score combination
+
+## Cross-Platform Support
+
+| Platform | Setup Script | Notes |
+|----------|--------------|-------|
+| Raspberry Pi | `pi-setup.sh` | Primary deployment target |
+| Windows | `win-setup.ps1` | Development/testing |
+
+Potential future work (Phases 43+):
 - Kiosk hardening (RPi5 optimization, error recovery)
 - Multilingual support (Filipino)
 - Multi-document namespace support

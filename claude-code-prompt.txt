@@ -1,0 +1,29 @@
+File/Folder Management Review
+Task
+Perform a file and folder organization review inside:
+campus_rag_chatbot/
+Objective
+Improve file organization by moving files that are not required for setting up or starting the application into more appropriate locations.
+What to Do
+1.	Analyze the contents of campus_rag_chatbot/
+2.	Identify files that:
+o	Are not required for runtime or app startup
+o	Are test scripts, debug scripts, reports, experimental files, or temporary artifacts
+3.	Move those files into appropriate locations (for example: scripts/, tests/, reports/, archive/, or another logically structured directory)
+Important Rules
+•	❗ Do NOT delete any files
+•	❗ Do NOT modify file contents
+•	❗ Do NOT change any application logic or code
+•	Only reorganize by moving files
+Deliverables
+Submit a report that includes:
+•	List of files moved
+•	Original location
+•	New location
+•	Short justification for each move
+•	Confirmation that runtime/startup behavior is unaffected
+Follow clean, industry-standard project organization practices.
+Do not refactor. Do not rewrite code.
+Only perform structural organization.
+Wait for my next instruction after submitting the report.
+
