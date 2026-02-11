@@ -1,29 +1,40 @@
-File/Folder Management Review
-Task
-Perform a file and folder organization review inside:
-campus_rag_chatbot/
+We are refining the Chatbot UI for fullscreen kiosk use (24-inch monitor).
+This task focuses strictly on UI/UX optimization.
 Objective
-Improve file organization by moving files that are not required for setting up or starting the application into more appropriate locations.
-What to Do
-1.	Analyze the contents of campus_rag_chatbot/
-2.	Identify files that:
-o	Are not required for runtime or app startup
-o	Are test scripts, debug scripts, reports, experimental files, or temporary artifacts
-3.	Move those files into appropriate locations (for example: scripts/, tests/, reports/, archive/, or another logically structured directory)
-Important Rules
-•	❗ Do NOT delete any files
-•	❗ Do NOT modify file contents
-•	❗ Do NOT change any application logic or code
-•	Only reorganize by moving files
-Deliverables
-Submit a report that includes:
-•	List of files moved
-•	Original location
-•	New location
-•	Short justification for each move
-•	Confirmation that runtime/startup behavior is unaffected
-Follow clean, industry-standard project organization practices.
-Do not refactor. Do not rewrite code.
-Only perform structural organization.
-Wait for my next instruction after submitting the report.
+Improve vertical space usage and touchscreen usability while maintaining a clean, professional kiosk layout.
+________________________________________
+Required UI Changes
+1. Optimize Panel Heights
+Reduce the vertical height of the following panels to an ideal, efficient size:
+•	Header panel
+•	The panel containing “Powered by AI”
+•	The bottom input panel (voice button, textbox, send button)
+Goals:
+•	Increase the height of the middle conversation area.
+•	Avoid making the interface feel cramped.
+•	Maintain comfortable spacing and alignment.
+•	Ensure buttons and text remain readable and touch-friendly.
+•	Preserve a balanced, kiosk-ready visual structure.
+The result should feel intentional and well-proportioned — not compressed.
+________________________________________
+2. Enlarge CoCo Image
+•	Increase the size of the chatbot image (CoCo).
+•	Keep it visually balanced with the header and surrounding elements.
+•	Avoid distortion or layout shifts.
+•	Maintain a clean and uncluttered look.
+________________________________________
+3. Improve Scrollbar for Touchscreen Use
+•	Further enlarge and thicken the scrollbar.
+•	Optimize it for touchscreen interaction (easy to grab and drag).
+•	Ensure it remains visually integrated with the UI.
+•	Maintain cross-browser compatibility where applicable.
+•	Keep the design modern and unobtrusive while being clearly usable.
+________________________________________
+Design Intent
+•	Maximize conversation visibility.
+•	Improve touchscreen ergonomics.
+•	Enhance overall usability for kiosk deployment.
+•	Maintain professional and structured layout for future UI extensions.
+Focus only on layout and styling improvements.
+After implementation, briefly explain what adjustments were made and why they improve the UI and touchscreen experience.
 

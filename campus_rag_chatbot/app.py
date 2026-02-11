@@ -4315,6 +4315,9 @@ async def serve_admin_ui():
 # Serve static files (CSS, JS, images)
 app.mount("/static", StaticFiles(directory=PROJECT_ROOT / "static"), name="static")
 
+# Serve images from project root images directory (for logo, etc.)
+app.mount("/images", StaticFiles(directory=PROJECT_ROOT.parent / "images"), name="images")
+
 
 # ==============================================================================
 # STARTUP/SHUTDOWN
