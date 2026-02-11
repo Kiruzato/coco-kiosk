@@ -180,18 +180,21 @@ function addAssistantMessage(data) {
         `;
     }
 
-    // Feedback buttons (only for non-rejected answers)
+    // Feedback buttons (only for non-rejected answers) - Modern thumbs icons
     if (!data.rejected) {
         const feedbackId = `feedback-${Date.now()}`;
         html += `
             <div class="feedback-container" id="${feedbackId}">
-                <div class="feedback-question">Was this answer helpful?</div>
-                <div class="feedback-buttons">
-                    <button class="feedback-btn helpful" onclick="submitFeedback('${feedbackId}', true)">
-                        &#10003; Yes, helpful
+                <div class="feedback-icons">
+                    <button class="feedback-icon-btn thumbs-up" onclick="submitFeedback('${feedbackId}', true)" aria-label="Helpful" title="Helpful">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+                            <path d="M2 20h2c.55 0 1-.45 1-1v-9c0-.55-.45-1-1-1H2v11zm19.83-7.12c.11-.25.17-.52.17-.8V11c0-1.1-.9-2-2-2h-5.5l.92-4.65c.05-.22.02-.46-.08-.66-.23-.45-.52-.86-.88-1.22L14 2 7.59 8.41C7.21 8.79 7 9.3 7 9.83v7.84C7 18.95 8.05 20 9.34 20h8.11c.7 0 1.36-.37 1.72-.97l2.66-6.15z"/>
+                        </svg>
                     </button>
-                    <button class="feedback-btn not-helpful" onclick="submitFeedback('${feedbackId}', false)">
-                        &#10007; Not helpful
+                    <button class="feedback-icon-btn thumbs-down" onclick="submitFeedback('${feedbackId}', false)" aria-label="Not helpful" title="Not helpful">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+                            <path d="M22 4h-2c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h2V4zM2.17 11.12c-.11.25-.17.52-.17.8V13c0 1.1.9 2 2 2h5.5l-.92 4.65c-.05.22-.02.46.08.66.23.45.52.86.88 1.22L10 22l6.41-6.41c.38-.38.59-.89.59-1.42V6.34C17 5.05 15.95 4 14.66 4h-8.1c-.71 0-1.36.37-1.72.97l-2.67 6.15z"/>
+                        </svg>
                     </button>
                 </div>
             </div>
@@ -287,14 +290,17 @@ async function submitFeedback(feedbackId, isHelpful) {
         });
 
         if (response.ok) {
-            // Disable feedback buttons and show thank you
+            // Show selected state on clicked button, disable both
             const feedbackContainer = document.getElementById(feedbackId);
             if (feedbackContainer) {
-                feedbackContainer.innerHTML = `
-                    <div class="feedback-thanks">
-                        ✓ Thank you for your feedback!
-                    </div>
-                `;
+                const buttons = feedbackContainer.querySelectorAll('.feedback-icon-btn');
+                buttons.forEach(btn => {
+                    btn.disabled = true;
+                    if ((isHelpful && btn.classList.contains('thumbs-up')) ||
+                        (!isHelpful && btn.classList.contains('thumbs-down'))) {
+                        btn.classList.add('selected');
+                    }
+                });
             }
         }
     } catch (error) {
@@ -1787,3 +1793,65 @@ function stopAudioVisualizer() {
         audioVisualizerContainer.style.display = 'none';
     }
 }
+
+// =============================================================================
+// DRAG-TO-SCROLL FOR MOUSE (Simulates touch scrolling behavior)
+// =============================================================================
+
+(function initDragToScroll() {
+    const scrollContainer = document.getElementById('chatContainer');
+    if (!scrollContainer) return;
+
+    let isDragging = false;
+    let startY = 0;
+    let scrollTop = 0;
+
+    // Mouse down - start drag
+    scrollContainer.addEventListener('mousedown', (e) => {
+        // Don't initiate drag if clicking on interactive elements
+        if (e.target.closest('button, a, input, textarea, select, .feedback-icon-btn')) {
+            return;
+        }
+
+        isDragging = true;
+        startY = e.pageY - scrollContainer.offsetTop;
+        scrollTop = scrollContainer.scrollTop;
+        scrollContainer.classList.add('dragging');
+
+        // Prevent text selection during drag
+        e.preventDefault();
+    });
+
+    // Mouse move - scroll while dragging
+    scrollContainer.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+
+        e.preventDefault();
+        const y = e.pageY - scrollContainer.offsetTop;
+        const walk = (y - startY) * 1.5; // Multiply for faster scroll speed
+        scrollContainer.scrollTop = scrollTop - walk;
+    });
+
+    // Mouse up - stop drag
+    scrollContainer.addEventListener('mouseup', () => {
+        isDragging = false;
+        scrollContainer.classList.remove('dragging');
+    });
+
+    // Mouse leave - stop drag if mouse leaves container
+    scrollContainer.addEventListener('mouseleave', () => {
+        if (isDragging) {
+            isDragging = false;
+            scrollContainer.classList.remove('dragging');
+        }
+    });
+
+    // Prevent drag from interfering with clicks
+    scrollContainer.addEventListener('click', (e) => {
+        // If we were dragging, don't propagate click
+        if (scrollContainer.classList.contains('was-dragging')) {
+            e.stopPropagation();
+            scrollContainer.classList.remove('was-dragging');
+        }
+    });
+})();
