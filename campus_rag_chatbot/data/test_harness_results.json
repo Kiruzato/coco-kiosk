@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-08T15:09:23.725456",
+  "timestamp": "2026-02-11T11:13:47.072476",
   "summary": {
     "total": 51,
     "passed": 51,
@@ -67,7 +67,7 @@
         "confidence": "Medium",
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "The vision of Columban College, Inc. is: \"Guided by Catholic faith and culture of excellence, we shall be an innovative institution of learning, extension, and research by 2025.\"\n\nThe mission is: \"As a Catholic institution, we transform lives through holistic education, Christian formation, and service.\"\n\nThe goals include cooperation with school authorities in the moral upbringing and guidance of children, especially by attending school programs on religious orientation for parents, on drugs, recollection for parents, family education, and the like in conjunction with the children's lessons, and being supportive of the school's implementation of its curricular and co-curricular programs. \n\n(Source: Vision, Mission, Strategic Goals and Core Values of Columban College, Inc.)"
+        "answer": "The vision of Columban College, Inc. is: \"guided by Catholic faith and culture of excellence, we shall be an innovative institution of learning, extension, and research by 2025.\"\n\nThe mission is: \"as a Catholic institution, we transform lives through holistic education, Christian formation, and service.\"\n\nThe goals include cooperation with school authorities in the moral upbringing and guidance of children, especially by attending school programs on religious orientation for parents, on drugs, recollection for parents, family education, and the like in conjunction with the children's lessons, and being supportive of the school's implementation of its curricular and co-curricular programs. \n\n(Source: Vision, Mission, Strategic Goals and Core Values of Columban College, Inc.)"
       }
     },
     {
@@ -81,7 +81,7 @@
         "confidence": "Medium",
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "Columban College, Inc. is a Christ-centered Catholic educational institution owned by the Diocese of Iba and guided by the motto, \"We are Christ's and not our own.\" The college serves the educational needs of Olongapo City, the province of Zambales, and nearby provinces. Its main campus is located in Barangay Asinan, with satellite campuses in Barrio Barretto, Olongapo City, and Barangay Naulo, Sta. Cruz, Zambales.\n\nThe institution was originally known as the Naval Reservation Junior College (NRJC), founded in 1947 by Mr. Pedro Mendoza and Mr. Dionisio Lindayag. NRJC was established to provide education for the people of Olongapo City and employees of the Subic Naval Base. In 1961, the Missionary Society of St. Columban for the Prelature Nullius of Iba acquired the school. It was incorporated in 1962 and renamed Columban College, Incorporated. A board of trustees was formed, headed by Bishop Henry Byrne, M.S.C.C., D.D., the first bishop of Iba. In 1964, the college's basic education programs were officially recognized. \n\n(Source: Historical Sketch of Columban College, Inc.)"
+        "answer": "Columban College, Inc. was originally known as the Naval Reservation Junior College (NRJC), founded in 1947 by Mr. Pedro Mendoza and Mr. Dionisio Lindayag. NRJC was established to provide education for the people of Olongapo City and employees of the Subic Naval Base. In 1961, the Missionary Society of St. Columban for the Prelature Nullius of Iba acquired the school. It was incorporated in 1962 and renamed Columban College, Incorporated. A board of trustees was formed, headed by Bishop Henry Byrne, M.S.C.C., D.D., the first bishop of Iba. In 1964, the college's basic education programs were officially recognized. \n\nColumban College is a Christ-centered Catholic educational institution owned by the Diocese of Iba and guided by the motto, \"We are Christ's and not our own.\" The college serves the educational needs of Olongapo City, the province of Zambales, and nearby provinces, with its main campus located in Barangay Asinan and satellite campuses in Barrio Barretto, Olongapo City, and Barangay Naulo, Sta. Cruz, Zambales. (Source: Historical Sketch of Columban College, Inc.)"
       }
     },
     {
@@ -137,7 +137,7 @@
         "confidence": "Medium",
         "grounding_mode": "keyword",
         "rejected": false,
-        "answer": "The engineering vision is: \"guided by the catholic faith and culture of excellence, the college of engineering shall be an innovative institution of learning, extension and research for future professional engineers who are to become responsive to the demands of local and global development by 2025.\"\n\nThe engineering mission is: \"as a catholic institution, we transform lives through holistic engineering education, christian formation, and service.\" \n\n(Source: Campus Documents, Engineering Vision and Mission)"
+        "answer": "The engineering vision is: \"guided by the catholic faith and culture of excellence, the college of engineering shall be an innovative institution of learning, extension and research for future professional engineers who are to become responsive to the demands of local and global development by 2025.\"\n\nThe engineering mission is: \"as a catholic institution, we transform lives through holistic engineering education, christian formation, and service.\" \n\n(Source: Campus documents, Engineering Vision and Mission sections)"
       }
     },
     {
@@ -207,7 +207,7 @@
         "confidence": "Medium",
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "CC Form 2 is the official registration form. A white copy is issued to the student, and a blue copy is issued to the parent or guardian. (Source: Verified campus documents, section on CC Form 2)"
+        "answer": "CC Form 2 is the official registration form. A white copy is issued to the student, and a blue copy is issued to the parent or guardian. (Source: Verified campus documents, CC Form 2 section)"
       }
     },
     {
@@ -221,7 +221,7 @@
         "confidence": "Medium",
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "The special class policy at Columban College, Inc. allows for the creation of special classes under specific conditions. Here are the key points:\n\n1. **Reasons for Special Classes**:\n   - Courses where students have failed.\n   - Courses that are closed but still have enrollees.\n   - Courses that are no longer offered due to curriculum changes.\n   - Courses that cannot be cross-enrolled as a matter of academic policy.\n   - Special classes apply to students who are graduating at the end of the semester and/or to prerequisite courses that must be taken.\n\n2. **Student Limit**: The number of students in a special class should not exceed nine (9).\n\n3. **Fees**: A student enrolled in a special class pays an additional fee, which is determined by the accounting office and must be settled on or before the midterm examination.\n\n4. **Procedures for Requesting a Special Class**:\n   - Fill out the petition for special class form (CC Form 10).\n   - Proceed to the respective dean's office for the dean's action.\n   - Submit the accomplished special class form (in triplicate) to the admissions and registration office to check student registration.\n   - The approved petition for special class form will be forwarded to the accounting office for assessment/adjustment of fees.\n   - Signatures of the dean, faculty, and students must be affixed to the special class form (CC Form 10).\n\n5. **Class Size Requirements**:\n   - The minimum number of students per class in regular semesters is thirty (30).\n   - For basic physical education and NSTP classes, the minimum is fifty (50).\n   - No minimum number of students is required to enroll in a major course as long as it is open and within the prescribed curriculum offering.\n\n(Source: Special Class Policy Document, Sections 1-5)"
+        "answer": "The special class policy at Columban College, Inc. allows for the creation of special classes under specific conditions. Here are the key points:\n\n1. **Reasons for Special Classes**:\n   - Courses where students have failed.\n   - Courses that are closed but still have enrollees.\n   - Courses that are no longer offered due to curriculum changes.\n   - Courses that cannot be cross-enrolled as a matter of academic policy.\n   - Special classes apply to students who are graduating at the end of the semester or to prerequisite courses that must be taken.\n\n2. **Student Limit**: The number of students in a special class should not exceed nine (9).\n\n3. **Additional Fees**: A student enrolled in a special class must pay an additional fee, which is determined by the accounting office and must be settled on or before the midterm examination.\n\n4. **Procedures for Requesting a Special Class**:\n   - Fill out the petition for special class form (CC Form 10).\n   - Proceed to the respective dean's office for the dean's action.\n   - Submit the accomplished special class form (in triplicate) to the admissions and registration office to check student registration.\n   - The approved petition for special class form will be forwarded to the accounting office for assessment/adjustment of fees.\n   - Signatures of the dean, faculty, and students must be affixed to the special class form (CC Form 10).\n\n5. **Class Size Requirements**:\n   - The minimum number of students per class in basic physical education and NSTP classes is fifty (50).\n   - No minimum number of students is required to enroll in a major course as long as it is open and within the prescribed curriculum offering.\n\nThis information is sourced from the \"Special Class Policy Statement\" and related sections in the campus documents."
       }
     },
     {
@@ -235,7 +235,7 @@
         "confidence": "Medium",
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "The change of program policy at Columban College, Inc. recognizes the rights of students to shift to another program or major, provided all requirements are met. Here are the guidelines and conditions for changing a program:\n\n1. Students must fill out a shifting form for change of program/major (CC Form 6).\n2. A change in program or major within the same college shall be subject to the approval of the dean.\n3. A change in program that involves transferring to another college shall be subject to the approval of the dean of the accepting college.\n4. A student who has been debarred by a college is not eligible to shift to another program within the same college or to other colleges.\n\nThe procedures for filing an application for change of program are as follows:\n\n1. Accomplish the application for change of program form (CC Form 6) in duplicate copies at the admissions and registration office.\n2. Proceed to the cashiers office to pay the required fee.\n3. Submit the application for change of program (CC Form 6) along with the official receipt of payment at the admissions and registration office to verify the student's credentials on file, evaluation of subjects, and the action of the dean and director for admissions and registration office.\n4. Get the result after five (5) working days at the admissions and registration office.\n\nNote: A student is allowed to shift to another program only once. (Source: Change of Program Policy Statement and Procedures)"
+        "answer": "The change of program policy at Columban College, Inc. recognizes the rights of students to shift to another program or major, provided all requirements are met. Here are the guidelines and conditions for changing a program:\n\n1. Students must fill out a shifting form for change of program/major (CC Form 6).\n2. A change in program or major within the same college shall be subject to the approval of the dean.\n3. A change in program that involves transferring to another college shall be subject to the approval of the dean of the accepting college.\n4. A student who has been debarred by a college is not eligible to shift to another program within the same college or to other colleges.\n\nThe procedures for filing an application for change of program are as follows:\n\n1. Accomplish the application for change of program form (CC Form 6) in duplicate copies at the admissions and registration office.\n2. Proceed to the cashiers office to pay the required fee.\n3. Submit the application for change of program (CC Form 6) with the official receipt of payment at the admissions and registration office to verify the student's credentials on file, evaluation of subjects, and the action of the dean and director for admissions and registration office.\n4. Get the result after five (5) working days at the admissions and registration office.\n\nNote: A student is allowed to shift to another program only once. (Source: Change of Program Policy Statement and Procedures)"
       }
     },
     {
@@ -263,7 +263,7 @@
         "confidence": "Medium",
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "Student school records refer to the documents that the school maintains regarding a student's academic and administrative history. According to the verified campus documents, the school releases student records to students who have no outstanding obligations, upon request. The requestable school records include:\n\n1. **Transcript of Records (TOR)**: This may be issued as either official or unofficial. An official transcript is a formal document issued to the admitting school upon request, while an unofficial transcript is for reference, evaluation, employment, board examination, and transfer purposes only.\n\n2. **Diploma**: Issued to a student after completing all degree program requirements prescribed by the Commission on Higher Education (CHED) or the Technical Education and Skills Development Authority (TESDA).\n\n3. **Certificates**: The school issues various certificates as part of the student school records, including:\n   - Certificate of eligibility to transfer (also known as transfer credential or honorable dismissal)\n   - Certificate of enrollment\n   - Certificate of attendance\n   - Certificate of good moral character\n   - Certificate of grades\n   - Certificate of bridging courses\n   - Certificate of graduation\n   - Certificate of graduation with GWA (General Weighted Average)\n   - Certificate of units earned\n   - Certificate of medium of instruction\n   - Certificate of course description\n   - Cross-enroll permit\n   - Certificate of cross-enrollment\n   - Grade certification\n   - Authentication verification (CAV)\n   - Evaluated program curriculum\n   - Certificate of no objection\n   - Certificate of no scholarship\n   - Certificate of anticipated date of graduation\n   - Certificate of NSTP serial number\n   - Certificate of prescribed curriculum\n   - Certified true copy\n\nThese records are essential for various academic and administrative purposes. (Source: Student School Records Policy Statement)"
+        "answer": "Student school records refer to the documents that the school maintains regarding a student's academic and personal information. According to the verified campus documents, the school releases student records to students who have no outstanding obligations, upon request. The requestable school records include:\n\n1. **Transcript of Records (TOR)**: This may be issued as either official or unofficial. An official transcript is a formal document issued to the admitting school upon request, while an unofficial transcript is for reference, evaluation, employment, board examination, and transfer purposes only.\n\n2. **Diploma**: Issued to a student after completing all degree program requirements prescribed by the Commission on Higher Education (CHED) or the Technical Education and Skills Development Authority (TESDA).\n\n3. **Certificates**: The school issues various certificates as part of the student school records, including:\n   - Certificate of eligibility to transfer (also known as transfer credential or honorable dismissal)\n   - Certificate of enrollment\n   - Certificate of attendance\n   - Certificate of good moral character\n   - Certificate of grades\n   - Certificate of bridging courses\n   - Certificate of graduation\n   - Certificate of graduation with GWA\n   - Certificate of units earned\n   - Certificate of medium of instruction\n   - Certificate of course description\n   - Cross-enroll permit\n   - Certificate of cross-enrollment\n   - Grade certification\n   - Authentication verification (CAV)\n   - Evaluated program curriculum\n   - Certificate of no objection\n   - Certificate of no scholarship\n   - Certificate of anticipated date of graduation\n   - Certificate of NSTP serial number\n   - Certificate of prescribed curriculum\n   - Certified true copy\n\nThese records are essential for various academic and administrative purposes. (Source: Student School Records Policy Statement)"
       }
     },
     {
@@ -277,7 +277,7 @@
         "confidence": "Medium",
         "grounding_mode": "keyword",
         "rejected": false,
-        "answer": "To request a Transcript of Records (TOR), a student must ensure they have no outstanding obligations. The TOR can be issued as either an official or unofficial document. An official TOR is a formal document issued to the admitting school upon request, while an unofficial TOR is for reference, evaluation, employment, board examination, and transfer purposes only. \n\nFor the specific procedure to request a TOR, I don't have verified campus information to answer that question. \n\n(Source: Student School Records Policy Statement)"
+        "answer": "To request a Transcript of Records (TOR), a student must ensure they have no outstanding obligations. The TOR can be issued as either an official or unofficial document. An official TOR is a formal document issued to the admitting school upon request, while an unofficial TOR is for reference, evaluation, employment, board examination, and transfer purposes only. \n\nFor the official TOR, once it is issued, another copy cannot be released without written clearance from the admitting school. \n\nFor more detailed steps, please refer to the \"student school records policy statement\" section of the campus documents."
       }
     },
     {
@@ -291,7 +291,7 @@
         "confidence": "Medium",
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "The school issues various certificates as part of the student school records. These include:\n\n1. Certificate of eligibility to transfer\n2. Certificate of enrollment\n3. Certificate of attendance\n4. Certificate of good moral character\n5. Certificate of grades\n6. Certificate of bridging courses\n7. Certificate of grades with average\n8. Certificate of graduation\n9. Certificate of graduation with gwa\n10. Certificate of units earned\n11. Certificate of medium of instruction\n12. Certificate of course description\n13. Cross-enroll permit\n14. Certificate of cross-enrollment grade\n15. Certification authentication verification (cav)\n16. Evaluated program curriculum\n17. Certificate of no objection\n18. Certificate of no scholarship\n19. Certificate of anticipated date of graduation\n20. Certificate of nstp serial number\n21. Certificate of prescribed curriculum\n22. Certified true copy\n\n(Source: Verified campus documents, Certificates section)"
+        "answer": "The school issues various certificates as part of the student school records. These include:\n\n1. Certificate of eligibility to transfer\n2. Certificate of enrollment\n3. Certificate of attendance\n4. Certificate of good moral character\n5. Certificate of grades\n6. Certificate of bridging courses\n7. Certificate of grades with average\n8. Certificate of graduation\n9. Certificate of graduation with gwa\n10. Certificate of units earned\n11. Certificate of medium of instruction\n12. Certificate of course description\n13. Cross-enroll permit\n14. Certificate of cross-enrollment grade\n15. Certification authentication verification (cav)\n16. Evaluated program curriculum\n17. Certificate of no objection\n18. Certificate of no scholarship\n19. Certificate of anticipated date of graduation\n20. Certificate of nstp serial number\n21. Certified true copy\n\n(Source: Verified campus documents, Certificates section)"
       }
     },
     {
@@ -319,7 +319,7 @@
         "confidence": "Medium",
         "grounding_mode": "keyword",
         "rejected": false,
-        "answer": "To request a Transcript of Records (TOR), a student must ensure they have no outstanding obligations. The TOR can be issued as either an official or unofficial document. An official TOR is a formal document issued to the admitting school upon request, while an unofficial TOR is for reference, evaluation, employment, board examination, and transfer purposes only. \n\nFor the specific steps to request a TOR, I don't have verified campus information to answer that question. \n\n(Source: Student School Records Policy Statement)"
+        "answer": "To request a Transcript of Records (TOR), a student must ensure they have no outstanding obligations. The TOR can be issued as either an official or unofficial document. An official TOR is a formal document issued to the admitting school upon request, while an unofficial TOR is for reference, evaluation, employment, board examination, and transfer purposes only. \n\nFor the official TOR, once it is issued, another copy cannot be released without written clearance from the admitting school. \n\nFor more detailed steps, please refer to the \"student school records policy statement\" section of the campus documents."
       }
     },
     {
@@ -333,7 +333,7 @@
         "confidence": "Medium",
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "According to the verified campus documents, the fees and refund policy is as follows:\n\n1. The school charges reasonable fees as approved by CHED and allows payment on an installment plan.\n2. A student who withdraws or cancels enrollment after paying one or more installments is responsible for settling the unpaid balance of fees for the whole semester.\n3. A student who withdraws or cancels enrollment may be given a refund of:\n   - 100% of tuition fees and other school fees except for the registration fee if he/she cancels enrollment before the scheduled start of classes;\n   - 75% of tuition fees if he/she drops during the first week of classes;\n   - 50% of tuition fees if he/she drops during the second week of classes;\n   - No refund will be given to a student who withdraws any time after the second week of classes.\n\n(Source: Chapter 4 Fees and Scholarship Policy Statement)"
+        "answer": "According to the verified campus documents, the fees and refund policy is as follows:\n\n1. The school charges reasonable fees as approved by CHED and recognizes the academic potential of deserving students through scholarship programs.\n2. The school allows payment on an installment plan.\n3. A student who withdraws or cancels enrollment after paying one or more installments is responsible for settling the unpaid balance of fees for the whole semester.\n4. However, a student who withdraws or cancels enrollment may be given a refund of:\n   - 100% of tuition fees and other school fees except for the registration fee if he/she cancels enrollment before the scheduled start of classes;\n   - 75% of tuition fees if he/she drops during the first week of classes;\n   - 50% of tuition fees if he/she drops during the second week of classes;\n   - No refund will be given to a student who withdraws any time after the second week of classes.\n\n(Source: Chapter 4 Fees and Scholarship Policy Statement)"
       }
     },
     {
@@ -361,7 +361,7 @@
         "confidence": "Medium",
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "The institutional thrusts of Columban College, Inc. are attained through collaborative and co-responsible efforts of the following:\n\n1. Administrators\n   a. Who are fully conscious that Christ operates through them to teach, administer, and sanctify his flock, the academic community;\n   b. Who coordinates and facilitates the total development of the educand;\n   c. Who implement the policies and decisions of the school's board of trustees. \n\n(Source: Verified campus documents, section on institutional thrusts)"
+        "answer": "The institutional thrusts of Columban College, Inc. are attained through collaborative and co-responsible efforts of the following:\n\n1. Administrators\n   a. Who are fully conscious that Christ operates through them to teach, administer, and sanctify his flock, the academic community;\n   b. Who coordinates and facilitates the total development of the educand;\n   c. Who implement the policies and decisions of the school's board of trustees. \n\n(Source: Verified campus documents)"
       }
     },
     {
@@ -375,7 +375,7 @@
         "confidence": "Medium",
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "The student receives a grade of 5.0 (failed) if he/she: \n\na. withdraws unofficially from a class at any time during the school term. (A subject is officially dropped when the respective instructor/professor, the dean, and the registrar are notified by filing the request for dropping/changing/adding of subject form (CC Form 5). \n\nb. withdraws from a class after failing the midterm examination, even if he/she officially withdraws from a class after enrollment but before the midterm examination. If a subject is officially dropped during the enrollment period, neither the subject nor a DR grade will appear in the student's permanent record. \n\nc. never attended the class. \n\nThe INC (incomplete) mark is given if the student fails to take the final examination or to submit a major requirement of a course. Non-compliance within one (1) year will result in a failing grade. \n\n(Source: Verified campus documents, section on grading system)"
+        "answer": "The student receives a grade of 5.0 (failed) if he/she: \n\na. withdraws unofficially from a class at any time during the school term. (A subject is officially dropped when the respective instructor/professor, the dean, and the registrar are notified by filing the request for dropping/changing/adding of subject form (CC Form 5). \n\nb. withdraws from a class after failing the midterm examination, even if he/she withdraws officially from a class after enrollment but before the midterm examination. \n\nc. never attended the class. \n\nThe \"INC\" (incomplete) mark is given if the student fails to take the final examination or to submit a major requirement of a course. Non-compliance within one (1) year will result in a failing grade. \n\n(Source: Verified campus documents, section on grading system)"
       }
     },
     {
@@ -417,7 +417,7 @@
         "confidence": "Medium",
         "grounding_mode": "keyword",
         "rejected": false,
-        "answer": "Honorable mention is awarded to a candidate who has a general weighted average of at least 88% with no grade lower than 85% or 2.0. Additionally, a candidate for honorable mention must not have obtained a mark of dropped or failed in any course required by the program, whether such mark was obtained in the college or other institutions. This information is sourced from the academic awards for graduation section of the campus documents."
+        "answer": "Honorable mention is awarded to a candidate who has a general weighted average of at least 88% with no grade lower than 85% or 2.0. Additionally, a candidate for honorable mention must not have obtained a mark of dropped or failed in any course required by the program, whether such mark was obtained in the college or other institutions. (Source: Academic Awards for Graduation, section on Honorable Mention)"
       }
     },
     {
@@ -529,7 +529,7 @@
         "confidence": "Medium",
         "grounding_mode": "keyword",
         "rejected": false,
-        "answer": "Minor offenses are defined as acts that do not constitute major violations and are subject to specific disciplinary actions. The first offense for minor offenses includes the following sanctions:\n\n1. A verbal warning and counsel from the Student Affairs Office (SAO).\n2. A written apology to the person concerned in case of a personal offense.\n3. A monetary payment or appropriate service to repair or replace the damage caused.\n\n(Source: campus documents, section 5.2)"
+        "answer": "Minor offenses include the following actions:\n\n1. A verbal warning and counsel from the Student Affairs Office (SAO).\n2. A written apology to the person concerned in case of a personal offense.\n3. A monetary payment or appropriate service to repair or replace the damage caused.\n\nThese actions are outlined in the campus document under section 5.2.1. (Document name not specified)."
       }
     },
     {
@@ -599,7 +599,7 @@
         "confidence": "Medium",
         "grounding_mode": "keyword",
         "rejected": false,
-        "answer": "Engr. John Ronald Enriquez is a faculty member in the Bachelor of Science in Electrical Engineering program at Columban College, Inc. (source: campus documents)."
+        "answer": "Engr. John Ronald Enriquez is a faculty member in the Electrical Engineering department at Columban College, Inc. (source: campus documents)."
       }
     },
     {
@@ -627,7 +627,7 @@
         "confidence": "N/A",
         "grounding_mode": "keyword",
         "rejected": false,
-        "answer": "Engr. Vivian E. Gutierrez is a professional engineer known for her contributions in the field of engineering. However, specific details about her background, achievements, or current role may vary. For more accurate information, please refer to verified sources or documents related to her work.\n\n[Based on general AI knowledge]"
+        "answer": "Engr. Vivian E. Gutierrez is a professional engineer known for her contributions in the field of engineering. However, specific details about her background, achievements, or current role may vary. For more precise information, please provide additional context or specify the area of her expertise.\n\n[Based on general AI knowledge]"
       }
     },
     {
@@ -641,7 +641,7 @@
         "confidence": "Medium",
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "To access the Columban College Pinnacle Student Module, follow these steps:\n\n1. URL: Go to [https://aims.pinnacle.com.ph/columban/students/](https://aims.pinnacle.com.ph/columban/students/).\n2. Username: Enter your student number.\n3. Password: Enter your designated password.\n4. Birthdate: Enter your birthdate.\n5. Forgot Password: If you cannot remember your password, there is a \"forgot your password?\" option available on the login page.\n\nFor new students, use the applicant module at [https://aims.pinnacle.com.ph/columban/applicants/](https://aims.pinnacle.com.ph/columban/applicants/).\n\nFor any issues, you can contact the Admissions and Registration Office (ARO) at registrar@columban.edu.ph or call (047) 222-3329 loc. 121.\n\n(Source: Verified campus documents, \"How to Access Pinnacle Student Access Module\")"
+        "answer": "To access the Columban College Pinnacle Student Module, follow these steps:\n\n1. URL: Go to [https://aims.pinnacle.com.ph/columban/students/](https://aims.pinnacle.com.ph/columban/students/).\n2. Username: Enter your student number.\n3. Password: Enter your designated password.\n4. Birthdate: Enter your birthdate.\n5. Forgot Password: If you cannot remember your password, there is a \"forgot your password?\" option available on the login page.\n\nFor new students, use the applicant module at [https://aims.pinnacle.com.ph/columban/applicants/](https://aims.pinnacle.com.ph/columban/applicants/).\n\nIf you encounter any issues, you can contact the Admissions and Registration Office (ARO) at registrar@columban.edu.ph or call (047) 222-3329 loc. 121.\n\n(Source: Verified campus documents, \"How to Access Pinnacle Student Access Module\")"
       }
     },
     {
@@ -655,7 +655,7 @@
         "confidence": "Medium",
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "To check grades online at Columban College, follow these steps:\n\n1. Navigate to the portal: Go to the official AIMS login page at https://aims.pinnacle.com.ph/columban/students/.\n2. Log in: Enter your student credentials, which include your student ID number, password, and birthdate.\n3. View grades: Look for the grades, transcript, or student profile section to view your current semester results.\n4. Complete evaluations: If necessary, click on the faculty evaluation tab to evaluate instructors before viewing grades.\n5. Settle outstanding balance: Ensure that all financial obligations or account balances are fully settled, as grades may not be accessible if there is an unpaid balance.\n\nIf you encounter technical issues, you can contact the SCC MIS official on Facebook or the institution directly. (Source: Verified campus documents, steps to check grades online)"
+        "answer": "To check grades online at Columban College, follow these steps:\n\n1. Navigate to the portal: Go to the official AIMS login page at https://aims.pinnacle.com.ph/columban/students/.\n2. Log in: Enter your student credentials (student ID number, password, and birthdate).\n3. View grades: Look for the grades, transcript, or student profile section to view current semester results.\n4. Complete evaluations: If necessary, click on the faculty evaluation tab to evaluate instructors before viewing grades.\n5. Settle outstanding balance: Ensure that all financial obligations or account balances are fully settled, as grades may not be accessible if there is an unpaid balance.\n\nIf you encounter technical issues, contact the SCC MIS official on Facebook or the institution directly. (Source: Verified campus documents, steps to check grades online)"
       }
     },
     {
@@ -669,7 +669,7 @@
         "confidence": "Medium",
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "To accomplish the evaluation, follow these steps:\n\n1. Log in at: https://aims.pinnacle.com.ph/columban/students/\n2. Enter your login credentials.\n3. Click on the faculty evaluation tab.\n4. Select the academic year and semester, then click set.\n5. Click the course code in the second column to display the evaluation questions.\n6. After answering the questions, click review evaluation. If you are sure of your responses, click close and then finish. Repeat this process for each subject.\n\nImportant reminders for accomplishing the evaluation:\n1. All questions must be answered. You cannot proceed to the next page if any question is left unanswered.\n2. Be fair in rating. This is not an opportunity to express personal grievances.\n3. Your responses will remain confidential. Faculty will only receive aggregated scores and a summary of comments. Student identities will not be disclosed.\n4. Provide meaningful feedback. Focus your comments on teaching effectiveness, classroom management, and student engagement rather than personal opinions.\n5. Base your ratings on actual experiences. Evaluate your faculty based on your interactions and observations throughout the semester.\n6. Be honest and responsible. Your feedback helps improve teaching quality and student learning.\n7. Once submitted, responses cannot be changed. Ensure accuracy before final submission.\n8. This evaluation is required before enrolling in the next term or requesting official documents.\n\n(Source: Verified campus documents, Evaluation Instructions)"
+        "answer": "To accomplish the evaluation, follow these steps:\n\n1. Log in at: https://aims.pinnacle.com.ph/columban/students/\n2. Enter your login credentials.\n3. Click on the faculty evaluation tab.\n4. Select the academic year and semester, then click set.\n5. Click the course code in the second column to display the evaluation questions.\n6. After answering the questions, click review evaluation. If you are sure of your responses, click close and then finish. Repeat this process for each subject.\n\nImportant reminders for accomplishing the evaluation:\n1. All questions must be answered. You cannot proceed to the next page if any question is left unanswered.\n2. Be fair in rating. This is not an opportunity to express personal grievances.\n3. Your responses will remain confidential. Faculty will only receive aggregated scores and a summary of comments. Student identities will not be disclosed.\n4. Provide meaningful feedback. Focus your comments on teaching effectiveness, classroom management, and student engagement rather than personal opinions.\n5. Base your ratings on actual experiences. Evaluate your faculty based on your interactions and observations throughout the semester.\n6. Be honest and responsible. Your feedback helps improve teaching quality and student learning.\n7. Once submitted, responses cannot be changed. Ensure accuracy before final submission.\n8. This evaluation is required before enrolling in the next term or requesting official documents.\n\n(Source: Verified campus documents)"
       }
     },
     {
@@ -697,7 +697,7 @@
         "confidence": "Medium",
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "The CE Board Top Notchers are as follows:\n\n1. Engr. Renato Gopez - 6th place (Year: 1990)\n2. Engr. Armando Gonzales - 3rd place (Year: 1993)\n3. Engr. Edwin Grate - 9th place (Year: 1993)\n4. Engr. Roberto Fabrique - 5th place (Year: 1995)\n5. Engr. Ferdinand Tablinga - 8th place (Year: 1997)\n6. Engr. Michael Gura - 3rd place (Year: 2003)\n7. Engr. Jesson James Cabael - 7th place (Year: 2011)\n8. Engr. Jan Alexis Monsalud - 7th place (Year: 2015)\n\n(Source: Verified campus documents, CE Board Top Notchers section)"
+        "answer": "The CE Board top notchers are:\n\n1. Engr. Renato Gopez - 6th place (Year: 1990)\n2. Engr. Armando Gonzales - 3rd place (Year: 1993)\n3. Engr. Edwin Grate - 9th place (Year: 1993)\n4. Engr. Roberto Fabrique - 5th place (Year: 1995)\n5. Engr. Ferdinand Tablinga - 8th place (Year: 1997)\n6. Engr. Michael Gura - 3rd place (Year: 2003)\n7. Engr. Jesson James Cabael - 7th place (Year: 2011)\n8. Engr. Jan Alexis Monsalud - 7th place (Year: 2015)\n\n(Source: Verified campus documents)"
       }
     },
     {
