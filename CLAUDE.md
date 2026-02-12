@@ -6,7 +6,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 
 ## Current State
 
-**Completed through Phase 46** - Arithmetic Query Processing
+**Completed through Phase 48** - Unified Query Parser
 
 ### Phase History
 1. **Phase 1-3**: Core RAG pipeline, document management, multi-format support
@@ -58,6 +58,8 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 47. **Phase 44**: LLM-as-Final-Synthesizer architecture (4-layer orchestration, semantic relevance scoring)
 48. **Phase 45**: Response Style Policy for kiosk/voice UX (query analyzer, style hints, LaTeX stripping)
 49. **Phase 46**: Arithmetic Query Processing (input preprocessor, deterministic math engine, STT artifact cleanup)
+50. **Phase 47**: Campus Query Engine Data Model (hierarchical schema, CampusQueryIndex, structural proximity)
+51. **Phase 48**: Unified Query Parser (StructuredQuery, QueryIntent, filter extraction, is_campus_query)
 
 ## Architecture
 
@@ -78,6 +80,11 @@ campus_rag_chatbot/
 ├── entity_consolidation.py   # DEPRECATED: Use consolidation_engine.py
 ├── consolidation_engine.py   # Phase 24: Config-driven consolidation
 ├── metadata_index.py         # Phase 25: Fast chunk lookups by metadata
+├── campus_schema.py          # Phase 47: Hierarchical entity schema (Campus/Building/Floor/Room)
+├── campus_index.py           # Phase 47: CampusQueryIndex with O(1) lookups
+├── migrate_entities.py       # Phase 47: Entity migration validation script
+├── structured_query.py       # Phase 48: StructuredQuery, QueryIntent, QueryFilter
+├── campus_query_parser.py    # Phase 48: Unified query parser with filter extraction
 ├── response_orchestrator.py  # Phase 44: LLM-as-Final-Synthesizer architecture
 ├── query_analyzer.py         # Phase 45: Query type detection for response formatting
 ├── input_preprocessor.py     # Phase 46: STT artifact cleanup, number normalization

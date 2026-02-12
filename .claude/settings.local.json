@@ -119,7 +119,9 @@
       "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -c \"import input_preprocessor; import math_engine; print\\(''Imports OK''\\)\")",
       "Bash(\"C:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/venv311/Scripts/python.exe\" -c \"import input_preprocessor; import math_engine; print\\(''Imports OK''\\)\")",
       "Bash(\"C:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/venv311/Scripts/python.exe\" -c \"\nfrom math_engine import try_calculate, is_calculable_expression\nfrom input_preprocessor import preprocess_input\n\n# Test cases\ntests = [\n    ''5 * 5. * 2 - 100 * 5,000.'',  # STT with artifacts\n    ''what is 25 plus 17'',\n    ''5 times 5 times 2 minus 100 times 5000'',\n    ''calculate 100 times 5000'',\n    ''15 + 23 - 8'',\n]\n\nfor test in tests:\n    preprocessed = preprocess_input\\(test, source=''voice''\\)\n    success, answer, result = try_calculate\\(preprocessed\\)\n    print\\(f''Input: {test}''\\)\n    print\\(f''  Preprocessed: {preprocessed}''\\)\n    print\\(f''  Calculable: {is_calculable_expression\\(preprocessed\\)}''\\)\n    print\\(f''  Result: {result}''\\)\n    print\\(f''  Answer: {answer}''\\)\n    print\\(\\)\n\")",
-      "Bash(\"C:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/venv311/Scripts/python.exe\" app.py)"
+      "Bash(\"C:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/venv311/Scripts/python.exe\" app.py)",
+      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" migrate_entities.py --dry-run)",
+      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\":*)"
     ]
   }
 }

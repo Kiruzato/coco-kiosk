@@ -8,6 +8,10 @@ This module provides:
 - EntityRegistry: In-memory registry with fast alias-based lookup
 
 Used by entity_resolver.py to resolve directory queries to specific locations.
+
+Phase 47: Added CampusQueryIndex integration for structured queries.
+The EntityRegistry now serves as a backward-compatibility wrapper that
+can optionally use the hierarchical CampusQueryIndex for enhanced queries.
 """
 
 import json
@@ -15,7 +19,7 @@ import logging
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -655,3 +659,198 @@ class EntityRegistry:
 
         total = stats["created"] + stats["updated"]
         return True, f"Successfully imported {total} entities ({stats['created']} created, {stats['updated']} updated)", stats
+
+    # -------------------------------------------------------------------------
+    # Phase 47: CampusQueryIndex Integration
+    # -------------------------------------------------------------------------
+
+    def get_campus_query_index(self):
+        """
+        Get or create CampusQueryIndex for structured queries.
+
+        Returns:
+            CampusQueryIndex instance with hierarchical indexes
+
+        Note:
+            The CampusQueryIndex is created lazily and cached.
+            It provides O(1) lookups for structured queries like:
+            - "Show all classrooms on Ground Floor"
+            - "List all offices in A Building"
+            - "What's the nearest restroom?"
+        """
+        if not hasattr(self, '_campus_index') or self._campus_index is None:
+            try:
+                from .campus_index import CampusQueryIndex
+            except ImportError:
+                from campus_index import CampusQueryIndex
+
+            self._campus_index = CampusQueryIndex()
+            self._campus_index.load_from_flat_entities(self._json_path)
+            logger.info(f"[PHASE47] CampusQueryIndex initialized with {len(self._campus_index.rooms)} rooms")
+
+        return self._campus_index
+
+    def get_rooms_by_type(self, room_type_str: str) -> List[DirectoryEntity]:
+        """
+        Get all rooms of a specific type.
+
+        Args:
+            room_type_str: Room type string (e.g., "classroom", "office", "restroom")
+
+        Returns:
+            List of matching DirectoryEntity objects
+        """
+        try:
+            from .campus_schema import RoomType
+        except ImportError:
+            from campus_schema import RoomType
+
+        index = self.get_campus_query_index()
+        room_type = RoomType.from_string(room_type_str)
+
+        rooms = index.get_rooms_by_type(room_type)
+        return [self._room_to_entity(room) for room in rooms]
+
+    def get_rooms_by_building(self, building_name: str) -> List[DirectoryEntity]:
+        """
+        Get all rooms in a building.
+
+        Args:
+            building_name: Building name or alias
+
+        Returns:
+            List of matching DirectoryEntity objects
+        """
+        index = self.get_campus_query_index()
+
+        # Resolve building
+        building = index.resolve_building(building_name)
+        if not building:
+            return []
+
+        rooms = index.get_rooms_by_building(building.building_id)
+        return [self._room_to_entity(room) for room in rooms]
+
+    def get_rooms_by_floor(self, building_name: str, floor_str: str) -> List[DirectoryEntity]:
+        """
+        Get all rooms on a specific floor of a building.
+
+        Args:
+            building_name: Building name or alias
+            floor_str: Floor string (e.g., "Ground Floor", "2nd Floor")
+
+        Returns:
+            List of matching DirectoryEntity objects
+        """
+        try:
+            from .campus_schema import FloorLevel
+        except ImportError:
+            from campus_schema import FloorLevel
+
+        index = self.get_campus_query_index()
+
+        # Resolve building
+        building = index.resolve_building(building_name)
+        if not building:
+            return []
+
+        floor_level = FloorLevel.from_string(floor_str)
+        rooms = index.get_rooms_by_building_and_floor(building.building_id, floor_level)
+        return [self._room_to_entity(room) for room in rooms]
+
+    def find_nearest(self, reference_alias: str, target_type_str: str, limit: int = 1) -> List[DirectoryEntity]:
+        """
+        Find nearest rooms of a given type using structural proximity.
+
+        Tiers:
+        0. Same Floor
+        1. Same Building, Different Floor
+        2. Same Campus, Different Building
+        3. Different Campus
+
+        Args:
+            reference_alias: Alias of reference room
+            target_type_str: Type of room to find (e.g., "restroom", "classroom")
+            limit: Maximum number of results
+
+        Returns:
+            List of nearest matching DirectoryEntity objects
+        """
+        try:
+            from .campus_schema import RoomType
+        except ImportError:
+            from campus_schema import RoomType
+
+        index = self.get_campus_query_index()
+
+        # Resolve reference room
+        reference_room = index.resolve_room(reference_alias)
+        if not reference_room:
+            return []
+
+        target_type = RoomType.from_string(target_type_str)
+        rooms = index.find_nearest(reference_room, target_type, limit)
+        return [self._room_to_entity(room) for room in rooms]
+
+    def count_rooms_by_type(self, room_type_str: str) -> int:
+        """
+        Count rooms of a specific type.
+
+        Args:
+            room_type_str: Room type string
+
+        Returns:
+            Number of matching rooms
+        """
+        try:
+            from .campus_schema import RoomType
+        except ImportError:
+            from campus_schema import RoomType
+
+        index = self.get_campus_query_index()
+        room_type = RoomType.from_string(room_type_str)
+        return index.count_rooms_by_type(room_type)
+
+    def _room_to_entity(self, room) -> DirectoryEntity:
+        """
+        Convert a Room object to DirectoryEntity for backward compatibility.
+
+        Args:
+            room: Room object from CampusQueryIndex
+
+        Returns:
+            DirectoryEntity object
+        """
+        return DirectoryEntity(
+            entity_id=room.room_id,
+            canonical_name=room.canonical_name,
+            aliases=room.aliases,
+            building=room.original_building_str or room.building_id,
+            floor=room.original_floor_str or room.floor_level.display_name(),
+            room=room.room_number,
+            campus=room.campus_id.replace("_", " ").title(),
+            department=room.department,
+            landmarks=room.landmarks,
+            description=room.description,
+            status=room.status
+        )
+
+    def get_index_stats(self) -> Dict:
+        """
+        Get CampusQueryIndex statistics.
+
+        Returns:
+            Dictionary with index statistics
+        """
+        index = self.get_campus_query_index()
+        return index.get_stats()
+
+    def invalidate_campus_index(self) -> None:
+        """
+        Invalidate the cached CampusQueryIndex.
+
+        Call this after modifying entities to force reloading.
+        """
+        if hasattr(self, '_campus_index'):
+            self._campus_index = None
+            logger.info("[PHASE47] CampusQueryIndex cache invalidated")
