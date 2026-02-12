@@ -1778,6 +1778,95 @@ body {
     gap: 4px;
 }
 
+/* Phase 44: Orchestrator Details */
+.result-orchestrator-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 11px;
+    color: #555;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    background: #f1f5f9;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.result-orchestrator-details .detail-label {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.result-orchestrator-details .detail-value {
+    font-weight: 600;
+    color: #334155;
+}
+
+/* Response mode colors */
+.result-orchestrator-details .mode-extractor {
+    color: #7c3aed;
+    background: #ede9fe;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.result-orchestrator-details .mode-rag_authoritative {
+    color: #059669;
+    background: #d1fae5;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.result-orchestrator-details .mode-rag_supplemented {
+    color: #d97706;
+    background: #fef3c7;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.result-orchestrator-details .mode-general {
+    color: #2563eb;
+    background: #dbeafe;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.result-orchestrator-details .mode-campus {
+    color: #059669;
+    background: #d1fae5;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Semantic relevance colors */
+.result-orchestrator-details .semantic-high {
+    color: #059669;
+}
+
+.result-orchestrator-details .semantic-medium {
+    color: #d97706;
+}
+
+.result-orchestrator-details .semantic-low {
+    color: #dc2626;
+}
+
+.result-orchestrator-details .extractor {
+    color: #7c3aed;
+    font-style: italic;
+}
+
+/* Category badge in result header */
+.result-category {
+    font-size: 10px;
+    padding: 2px 8px;
+    background: #e2e8f0;
+    color: #475569;
+    border-radius: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
 .result-failures {
     margin-top: 10px;
     font-size: 12px;

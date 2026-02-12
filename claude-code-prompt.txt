@@ -1,38 +1,69 @@
-We are refining the Chatbot UI for kiosk deployment.
-This task focuses purely on UI/UX improvement.
+We need to address a response formatting and behavior issue in the chatbot.
+Issue
+For certain queries — especially general math or casual questions — the chatbot produces overly verbose, LaTeX-heavy, or structurally messy responses that are not appropriate for kiosk-style interaction.
+Example:
+Voice Input Query:
+What is 5 * 5 - 5 +? 5 + 23.
+Current Chatbot Response:
+To solve the expression \(5 * 5 - 5 + 5 + 23\), we can break it down step by step:
+1.	Calculate \(5 * 5\):
+
+\[
+5 * 5 = 25
+\]
+2.	Now substitute that back into the expression:
+
+\[
+25 - 5 + 5 + 23
+\]
+3.	Next, perform the subtraction:
+
+\[
+25 - 5 = 20
+\]
+4.	Now add \(5\):
+
+\[
+20 + 5 = 25
+\]
+5.	Finally, add \(23\):
+
+\[
+25 + 23 = 48
+\]
+So, the final answer is \(48\).
+This calculation does not relate to the provided campus information, which pertains to general and disciplinary policies.
+Problems observed:
+•	Excessive LaTeX formatting
+•	Overly academic explanation style
+•	Irrelevant grounding disclaimer
+•	Not kiosk-friendly
+•	Poor UX for voice interaction
+•	Not aligned with conversational expectations
+________________________________________
 Objective
-Modernize the feedback interaction and improve touch-based scrolling behavior in the chatbot conversation area.
+Propose a clean, industry-aligned solution that ensures:
+1.	General knowledge / math queries produce concise, natural responses.
+2.	No unnecessary LaTeX blocks unless explicitly requested.
+3.	No irrelevant campus-grounding disclaimers.
+4.	Voice-input queries are handled gracefully even if ASR transcription is imperfect.
+5.	Responses are optimized for kiosk UX (clear, short, readable, speakable).
 ________________________________________
-Required Changes
-1. Replace “Was this answer helpful?” Section
-Current:
-•	Title: “Was this answer helpful?”
-•	Two buttons: “Yes, helpful” and “Not helpful”
-Change to:
-•	Remove the title entirely.
-•	Replace the buttons with:
-o	👍 Thumbs Up icon
-o	👎 Thumbs Down icon
-Requirements:
-•	Icons must be directly clickable (not text inside buttons).
-•	Use clean, modern icon styling.
-•	Maintain clear hover and active states.
-•	Ensure icons are touch-friendly in size.
-•	Keep spacing visually aligned with the response bubble.
-•	Maintain accessibility support.
+Requirements
+•	Do not implement random formatting patches.
+•	Propose a structured solution at the architecture or response-orchestration level.
+•	Follow industry best practices for:
+o	Conversational AI UX
+o	LLM output control
+o	Multi-modal (voice + text) consistency
+o	Response style governance
 ________________________________________
-2. Improve Touch Scrolling Behavior (Conversation Area Only)
-In the chatbot conversation area:
-•	Ensure scrolling fully supports natural swipe/drag gestures.
-•	Optimize for touchscreen use (kiosk environment).
-•	Make vertical scrolling feel smooth and responsive.
-•	Ensure no resistance, jitter, or scroll blocking occurs during swipe gestures.
-Focus only on enabling and improving natural swipe/drag scrolling behavior.
-________________________________________
-Design Intent
-•	Reduce visual clutter.
-•	Modernize feedback UI.
-•	Improve touchscreen usability.
-•	Make the chatbot feel intuitive and natural to interact with.
-After implementation, briefly explain what was adjusted to improve touch scrolling behavior.
+Deliverables
+1.	Root cause analysis.
+2.	Recommended architectural or orchestration-level solution.
+3.	How to differentiate response styles (math, general knowledge, campus-grounded).
+4.	How to prevent irrelevant grounding disclaimers.
+5.	Suggested response style policy for kiosk deployment.
+Focus on sustainable design, not ad-hoc fixes.
+Wait for implementation approval after presenting the plan.
 

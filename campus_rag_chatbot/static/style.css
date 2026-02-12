@@ -130,15 +130,17 @@ body.fullscreen-active {
     overscroll-behavior: contain; /* Prevent scroll chaining to parent */
     scroll-behavior: smooth; /* Smooth programmatic scrolling */
     touch-action: pan-y; /* Allow vertical touch gestures */
+}
 
-    /* Drag-to-scroll cursor styles */
+/* Drag-to-scroll styles (DISABLED - interferes with text selection)
+.chat-container {
     cursor: grab;
 }
-
 .chat-container.dragging {
     cursor: grabbing;
-    user-select: none; /* Prevent text selection while dragging */
+    user-select: none;
 }
+*/
 
 .chat-container::-webkit-scrollbar {
     width: 12px;

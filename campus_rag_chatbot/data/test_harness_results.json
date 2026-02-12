@@ -1,341 +1,19 @@
 {
-  "timestamp": "2026-02-11T11:13:47.072476",
+  "timestamp": "2026-02-12T08:14:19.238060",
   "summary": {
-    "total": 51,
-    "passed": 51,
+    "total": 10,
+    "passed": 10,
     "failed": 0,
     "pass_rate": 100.0
   },
   "by_category": {
     "test": {
-      "passed": 51,
+      "passed": 10,
       "failed": 0,
       "rate": 100.0
     }
   },
   "results": [
-    {
-      "id": "d6286ad0-f26c-4517-b7ab-aabd29cfdcd0",
-      "query": "What are the programs offering?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "The programs offered at Columban College, Inc. include the following graduate programs:\n\n1. Doctor of Education (EdD)\n2. Master in Business Administration (MBA)\n3. Master in Public Management (MPM)\n4. Master of Arts in Education\n   - Major in Educational Administration (MAED)\n   - Major in English Language Teaching (MALT)\n   - Major in Religious Education (MARE)\n   - Major in Science Education (MASE)\n   - Major in Values Education (MAV)\n\n(Source: Verified campus documents, program offerings)"
-      }
-    },
-    {
-      "id": "796dd030-158e-44cb-b1f9-bea606fd68aa",
-      "query": "What is the school motto?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": false,
-        "answer": "The school motto is \"we are christs not our own.\" (Source: school motto)"
-      }
-    },
-    {
-      "id": "fb11712e-bcfc-4a3a-96bd-6d42845a0414",
-      "query": "What is Christi Simus Non Nostri?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "\"Christi Simus Non Nostri\" is the motto of Columban College, which translates to \"We are Christ's, not our own\" in English. This motto reflects the school's commitment to teaching not merely for the attainment of knowledge but for the acquisition of values and the discovery of truth necessary to translate one's faith into daily life and to celebrate it in prayer and worship. (Source: Verified campus documents, section on the seal and motto of Columban College)"
-      }
-    },
-    {
-      "id": "2f6d104c-3b07-49dc-b841-dc99884cc954",
-      "query": "What is the vision, mission, goals of Columban?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "The vision of Columban College, Inc. is: \"guided by Catholic faith and culture of excellence, we shall be an innovative institution of learning, extension, and research by 2025.\"\n\nThe mission is: \"as a Catholic institution, we transform lives through holistic education, Christian formation, and service.\"\n\nThe goals include cooperation with school authorities in the moral upbringing and guidance of children, especially by attending school programs on religious orientation for parents, on drugs, recollection for parents, family education, and the like in conjunction with the children's lessons, and being supportive of the school's implementation of its curricular and co-curricular programs. \n\n(Source: Vision, Mission, Strategic Goals and Core Values of Columban College, Inc.)"
-      }
-    },
-    {
-      "id": "f445012a-a875-4d6b-b526-f32f64b4b768",
-      "query": "What is the history of Columban?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "Columban College, Inc. was originally known as the Naval Reservation Junior College (NRJC), founded in 1947 by Mr. Pedro Mendoza and Mr. Dionisio Lindayag. NRJC was established to provide education for the people of Olongapo City and employees of the Subic Naval Base. In 1961, the Missionary Society of St. Columban for the Prelature Nullius of Iba acquired the school. It was incorporated in 1962 and renamed Columban College, Incorporated. A board of trustees was formed, headed by Bishop Henry Byrne, M.S.C.C., D.D., the first bishop of Iba. In 1964, the college's basic education programs were officially recognized. \n\nColumban College is a Christ-centered Catholic educational institution owned by the Diocese of Iba and guided by the motto, \"We are Christ's and not our own.\" The college serves the educational needs of Olongapo City, the province of Zambales, and nearby provinces, with its main campus located in Barangay Asinan and satellite campuses in Barrio Barretto, Olongapo City, and Barangay Naulo, Sta. Cruz, Zambales. (Source: Historical Sketch of Columban College, Inc.)"
-      }
-    },
-    {
-      "id": "7e61b180-56d5-4266-aace-7038b10c4fb8",
-      "query": "Who is saint Columban?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "St. Columban, also known as Columbanus, was born around the year 543 in Leinster, Ireland. He was first educated at home by skilled tutors who introduced him to the liberal arts. At about 17 or 18 years old, he decided to dedicate his life to God and left home to continue his studies in a monastery under Abbot Sinell at Cleenish in Northern Ireland. Later, under the guidance of St. Comgall at the monastery of Bangor, St. Columban lived a strict monastic life centered on prayer, discipline, asceticism, and study. He was ordained a priest while at Bangor and eventually became one of its great teachers. His experiences and the example of his abbots shaped his vision of monastic life, which he would later spread throughout Europe.\n\nIn his later years, St. Columban settled in Bobbio, near Genoa, where he founded his final monastery. He died there on November 23, 615. Throughout his life, he sought to balance hard work and service with moments of silence and prayer, following the example of Jesus. His monasteries became places of education, faith, and service to local communities. St. Columban was known for his courage and honesty, even when correcting powerful people at great personal cost. He often described himself as a wanderer for Christ, and one of his most famous sayings reflects his life's mission: \"Let us be of Christ, not of ourselves.\" (Source: Verified campus documents)"
-      }
-    },
-    {
-      "id": "ca14d925-af58-424b-bcd6-3c04f2aafdcb",
-      "query": "Columban prayer",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "Here is the prayer to St. Columban:\n\nO blessed Columban, in your desire to spread the good news of salvation to all God's people, you gave yourself to a life of hardship and journeying. We ask you to help and protect today's missionary men and women who, like you, have dedicated their lives to sharing the good news with all God's people. Intercede for them that they also will be given the grace to carry on in the face of adversity, the strength that helped you to overcome all of the hardships you faced on your missionary journey, and the faith and love that helped you to endure joyfully all the difficulties of time because of your love for Christ. Help us, O beloved Columban, to live for Christ and not for ourselves so that, when our mission is done, we can share with you the fullness of life in heaven, through Christ our Lord, Amen. \n\n(Source: Appendix D)"
-      }
-    },
-    {
-      "id": "190d4aeb-3ee6-44bc-b51a-09ec1fcaf6bf",
-      "query": "Columban hymn",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "The Columban hymn is as follows:\n\nStep together, brave and free  \nFamily of Columban  \nWe know that we can lead the way  \nIn the land we love today.  \n\nRefrain:  \nDedicated to promote the good  \nFaith in God guides our endeavor  \nFaith, hope, and love for all  \nWe can serve and lead together  \nWe are Christ's and His forever.  \n\nMary helps us on the way  \nMary helps us every day  \nFor we love her only Son  \nWe are Christ's and not our own.  \n\nStep together, never fear  \nGod is good, and God is near  \nNever left to fight alone  \nWe are Christ's and not our own.  \n\n(Source: Appendix C, Columban Hymn)"
-      }
-    },
-    {
-      "id": "2f29839a-7888-4e4e-82cd-ad1333df62e7",
-      "query": "What is the engineering vision, mission?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": false,
-        "answer": "The engineering vision is: \"guided by the catholic faith and culture of excellence, the college of engineering shall be an innovative institution of learning, extension and research for future professional engineers who are to become responsive to the demands of local and global development by 2025.\"\n\nThe engineering mission is: \"as a catholic institution, we transform lives through holistic engineering education, christian formation, and service.\" \n\n(Source: Campus documents, Engineering Vision and Mission sections)"
-      }
-    },
-    {
-      "id": "a268a017-32c2-4ec2-a5b3-69c8a131d0a8",
-      "query": "Where is engineering dean office?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "directory",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": true,
-        "answer": "I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance."
-      }
-    },
-    {
-      "id": "3bd932aa-ea7c-415d-9853-bf345ec3eaf3",
-      "query": "Where is dean office?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "clarification",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": false,
-        "answer": "I found multiple locations that might match. Which one do you mean?\n\n1. ASEN Dean\u2019s Office (H Building)\n2. Nursing Dean's Office (St. Agatha's Building)\n3. Engineering Dean\u2019s Office (St. Patrick Building)\n\nPlease reply with the number or name."
-      }
-    },
-    {
-      "id": "60370e90-36c2-47e4-99ad-4ac0ae347245",
-      "query": "List of deans in Columban",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "The deans are:\n\n1. Dr. Leilani E. Capili \u2014 Dean, college of nursing & asst\n2. Dr. Christine Gil O. Almazan \u2014 Dean, cased 1.\n3. Dr. Eric A. Matriano \u2014 Dean, college of business & accountancy\n4. Engr. Noel H. Yap \u2014 Dean, college of computer studies\n5. Arch. Corazon Z. Gonzales \u2014 Dean, college of architecture\n6. Engr. Vivian E. Gutierrez \u2014 Dean, college of engineering"
-      }
-    },
-    {
-      "id": "7d825c52-36c8-49c6-9aed-c58ed4fc2cf4",
-      "query": "List of all programs offerings",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": false,
-        "answer": "The program offerings at Columban College, Inc. are as follows:\n\nGraduate Programs:\n1. Doctor of Education (EdD)\n2. Master in Business Administration (MBA)\n3. Master in Public Management (MPM)\n4. Master of Arts in Education\n   - Major in Educational Administration (MAEd)\n   - Major in English Language Teaching (MALT)\n   - Major in Religious Education (MARE)\n   - Major in Science Education (MASE)\n   - Major in Values Education (MAV)\n\n(Source: campus documents, program offerings section)"
-      }
-    },
-    {
-      "id": "8197d4fa-44b9-4150-9a06-61100eda5fc1",
-      "query": "What is CC Form 2?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "CC Form 2 is the official registration form. A white copy is issued to the student, and a blue copy is issued to the parent or guardian. (Source: Verified campus documents, CC Form 2 section)"
-      }
-    },
-    {
-      "id": "02410300-12fc-4550-bf6e-2748a1f851e0",
-      "query": "Tell me about the special class",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "The special class policy at Columban College, Inc. allows for the creation of special classes under specific conditions. Here are the key points:\n\n1. **Reasons for Special Classes**:\n   - Courses where students have failed.\n   - Courses that are closed but still have enrollees.\n   - Courses that are no longer offered due to curriculum changes.\n   - Courses that cannot be cross-enrolled as a matter of academic policy.\n   - Special classes apply to students who are graduating at the end of the semester or to prerequisite courses that must be taken.\n\n2. **Student Limit**: The number of students in a special class should not exceed nine (9).\n\n3. **Additional Fees**: A student enrolled in a special class must pay an additional fee, which is determined by the accounting office and must be settled on or before the midterm examination.\n\n4. **Procedures for Requesting a Special Class**:\n   - Fill out the petition for special class form (CC Form 10).\n   - Proceed to the respective dean's office for the dean's action.\n   - Submit the accomplished special class form (in triplicate) to the admissions and registration office to check student registration.\n   - The approved petition for special class form will be forwarded to the accounting office for assessment/adjustment of fees.\n   - Signatures of the dean, faculty, and students must be affixed to the special class form (CC Form 10).\n\n5. **Class Size Requirements**:\n   - The minimum number of students per class in basic physical education and NSTP classes is fifty (50).\n   - No minimum number of students is required to enroll in a major course as long as it is open and within the prescribed curriculum offering.\n\nThis information is sourced from the \"Special Class Policy Statement\" and related sections in the campus documents."
-      }
-    },
-    {
-      "id": "ca0d12ba-bf84-4b23-9d09-fa46bade9ba1",
-      "query": "Tell me about change of program",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "The change of program policy at Columban College, Inc. recognizes the rights of students to shift to another program or major, provided all requirements are met. Here are the guidelines and conditions for changing a program:\n\n1. Students must fill out a shifting form for change of program/major (CC Form 6).\n2. A change in program or major within the same college shall be subject to the approval of the dean.\n3. A change in program that involves transferring to another college shall be subject to the approval of the dean of the accepting college.\n4. A student who has been debarred by a college is not eligible to shift to another program within the same college or to other colleges.\n\nThe procedures for filing an application for change of program are as follows:\n\n1. Accomplish the application for change of program form (CC Form 6) in duplicate copies at the admissions and registration office.\n2. Proceed to the cashiers office to pay the required fee.\n3. Submit the application for change of program (CC Form 6) with the official receipt of payment at the admissions and registration office to verify the student's credentials on file, evaluation of subjects, and the action of the dean and director for admissions and registration office.\n4. Get the result after five (5) working days at the admissions and registration office.\n\nNote: A student is allowed to shift to another program only once. (Source: Change of Program Policy Statement and Procedures)"
-      }
-    },
-    {
-      "id": "560e7096-eaa2-4fa7-867c-749a1aa9858d",
-      "query": "What is TOR?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "The Transcript of Records (TOR) is a document that may be issued as either official or unofficial. An official Transcript of Records is a formal document issued to the admitting school upon request, which includes the remark \"copy for _____,\" the name of the requesting school, and the date the transcript was forwarded. Once an official copy is issued, another copy cannot be released without written clearance from the admitting school. An unofficial Transcript of Records is an informal document issued for reference, evaluation, employment, board examination, and transfer purposes only. (Source: Student School Records Policy Statement)"
-      }
-    },
-    {
-      "id": "ee43f9f1-1d29-4dab-aab3-1622f92787a3",
-      "query": "What are student school record?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "Student school records refer to the documents that the school maintains regarding a student's academic and personal information. According to the verified campus documents, the school releases student records to students who have no outstanding obligations, upon request. The requestable school records include:\n\n1. **Transcript of Records (TOR)**: This may be issued as either official or unofficial. An official transcript is a formal document issued to the admitting school upon request, while an unofficial transcript is for reference, evaluation, employment, board examination, and transfer purposes only.\n\n2. **Diploma**: Issued to a student after completing all degree program requirements prescribed by the Commission on Higher Education (CHED) or the Technical Education and Skills Development Authority (TESDA).\n\n3. **Certificates**: The school issues various certificates as part of the student school records, including:\n   - Certificate of eligibility to transfer (also known as transfer credential or honorable dismissal)\n   - Certificate of enrollment\n   - Certificate of attendance\n   - Certificate of good moral character\n   - Certificate of grades\n   - Certificate of bridging courses\n   - Certificate of graduation\n   - Certificate of graduation with GWA\n   - Certificate of units earned\n   - Certificate of medium of instruction\n   - Certificate of course description\n   - Cross-enroll permit\n   - Certificate of cross-enrollment\n   - Grade certification\n   - Authentication verification (CAV)\n   - Evaluated program curriculum\n   - Certificate of no objection\n   - Certificate of no scholarship\n   - Certificate of anticipated date of graduation\n   - Certificate of NSTP serial number\n   - Certificate of prescribed curriculum\n   - Certified true copy\n\nThese records are essential for various academic and administrative purposes. (Source: Student School Records Policy Statement)"
-      }
-    },
-    {
-      "id": "31c387c8-3cf6-4a18-8454-8eebbb01df68",
-      "query": "How to request TOR?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": false,
-        "answer": "To request a Transcript of Records (TOR), a student must ensure they have no outstanding obligations. The TOR can be issued as either an official or unofficial document. An official TOR is a formal document issued to the admitting school upon request, while an unofficial TOR is for reference, evaluation, employment, board examination, and transfer purposes only. \n\nFor the official TOR, once it is issued, another copy cannot be released without written clearance from the admitting school. \n\nFor more detailed steps, please refer to the \"student school records policy statement\" section of the campus documents."
-      }
-    },
-    {
-      "id": "486a0849-79e3-458a-82ae-b6d9d351310c",
-      "query": "List of Certificates in student record",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "The school issues various certificates as part of the student school records. These include:\n\n1. Certificate of eligibility to transfer\n2. Certificate of enrollment\n3. Certificate of attendance\n4. Certificate of good moral character\n5. Certificate of grades\n6. Certificate of bridging courses\n7. Certificate of grades with average\n8. Certificate of graduation\n9. Certificate of graduation with gwa\n10. Certificate of units earned\n11. Certificate of medium of instruction\n12. Certificate of course description\n13. Cross-enroll permit\n14. Certificate of cross-enrollment grade\n15. Certification authentication verification (cav)\n16. Evaluated program curriculum\n17. Certificate of no objection\n18. Certificate of no scholarship\n19. Certificate of anticipated date of graduation\n20. Certificate of nstp serial number\n21. Certified true copy\n\n(Source: Verified campus documents, Certificates section)"
-      }
-    },
-    {
-      "id": "48a7d65a-d739-4970-8170-34d5af9f652e",
-      "query": "List of certificates",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "The school issues various certificates as part of the student school records. Here is the detailed list of certificates:\n\n1. Certificate of eligibility to transfer\n2. Certificate of enrollment\n3. Certificate of attendance\n4. Certificate of good moral character\n5. Certificate of grades\n6. Certificate of bridging courses\n7. Certificate of grades with average\n8. Certificate of graduation\n9. Certificate of graduation with gwa\n10. Certificate of units earned\n11. Certificate of medium of instruction\n12. Certificate of course description\n13. Cross-enroll permit\n14. Certificate of cross-enrollment grade\n15. Certification authentication verification (cav)\n16. Evaluated program curriculum\n17. Certificate of no objection\n18. Certificate of no scholarship\n19. Certificate of anticipated date of graduation\n20. Certificate of nstp serial number\n21. Certificate of prescribed curriculum\n22. Certified true copy\n\n(Source: Verified campus documents, Certificates section)"
-      }
-    },
-    {
-      "id": "813a46b7-3e76-438a-a14f-4bfe1e7c7037",
-      "query": "How to request TOR?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": false,
-        "answer": "To request a Transcript of Records (TOR), a student must ensure they have no outstanding obligations. The TOR can be issued as either an official or unofficial document. An official TOR is a formal document issued to the admitting school upon request, while an unofficial TOR is for reference, evaluation, employment, board examination, and transfer purposes only. \n\nFor the official TOR, once it is issued, another copy cannot be released without written clearance from the admitting school. \n\nFor more detailed steps, please refer to the \"student school records policy statement\" section of the campus documents."
-      }
-    },
-    {
-      "id": "88da5445-d3b2-41db-8681-ed5ee48834bd",
-      "query": "What are fees and refund?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "According to the verified campus documents, the fees and refund policy is as follows:\n\n1. The school charges reasonable fees as approved by CHED and recognizes the academic potential of deserving students through scholarship programs.\n2. The school allows payment on an installment plan.\n3. A student who withdraws or cancels enrollment after paying one or more installments is responsible for settling the unpaid balance of fees for the whole semester.\n4. However, a student who withdraws or cancels enrollment may be given a refund of:\n   - 100% of tuition fees and other school fees except for the registration fee if he/she cancels enrollment before the scheduled start of classes;\n   - 75% of tuition fees if he/she drops during the first week of classes;\n   - 50% of tuition fees if he/she drops during the second week of classes;\n   - No refund will be given to a student who withdraws any time after the second week of classes.\n\n(Source: Chapter 4 Fees and Scholarship Policy Statement)"
-      }
-    },
     {
       "id": "ee63f13d-14c6-49f8-9693-116ff2c07e46",
       "query": "What are institutional thrusts?",
@@ -345,9 +23,18 @@
       "response": {
         "mode": "campus",
         "confidence": "Medium",
+        "confidence_score": 67.91581726074219,
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "The institutional thrusts of Columban College, Inc. are attained through collaborative and co-responsible efforts of the following:\n\n1. Administrators\n   a. Who are fully conscious that Christ operates through them to teach, administer, and sanctify his flock, the academic community;\n   b. Who coordinate and facilitate the total development of the educand;\n   c. Who implement the policies and decisions of the school's board of trustees.\n\n2. Support Staff\n   Faculty and staff who collaborate meaningfully in the realization of the vision, mission, and goals of Columban College through their functions and services. They participate actively in the life and growth of the academic community, continuously improve themselves professionally by keeping abreast of the latest trends and techniques in their profession, promote and maintain an atmosphere conducive to service and learning, and maintain harmonious relationships appropriate to members of the academic community. \n\n(Source: Institutional Thrusts, Objectives of Columban College, Inc.)"
+        "answer": "The institutional thrusts of Columban College are the objectives that are attained through collaborative and co-responsible efforts of administrators. These administrators are conscious that Christ operates through them to teach, administer, and sanctify the academic community. They coordinate and facilitate the total development of the educand and implement the policies and decisions of the school's board of trustees.",
+        "response_mode": "rag_authoritative",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "institutional",
+          "thrusts"
+        ],
+        "grounding_passed": true
       }
     },
     {
@@ -359,9 +46,18 @@
       "response": {
         "mode": "campus",
         "confidence": "Medium",
+        "confidence_score": 67.66827392578125,
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "The institutional thrusts of Columban College, Inc. are attained through collaborative and co-responsible efforts of the following:\n\n1. Administrators\n   a. Who are fully conscious that Christ operates through them to teach, administer, and sanctify his flock, the academic community;\n   b. Who coordinates and facilitates the total development of the educand;\n   c. Who implement the policies and decisions of the school's board of trustees. \n\n(Source: Verified campus documents)"
+        "answer": "The institutional thrusts of Columban College are as follows:\n\n1. Administrators who are fully conscious that Christ operates through them to teach, administer, and sanctify his flock, the academic community.\n2. Administrators who coordinate and facilitate the total development of the educand.\n3. Administrators who implement the policies and decisions of the school's board of trustees.",
+        "response_mode": "rag_authoritative",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "institutional",
+          "thrusts"
+        ],
+        "grounding_passed": true
       }
     },
     {
@@ -371,11 +67,20 @@
       "passed": true,
       "failures": [],
       "response": {
-        "mode": "campus",
+        "mode": "general",
         "confidence": "Medium",
-        "grounding_mode": "semantic",
+        "confidence_score": 74.10292053222656,
+        "grounding_mode": "keyword",
         "rejected": false,
-        "answer": "The student receives a grade of 5.0 (failed) if he/she: \n\na. withdraws unofficially from a class at any time during the school term. (A subject is officially dropped when the respective instructor/professor, the dean, and the registrar are notified by filing the request for dropping/changing/adding of subject form (CC Form 5). \n\nb. withdraws from a class after failing the midterm examination, even if he/she withdraws officially from a class after enrollment but before the midterm examination. \n\nc. never attended the class. \n\nThe \"INC\" (incomplete) mark is given if the student fails to take the final examination or to submit a major requirement of a course. Non-compliance within one (1) year will result in a failing grade. \n\n(Source: Verified campus documents, section on grading system)"
+        "answer": "According to the campus information provided, a student receives a grade of 5.0 (failed) under specific circumstances, which include:\n\n1. If the student withdraws unofficially from a class at any time during the school term.\n2. If the student withdraws from a class after failing the midterm examination, even if they have not officially dropped the class.\n\nIn general, receiving a 5.0 grade typically indicates that the student has not met the necessary requirements for passing the course, which may affect their overall academic standing and could have implications for their progression in their program. \n\nIf you have further questions about the implications of a 5.0 grade or how to address it, it may be beneficial to consult with an academic advisor at your institution.",
+        "response_mode": "rag_supplemented",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "happens",
+          "grade"
+        ],
+        "grounding_passed": true
       }
     },
     {
@@ -387,9 +92,20 @@
       "response": {
         "mode": "campus",
         "confidence": "Medium",
+        "confidence_score": 70.80882263183594,
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "The graduation honors for summa cum laude require a general weighted average of at least 95% with no grade lower than 93% or 1.3. (Source: verified campus documents, section on graduation honors)"
+        "answer": "To graduate with the honor of summa cum laude, a candidate must have a general weighted average of at least 95% with no grade lower than 93% or 1.3.",
+        "response_mode": "rag_authoritative",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "summa",
+          "cum",
+          "laude",
+          "grade"
+        ],
+        "grounding_passed": true
       }
     },
     {
@@ -401,9 +117,19 @@
       "response": {
         "mode": "campus",
         "confidence": "Medium",
+        "confidence_score": 75.0,
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "The academic awards and honors at Columban College are:\n\n1. Dean's Award - No derogatory records, with meritorious scholastic standing but have not qualified for any academic awards, involvement in church, school and communit\n2. First Honors\n3. Honorable Mention\n4. Second Honors\n5. Third Honors"
+        "answer": "At Columban College, graduation honors are a way to recognize outstanding academic achievement. The honors you can earn include:\n\n1. Dean's Lister\n2. First Honors\n3. Second Honors\n4. Third Honors\n\nThese distinctions highlight your hard work and dedication during your studies. If you have any more questions about the honors or how they are awarded, feel free to ask!",
+        "response_mode": "extractor",
+        "semantic_relevance": "unknown",
+        "extractor_used": "awards",
+        "query_terms": [
+          "graduation",
+          "honors",
+          "grades"
+        ],
+        "grounding_passed": true
       }
     },
     {
@@ -415,9 +141,18 @@
       "response": {
         "mode": "campus",
         "confidence": "Medium",
+        "confidence_score": 68.1103286743164,
         "grounding_mode": "keyword",
         "rejected": false,
-        "answer": "Honorable mention is awarded to a candidate who has a general weighted average of at least 88% with no grade lower than 85% or 2.0. Additionally, a candidate for honorable mention must not have obtained a mark of dropped or failed in any course required by the program, whether such mark was obtained in the college or other institutions. (Source: Academic Awards for Graduation, section on Honorable Mention)"
+        "answer": "Honorable mention is awarded to a candidate who has a general weighted average of at least 88% with no grade lower than 85 or 2.0. Additionally, a candidate for honorable mention must not have obtained a mark of dropped or failed in any course required by the program, whether such mark was obtained in the college or other institutions.",
+        "response_mode": "rag_authoritative",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "honorable",
+          "mention"
+        ],
+        "grounding_passed": true
       }
     },
     {
@@ -429,9 +164,19 @@
       "response": {
         "mode": "campus",
         "confidence": "Medium",
+        "confidence_score": 71.79212188720703,
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "I don't have verified campus information to answer that question."
+        "answer": "A non-degree program is a program for students who are not pursuing a full degree but may still be recognized for their academic achievements. According to the documents, students in non-degree programs can be awarded honors based on their general weighted average (GWA) and specific grade requirements. For example, a student with a GWA of not less than 1.3 can be awarded first honors, provided no mark is lower than 90% or 1.5. Similarly, there are criteria for second and third honors based on different GWA thresholds and grade requirements.",
+        "response_mode": "rag_authoritative",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "non",
+          "degree",
+          "program"
+        ],
+        "grounding_passed": true
       }
     },
     {
@@ -442,10 +187,20 @@
       "failures": [],
       "response": {
         "mode": "campus",
-        "confidence": "Medium",
+        "confidence": "High",
+        "confidence_score": 93.42144775390625,
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "According to the verified campus documents, students enrolled in the college are classified as follows:\n\n1. **According to academic load:**\n   - **Regular student:** Officially enrolled and carries the prescribed full load by his/her required curriculum per semester. Must not have deficiency/back or advanced subject/s in a given semester by his/her curriculum program.\n   - **Irregular student:** Officially enrolled but has deficiency/back or advanced subject/s in a given semester in his/her curriculum program.\n\n2. **According to year level:**\n   - **First year:** One who has not finished the prescribed subjects and units of his/her curriculum program or has finished only or less than the total number of units required in his/her first-year curriculum program.\n   - **Second year:** One who has completed the prescribed subjects and units of the first year level of his/her prescribed curriculum program or has finished not less than the total number of units required in his/her first year program nor more than the total number of units required in his/her first and second year program curriculum.\n   - **Third year:** One who has completed the prescribed subjects. \n\n(Source: Verified campus documents, classification of students)"
+        "answer": "Students enrolled in the college are classified according to academic load and year level. \n\na. According to academic load:\n- A regular student is officially enrolled and carries the prescribed full load by his/her required curriculum per semester. They must not have any deficiency/back or advanced subject/s in a given semester.\n- An irregular student is officially enrolled but has deficiency/back or advanced subject/s in a given semester in his/her curriculum program.\n\nb. According to year level, students are classified based on their enrollment in five-year curriculum programs.",
+        "response_mode": "rag_authoritative",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "classification",
+          "students",
+          "student"
+        ],
+        "grounding_passed": true
       }
     },
     {
@@ -455,11 +210,21 @@
       "passed": true,
       "failures": [],
       "response": {
-        "mode": "campus",
-        "confidence": "Medium",
+        "mode": "general",
+        "confidence": "High",
+        "confidence_score": 93.59933471679688,
         "grounding_mode": "semantic",
         "rejected": false,
-        "answer": "The five-year curriculum program is defined as follows:\n\n- **Fifth Year**: One who has completed the prescribed subjects and units of the first, second, third, and fourth year levels of his/her prescribed curriculum program or has finished not less than the total number of units required in his/her first, second, third, and fourth-year program curriculum. \n\n(Source: Verified campus documents, section e)"
+        "answer": "A five-year curriculum program typically refers to an academic program that is designed to be completed in five years, often seen in fields that require extensive coursework, such as engineering, architecture, or certain health professions. \n\n**Verified Campus Information:**\nAccording to the campus information provided, a \"fifth year\" student is defined as one who has completed the prescribed subjects and units of the first, second, third, and fourth-year levels of their curriculum program or has finished not less than the total number of units required in those years.\n\n**General Knowledge:**\nIn a five-year curriculum program, students usually take a combination of general education courses, major-specific courses, and possibly internships or practical experiences. The structure allows for a deeper exploration of the subject matter and often includes capstone projects or thesis work in the final year. This extended duration is beneficial for students to gain comprehensive knowledge and skills in their chosen field.",
+        "response_mode": "rag_supplemented",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "year",
+          "curriculum",
+          "program"
+        ],
+        "grounding_passed": true
       }
     },
     {
@@ -471,261 +236,18 @@
       "response": {
         "mode": "campus",
         "confidence": "Medium",
+        "confidence_score": 74.43645477294922,
         "grounding_mode": "keyword",
         "rejected": false,
-        "answer": "The sports facilities at Columban College, Inc. include the gymnasium and playing fields. These facilities are available for student use at designated times, and anyone using the sports facilities is required to be in appropriate sports attire (source: campus documents, section 3.3)."
-      }
-    },
-    {
-      "id": "25063b80-0e4b-4f82-be6c-47e6aaa4a8fc",
-      "query": "What are the restricted areas?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "The following are restricted areas at Columban College, Inc.:\n\n1. Administration offices\n2. Maintenance and repair shop\n3. Faculty room/lounge\n4. Laboratories\n\nStudents may not enter these areas unless they are transacting official business there. (Source: verified campus documents, section 3.6)"
-      }
-    },
-    {
-      "id": "38d53195-063e-4e1b-bde1-5ef21621f7db",
-      "query": "What are offenses?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": false,
-        "answer": "I don't have verified campus information to answer that question."
-      }
-    },
-    {
-      "id": "c3f29961-23a8-46b8-b7fa-53c5cbd4fe99",
-      "query": "What are major offenses?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": false,
-        "answer": "Major offenses include the following:\n\n1. Assaulting a faculty, staff, student, or any other person in authority.\n2. Bribery or attempt to bribe school officials, academic or non-academic personnel in exchange for favors such as, but not limited to, change of grades, etc.\n3. Bringing and/or drinking alcoholic beverages within the school premises.\n4. Bullying (cyber/electronic, verbal, physical, social, racial, religious, sexual).\n5. Unauthorized bringing in, carrying, possession, or use of prohibited or regulated drugs or chemicals without a proper prescription, inside school premises or outside the school during an academic function or school activity, and any other violation of the provisions of R.A. 9165, otherwise known as the Comprehensive Dangerous Drugs Act of 2002.\n6. Carrying deadly weapons and explosives.\n7. Distribution/sale/use/possession of pornographic materials and prohibited drugs.\n8. Entering the campus, attending academic functions or school activities under the influence of liquor or illegal drugs.\n9. Extortion.\n10. Forming and recruiting members in fraternities and sororities not recognized by the school.\n\n(Source: campus documents, section 4.1)"
-      }
-    },
-    {
-      "id": "dcc8efe0-d329-4c9f-80ba-5213545b0aac",
-      "query": "What are minor offenses?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": false,
-        "answer": "Minor offenses include the following actions:\n\n1. A verbal warning and counsel from the Student Affairs Office (SAO).\n2. A written apology to the person concerned in case of a personal offense.\n3. A monetary payment or appropriate service to repair or replace the damage caused.\n\nThese actions are outlined in the campus document under section 5.2.1. (Document name not specified)."
-      }
-    },
-    {
-      "id": "7bf97e46-ce5d-4f17-961a-b0fc903b3c0e",
-      "query": "Where is Columban church?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "directory",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": true,
-        "answer": "I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance."
-      }
-    },
-    {
-      "id": "11597429-44ef-4f8c-a2ac-7d75cb479d2e",
-      "query": "Objective of Engineering in Columban",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "The program educational objectives (PEOs) for the engineering programs at Columban College are as follows:\n\n1. The graduates of the different programs exhibit analytical and critical thinking, creativity, and innovativeness in the field of engineering.\n2. The graduates of the programs use mathematical and scientific knowledge and skills in dealing with complex engineering problems and real-life situations.\n3. The graduates of the programs utilize technological tools, techniques, methods, and processes related to engineering.\n4. The graduates of the programs demonstrate the ability to work independently and collaboratively in a multi-disciplinary and multi-cultural environment.\n5. The graduates of the program meet the expectations of the industry, have effective oral and written communication skills, and commit themselves to life-long learning.\n6. The graduates of the program demonstrate compassion, humanity, a deep sense of nationalism, commitment to social transformation, and an ability to act as a steward of God's creation and His people to exude the St. Columban spirit. \n\n(Source: Program Educational Objectives)"
-      }
-    },
-    {
-      "id": "5fecd541-27c0-40cf-aaf3-b0e9a921a77b",
-      "query": "Who is Engr. Sally G. Corpus?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": false,
-        "answer": "Engr. Sally G. Corpus is the Chairperson of the Electrical Engineering / Electronics Engineering department at Columban College, Inc. (source: campus documents)."
-      }
-    },
-    {
-      "id": "5797556f-3e7c-4200-b2ef-1abb3fe34efd",
-      "query": "List of Engineering Part time faculty",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": false,
-        "answer": "I don't have verified campus information to answer that question."
-      }
-    },
-    {
-      "id": "11d7298a-817a-4064-8289-ef672cc78c67",
-      "query": "Who is Engr. John Ronald Enriquez",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": false,
-        "answer": "Engr. John Ronald Enriquez is a faculty member in the Electrical Engineering department at Columban College, Inc. (source: campus documents)."
-      }
-    },
-    {
-      "id": "61540b7a-38db-481d-93bf-1b28cb2720e7",
-      "query": "Who is CCI president now?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": false,
-        "answer": "The current president of Columban College, Inc. is Most Reverend Bartolome G. Santos Jr., D.D. (as of now 2026) (source: verified campus documents, section: organizational chart)."
-      }
-    },
-    {
-      "id": "d350158a-26f9-4273-a1ca-5398d1d345a8",
-      "query": "Who is Engr. Vivian E. Gutierrez?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "general",
-        "confidence": "N/A",
-        "grounding_mode": "keyword",
-        "rejected": false,
-        "answer": "Engr. Vivian E. Gutierrez is a professional engineer known for her contributions in the field of engineering. However, specific details about her background, achievements, or current role may vary. For more precise information, please provide additional context or specify the area of her expertise.\n\n[Based on general AI knowledge]"
-      }
-    },
-    {
-      "id": "dc82d3b9-0bf9-4b9d-b319-3d72023cf07e",
-      "query": "How to access Pinnacle Student Access Module?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "To access the Columban College Pinnacle Student Module, follow these steps:\n\n1. URL: Go to [https://aims.pinnacle.com.ph/columban/students/](https://aims.pinnacle.com.ph/columban/students/).\n2. Username: Enter your student number.\n3. Password: Enter your designated password.\n4. Birthdate: Enter your birthdate.\n5. Forgot Password: If you cannot remember your password, there is a \"forgot your password?\" option available on the login page.\n\nFor new students, use the applicant module at [https://aims.pinnacle.com.ph/columban/applicants/](https://aims.pinnacle.com.ph/columban/applicants/).\n\nIf you encounter any issues, you can contact the Admissions and Registration Office (ARO) at registrar@columban.edu.ph or call (047) 222-3329 loc. 121.\n\n(Source: Verified campus documents, \"How to Access Pinnacle Student Access Module\")"
-      }
-    },
-    {
-      "id": "3a827e78-86c1-4ee1-bdd8-65c10d5ad7e0",
-      "query": "How to check grades online?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "To check grades online at Columban College, follow these steps:\n\n1. Navigate to the portal: Go to the official AIMS login page at https://aims.pinnacle.com.ph/columban/students/.\n2. Log in: Enter your student credentials (student ID number, password, and birthdate).\n3. View grades: Look for the grades, transcript, or student profile section to view current semester results.\n4. Complete evaluations: If necessary, click on the faculty evaluation tab to evaluate instructors before viewing grades.\n5. Settle outstanding balance: Ensure that all financial obligations or account balances are fully settled, as grades may not be accessible if there is an unpaid balance.\n\nIf you encounter technical issues, contact the SCC MIS official on Facebook or the institution directly. (Source: Verified campus documents, steps to check grades online)"
-      }
-    },
-    {
-      "id": "c67fe1f8-feff-46a4-aba0-d0f331d4d16c",
-      "query": "How to Accomplish the Evaluation?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "To accomplish the evaluation, follow these steps:\n\n1. Log in at: https://aims.pinnacle.com.ph/columban/students/\n2. Enter your login credentials.\n3. Click on the faculty evaluation tab.\n4. Select the academic year and semester, then click set.\n5. Click the course code in the second column to display the evaluation questions.\n6. After answering the questions, click review evaluation. If you are sure of your responses, click close and then finish. Repeat this process for each subject.\n\nImportant reminders for accomplishing the evaluation:\n1. All questions must be answered. You cannot proceed to the next page if any question is left unanswered.\n2. Be fair in rating. This is not an opportunity to express personal grievances.\n3. Your responses will remain confidential. Faculty will only receive aggregated scores and a summary of comments. Student identities will not be disclosed.\n4. Provide meaningful feedback. Focus your comments on teaching effectiveness, classroom management, and student engagement rather than personal opinions.\n5. Base your ratings on actual experiences. Evaluate your faculty based on your interactions and observations throughout the semester.\n6. Be honest and responsible. Your feedback helps improve teaching quality and student learning.\n7. Once submitted, responses cannot be changed. Ensure accuracy before final submission.\n8. This evaluation is required before enrolling in the next term or requesting official documents.\n\n(Source: Verified campus documents)"
-      }
-    },
-    {
-      "id": "64fa5ffe-bfc5-4b63-b812-f7f7ccd4908b",
-      "query": "How to setup MS Teams?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "To set up MS Teams at Columban College, follow these steps:\n\n1. **Obtain Credentials**: Wait for the distribution of your official MS Teams/Office 365 account, specifically for freshmen and transferees.\n2. **Download and Install**: Download the Microsoft Teams application on your computer or mobile device from the official Microsoft website.\n3. **Log In**: Use the institutional email provided by Columban College and the password you set.\n4. **Access Classes**: Faculty in charge will generally add you to the respective class teams.\n5. **Check for Updates**: Regularly monitor your email, MS Teams, and official class group chats for updates.\n\nFor technical assistance, contact the IT department or visit the Columban College official Facebook page for tutorials. (Source: Verified campus documents, \"how to setup ms.teams\")"
-      }
-    },
-    {
-      "id": "26198a1b-f164-4cf4-900b-7a452450411b",
-      "query": "List all CE BOARD TOP NOTCHERS",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "The CE Board top notchers are:\n\n1. Engr. Renato Gopez - 6th place (Year: 1990)\n2. Engr. Armando Gonzales - 3rd place (Year: 1993)\n3. Engr. Edwin Grate - 9th place (Year: 1993)\n4. Engr. Roberto Fabrique - 5th place (Year: 1995)\n5. Engr. Ferdinand Tablinga - 8th place (Year: 1997)\n6. Engr. Michael Gura - 3rd place (Year: 2003)\n7. Engr. Jesson James Cabael - 7th place (Year: 2011)\n8. Engr. Jan Alexis Monsalud - 7th place (Year: 2015)\n\n(Source: Verified campus documents)"
-      }
-    },
-    {
-      "id": "65f8e6f5-7943-4bcc-ae1b-75ff0dc1ae54",
-      "query": "Who is Engr. Michael Gura?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "keyword",
-        "rejected": false,
-        "answer": "I don't have verified campus information to answer that question."
-      }
-    },
-    {
-      "id": "e7923b83-5d0e-49ad-b44e-5d65130842d3",
-      "query": "Who is topnotcher in year 1990?",
-      "category": "test",
-      "passed": true,
-      "failures": [],
-      "response": {
-        "mode": "campus",
-        "confidence": "Medium",
-        "grounding_mode": "semantic",
-        "rejected": false,
-        "answer": "The topnotcher in the year 1990 is Engr. Renato Gopez. (Source: CE Board Top Notchers)"
+        "answer": "Sports facilities at Columban College include a gymnasium and playing fields. These facilities are available for student use at designated times, and anyone using them is required to be in appropriate sports attire.",
+        "response_mode": "rag_authoritative",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "sports",
+          "facilities"
+        ],
+        "grounding_passed": true
       }
     }
   ]

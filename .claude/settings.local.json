@@ -113,7 +113,9 @@
       "Bash(wc:*)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\campus_rag_chatbot\" -Recurse -File)",
       "Bash(Select-Object FullName, Length, LastWriteTime)",
-      "Bash(Format-Table -AutoSize)"
+      "Bash(Format-Table -AutoSize)",
+      "Bash(find:*)",
+      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -c \"from response_orchestrator import ResponseOrchestrator, ResponseMode, SemanticRelevance; print\\(''✓ response_orchestrator.py imports OK''\\)\")"
     ]
   }
 }

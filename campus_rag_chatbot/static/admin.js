@@ -1626,6 +1626,42 @@ function renderTestQuestions() {
 /**
  * Phase 42: Render test results
  */
+/**
+ * Phase 44: Build orchestrator details HTML for test results
+ */
+function buildOrchestratorDetailsHtml(response) {
+    if (!response) return '';
+
+    const parts = [];
+
+    // Response mode (Phase 44)
+    const responseMode = response.response_mode || response.mode || 'unknown';
+    parts.push(`<span class="detail-label">Response Mode:</span> <span class="detail-value mode-${responseMode}">${responseMode}</span>`);
+
+    // Semantic relevance (Phase 44)
+    if (response.semantic_relevance && response.semantic_relevance !== 'unknown') {
+        parts.push(`<span class="detail-label">Semantic:</span> <span class="detail-value semantic-${response.semantic_relevance}">${response.semantic_relevance}</span>`);
+    }
+
+    // Extractor used (Phase 44)
+    if (response.extractor_used) {
+        parts.push(`<span class="detail-label">Extractor:</span> <span class="detail-value extractor">${response.extractor_used}</span>`);
+    }
+
+    // Confidence
+    const confidence = response.confidence || 'N/A';
+    const confidenceScore = response.confidence_score ? ` (${response.confidence_score.toFixed(1)}%)` : '';
+    parts.push(`<span class="detail-label">Confidence:</span> <span class="detail-value">${confidence}${confidenceScore}</span>`);
+
+    // Grounding
+    if (response.grounding_mode && response.grounding_mode !== 'unknown') {
+        const grounded = response.grounding_passed ? 'Yes' : 'No';
+        parts.push(`<span class="detail-label">Grounding:</span> <span class="detail-value">${response.grounding_mode} (${grounded})</span>`);
+    }
+
+    return parts.length > 0 ? `<div class="result-orchestrator-details">${parts.join(' | ')}</div>` : '';
+}
+
 function renderTestResults() {
     const resultsContainer = document.getElementById('testResultsContainer');
     if (!resultsContainer) return;
@@ -1638,17 +1674,18 @@ function renderTestResults() {
     resultsContainer.innerHTML = testResults.map((r, index) => {
         const response = r.response || {};
         const answerText = response.answer || 'No response';
-        const mode = response.mode || r.mode || '';
-        const confidence = response.confidence || r.confidence || '';
+        const orchestratorDetails = buildOrchestratorDetailsHtml(response);
+
         return `
         <div class="result-item ${r.passed ? 'passed' : 'failed'}">
             <div class="result-header">
                 <span class="result-number">Q${index + 1}</span>
+                <span class="result-category">${r.category || 'general'}</span>
                 <span class="result-status ${r.passed ? 'pass' : 'fail'}">${r.passed ? 'PASS' : 'FAIL'}</span>
             </div>
             <div class="result-question">${escapeHtml(r.query)}</div>
+            ${orchestratorDetails}
             <div class="result-response">${formatAnswerText(answerText)}</div>
-            ${mode ? `<div class="result-meta">Mode: ${mode} | Confidence: ${confidence || 'N/A'}</div>` : ''}
             ${r.failures && r.failures.length > 0 ? `<div class="result-failures">Failures: ${r.failures.join(', ')}</div>` : ''}
         </div>
     `}).join('');
@@ -1668,18 +1705,18 @@ function appendResultItem(result, index) {
 
     const response = result.response || {};
     const answerText = response.answer || 'No response';
-    const mode = response.mode || result.mode || '';
-    const confidence = response.confidence || result.confidence || '';
+    const orchestratorDetails = buildOrchestratorDetailsHtml(response);
 
     const resultHtml = `
         <div class="result-item ${result.passed ? 'passed' : 'failed'}">
             <div class="result-header">
                 <span class="result-number">Q${index + 1}</span>
+                <span class="result-category">${result.category || 'general'}</span>
                 <span class="result-status ${result.passed ? 'pass' : 'fail'}">${result.passed ? 'PASS' : 'FAIL'}</span>
             </div>
             <div class="result-question">${escapeHtml(result.query)}</div>
+            ${orchestratorDetails}
             <div class="result-response">${formatAnswerText(answerText)}</div>
-            ${mode ? `<div class="result-meta">Mode: ${mode} | Confidence: ${confidence || 'N/A'}</div>` : ''}
             ${result.failures && result.failures.length > 0 ? `<div class="result-failures">Failures: ${result.failures.join(', ')}</div>` : ''}
         </div>
     `;

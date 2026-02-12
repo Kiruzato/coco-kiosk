@@ -70,6 +70,9 @@ from retrieval_validator import (  # Phase 17A: Hybrid retrieval & grounding
 )
 from response_formatter import format_structured_answer, build_structured_answer  # Phase 17B/17B.1
 
+# Phase 44: LLM-as-Final-Synthesizer Architecture
+from response_orchestrator import ResponseOrchestrator, ResponseMode, SemanticRelevance
+
 # Phase 32: Voice Integration
 import voice_routes
 
@@ -207,6 +210,21 @@ llm = ChatOpenAI(
     temperature=0,
     openai_api_key=OPENAI_API_KEY
 )
+
+# Initialize Response Orchestrator (Phase 44: LLM-as-Final-Synthesizer)
+# Singleton instance reused across all requests
+response_orchestrator = ResponseOrchestrator(
+    llm=llm,
+    doc_manager=doc_manager,
+    config={
+        "retrieval_top_k": RETRIEVAL_TOP_K,
+        "relevance_threshold": RELEVANCE_SCORE_THRESHOLD,
+        "min_grounding_terms": MIN_GROUNDING_TERMS,
+        "semantic_threshold_high": 0.78,
+        "semantic_threshold_medium": 0.65
+    }
+)
+logger.info("[PHASE44] ResponseOrchestrator initialized (singleton)")
 
 # Initialize query logger
 query_logger = QueryLogger(log_dir=LOG_DIR)
@@ -2551,77 +2569,103 @@ async def chat(request: ChatRequest):
         }
         return await handle_directory_query(query, session_id, memory, intent_metadata, session)
 
-    # === PHASE 17A.2: RETRIEVAL-FIRST ROUTING ===
-    # Attempt document retrieval FIRST before deciding whether to use general AI
-    retrieval_result = attempt_document_retrieval(query)
+    # === PHASE 44: LLM-AS-FINAL-SYNTHESIZER ARCHITECTURE ===
+    # All response paths now go through the orchestrator which terminates in LLM synthesis
+    # Uses module-level singleton (response_orchestrator) for efficiency
+    _orchestrator_start = time.perf_counter()
 
-    # Log retrieval attempt
-    event_tracker.track(
-        EventType.ROUTING_DOCUMENT_ATTEMPTED,
+    # Process query through singleton orchestrator
+    orchestrated = response_orchestrator.process_query(
+        query=query,
         session_id=session_id,
-        grounded=retrieval_result["is_grounded"],
-        confidence=retrieval_result["confidence_score"],
+        memory=memory,
         rag_only_mode=rag_only_mode
     )
 
-    # Check if retrieval succeeded (grounded AND sufficient confidence)
-    retrieval_succeeded = (
-        retrieval_result["is_grounded"] and
-        should_answer_confidently(retrieval_result["confidence_level"], MIN_CONFIDENCE_TO_ANSWER)
+    # Track event based on response mode
+    if orchestrated.mode == ResponseMode.GENERAL_KNOWLEDGE:
+        event_tracker.track(
+            EventType.ROUTING_GENERAL_FALLBACK,
+            session_id=session_id,
+            confidence=orchestrated.confidence_score,
+            grounded=False
+        )
+    elif orchestrated.mode in [ResponseMode.RAG_AUTHORITATIVE, ResponseMode.RAG_SUPPLEMENTED]:
+        event_tracker.track(
+            EventType.ROUTING_DOCUMENT_SUCCESS,
+            session_id=session_id
+        )
+    elif orchestrated.mode == ResponseMode.EXTRACTOR_AUTHORITATIVE:
+        event_tracker.track(
+            EventType.ROUTING_DOCUMENT_SUCCESS,
+            session_id=session_id,
+            extractor=orchestrated.extractor_used
+        )
+
+    # Log query
+    query_logger.log_query(
+        query=query,
+        session_id=session_id,
+        metadata={
+            "intent": "campus" if orchestrated.mode != ResponseMode.GENERAL_KNOWLEDGE else "general",
+            "confidence_level": orchestrated.confidence_level,
+            "confidence_score": orchestrated.confidence_score,
+            "rejected": orchestrated.rejected,
+            "response_mode": orchestrated.mode.value,
+            "semantic_relevance": orchestrated.debug_info.get("semantic_relevance") if orchestrated.debug_info else None,
+            "extractor_used": orchestrated.extractor_used,
+            "answer_preview": orchestrated.answer[:100] if orchestrated.answer else None,
+            "phase": "orchestrator_v44"
+        }
     )
 
-    if retrieval_succeeded:
-        # Retrieval succeeded - use RAG answer
-        event_tracker.track(EventType.ROUTING_DOCUMENT_SUCCESS, session_id=session_id)
-        intent_metadata = {
-            "intent": "campus",
-            "reasoning": "Retrieval-first routing: document retrieval succeeded",
-            "raw_classification": "CAMPUS",
-            "query_length": len(query)
-        }
-        return await handle_campus_query(
-            query, session_id, memory, intent_metadata, session,
-            precomputed_retrieval=retrieval_result
+    # Build debug info if enabled
+    _debug_info = None
+    if debug_mode_enabled and orchestrated.debug_info:
+        _orchestrator_time = round((time.perf_counter() - _orchestrator_start) * 1000, 1)
+        _debug_info = DebugInfo(
+            llm_provider="openai",
+            llm_model="gpt-4o-mini",
+            retrieval_mode=orchestrated.mode.value,
+            retrieval_method="orchestrator_hybrid",
+            chunks_retrieved=len(orchestrated.sources),
+            intent_classified=orchestrated.debug_info.get("response_mode", "unknown"),
+            grounding_passed=orchestrated.debug_info.get("grounded", False),
+            query_terms=orchestrated.debug_info.get("query_terms", []),
+            routing_path=f"orchestrator:{orchestrated.mode.value}",
+            extractor_used=orchestrated.extractor_used,
+            timing={"total_ms": _orchestrator_time}
         )
-    else:
-        # Retrieval failed - decide fallback
-        if rag_only_mode:
-            # RAG-only mode: refuse instead of falling back to general AI
-            grounding_result = retrieval_result.get("grounding_result")
-            topic = grounding_result.topic if grounding_result else "your question"
 
-            event_tracker.track(
-                EventType.ANSWER_REFUSED,
-                session_id=session_id,
-                reason="retrieval_failed_rag_only",
-                confidence=retrieval_result["confidence_score"]
-            )
+    # Convert sources to Source objects
+    sources = [
+        Source(
+            document_name=s.get("document_name", "Unknown"),
+            section=s.get("section", "Unknown"),
+            chunk_id=s.get("chunk_id", 0)
+        )
+        for s in orchestrated.sources
+    ]
 
-            return ChatResponse(
-                session_id=session_id,
-                answer=f"[RAG-Only Mode] I couldn't find relevant campus information about {topic}. Please try rephrasing your question or ask about a different topic.",
-                sources=[],
-                confidence_level="LOW",
-                confidence_score=0.0,
-                rejected=True,
-                timestamp=datetime.now().isoformat(),
-                mode="rag_only"
-            )
-        else:
-            # Normal mode: fall back to general AI
-            event_tracker.track(
-                EventType.ROUTING_GENERAL_FALLBACK,
-                session_id=session_id,
-                confidence=retrieval_result["confidence_score"],
-                grounded=retrieval_result["is_grounded"]
-            )
-            intent_metadata = {
-                "intent": "general",
-                "reasoning": "Retrieval-first routing: document retrieval failed, falling back to general AI",
-                "raw_classification": "GENERAL_FALLBACK",
-                "query_length": len(query)
-            }
-            return await handle_general_query(query, session_id, memory, intent_metadata)
+    # Determine mode string for response
+    mode_str = "campus"
+    if orchestrated.mode == ResponseMode.GENERAL_KNOWLEDGE:
+        mode_str = "general"
+    elif orchestrated.mode == ResponseMode.RAG_SUPPLEMENTED:
+        mode_str = "general"  # Supplemented mode appears as general to user
+
+    return ChatResponse(
+        session_id=session_id,
+        answer=orchestrated.answer,
+        sources=sources,
+        confidence_level=orchestrated.confidence_level,
+        confidence_score=orchestrated.confidence_score,
+        grounding_mode=orchestrated.grounding_mode,
+        rejected=orchestrated.rejected,
+        timestamp=datetime.now().isoformat(),
+        mode=mode_str,
+        debug_info=_debug_info
+    )
 
 
 @app.post("/feedback")
@@ -3670,12 +3714,27 @@ async def execute_single_test(question: Dict) -> Dict:
 
 
 def evaluate_test_result(question: Dict, response: Dict) -> Dict:
-    """Evaluate a test result and return pass/fail status."""
+    """
+    Evaluate a test result and return pass/fail status.
+
+    Phase 44: Updated to capture orchestrator response details including
+    semantic relevance, response mode, and extractor information.
+    """
     failures = []
 
     # Check for API error
     if "error" in response:
         failures.append(f"API error: {response['error']}")
+
+    # Extract debug info if available (Phase 44)
+    debug_info = response.get("debug_info") or {}
+
+    # Phase 44: Extract orchestrator-specific fields
+    response_mode = debug_info.get("response_mode") or debug_info.get("retrieval_mode") or response.get("mode", "unknown")
+    semantic_relevance = debug_info.get("semantic_relevance", "unknown")
+    extractor_used = debug_info.get("extractor_used") or response.get("extractor_used")
+    query_terms = debug_info.get("query_terms", [])
+    grounding_passed = debug_info.get("grounding_passed", False)
 
     # Build result
     passed = len(failures) == 0
@@ -3689,9 +3748,16 @@ def evaluate_test_result(question: Dict, response: Dict) -> Dict:
         "response": {
             "mode": response.get("mode", "unknown"),
             "confidence": response.get("confidence_level", "N/A"),
+            "confidence_score": response.get("confidence_score", 0),
             "grounding_mode": response.get("grounding_mode", "unknown"),
             "rejected": response.get("rejected", False),
-            "answer": response.get("answer", "")
+            "answer": response.get("answer", ""),
+            # Phase 44: Orchestrator details
+            "response_mode": response_mode,
+            "semantic_relevance": semantic_relevance,
+            "extractor_used": extractor_used,
+            "query_terms": query_terms,
+            "grounding_passed": grounding_passed
         }
     }
 
@@ -3827,21 +3893,41 @@ async def download_test_harness_results():
     # Individual results
     for i, result in enumerate(results.get("results", []), 1):
         lines.append(f"Question No.: {i}")
+        lines.append(f"Category: {result.get('category', 'general')}")
         lines.append(result["query"])
         lines.append("")
+
+        response = result.get("response", {})
+
+        # Phase 44: Orchestrator details
+        response_mode = response.get("response_mode", response.get("mode", "-"))
+        semantic = response.get("semantic_relevance", "-")
+        extractor = response.get("extractor_used", "-")
+        confidence = response.get("confidence", "-")
+        confidence_score = response.get("confidence_score", 0)
+        grounding = response.get("grounding_mode", "-")
+        grounded = "Yes" if response.get("grounding_passed") else "No"
+
+        lines.append("Orchestrator Details:")
+        lines.append(f"  Response Mode:      {response_mode}")
+        lines.append(f"  Semantic Relevance: {semantic}")
+        lines.append(f"  Extractor Used:     {extractor}")
+        lines.append(f"  Confidence:         {confidence} ({confidence_score:.1f}%)")
+        lines.append(f"  Grounding:          {grounding} (Passed: {grounded})")
+        lines.append("")
+
         lines.append("Response:")
-        if result.get("response"):
-            lines.append(result["response"].get("answer", "No answer"))
+        if response:
+            lines.append(response.get("answer", "No answer"))
         else:
             lines.append("No response received")
         lines.append("")
 
         status = "PASS" if result["passed"] else "FAIL"
-        mode = result.get("response", {}).get("mode", "-")
-        confidence = result.get("response", {}).get("confidence", "-")
-        lines.append(f"Status: {status} | Mode: {mode} | Confidence: {confidence}")
+        lines.append(f"Status: {status}")
 
         if result.get("failures"):
+            lines.append("Failures:")
             for failure in result["failures"]:
                 lines.append(f"  - {failure}")
 

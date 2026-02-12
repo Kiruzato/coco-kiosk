@@ -1795,9 +1795,16 @@ function stopAudioVisualizer() {
 }
 
 // =============================================================================
-// DRAG-TO-SCROLL FOR MOUSE (Simulates touch scrolling behavior)
+// DRAG-TO-SCROLL FOR MOUSE (DISABLED - interferes with text selection)
+// =============================================================================
+// This feature was disabled because it prevents users from selecting and
+// copying text in the chat conversation area. Touch scrolling on mobile
+// devices still works via native browser behavior and CSS touch-action.
+//
+// To re-enable, uncomment the initDragToScroll function below.
 // =============================================================================
 
+/*
 (function initDragToScroll() {
     const scrollContainer = document.getElementById('chatContainer');
     if (!scrollContainer) return;
@@ -1855,3 +1862,4 @@ function stopAudioVisualizer() {
         }
     });
 })();
+*/
