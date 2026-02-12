@@ -23,6 +23,7 @@ Response Modes:
     - RAG_AUTHORITATIVE: High-confidence RAG, LLM answers from documents
     - RAG_SUPPLEMENTED: Low semantic relevance, LLM uses context if applicable
     - GENERAL_KNOWLEDGE: No campus relevance, LLM provides general answer
+    - STRUCTURED_AUTHORITATIVE: Phase 49 - Campus Query Engine deterministic response
 """
 
 import logging
@@ -64,6 +65,24 @@ except ImportError:
     def preprocess_input(text, source="text"):
         return text
 
+# Phase 49: Campus Query Engine
+try:
+    from campus_query_parser import is_campus_query, parse_campus_query
+    from campus_query_executor import CampusQueryExecutor
+    from campus_response_formatter import format_query_result
+    from campus_index import get_campus_index
+    CAMPUS_QUERY_ENGINE_AVAILABLE = True
+except ImportError:
+    CAMPUS_QUERY_ENGINE_AVAILABLE = False
+    def is_campus_query(text):
+        return False
+    def parse_campus_query(text):
+        return None
+    def format_query_result(result):
+        return ""
+    def get_campus_index():
+        return None
+
 logger = logging.getLogger(__name__)
 
 
@@ -77,6 +96,7 @@ class ResponseMode(Enum):
     RAG_AUTHORITATIVE = "rag_authoritative"    # High-confidence RAG answer
     RAG_SUPPLEMENTED = "rag_supplemented"      # Context available but low relevance
     GENERAL_KNOWLEDGE = "general"              # No campus relevance, general AI
+    STRUCTURED_AUTHORITATIVE = "structured"    # Phase 49: Campus Query Engine (deterministic)
 
 
 class SemanticRelevance(Enum):
@@ -119,6 +139,16 @@ class ExtractionResult:
 
 
 @dataclass
+class StructuredQueryOutput:
+    """Result from Campus Query Engine (Phase 49)."""
+    matched: bool = False
+    formatted_response: str = ""
+    query_intent: Optional[str] = None
+    entity_count: int = 0
+    execution_mode: str = ""
+
+
+@dataclass
 class OrchestratedResponse:
     """Final orchestrated response."""
     answer: str
@@ -130,6 +160,7 @@ class OrchestratedResponse:
     rejected: bool = False
     extractor_used: Optional[str] = None
     debug_info: Optional[Dict] = None
+    structured_output: Optional[StructuredQueryOutput] = None  # Phase 49
 
 
 # =============================================================================
@@ -196,6 +227,21 @@ RESPONSE STYLE:
 - Keep responses concise (1-3 sentences for simple questions)
 - Do NOT add disclaimers about not being campus-related
 {style_hints}
+
+Question: {query}""",
+
+    ResponseMode.STRUCTURED_AUTHORITATIVE: """You are presenting verified campus location information from Columban College.
+The following location information comes from the official campus directory and is 100% accurate.
+
+VERIFIED LOCATION INFORMATION:
+{structured_output}
+
+INSTRUCTIONS:
+- Present this information naturally and helpfully
+- The location facts above are AUTHORITATIVE - do NOT modify building, floor, or room information
+- You may add brief phrases to make the response conversational
+- Keep the response concise and direct
+- Do NOT add information that is not in the verified data above
 
 Question: {query}"""
 }
@@ -313,6 +359,30 @@ class ResponseOrchestrator:
                     extractor_used="math_engine"
                 )
 
+        # Phase 49: Campus Query Engine fast path (deterministic, index-based)
+        if CAMPUS_QUERY_ENGINE_AVAILABLE and is_campus_query(query):
+            structured_result = self._try_campus_query_engine(query)
+            if structured_result and structured_result.matched:
+                logger.info(f"[ORCHESTRATOR] Campus Query Engine: intent={structured_result.query_intent}, "
+                           f"entities={structured_result.entity_count}")
+                return OrchestratedResponse(
+                    answer=structured_result.formatted_response,
+                    mode=ResponseMode.STRUCTURED_AUTHORITATIVE,
+                    sources=[],
+                    confidence_level="High",
+                    confidence_score=100.0,
+                    grounding_mode="index",
+                    rejected=False,
+                    extractor_used="campus_query_engine",
+                    structured_output=structured_result,
+                    debug_info={
+                        "response_mode": "structured",
+                        "query_intent": structured_result.query_intent,
+                        "entity_count": structured_result.entity_count,
+                        "execution_mode": structured_result.execution_mode
+                    }
+                )
+
         # Layer 1: Governance (intent, safety)
         governance = self._apply_governance(query)
         logger.info(f"[ORCHESTRATOR] Governance: intent={governance.intent}, safe={governance.is_safe}")
@@ -372,6 +442,51 @@ class ResponseOrchestrator:
             is_directory_query=is_dir_query,
             requires_authority=True
         )
+
+    def _try_campus_query_engine(self, query: str) -> Optional[StructuredQueryOutput]:
+        """
+        Phase 49: Try the Campus Query Engine for structured queries.
+
+        Returns StructuredQueryOutput if successful, None otherwise.
+        """
+        if not CAMPUS_QUERY_ENGINE_AVAILABLE:
+            return None
+
+        try:
+            # Parse the query
+            parsed_query = parse_campus_query(query)
+            if not parsed_query or not parsed_query.is_valid():
+                logger.debug(f"[CQE] Query parsing failed or invalid: {query}")
+                return None
+
+            # Get the index
+            index = get_campus_index()
+            if not index:
+                logger.warning("[CQE] Campus index not available")
+                return None
+
+            # Execute the query
+            executor = CampusQueryExecutor(index)
+            result = executor.execute(parsed_query)
+
+            if not result.success:
+                logger.debug(f"[CQE] Query execution failed: {result.error}")
+                return None
+
+            # Format the response
+            formatted = format_query_result(result)
+
+            return StructuredQueryOutput(
+                matched=True,
+                formatted_response=formatted,
+                query_intent=parsed_query.intent.value,
+                entity_count=len(result.entities) if result.entities else (result.count or 0),
+                execution_mode=result.execution_mode
+            )
+
+        except Exception as e:
+            logger.error(f"[CQE] Error in campus query engine: {e}")
+            return None
 
     def _perform_retrieval(self, query: str) -> RetrievalResult:
         """

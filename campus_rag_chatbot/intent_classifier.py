@@ -1,13 +1,20 @@
 """
-Intent Classifier Module - Phase 6 + Phase 8
-=============================================
+Intent Classifier Module - Phase 6 + Phase 8 + Phase 50
+========================================================
 This module classifies user query intent to enable dual-mode answering:
 - Campus queries → RAG pipeline with campus documents
 - General queries → Direct LLM without retrieval
 - Ambiguous queries → Ask for clarification
 - Directory queries → Strict location/wayfinding with high confidence (Phase 8)
+- Structured queries → Campus Query Engine (Phase 49-50)
 
 Intent classification uses the existing LLM (gpt-4o-mini) with a structured prompt.
+
+Phase 50 Update:
+- Structured campus queries now route to Campus Query Engine (CQE)
+- CQE handles: LOCATE_SINGLE, LOCATE_MULTIPLE, NEAREST, COUNT, LIST intents
+- is_directory_query() preserved for backward compatibility
+- New is_structured_campus_query() delegates to campus_query_parser.is_campus_query()
 """
 
 import re
@@ -22,6 +29,7 @@ class QueryIntent(Enum):
     GENERAL = "general"
     AMBIGUOUS = "ambiguous"
     DIRECTORY = "directory"  # Phase 8: Location/wayfinding queries
+    STRUCTURED = "structured"  # Phase 50: Campus Query Engine structured queries
 
 
 # ==============================================================================
@@ -43,7 +51,7 @@ CAMPUS_KEYWORDS = [
 # DIRECTORY QUERY DETECTION - Phase 8
 # ==============================================================================
 
-# Patterns that indicate a location/directory query
+# Patterns that indicate a location/directory query (legacy - Phase 8)
 DIRECTORY_PATTERNS = [
     r"\bwhere is\b",
     r"\bwhere's\b",
@@ -65,6 +73,43 @@ DIRECTORY_PATTERNS = [
 ]
 
 
+# ==============================================================================
+# CAMPUS QUERY ENGINE PATTERNS - Phase 50
+# ==============================================================================
+
+# Additional patterns for CQE intents (comprehensive list for reference)
+# These are also defined in campus_query_parser.py - kept here for documentation
+
+CQE_LOCATE_MULTIPLE_PATTERNS = [
+    r"\bshow all\b",
+    r"\blist all\b",
+    r"\bwhat are the\b",
+    r"\bwhere are the\b",
+    r"\bshow me all\b",
+]
+
+CQE_NEAREST_PATTERNS = [
+    r"\bnearest\b",
+    r"\bclosest\b",
+    r"\bnearby\b",
+    r"\bnear here\b",
+]
+
+CQE_COUNT_PATTERNS = [
+    r"\bhow many\b",
+    r"\bcount\b",
+    r"\bnumber of\b",
+    r"\btotal\s+(?:number\s+)?of\b",
+]
+
+CQE_LIST_PATTERNS = [
+    r"^list\b",
+    r"\blist the\b",
+    r"\bshow departments\b",
+    r"\bshow buildings\b",
+]
+
+
 def is_directory_query(query: str) -> bool:
     """
     Detect if query is asking for location/directory information.
@@ -72,6 +117,11 @@ def is_directory_query(query: str) -> bool:
     Phase 8: Uses lightweight regex patterns to identify wayfinding questions
     before LLM classification. This enables stricter answering policies for
     location queries.
+
+    NOTE: Phase 50 - This function is preserved for backward compatibility.
+    Prefer using is_structured_campus_query() which uses the Campus Query Engine
+    for comprehensive location query handling (LOCATE_SINGLE, LOCATE_MULTIPLE,
+    NEAREST, COUNT, LIST).
 
     Args:
         query: User query string
@@ -81,6 +131,32 @@ def is_directory_query(query: str) -> bool:
     """
     query_lower = query.lower()
     return any(re.search(pattern, query_lower) for pattern in DIRECTORY_PATTERNS)
+
+
+def is_structured_campus_query(query: str) -> bool:
+    """
+    Detect if query should be handled by Campus Query Engine.
+
+    Phase 50: Delegates to campus_query_parser.is_campus_query() for unified
+    detection of all 5 CQE intents:
+    - LOCATE_SINGLE: "Where is SP303?", "Where is the library?"
+    - LOCATE_MULTIPLE: "Show all classrooms", "Where are the restrooms?"
+    - NEAREST: "What's the nearest restroom?", "Closest clinic to SP303"
+    - COUNT: "How many offices?", "Number of labs in A Building"
+    - LIST: "List all departments", "Show buildings"
+
+    Args:
+        query: User query string
+
+    Returns:
+        True if the query should be handled by CQE
+    """
+    try:
+        from campus_query_parser import is_campus_query
+        return is_campus_query(query)
+    except ImportError:
+        # CQE not available, fall back to legacy directory detection
+        return is_directory_query(query)
 
 
 # ==============================================================================

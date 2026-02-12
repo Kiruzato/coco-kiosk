@@ -416,9 +416,15 @@ class CampusQueryExecutor:
         """Build a description of what was counted."""
         parts = []
 
+        def pluralize(word):
+            """Simple pluralization handling common cases."""
+            if word.endswith("y"):
+                return word[:-1] + "ies"  # laboratory -> laboratories
+            return word + "s"
+
         for f in filters:
             if f.field == FilterField.ROOM_TYPE:
-                parts.append(f"{f.value.value}s")
+                parts.append(pluralize(f.value.value))
             elif f.field == FilterField.BUILDING:
                 parts.append(f"in {f.value}")
             elif f.field == FilterField.FLOOR_LEVEL:

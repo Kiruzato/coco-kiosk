@@ -77,6 +77,7 @@ LOCATE_MULTIPLE_PATTERNS = [
     r"\bshow me all\b",
     r"\bshow me the\b",
     r"\ball the\s+\w+s\b",  # "all the classrooms"
+    r"\bshow\s+(?:the\s+)?\w+s?\s+(?:in|on|at)\b",  # "show offices in X", "show classrooms on 2nd floor"
 ]
 
 # Nearest/proximity patterns

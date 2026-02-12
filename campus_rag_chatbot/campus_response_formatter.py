@@ -195,10 +195,16 @@ class CampusResponseFormatter:
         count = result.count or 0
         desc = result.metadata.get("count_description", "rooms")
 
+        # Handle irregular plurals for singular form
+        def singularize(word):
+            if word.endswith("ies"):
+                return word[:-3] + "y"  # laboratories -> laboratory
+            return word.rstrip("s")
+
         if count == 0:
             return f"There are no {desc} matching your criteria."
         elif count == 1:
-            return f"There is 1 {desc.rstrip('s')} matching your criteria."
+            return f"There is 1 {singularize(desc)} matching your criteria."
         else:
             return f"There are {count} {desc} matching your criteria."
 

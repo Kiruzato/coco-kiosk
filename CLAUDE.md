@@ -6,7 +6,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 
 ## Current State
 
-**Completed through Phase 48** - Unified Query Parser
+**Completed through Phase 50** - Campus Query Engine Integration
 
 ### Phase History
 1. **Phase 1-3**: Core RAG pipeline, document management, multi-format support
@@ -60,6 +60,8 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 49. **Phase 46**: Arithmetic Query Processing (input preprocessor, deterministic math engine, STT artifact cleanup)
 50. **Phase 47**: Campus Query Engine Data Model (hierarchical schema, CampusQueryIndex, structural proximity)
 51. **Phase 48**: Unified Query Parser (StructuredQuery, QueryIntent, filter extraction, is_campus_query)
+52. **Phase 49**: Query Executor & Response Formatter (index-based execution, template formatting, structural proximity)
+53. **Phase 50**: CQE Integration (STRUCTURED_AUTHORITATIVE mode, app.py routing, golden tests)
 
 ## Architecture
 
@@ -85,7 +87,9 @@ campus_rag_chatbot/
 ├── migrate_entities.py       # Phase 47: Entity migration validation script
 ├── structured_query.py       # Phase 48: StructuredQuery, QueryIntent, QueryFilter
 ├── campus_query_parser.py    # Phase 48: Unified query parser with filter extraction
-├── response_orchestrator.py  # Phase 44: LLM-as-Final-Synthesizer architecture
+├── campus_query_executor.py  # Phase 49: Index-based query execution, structural proximity
+├── campus_response_formatter.py  # Phase 49: Template-based response formatting
+├── response_orchestrator.py  # Phase 44-50: LLM-as-Final-Synthesizer + STRUCTURED mode
 ├── query_analyzer.py         # Phase 45: Query type detection for response formatting
 ├── input_preprocessor.py     # Phase 46: STT artifact cleanup, number normalization
 ├── math_engine.py            # Phase 46: Deterministic arithmetic evaluation
@@ -180,13 +184,40 @@ campus_rag_chatbot/
 - Handles concatenated single-line content via title pattern splitting
 - Filters false positives with role/college pattern matching
 
-### Response Orchestrator (Phase 44-46)
+### Campus Query Engine (Phase 47-50)
+- **Thesis Position**: "Deterministic Structured Campus Query Engine with Controlled Generative Augmentation"
+- Unified handling of ALL location queries with 100% deterministic responses
+- No LLM calls for location facts - facts come directly from index
+- 5 query intents supported:
+  - `LOCATE_SINGLE`: "Where is the library?", "Where is SP303?"
+  - `LOCATE_MULTIPLE`: "Show all classrooms", "Where are the restrooms?"
+  - `NEAREST`: "What's the nearest restroom?", "Closest clinic to SP303"
+  - `COUNT`: "How many offices?", "Number of labs in A Building"
+  - `LIST`: "List all buildings", "Show departments"
+- **Hierarchical Data Model**: Campus → Building → Floor → Room
+- **Structural Proximity** (NEAREST): 4-tier algorithm
+  - Tier 0: Same Floor (highest priority)
+  - Tier 1: Same Building, different floor
+  - Tier 2: Same Campus, different building
+  - Tier 3: Different Campus
+- **Index-based execution**: O(1) lookups via pre-built indexes
+  - `rooms_by_type`, `rooms_by_building`, `rooms_by_floor`, `rooms_by_building_floor`
+- **Template-based formatting**: Natural language responses without LLM variability
+- Files: `campus_schema.py`, `campus_index.py`, `campus_query_parser.py`, `campus_query_executor.py`, `campus_response_formatter.py`
+
+### Response Orchestrator (Phase 44-50)
 - 4-layer architecture: Governance → Retrieval → Extraction → LLM Synthesis
-- All response paths terminate in LLM for natural language generation
-- Response modes: EXTRACTOR_AUTHORITATIVE, RAG_AUTHORITATIVE, RAG_SUPPLEMENTED, GENERAL_KNOWLEDGE
+- All response paths terminate in LLM for natural language generation (except CQE)
+- Response modes:
+  - `EXTRACTOR_AUTHORITATIVE`: Deterministic extractors (deans, awards, etc.)
+  - `RAG_AUTHORITATIVE`: High-confidence RAG answers
+  - `RAG_SUPPLEMENTED`: Context available but low semantic relevance
+  - `GENERAL_KNOWLEDGE`: General AI responses
+  - `STRUCTURED_AUTHORITATIVE`: Campus Query Engine (Phase 49-50)
 - Semantic relevance scoring (HIGH, MEDIUM, LOW) prevents lexical confusion
 - Query analyzer detects query types (MATH, GREETING, DEFINITION, CONVERSATIONAL)
 - Style hints for kiosk/voice-friendly responses
+- **CQE Fast Path**: Campus queries bypass RAG/LLM for deterministic responses
 
 ### Math Engine (Phase 46)
 - Deterministic arithmetic evaluation (bypasses LLM)
@@ -270,17 +301,19 @@ USAGE_TRACKING_ENABLED=true
 
 ## Current Work / Next Steps
 
-The project has completed Phase 42 (Windows Setup & UI Enhancements). Recent additions:
-- Phase 40: Silent TTS - audio plays in background, auto-stops on user input
-- Phase 41: Voice bug fixes & Python 3.11 migration
-- Phase 42: Windows setup & UI enhancements
-  - Fullscreen toggle button for kiosk UI (upper-right corner)
-  - Auto-focus disabled to prevent virtual keyboard obstruction on RPi
-  - TTS reads full responses without truncation (removed 500-char limit)
-  - Debug panel now shows actual TTS engine from response header
-  - Windows setup script (`win-setup.ps1`) and instructions
-  - Added `edge-tts` and `python-magic-bin` to requirements
-- Golden test suite: 32 test cases, 87.5% pass rate (28/32)
+The project has completed Phase 50 (Campus Query Engine Integration). Recent additions:
+- **Phase 47-50: Campus Query Engine** - Complete deterministic location handling
+  - Phase 47: Hierarchical data model (Campus/Building/Floor/Room)
+  - Phase 48: Unified query parser with filter extraction
+  - Phase 49: Index-based executor + template formatter + structural proximity
+  - Phase 50: Integration with app.py routing + STRUCTURED_AUTHORITATIVE mode
+- Golden test suite: 41/41 tests passing (CQE golden tests)
+- All 5 query intents working: LOCATE_SINGLE, LOCATE_MULTIPLE, NEAREST, COUNT, LIST
+- Backward compatibility preserved: `is_directory_query()` still works
+
+Previous milestones:
+- Phase 44-46: LLM-as-Final-Synthesizer, Response Style Policy, Math Engine
+- Phase 40-42: Silent TTS, Voice bug fixes, Windows setup
 
 ## RAG Architecture
 

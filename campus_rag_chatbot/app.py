@@ -73,6 +73,15 @@ from response_formatter import format_structured_answer, build_structured_answer
 # Phase 44: LLM-as-Final-Synthesizer Architecture
 from response_orchestrator import ResponseOrchestrator, ResponseMode, SemanticRelevance
 
+# Phase 49-50: Campus Query Engine (unified query handling)
+try:
+    from campus_query_parser import is_campus_query
+    CAMPUS_QUERY_ENGINE_ENABLED = True
+except ImportError:
+    CAMPUS_QUERY_ENGINE_ENABLED = False
+    def is_campus_query(query):
+        return False
+
 # Phase 32: Voice Integration
 import voice_routes
 
@@ -2558,8 +2567,91 @@ async def chat(request: ChatRequest):
                 debug_info=_debug_info
             )
 
-    # === PHASE 8: CHECK FOR DIRECTORY QUERY FIRST ===
-    # Directory queries get stricter handling (HIGH confidence required)
+    # === PHASE 49-50: CAMPUS QUERY ENGINE (UNIFIED LOCATION HANDLING) ===
+    # CQE handles all 5 query intents: LOCATE_SINGLE, LOCATE_MULTIPLE, NEAREST, COUNT, LIST
+    # Routes through orchestrator which has deterministic CQE fast path
+    if CAMPUS_QUERY_ENGINE_ENABLED and is_campus_query(query):
+        logger.info(f"[CQE] Campus query detected, routing to orchestrator: '{query[:50]}...'")
+        _cqe_start = time.perf_counter()
+
+        # Process through orchestrator (CQE fast path will handle it deterministically)
+        orchestrated = response_orchestrator.process_query(
+            query=query,
+            session_id=session_id,
+            memory=memory,
+            rag_only_mode=rag_only_mode
+        )
+
+        # Track event for CQE queries
+        if orchestrated.mode == ResponseMode.STRUCTURED_AUTHORITATIVE:
+            event_tracker.track(
+                EventType.ROUTING_DOCUMENT_SUCCESS,
+                session_id=session_id,
+                extractor="campus_query_engine"
+            )
+            logger.info(f"[CQE] Structured response generated via CQE")
+
+        # Log query
+        query_logger.log_query(
+            query=query,
+            session_id=session_id,
+            metadata={
+                "intent": "campus_structured",
+                "confidence_level": orchestrated.confidence_level,
+                "confidence_score": orchestrated.confidence_score,
+                "rejected": orchestrated.rejected,
+                "response_mode": orchestrated.mode.value,
+                "extractor_used": orchestrated.extractor_used,
+                "answer_preview": orchestrated.answer[:100] if orchestrated.answer else None,
+                "phase": "cqe_v50"
+            }
+        )
+
+        # Build debug info if enabled
+        _debug_info = None
+        if debug_mode_enabled:
+            _cqe_time = round((time.perf_counter() - _cqe_start) * 1000, 1)
+            _debug_info = DebugInfo(
+                llm_provider="deterministic" if orchestrated.mode == ResponseMode.STRUCTURED_AUTHORITATIVE else "openai",
+                llm_model="campus_query_engine" if orchestrated.mode == ResponseMode.STRUCTURED_AUTHORITATIVE else "gpt-4o-mini",
+                retrieval_mode=orchestrated.mode.value,
+                retrieval_method="cqe_index" if orchestrated.mode == ResponseMode.STRUCTURED_AUTHORITATIVE else "orchestrator_hybrid",
+                chunks_retrieved=len(orchestrated.sources) if orchestrated.sources else 0,
+                intent_classified=orchestrated.debug_info.get("query_intent", "campus") if orchestrated.debug_info else "campus",
+                grounding_passed=True if orchestrated.mode == ResponseMode.STRUCTURED_AUTHORITATIVE else orchestrated.debug_info.get("grounded", False) if orchestrated.debug_info else False,
+                query_terms=orchestrated.debug_info.get("query_terms", []) if orchestrated.debug_info else [],
+                routing_path=f"cqe:{orchestrated.mode.value}",
+                extractor_used=orchestrated.extractor_used,
+                timing={"total_ms": _cqe_time}
+            )
+
+        # Convert sources to Source objects
+        sources = [
+            Source(
+                document_name=s.get("document_name", "Unknown"),
+                section=s.get("section", "Unknown"),
+                chunk_id=s.get("chunk_id", 0)
+            )
+            for s in (orchestrated.sources or [])
+        ]
+
+        # Determine mode string for response
+        mode_str = "structured" if orchestrated.mode == ResponseMode.STRUCTURED_AUTHORITATIVE else "campus"
+
+        return ChatResponse(
+            session_id=session_id,
+            answer=orchestrated.answer,
+            sources=sources,
+            confidence_level=orchestrated.confidence_level,
+            confidence_score=orchestrated.confidence_score,
+            rejected=orchestrated.rejected,
+            timestamp=datetime.now().isoformat(),
+            mode=mode_str,
+            debug_info=_debug_info
+        )
+
+    # === PHASE 8: CHECK FOR DIRECTORY QUERY (FALLBACK) ===
+    # Legacy directory handling for any edge cases not caught by CQE
     if is_directory_query(query):
         intent_metadata = {
             "intent": "directory",
@@ -2600,6 +2692,13 @@ async def chat(request: ChatRequest):
             EventType.ROUTING_DOCUMENT_SUCCESS,
             session_id=session_id,
             extractor=orchestrated.extractor_used
+        )
+    elif orchestrated.mode == ResponseMode.STRUCTURED_AUTHORITATIVE:
+        # Phase 50: Campus Query Engine responses
+        event_tracker.track(
+            EventType.ROUTING_DOCUMENT_SUCCESS,
+            session_id=session_id,
+            extractor="campus_query_engine"
         )
 
     # Log query
