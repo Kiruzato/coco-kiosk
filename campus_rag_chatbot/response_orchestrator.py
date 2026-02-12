@@ -155,30 +155,78 @@ Question: {query}""",
 
     ResponseMode.RAG_SUPPLEMENTED: """You are answering a question. Some campus information was found that may or may not be relevant.
 
-POSSIBLY RELATED CAMPUS INFO (use only if directly relevant):
+POSSIBLY RELATED CAMPUS INFO:
 {context}
 
 INSTRUCTIONS:
 - If the campus info above DIRECTLY answers the question, use it
-- If the campus info is only tangentially related (e.g., mentions the term in a different context),
-  provide a general knowledge answer instead
-- Clearly distinguish between verified campus information and general knowledge
-- For general knowledge answers, you may draw on your training data
-- Be helpful and accurate
+- If the campus info is NOT relevant to the question (e.g., the question is about something general
+  and the campus info just happens to mention a related word), IGNORE the campus info entirely
+  and answer based on general knowledge
+- DO NOT mention or explain that campus information was irrelevant
+- DO NOT add disclaimers about campus vs general knowledge
+- Just answer the question naturally and helpfully
+- Use plain language suitable for reading aloud
 
 Question: {query}""",
 
-    ResponseMode.GENERAL_KNOWLEDGE: """You are a helpful assistant answering a general knowledge question.
-This question is NOT asking for campus-specific information.
+    ResponseMode.GENERAL_KNOWLEDGE: """You are a helpful assistant on a campus information kiosk.
+Answer this general question naturally and concisely.
 
-INSTRUCTIONS:
-- Provide a helpful, accurate answer based on general knowledge
-- Be informative and educational
-- If this somehow IS a campus-specific question (asking about Columban College specifically),
-  say "I don't have verified campus information about this topic"
-- Keep the response clear and appropriately detailed
+RESPONSE STYLE:
+- Be conversational and friendly
+- Give direct answers without unnecessary preamble
+- Use plain language that sounds natural when spoken aloud
+- Do NOT use LaTeX, mathematical notation, or special symbols
+- For math calculations, state the answer naturally (e.g., "25 plus 17 equals 42")
+- Keep responses concise (1-3 sentences for simple questions)
+- Do NOT add disclaimers about not being campus-related
+{style_hints}
 
 Question: {query}"""
+}
+
+
+# =============================================================================
+# STYLE HINTS FOR QUERY-SPECIFIC FORMATTING (Phase 45)
+# =============================================================================
+
+STYLE_HINTS = {
+    "math_simple": """
+MATH RESPONSE STYLE:
+- State the numerical answer directly in one sentence
+- Use words like "plus", "times", "equals" instead of symbols
+- Example: "5 times 5 equals 25" or "That equals 48"
+- Do NOT show step-by-step calculations unless asked
+""",
+
+    "math_complex": """
+MATH RESPONSE STYLE:
+- You may explain steps if the calculation is complex
+- Keep explanations concise
+- You may use mathematical notation if it aids clarity
+""",
+
+    "greeting": """
+GREETING STYLE:
+- Respond warmly in 1-2 sentences
+- Be welcoming and friendly
+- You may offer to help with campus information
+""",
+
+    "definition": """
+DEFINITION STYLE:
+- Start with the definition directly
+- Keep it concise (2-4 sentences)
+- Use accessible language
+""",
+
+    "default": """
+GENERAL STYLE:
+- Be helpful and concise
+- Use plain language suitable for speaking aloud
+- Avoid special notation or symbols
+"""
 }
 
 
@@ -603,7 +651,16 @@ class ResponseOrchestrator:
     ) -> OrchestratedResponse:
         """
         Final LLM synthesis layer. ALL response paths terminate here.
+
+        Phase 45: Includes query-aware formatting for kiosk/voice UX.
         """
+        from query_analyzer import analyze_query, QueryType
+
+        # Phase 45: Analyze query for response formatting
+        query_analysis = analyze_query(query)
+        query_type = query_analysis["query_type"]
+        style_key = query_analysis["formatting_hints"].get("style_key", "default")
+
         prompt_template = SYNTHESIS_PROMPTS[mode]
 
         # Prepare prompt variables
@@ -614,6 +671,24 @@ class ResponseOrchestrator:
         elif mode in [ResponseMode.RAG_AUTHORITATIVE, ResponseMode.RAG_SUPPLEMENTED]:
             prompt_vars["context"] = retrieval.context or "No relevant documents found."
 
+        # Phase 45: Add style hints for GENERAL_KNOWLEDGE and RAG_SUPPLEMENTED modes
+        if mode in [ResponseMode.GENERAL_KNOWLEDGE, ResponseMode.RAG_SUPPLEMENTED]:
+            # Map query type to style hint key
+            if query_type == QueryType.MATH:
+                if query_analysis["complexity"].value == "simple":
+                    prompt_vars["style_hints"] = STYLE_HINTS.get("math_simple", "")
+                else:
+                    prompt_vars["style_hints"] = STYLE_HINTS.get("math_complex", "")
+            elif query_type == QueryType.GREETING:
+                prompt_vars["style_hints"] = STYLE_HINTS.get("greeting", "")
+            elif query_type == QueryType.DEFINITION:
+                prompt_vars["style_hints"] = STYLE_HINTS.get("definition", "")
+            else:
+                prompt_vars["style_hints"] = STYLE_HINTS.get("default", "")
+        else:
+            # Ensure style_hints is defined even if not used
+            prompt_vars["style_hints"] = ""
+
         # Format the prompt
         prompt = prompt_template.format(**prompt_vars)
 
@@ -622,6 +697,11 @@ class ResponseOrchestrator:
             messages = [HumanMessage(content=prompt)]
             response = self.llm.invoke(messages)
             answer = response.content
+
+            # Phase 45: Post-process - strip LaTeX for simple math queries
+            if query_type == QueryType.MATH and not query_analysis["needs_latex"]:
+                answer = self._strip_latex(answer)
+
         except Exception as e:
             logger.error(f"[ORCHESTRATOR] LLM error: {e}")
             answer = "I apologize, but I encountered an error processing your question. Please try again."
@@ -663,3 +743,55 @@ class ResponseOrchestrator:
                 "extractor_name": extraction.extractor_name
             }
         )
+
+    def _strip_latex(self, text: str) -> str:
+        """
+        Phase 45: Remove LaTeX notation and convert to plain text.
+
+        Used for simple math queries where LaTeX is inappropriate for
+        kiosk/voice output.
+
+        Args:
+            text: Response text that may contain LaTeX
+
+        Returns:
+            Plain text with LaTeX converted to words
+        """
+        import re
+
+        # Remove $...$ inline math (preserve content)
+        text = re.sub(r'\$([^$]+)\$', r'\1', text)
+
+        # Remove \( ... \) inline math
+        text = re.sub(r'\\\(([^)]+)\\\)', r'\1', text)
+
+        # Remove \[ ... \] display math
+        text = re.sub(r'\\\[([^\]]+)\\\]', r'\1', text)
+
+        # Convert LaTeX operators to words
+        text = re.sub(r'\\times', ' times ', text)
+        text = re.sub(r'\\div', ' divided by ', text)
+        text = re.sub(r'\\cdot', ' times ', text)
+        text = re.sub(r'\\pm', ' plus or minus ', text)
+
+        # Convert fractions
+        text = re.sub(r'\\frac\{([^}]+)\}\{([^}]+)\}', r'\1 over \2', text)
+
+        # Convert square root
+        text = re.sub(r'\\sqrt\{([^}]+)\}', r'square root of \1', text)
+
+        # Convert exponents
+        text = re.sub(r'\^(\d+)', r' to the power of \1', text)
+        text = re.sub(r'\^\{(\d+)\}', r' to the power of \1', text)
+
+        # Convert common symbols to words
+        text = text.replace(' + ', ' plus ')
+        text = text.replace(' - ', ' minus ')
+        text = text.replace(' * ', ' times ')
+        text = text.replace(' / ', ' divided by ')
+        text = text.replace(' = ', ' equals ')
+
+        # Clean up extra whitespace
+        text = re.sub(r'\s+', ' ', text).strip()
+
+        return text

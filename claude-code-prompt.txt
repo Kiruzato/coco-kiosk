@@ -1,69 +1,24 @@
-We need to address a response formatting and behavior issue in the chatbot.
-Issue
-For certain queries — especially general math or casual questions — the chatbot produces overly verbose, LaTeX-heavy, or structurally messy responses that are not appropriate for kiosk-style interaction.
+Prompt
+We are observing recurring issues with arithmetic queries, especially when they originate from voice input.
 Example:
-Voice Input Query:
-What is 5 * 5 - 5 +? 5 + 23.
-Current Chatbot Response:
-To solve the expression \(5 * 5 - 5 + 5 + 23\), we can break it down step by step:
-1.	Calculate \(5 * 5\):
-
-\[
-5 * 5 = 25
-\]
-2.	Now substitute that back into the expression:
-
-\[
-25 - 5 + 5 + 23
-\]
-3.	Next, perform the subtraction:
-
-\[
-25 - 5 = 20
-\]
-4.	Now add \(5\):
-
-\[
-20 + 5 = 25
-\]
-5.	Finally, add \(23\):
-
-\[
-25 + 23 = 48
-\]
-So, the final answer is \(48\).
-This calculation does not relate to the provided campus information, which pertains to general and disciplinary policies.
-Problems observed:
-•	Excessive LaTeX formatting
-•	Overly academic explanation style
-•	Irrelevant grounding disclaimer
-•	Not kiosk-friendly
-•	Poor UX for voice interaction
-•	Not aligned with conversational expectations
+User:
+What is 5 times 5 times 2 minus 100 times 5 thousand?
+STT output:
+5 * 5. * 2 - 100 * 5,000.
+Chatbot response:
+To solve the expression 5 times 5 times 2 minus 100 times 5,000, we first calculate each part. First, calculate 5 times 5 times 2: - 5 times 5 equals 25 - 25 times 2 equals 50 Next, calculate 100 times 5,000: - 100 times 5,000 equals 500,000 Now, subtract the two results: - 50 minus 500,000 equals -499,950 So, the final answer is -499,950.
+Observed problems:
+•	STT punctuation breaks parsing.
+•	Expressions are evaluated without normalization or validation.
+•	Output formatting collapses (bullets merge, spacing breaks).
+•	Simple arithmetic responses are overly verbose.
+•	Voice and text responses sometimes differ in formatting behavior.
 ________________________________________
-Objective
-Propose a clean, industry-aligned solution that ensures:
-1.	General knowledge / math queries produce concise, natural responses.
-2.	No unnecessary LaTeX blocks unless explicitly requested.
-3.	No irrelevant campus-grounding disclaimers.
-4.	Voice-input queries are handled gracefully even if ASR transcription is imperfect.
-5.	Responses are optimized for kiosk UX (clear, short, readable, speakable).
-________________________________________
-Requirements
-•	Do not implement random formatting patches.
-•	Propose a structured solution at the architecture or response-orchestration level.
-•	Follow industry best practices for:
-o	Conversational AI UX
-o	LLM output control
-o	Multi-modal (voice + text) consistency
-o	Response style governance
-________________________________________
-Deliverables
-1.	Root cause analysis.
-2.	Recommended architectural or orchestration-level solution.
-3.	How to differentiate response styles (math, general knowledge, campus-grounded).
-4.	How to prevent irrelevant grounding disclaimers.
-5.	Suggested response style policy for kiosk deployment.
-Focus on sustainable design, not ad-hoc fixes.
-Wait for implementation approval after presenting the plan.
+Your task:
+1.	Diagnose the root causes across system layers.
+2.	Identify which architectural responsibilities are misallocated or missing.
+3.	Propose a production-grade, scalable solution.
+4.	Focus on system design — not patches.
+5.	Do not modify code yet.
+Provide a structured architectural proposal after analysis.
 

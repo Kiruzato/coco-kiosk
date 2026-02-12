@@ -482,5 +482,76 @@ Status: PASS
 ```
 
 ================================================================================
+17. PHASE 45: RESPONSE STYLE POLICY FOR KIOSK/VOICE UX
+================================================================================
+
+Date: 2026-02-12
+Status: COMPLETED
+
+PROBLEM ADDRESSED:
+------------------
+For certain queries (especially math), the chatbot produced:
+- Overly verbose, LaTeX-heavy responses
+- Irrelevant grounding disclaimers ("This calculation does not relate to campus...")
+- Not kiosk/voice-friendly output
+
+SOLUTION IMPLEMENTED:
+---------------------
+Response Style Policy system that:
+1. Detects query type/complexity before LLM synthesis
+2. Applies appropriate formatting constraints via prompt engineering
+3. Eliminates irrelevant disclaimers for non-campus queries
+4. Optimizes for voice/kiosk UX by default
+
+FILES CREATED/MODIFIED:
+-----------------------
+
+NEW FILE: campus_rag_chatbot/query_analyzer.py
+- QueryType enum (MATH, GREETING, DEFINITION, CONVERSATIONAL, etc.)
+- QueryComplexity enum (SIMPLE, MODERATE, DETAILED)
+- analyze_query() - Classifies queries for response formatting
+- normalize_asr_query() - Fixes common ASR transcription errors
+- is_simple_calculation() - Quick math detection
+- Pattern definitions for math, greetings, definitions
+
+MODIFIED: campus_rag_chatbot/response_orchestrator.py
+- Updated RAG_SUPPLEMENTED prompt (removed disclaimer instruction)
+- Updated GENERAL_KNOWLEDGE prompt (added kiosk-friendly instructions)
+- Added STYLE_HINTS dictionary for query-type-specific formatting
+- Modified _synthesize_response() to use query analysis
+- Added _strip_latex() method for post-processing
+
+KEY PROMPT CHANGES:
+-------------------
+
+RAG_SUPPLEMENTED - BEFORE:
+"Clearly distinguish between verified campus information and general knowledge"
+
+RAG_SUPPLEMENTED - AFTER:
+"DO NOT mention or explain that campus information was irrelevant
+DO NOT add disclaimers about campus vs general knowledge
+Just answer the question naturally and helpfully"
+
+GENERAL_KNOWLEDGE - ADDED:
+"Do NOT use LaTeX, mathematical notation, or special symbols
+For math calculations, state the answer naturally (e.g., '25 plus 17 equals 42')
+Keep responses concise (1-3 sentences for simple questions)"
+
+VERIFICATION RESULTS:
+---------------------
+
+Query: "what is 25 plus 17"
+Before: LaTeX with step-by-step breakdown
+After:  "25 plus 17 equals 42."
+
+Query: "hi there"
+Before: Verbose greeting with disclaimer
+After:  "Hi! Welcome to the campus information kiosk! How can I help you today?"
+
+Query: "what is hydraulics"
+Before: Long explanation + "does not relate to campus information"
+After:  Concise definition without disclaimers
+
+================================================================================
 END OF REPORT
 ================================================================================
