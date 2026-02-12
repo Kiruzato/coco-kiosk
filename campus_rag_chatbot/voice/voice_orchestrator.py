@@ -19,6 +19,14 @@ import time
 from .stt_service import STTService, TranscriptionResult
 from .tts_service import TTSService, SynthesisResult
 
+# Phase 46: Import input preprocessor for STT artifact cleanup
+try:
+    from input_preprocessor import preprocess_input
+except ImportError:
+    # Fallback if module not found
+    def preprocess_input(text, source="text"):
+        return text
+
 logger = logging.getLogger(__name__)
 
 
@@ -226,10 +234,18 @@ class VoiceOrchestrator:
 
         chat_start = time.time()
         try:
-            # Call existing chat handler with transcribed text
+            # Phase 46: Preprocess STT output before sending to chat
+            # Cleans up number formatting, operator artifacts, etc.
+            preprocessed_text = preprocess_input(transcription.text, source="voice")
+            if preprocessed_text != transcription.text:
+                logger.info(
+                    f"[VOICE] Preprocessed: '{transcription.text[:50]}' -> '{preprocessed_text[:50]}'"
+                )
+
+            # Call existing chat handler with preprocessed text
             # This preserves ALL grounding, confidence, and determinism rules
             chat_response = await self.chat_handler(
-                message=transcription.text,
+                message=preprocessed_text,
                 session_id=session_id
             )
             result.chat_response = chat_response

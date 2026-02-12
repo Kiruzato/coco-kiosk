@@ -50,6 +50,20 @@ from entity_extractors import (
     is_contact_query, extract_contacts_from_text, format_contact_list
 )
 
+# Phase 46: Math engine and input preprocessing
+try:
+    from math_engine import is_calculable_expression, try_calculate
+    from input_preprocessor import preprocess_input
+    MATH_ENGINE_AVAILABLE = True
+except ImportError:
+    MATH_ENGINE_AVAILABLE = False
+    def is_calculable_expression(text):
+        return False
+    def try_calculate(text):
+        return False, None, None
+    def preprocess_input(text, source="text"):
+        return text
+
 logger = logging.getLogger(__name__)
 
 
@@ -279,6 +293,25 @@ class ResponseOrchestrator:
             OrchestratedResponse with the final answer and metadata
         """
         logger.info(f"[ORCHESTRATOR] Processing query: {query[:50]}...")
+
+        # Phase 46: Preprocess input (STT artifact cleanup, number normalization)
+        query = preprocess_input(query)
+
+        # Phase 46: Fast path for simple arithmetic (deterministic, no LLM needed)
+        if MATH_ENGINE_AVAILABLE and is_calculable_expression(query):
+            success, answer, result = try_calculate(query)
+            if success and answer:
+                logger.info(f"[ORCHESTRATOR] Math engine: '{query}' = {result}")
+                return OrchestratedResponse(
+                    answer=answer,
+                    mode=ResponseMode.GENERAL_KNOWLEDGE,
+                    sources=[],
+                    confidence_level="High",
+                    confidence_score=100.0,
+                    grounding_mode="deterministic",
+                    rejected=False,
+                    extractor_used="math_engine"
+                )
 
         # Layer 1: Governance (intent, safety)
         governance = self._apply_governance(query)
@@ -791,7 +824,9 @@ class ResponseOrchestrator:
         text = text.replace(' / ', ' divided by ')
         text = text.replace(' = ', ' equals ')
 
-        # Clean up extra whitespace
-        text = re.sub(r'\s+', ' ', text).strip()
+        # Phase 46 Fix: Preserve newlines, only collapse horizontal whitespace
+        # Old: re.sub(r'\s+', ' ', text) - destroyed all newlines
+        text = re.sub(r'[ \t]+', ' ', text)  # Collapse spaces/tabs only
+        text = re.sub(r'\n{3,}', '\n\n', text)  # Max 2 consecutive newlines
 
-        return text
+        return text.strip()

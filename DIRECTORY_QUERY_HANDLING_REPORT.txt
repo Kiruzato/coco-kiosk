@@ -1,0 +1,504 @@
+================================================================================
+DIRECTORY QUERY HANDLING ARCHITECTURE REPORT
+================================================================================
+Date: 2026-02-12
+Project: CoCo Campus RAG Chatbot
+
+This report explains how the chatbot processes and answers directory/location
+queries (e.g., "Where is the library?", "How do I get to the canteen?").
+
+================================================================================
+1. OVERVIEW
+================================================================================
+
+Directory queries are handled through a specialized pipeline that prioritizes:
+1. ACCURACY: No location details are invented or hallucinated
+2. DETERMINISM: Same query always yields same answer
+3. SAFETY: Strict grounding prevents false location information
+
+The system uses a hybrid approach:
+- PRIMARY: Entity Resolution (deterministic, instant, highest confidence)
+- FALLBACK: RAG-based retrieval (when entity not found)
+
+================================================================================
+2. QUERY DETECTION
+================================================================================
+
+File: campus_rag_chatbot/intent_classifier.py
+
+Directory queries are detected via regex patterns BEFORE any LLM classification:
+
+DIRECTORY_PATTERNS = [
+    r"\bwhere is\b",
+    r"\bwhere's\b",
+    r"\bwhere can i find\b",
+    r"\blocation of\b",
+    r"\bhow do i get to\b",
+    r"\bhow to get to\b",
+    r"\bdirections to\b",
+    r"\bfind the\b",
+    r"\blooking for\b",
+    r"\bwhich building\b",
+    r"\bwhich floor\b",
+    r"\bwhat room\b",
+    r"\bwhat building\b",
+    r"\bwhere do i go\b",
+    r"\blocate the\b",
+    r"\broom number\b",
+    r"\bwhat floor\b",
+]
+
+Function: is_directory_query(query) -> bool
+- Returns True if any pattern matches
+- Fast regex check (no LLM call)
+- Triggers specialized directory handling
+
+================================================================================
+3. QUERY NORMALIZATION
+================================================================================
+
+File: campus_rag_chatbot/text_normalizer.py
+
+Directory queries are transformed into canonical format for better matching:
+
+Function: canonicalize_directory_query(query) -> str
+
+Examples:
+  "where is the canteen"     -> "canteen location"
+  "how do I get to library"  -> "library location"
+  "where's room SP303"       -> "room sp303 location"
+  "find the registrar"       -> "registrar location"
+
+Patterns stripped:
+  - "where is the..."
+  - "where's..."
+  - "how do I get to..."
+  - "how to get to..."
+  - "find the..."
+  - "looking for..."
+  - "directions to..."
+  - "can you tell me where..."
+
+================================================================================
+4. ENTITY REGISTRY
+================================================================================
+
+File: campus_rag_chatbot/entity_registry.py
+Data: campus_rag_chatbot/directory_entities.json
+
+DirectoryEntity Data Class:
+---------------------------
+@dataclass
+class DirectoryEntity:
+    entity_id: str           # Unique ID (e.g., "CANTEEN", "LIBRARY")
+    canonical_name: str      # Official name (e.g., "Main Library")
+    aliases: List[str]       # Alternative names (e.g., ["lib", "library"])
+    building: str            # Building name
+    floor: str               # Floor level (e.g., "Ground Floor")
+    room: Optional[str]      # Room number if applicable
+    campus: str              # Campus name
+    department: Optional[str] # Department (optional)
+    landmarks: Optional[str] # Navigation hints
+    description: Optional[str]
+    status: str              # "active" or "inactive"
+    last_updated: Optional[str]
+
+EntityRegistry Class:
+---------------------
+- Loads entities from JSON file at startup
+- Builds O(1) alias index for fast lookup
+- Case-insensitive matching
+- Supports partial/fuzzy matching for disambiguation
+
+Key Methods:
+- get_by_alias(alias) -> DirectoryEntity or None
+- get_active_entities() -> List[DirectoryEntity]
+- find_matching_entities(query) -> List[DirectoryEntity] (for disambiguation)
+
+================================================================================
+5. ENTITY RESOLUTION
+================================================================================
+
+File: campus_rag_chatbot/entity_resolver.py
+
+Step 1: Extract Subject
+-----------------------
+Function: extract_subject(canonical_query) -> str
+
+Examples:
+  "library location" -> "library"
+  "room sp303 location" -> "sp303"
+  "canteen location" -> "canteen"
+
+Step 2: Resolve Entity
+----------------------
+Function: resolve_entity(subject, registry) -> (entity, confidence, method)
+
+Resolution Strategy (priority order):
+1. Exact match on canonical_name (case-insensitive)
+2. Exact match on any alias (case-insensitive)
+
+Returns:
+  - entity: DirectoryEntity or None
+  - confidence: 1.0 for exact match, 0.0 for no match
+  - method: "exact_canonical", "exact_alias", or "none"
+
+Step 3: Format Response
+-----------------------
+Function: format_entity_response(entity) -> str
+
+Template-based, deterministic response generation:
+
+Example Output:
+"The Main Library is located in the Academic Building, 2nd Floor.
+It is accessible via the main staircase near the entrance lobby."
+
+Components included:
+  - Canonical name
+  - Building
+  - Floor
+  - Room (if applicable)
+  - Landmarks (navigation hints)
+
+================================================================================
+6. QUERY PROCESSING FLOW
+================================================================================
+
+File: campus_rag_chatbot/app.py
+Function: handle_directory_query() (lines 2064-2300)
+
+FLOW DIAGRAM:
+=============
+
+    User Query: "Where is the library?"
+            |
+            v
+    +-----------------------+
+    | is_directory_query()  |  <-- Regex pattern detection
+    +-----------------------+
+            |
+            v
+    +-----------------------+
+    | normalize_text()      |  <-- Lowercase, trim whitespace
+    +-----------------------+
+            |
+            v
+    +-----------------------------+
+    | canonicalize_directory_query|  <-- "library location"
+    +-----------------------------+
+            |
+            v
+    +-----------------------+
+    | extract_subject()     |  <-- "library"
+    +-----------------------+
+            |
+            v
+    +-----------------------------+
+    | find_matching_entities()    |  <-- Check for multiple matches
+    +-----------------------------+
+            |
+    +-------+-------+
+    |               |
+    v               v
+  Multiple       Single/None
+  Matches        Match
+    |               |
+    v               v
+  +-------------+  +-------------------+
+  | DISAMBIGUATE|  | resolve_entity()  |
+  +-------------+  +-------------------+
+    |               |
+    |       +-------+-------+
+    |       |               |
+    |       v               v
+    |   Entity Found    Not Found
+    |       |               |
+    |       v               v
+    |   +---------------+  +-------------------+
+    |   | format_entity |  | RAG FALLBACK      |
+    |   | _response()   |  | (similarity search)|
+    |   +---------------+  +-------------------+
+    |       |               |
+    |       v               v
+    |   DETERMINISTIC   CONFIDENCE CHECK
+    |   ANSWER          (require HIGH)
+    |   (98% conf)          |
+    |       |       +-------+-------+
+    |       |       |               |
+    |       |       v               v
+    |       |   HIGH conf       LOW conf
+    |       |       |               |
+    |       |       v               v
+    |       |   LLM generates   REJECT
+    |       |   answer from     "I don't have
+    |       |   context         precise info..."
+    |       |       |
+    +-------+-------+
+            |
+            v
+        RESPONSE
+
+================================================================================
+7. DISAMBIGUATION (PHASE 14)
+================================================================================
+
+File: campus_rag_chatbot/app.py
+Function: handle_entity_disambiguation() (lines 1847-1920)
+
+When multiple entities match a query (e.g., "court" matches both
+"Basketball Court" and "Tennis Court"):
+
+1. DETECTION:
+   matching_entities = entity_registry.find_matching_entities(subject)
+   if len(matching_entities) > 1:
+       return handle_entity_disambiguation(...)
+
+2. PRESENTATION:
+   Response format:
+   "I found multiple locations that might match. Which one do you mean?
+
+   1. Basketball Court (Sports Complex)
+   2. Tennis Court (Outdoor Area)
+   3. Moot Court (Law Building)
+
+   Please reply with the number or name."
+
+3. STATE STORAGE:
+   session["conversation_context"]["awaiting_disambiguation"] = True
+   session["conversation_context"]["disambiguation_candidates"] = [entity_ids]
+
+4. SELECTION HANDLING:
+   User can reply with:
+   - Number: "1", "2", "3"
+   - Position word: "first", "second", "third"
+   - Partial name: "basketball", "tennis"
+
+================================================================================
+8. FOLLOW-UP QUERIES (PHASE 13)
+================================================================================
+
+File: campus_rag_chatbot/app.py
+
+The system tracks conversation context for follow-up questions:
+
+Session Context Structure:
+--------------------------
+session["conversation_context"] = {
+    "last_intent": "directory",
+    "last_entity_id": "LIBRARY",
+    "last_entity_name": "Main Library",
+    "last_campus": "Main Campus",
+    "awaiting_disambiguation": False,
+    "disambiguation_candidates": []
+}
+
+Follow-up Detection:
+--------------------
+Function: is_followup_query(query) -> bool
+
+Patterns detected:
+  - "what floor is it on"
+  - "how do i get there"
+  - "where is it"
+  - "what building"
+  - "what room"
+  - "it" / "there" / "that"
+
+Example Flow:
+-------------
+User: "Where is the library?"
+Bot:  "The Main Library is located in the Academic Building, 2nd Floor."
+      [Context: last_entity_id = "LIBRARY"]
+
+User: "What floor is it on?"
+Bot:  [Detects follow-up, uses context]
+      "The Main Library is on the 2nd Floor."
+
+Context Update:
+---------------
+After each successful entity resolution:
+  update_conversation_context(
+      session,
+      intent="directory",
+      entity_id=resolved_entity.entity_id,
+      entity_name=resolved_entity.canonical_name,
+      campus=resolved_entity.campus
+  )
+
+================================================================================
+9. RAG FALLBACK
+================================================================================
+
+When entity resolution fails, the system falls back to RAG retrieval:
+
+Step 1: Vector Search
+---------------------
+retrieval_results = doc_manager.vector_store.similarity_search_with_relevance_scores(
+    canonical_query,
+    k=8,  # Top 8 chunks
+    score_threshold=0.5
+)
+
+Step 2: Confidence Scoring
+--------------------------
+confidence_level, metrics = compute_confidence_score(similarity_scores)
+
+For directory queries, ONLY HIGH confidence is accepted.
+MEDIUM confidence is rejected with:
+  "I don't have precise location information for that yet."
+
+Step 3: Entity Agreement Check
+------------------------------
+If MEDIUM confidence, check if multiple chunks agree on same entity:
+  has_agreement, common_entity, entities = check_entity_agreement(docs, scores)
+
+If agreement found, may promote to HIGH confidence.
+
+Step 4: LLM Generation (if HIGH)
+--------------------------------
+Uses specialized directory prompt:
+
+CRITICAL RULES FOR LOCATION QUESTIONS:
+1. ONLY provide location information EXPLICITLY stated in context
+2. May ONLY mention: building names, floor numbers, room numbers from context
+3. If exact location not stated, respond: "I don't have precise info..."
+4. NEVER guess or invent buildings, floors, rooms, or directions
+5. Always mention the source (e.g., "According to the Campus Directory...")
+
+================================================================================
+10. CONFIDENCE REQUIREMENTS
+================================================================================
+
+Directory queries have STRICTER confidence requirements:
+
+| Query Type      | Minimum Confidence | Fallback Behavior |
+|-----------------|-------------------|-------------------|
+| General Campus  | MEDIUM            | LLM generates     |
+| Directory       | HIGH              | REJECT            |
+
+Confidence Levels:
+- HIGH: >= 0.70 avg similarity, >= 0.78 max similarity
+- MEDIUM: >= 0.50 avg similarity
+- LOW: < 0.50 avg similarity
+
+Rejection Message:
+"I don't have precise location information for that yet. Please check
+with the campus information desk or security office for assistance."
+
+================================================================================
+11. RESPONSE MODES
+================================================================================
+
+| Mode              | Trigger                          | Response Source |
+|-------------------|----------------------------------|-----------------|
+| Entity Resolved   | Alias match in registry          | Template-based  |
+| Disambiguation    | Multiple entity matches          | Options list    |
+| Context Follow-up | Follow-up with known entity      | Template-based  |
+| RAG High Conf     | HIGH similarity, entity agrees   | LLM from docs   |
+| Rejection         | LOW/MEDIUM conf for directory    | Canned message  |
+
+================================================================================
+12. FILES INVOLVED
+================================================================================
+
+| File                      | Purpose                               |
+|---------------------------|---------------------------------------|
+| intent_classifier.py      | is_directory_query() detection        |
+| text_normalizer.py        | canonicalize_directory_query()        |
+| entity_registry.py        | DirectoryEntity, EntityRegistry       |
+| entity_resolver.py        | resolve_entity(), format response     |
+| app.py                    | handle_directory_query() orchestration|
+| directory_entities.json   | Entity data (admin-managed)           |
+
+================================================================================
+13. ADMIN MANAGEMENT
+================================================================================
+
+Directory entities are managed via Admin UI:
+
+URL: /admin -> Directory Entities tab
+
+Features:
+- CRUD operations (Create, Read, Update, Delete)
+- Alias management (add/remove aliases)
+- Campus/department assignment
+- Status toggle (active/inactive)
+- CSV import/export for bulk operations
+
+CSV Format:
+entity_id,canonical_name,aliases,building,floor,room,campus,department,landmarks
+
+================================================================================
+14. SAFETY GUARANTEES
+================================================================================
+
+1. NO HALLUCINATION:
+   - Entity resolution is deterministic (template-based)
+   - LLM fallback has strict grounding rules
+   - Cannot invent buildings, floors, or room numbers
+
+2. HIGH CONFIDENCE REQUIRED:
+   - Directory queries require HIGH confidence
+   - Low-confidence answers are rejected, not guessed
+
+3. SOURCE ATTRIBUTION:
+   - LLM responses must cite source documents
+   - Entity responses come from verified registry
+
+4. INACTIVE ENTITY FILTERING:
+   - Deactivated entities are excluded from resolution
+   - Admin can hide locations without deleting data
+
+================================================================================
+15. EXAMPLE INTERACTIONS
+================================================================================
+
+EXAMPLE 1: Direct Entity Resolution
+-----------------------------------
+User: "Where is the library?"
+Flow: is_directory_query() -> normalize -> canonicalize -> extract_subject
+      -> resolve_entity("library") -> MATCH -> format_entity_response()
+Answer: "The Main Library is located in the Academic Building, 2nd Floor.
+        It is accessible via the main staircase near the entrance lobby."
+Confidence: 98% (entity-resolved)
+Mode: directory
+
+EXAMPLE 2: Disambiguation
+-------------------------
+User: "Where is the court?"
+Flow: extract_subject("court") -> find_matching_entities()
+      -> 3 matches -> handle_entity_disambiguation()
+Answer: "I found multiple locations that might match. Which one do you mean?
+        1. Basketball Court (Sports Complex)
+        2. Tennis Court (Outdoor Area)
+        3. Moot Court (Law Building)
+        Please reply with the number or name."
+Mode: clarification
+
+User: "1"
+Flow: Parse selection -> resolve entity_id from candidates
+Answer: "The Basketball Court is located in the Sports Complex, Ground Floor."
+
+EXAMPLE 3: Follow-up Query
+--------------------------
+User: "Where is the canteen?"
+Answer: "The Canteen is located in the Student Center, Ground Floor."
+[Context saved: last_entity_id = "CANTEEN"]
+
+User: "What floor is it on?"
+Flow: is_followup_query() = True -> get context -> entity = CANTEEN
+Answer: "The Canteen is on the Ground Floor."
+
+EXAMPLE 4: RAG Fallback with Rejection
+--------------------------------------
+User: "Where is the secret lab?"
+Flow: resolve_entity("secret lab") -> NO MATCH
+      -> RAG fallback -> similarity search -> LOW confidence
+Answer: "I don't have precise location information for that yet.
+        Please check with the campus information desk."
+Confidence: LOW
+Rejected: True
+
+================================================================================
+END OF REPORT
+================================================================================

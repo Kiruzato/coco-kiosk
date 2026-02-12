@@ -6,7 +6,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 
 ## Current State
 
-**Completed through Phase 42** - Windows Setup & UI Enhancements
+**Completed through Phase 46** - Arithmetic Query Processing
 
 ### Phase History
 1. **Phase 1-3**: Core RAG pipeline, document management, multi-format support
@@ -55,6 +55,9 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 44. **Phase 40**: Silent TTS with implicit interruption (background audio, auto-stop on input)
 45. **Phase 41**: Voice bug fixes & Python 3.11 migration
 46. **Phase 42**: Windows setup & UI enhancements (fullscreen toggle, auto-focus disabled, TTS full response)
+47. **Phase 44**: LLM-as-Final-Synthesizer architecture (4-layer orchestration, semantic relevance scoring)
+48. **Phase 45**: Response Style Policy for kiosk/voice UX (query analyzer, style hints, LaTeX stripping)
+49. **Phase 46**: Arithmetic Query Processing (input preprocessor, deterministic math engine, STT artifact cleanup)
 
 ## Architecture
 
@@ -75,6 +78,10 @@ campus_rag_chatbot/
 ├── entity_consolidation.py   # DEPRECATED: Use consolidation_engine.py
 ├── consolidation_engine.py   # Phase 24: Config-driven consolidation
 ├── metadata_index.py         # Phase 25: Fast chunk lookups by metadata
+├── response_orchestrator.py  # Phase 44: LLM-as-Final-Synthesizer architecture
+├── query_analyzer.py         # Phase 45: Query type detection for response formatting
+├── input_preprocessor.py     # Phase 46: STT artifact cleanup, number normalization
+├── math_engine.py            # Phase 46: Deterministic arithmetic evaluation
 ├── entity_extractors/        # Phase 18.2/27/31: Deterministic extractors
 │   ├── deans.py              # Dean enumeration extraction
 │   ├── awards.py             # Awards enumeration extraction
@@ -165,6 +172,21 @@ campus_rag_chatbot/
 - Awards extractor: `is_awards_enumeration_query()`, `extract_awards_from_text()`, `format_awards_list()`
 - Handles concatenated single-line content via title pattern splitting
 - Filters false positives with role/college pattern matching
+
+### Response Orchestrator (Phase 44-46)
+- 4-layer architecture: Governance → Retrieval → Extraction → LLM Synthesis
+- All response paths terminate in LLM for natural language generation
+- Response modes: EXTRACTOR_AUTHORITATIVE, RAG_AUTHORITATIVE, RAG_SUPPLEMENTED, GENERAL_KNOWLEDGE
+- Semantic relevance scoring (HIGH, MEDIUM, LOW) prevents lexical confusion
+- Query analyzer detects query types (MATH, GREETING, DEFINITION, CONVERSATIONAL)
+- Style hints for kiosk/voice-friendly responses
+
+### Math Engine (Phase 46)
+- Deterministic arithmetic evaluation (bypasses LLM)
+- Input preprocessing: STT artifact cleanup, number normalization ("5,000" → "5000")
+- AST-based evaluation (secure, no eval())
+- Supports: +, -, *, /, **, parentheses, word operators (plus, times, etc.)
+- Voice-friendly output: "The answer is 42."
 
 ### Voice Integration (Phase 32-40)
 - Modular STT/TTS architecture with automatic fallback
