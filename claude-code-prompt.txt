@@ -1,24 +1,13 @@
-Prompt
-We are observing recurring issues with arithmetic queries, especially when they originate from voice input.
-Example:
-User:
-What is 5 times 5 times 2 minus 100 times 5 thousand?
-STT output:
-5 * 5. * 2 - 100 * 5,000.
-Chatbot response:
-To solve the expression 5 times 5 times 2 minus 100 times 5,000, we first calculate each part. First, calculate 5 times 5 times 2: - 5 times 5 equals 25 - 25 times 2 equals 50 Next, calculate 100 times 5,000: - 100 times 5,000 equals 500,000 Now, subtract the two results: - 50 minus 500,000 equals -499,950 So, the final answer is -499,950.
-Observed problems:
-•	STT punctuation breaks parsing.
-•	Expressions are evaluated without normalization or validation.
-•	Output formatting collapses (bullets merge, spacing breaks).
-•	Simple arithmetic responses are overly verbose.
-•	Voice and text responses sometimes differ in formatting behavior.
-________________________________________
-Your task:
-1.	Diagnose the root causes across system layers.
-2.	Identify which architectural responsibilities are misallocated or missing.
-3.	Propose a production-grade, scalable solution.
-4.	Focus on system design — not patches.
-5.	Do not modify code yet.
-Provide a structured architectural proposal after analysis.
+Thanks for the detailed architectural proposal. I like the direction and the structured approach.
+I’d like to refine the design slightly to make it cleaner and stronger for thesis-level presentation.
+First, I want to simplify the architecture conceptually. Instead of keeping a separate Directory Engine and Structured Engine, I’d prefer that single-entity location queries (e.g., “Where is SP303?”, “Where is the library?”, “Where is Building A?”) be treated as structured queries under a unified Campus Query Engine. The legacy directory behavior can remain for backward compatibility, but architecturally it should be absorbed into the structured system. Please revise the design to reflect this unification clearly.
+Second, regarding the “NEAREST” query intent — we are not implementing spatial coordinates or navigation graphs at this stage. Please redefine what “nearest” means in a structurally consistent way (e.g., nearest within same building or floor) and explicitly document the limitation for thesis clarity. This should be framed as a constrained structural proximity model, not geometric distance.
+Third, strengthen the architectural narrative and justification:
+•	Clarify how the hierarchical schema (Campus → Building → Floor → Room → Department) supports structured querying and future extensibility.
+•	Refine the explanation of why hierarchical JSON is appropriate for Phase 1 and when SQLite would become necessary.
+•	Emphasize deterministic-first guarantees and how the structured engine prevents hallucination.
+Do not expand the scope by adding spatial modeling, normalization layers, or additional heavy dependencies. Keep the system within realistic thesis scope.
+I want the final architecture to clearly position CoCo as:
+“A Deterministic Structured Campus Query Engine with Controlled Generative Augmentation.”
+Please rewrite and refine the proposal accordingly, focusing on architectural clarity, system boundaries, and academic defensibility.
 

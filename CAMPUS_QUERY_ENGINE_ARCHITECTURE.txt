@@ -1,0 +1,684 @@
+================================================================================
+CAMPUS QUERY ENGINE: REFINED ARCHITECTURAL DESIGN
+================================================================================
+Date: 2026-02-12
+Project: CoCo Campus RAG Chatbot
+Author: AI Co-pilot (Claude)
+Status: PROPOSAL - Pending Implementation
+Version: 2.0 (Refined)
+
+================================================================================
+THESIS POSITIONING
+================================================================================
+
+    CoCo: A Deterministic Structured Campus Query Engine
+          with Controlled Generative Augmentation
+
+This architecture positions CoCo as a hybrid system that combines:
+- DETERMINISTIC structured querying for location/directory data
+- CONTROLLED generative augmentation for natural language presentation
+
+The system guarantees that location facts are NEVER hallucinated - they are
+resolved deterministically from the entity registry. LLM is used ONLY for
+presentation formatting, not fact generation.
+
+================================================================================
+1. EXECUTIVE SUMMARY
+================================================================================
+
+This document presents a refined architecture for the Campus Query Engine (CQE)
+component of the CoCo chatbot system.
+
+SUPPORTED QUERY TYPES:
+  - "Where is SP303?" (single-entity lookup)
+  - "Where is the library?" (alias resolution)
+  - "Where is Building A?" (building-level query)
+  - "Show all classrooms on Ground Floor" (filtered enumeration)
+  - "List all offices in A Building" (building filter)
+  - "What's the nearest restroom?" (structural proximity)
+  - "How many labs are there?" (count aggregation)
+
+KEY DESIGN PRINCIPLES:
+  1. UNIFIED ENGINE: All location queries flow through single CQE
+  2. DETERMINISTIC-FIRST: Structured data produces deterministic responses
+  3. STRUCTURAL PROXIMITY: NEAREST uses hierarchy, not geometric distance
+  4. CONTROLLED LLM: Generative augmentation for presentation only
+
+================================================================================
+2. UNIFIED SYSTEM ARCHITECTURE
+================================================================================
+
+2.1 HIGH-LEVEL ARCHITECTURE DIAGRAM
+-----------------------------------
+
+                         +------------------------+
+                         |      User Query        |
+                         +------------------------+
+                                    |
+                                    v
+               +------------------------------------------+
+               |         QUERY ROUTING LAYER              |
+               |  - Intent Classification                 |
+               |  - Pattern Detection                     |
+               |  - Query Normalization                   |
+               +------------------------------------------+
+                      /                         \
+                     v                           v
+    +--------------------------------+    +------------------------+
+    |    CAMPUS QUERY ENGINE (CQE)   |    |      RAG ENGINE        |
+    |    [DETERMINISTIC LAYER]       |    |    [RETRIEVAL LAYER]   |
+    |                                |    |                        |
+    | - Single-entity lookup         |    | - Vector + BM25 (RRF)  |
+    | - Multi-entity enumeration     |    | - Grounding validation |
+    | - Structural proximity         |    | - Confidence scoring   |
+    | - Count/List aggregation       |    |                        |
+    | - 100% deterministic           |    | - For non-directory    |
+    +--------------------------------+    +------------------------+
+                     \                           /
+                      \                         /
+                       v                       v
+              +---------------------------------------+
+              |      LLM SYNTHESIS LAYER              |
+              |   [CONTROLLED GENERATIVE LAYER]       |
+              |   - Presentation formatting only      |
+              |   - Facts are IMMUTABLE input         |
+              |   - No location generation            |
+              +---------------------------------------+
+                              |
+                              v
+                    +-------------------+
+                    |     Response      |
+                    +-------------------+
+
+
+2.2 KEY ARCHITECTURAL CHANGE: UNIFIED ENGINE
+--------------------------------------------
+
+PREVIOUS DESIGN (v1.0):
+  - Separate "Directory Engine" for single-entity queries
+  - Separate "Structured Engine" for multi-entity queries
+  - Conceptual confusion about boundaries
+
+REFINED DESIGN (v2.0):
+  - SINGLE Campus Query Engine handles ALL location queries
+  - No separate Directory Engine box in architecture
+  - Legacy backward compatibility via wrapper
+
+RATIONALE:
+  Single-entity queries ("Where is SP303?") and multi-entity queries
+  ("Show all offices") both operate on the same hierarchical index.
+  Separating them architecturally creates artificial boundaries.
+
+
+2.3 COMPONENT BOUNDARIES
+------------------------
+
++----------------+----------------------------------+-----------------+
+| Component      | Responsibility                   | LLM Involvement |
++----------------+----------------------------------+-----------------+
+| Query Routing  | Classify intent, detect patterns | None (regex)    |
+| Campus Query   | Resolve entities, execute        | None (index)    |
+| Engine (CQE)   | structured queries               |                 |
+| RAG Engine     | Retrieve/rank chunks for non-    | None (algo)     |
+|                | directory queries                |                 |
+| LLM Synthesis  | Format responses naturally       | Yes (present)   |
++----------------+----------------------------------+-----------------+
+
+================================================================================
+3. HIERARCHICAL DATA MODEL
+================================================================================
+
+3.1 ENTITY SCHEMA
+-----------------
+
+    Campus (Level 0)
+        |
+        +-- Building (Level 1)
+              |
+              +-- Floor (Level 2)
+                    |
+                    +-- Room (Level 3)
+                          |
+                          +-- RoomType, Department (Attributes)
+
+
+3.2 ENTITY TYPES (ENUMS)
+------------------------
+
+RoomType Enum:
+  - CLASSROOM
+  - OFFICE
+  - LABORATORY
+  - RESTROOM
+  - CONFERENCE
+  - FACILITY (gym, canteen, clinic)
+  - STORAGE
+  - UTILITY
+
+FloorLevel Enum:
+  - GROUND = 0
+  - FIRST = 1
+  - SECOND = 2
+  - THIRD = 3
+  - FOURTH = 4
+
+
+3.3 CURRENT DATA DISTRIBUTION
+-----------------------------
+
+From directory_entities.json:
+
+| Level    | Count | Values                                              |
+|----------|-------|-----------------------------------------------------|
+| Campus   | 2     | Main Campus (127), Barretto Campus (93)             |
+| Building | 12    | A, B, C, E, H, IP, P, P Extension, St. Agatha,      |
+|          |       | St. Augustine, St. Patrick, V                       |
+| Floor    | 4     | Ground, Second, Third, Fourth                       |
+| Room     | 220   | Individual entities                                 |
+
+
+3.4 INDEX STRUCTURES
+--------------------
+
+class CampusQueryIndex:
+    # Primary indexes (O(1) lookup by ID)
+    campuses: Dict[str, Campus]
+    buildings: Dict[str, Building]
+    floors: Dict[str, Floor]
+    rooms: Dict[str, Room]
+
+    # Alias resolution (O(1) lookup)
+    alias_to_room: Dict[str, str]
+    alias_to_building: Dict[str, str]
+
+    # Relationship indexes (for filtered queries)
+    rooms_by_floor: Dict[Tuple[str, str], List[str]]     # (building, floor)
+    rooms_by_building: Dict[str, List[str]]              # building_id
+    rooms_by_campus: Dict[str, List[str]]                # campus_id
+    rooms_by_type: Dict[RoomType, List[str]]             # room type
+
+    # For structural proximity
+    floor_neighbors: Dict[str, List[str]]                # same-floor rooms
+
+
+================================================================================
+4. ACADEMIC JUSTIFICATION: WHY HIERARCHICAL OVER FLAT?
+================================================================================
+
++---------------------+-------------------+---------------------------+
+| Criterion           | Flat Model        | Hierarchical Model        |
++---------------------+-------------------+---------------------------+
+| Query Expressiveness| O(n) scan for     | O(1) index lookup via     |
+|                     | "rooms on 2nd     | rooms_by_floor[(bldg,     |
+|                     | floor"            | floor)]                   |
++---------------------+-------------------+---------------------------+
+| Structural Proximity| Undefined - no    | Natural distance: Floor > |
+|                     | relationship      | Building > Campus         |
+|                     | semantics         |                           |
++---------------------+-------------------+---------------------------+
+| Determinism         | Ambiguous - room  | Absolute - room on        |
+|                     | could match       | exactly one floor         |
+|                     | multiple floors   |                           |
++---------------------+-------------------+---------------------------+
+| Extensibility       | Schema changes    | Add buildings without     |
+|                     | for new levels    | schema changes            |
++---------------------+-------------------+---------------------------+
+
+THESIS ARGUMENT:
+
+Hierarchical containment maps directly to physical campus structure. A room
+cannot be on two floors simultaneously. This provides:
+
+  1. UNAMBIGUOUS RELATIONSHIPS: SP303 is always on Third Floor
+  2. DETERMINISTIC QUERIES: No ambiguity in containment
+  3. ANTI-HALLUCINATION: LLM cannot invent non-existent relationships
+
+
+================================================================================
+5. STRUCTURAL PROXIMITY MODEL (NEAREST)
+================================================================================
+
+5.1 SCOPE CONSTRAINT (EXPLICIT LIMITATION)
+------------------------------------------
+
+    IMPORTANT FOR THESIS:
+
+    This system does NOT implement geometric distance calculations,
+    GPS coordinates, or navigation graphs. "Nearest" is defined
+    EXCLUSIVELY through structural containment relationships.
+
+    This is a CONSTRAINED STRUCTURAL PROXIMITY MODEL, not spatial modeling.
+
+
+5.2 PROXIMITY TIERS
+-------------------
+
++------+------------------+---------------------+---------------------------+
+| Tier | Definition       | Structural Distance | Example                   |
++------+------------------+---------------------+---------------------------+
+| 0    | Same Floor       | Entities sharing    | SP303 and SP310 are both  |
+|      |                  | floor_id            | on Third Floor            |
++------+------------------+---------------------+---------------------------+
+| 1    | Same Building    | Entities sharing    | SP303 (3F) and SP201 (2F) |
+|      |                  | building_id,        | same building             |
+|      |                  | different floor     |                           |
++------+------------------+---------------------+---------------------------+
+| 2    | Same Campus      | Entities sharing    | St. Patrick and A Building|
+|      |                  | campus_id,          | both on Main Campus       |
+|      |                  | different building  |                           |
++------+------------------+---------------------+---------------------------+
+| 3    | Different Campus | No shared           | Main Campus vs Barretto   |
+|      |                  | containment         | Campus                    |
++------+------------------+---------------------+---------------------------+
+
+
+5.3 ALGORITHM
+-------------
+
+def find_nearest(reference: Entity, target_type: RoomType) -> Entity:
+    """
+    Constrained Structural Proximity Model.
+    Returns first match at closest structural tier.
+    """
+    ref = reference
+
+    # Tier 0: Same Floor
+    candidates = index.rooms_by_floor[(ref.building_id, ref.floor)]
+    matches = [e for e in candidates if e.room_type == target_type]
+    if matches:
+        return sorted(matches, key=lambda e: e.entity_id)[0]
+
+    # Tier 1: Same Building, Different Floor
+    candidates = index.rooms_by_building[ref.building_id]
+    matches = [e for e in candidates
+               if e.room_type == target_type and e.floor != ref.floor]
+    if matches:
+        # Sort by floor proximity (closest floor first)
+        return sorted(matches, key=lambda e: abs(e.floor_level - ref.floor_level))[0]
+
+    # Tier 2: Same Campus, Different Building
+    candidates = index.rooms_by_campus[ref.campus_id]
+    matches = [e for e in candidates
+               if e.room_type == target_type and e.building_id != ref.building_id]
+    if matches:
+        return sorted(matches, key=lambda e: e.entity_id)[0]
+
+    # Tier 3: Different Campus (fallback)
+    return None  # Or search other campus
+
+
+5.4 EXAMPLE RESOLUTION
+----------------------
+
+Query: "Where is the nearest restroom to SP303?"
+
+Step 1: Resolve SP303
+  -> {building: "St. Patrick Building", floor: "Third Floor", campus: "Main Campus"}
+
+Step 2: Search Tier 0 (Same Floor)
+  -> Check rooms_by_floor[("ST_PATRICK", "THIRD")]
+  -> Filter by room_type == RESTROOM
+  -> Found: SP310_CRM (Comfort Room)
+
+Step 3: Return Result
+  -> "The nearest restroom to SP303 is SP310, on the Third Floor of
+      St. Patrick Building."
+
+
+5.5 ACADEMIC JUSTIFICATION: WHY STRUCTURAL OVER GEOMETRIC?
+-----------------------------------------------------------
+
++---------------------+---------------------+---------------------------+
+| Factor              | Geometric           | Structural                |
++---------------------+---------------------+---------------------------+
+| Data Required       | GPS coordinates,    | Already in entity schema  |
+|                     | floor plans         | (building, floor fields)  |
++---------------------+---------------------+---------------------------+
+| User Mental Model   | Abstract distance   | Matches "same floor"      |
+|                     | (meters)            | thinking                  |
++---------------------+---------------------+---------------------------+
+| Determinism         | Depends on path     | Absolute containment      |
+|                     | algorithm choice    |                           |
++---------------------+---------------------+---------------------------+
+| Implementation      | Floor plans,        | Index lookups only        |
+| Scope               | pathfinding A*      |                           |
++---------------------+---------------------+---------------------------+
+
+THESIS ARGUMENT:
+
+Structural proximity aligns with how users navigate campuses. Users think
+"go to 2nd floor, find room" - not "walk 47 meters northeast." This model:
+
+  1. Matches cognitive navigation patterns
+  2. Requires no additional data collection
+  3. Provides deterministic, reproducible results
+
+
+================================================================================
+6. QUERY INTENTS (UNIFIED CQE)
+================================================================================
+
+All location queries route through the UNIFIED Campus Query Engine:
+
++----------------+----------------------------------+----------------------+
+| Intent         | Example Queries                  | Resolution Method    |
++----------------+----------------------------------+----------------------+
+| LOCATE_SINGLE  | "Where is SP303?"                | Entity lookup by ID  |
+|                | "Where is the library?"          | Alias resolution     |
+|                | "Where is Building A?"           | Building metadata    |
++----------------+----------------------------------+----------------------+
+| LOCATE_MULTIPLE| "Where are the restrooms?"       | Type-based enum      |
+|                | "Show all classrooms"            |                      |
++----------------+----------------------------------+----------------------+
+| NEAREST        | "What's the nearest clinic?"     | Structural proximity |
+|                | "Nearest restroom to SP303?"     | search               |
++----------------+----------------------------------+----------------------+
+| COUNT          | "How many labs are there?"       | Index aggregation    |
+|                | "How many offices in A Building?"|                      |
++----------------+----------------------------------+----------------------+
+| LIST           | "List all offices in A Building" | Filtered enumeration |
+|                | "Show departments"               |                      |
++----------------+----------------------------------+----------------------+
+
+
+================================================================================
+7. DETERMINISTIC-FIRST ARCHITECTURE
+================================================================================
+
+7.1 ANTI-HALLUCINATION GUARANTEES
+---------------------------------
+
++-------------------+----------------------------------------------------+
+| Component         | Guarantee                                          |
++-------------------+----------------------------------------------------+
+| Entity Resolution | Answers from directory_entities.json ONLY          |
+|                   | Cannot return locations not in registry            |
++-------------------+----------------------------------------------------+
+| Template Responses| Deterministic string construction                  |
+|                   | format_entity_response() is pure function          |
++-------------------+----------------------------------------------------+
+| CQE Queries       | Pure index operations, ZERO LLM calls             |
+|                   | All execution paths deterministic                  |
++-------------------+----------------------------------------------------+
+| LLM Layer         | Presentation only, facts are IMMUTABLE input       |
+|                   | LLM receives completed data, not queries           |
++-------------------+----------------------------------------------------+
+
+
+7.2 CONTROLLED GENERATIVE AUGMENTATION
+--------------------------------------
+
+Definition: LLM is used ONLY for presentation formatting, not fact generation.
+
+def synthesize_response(cqe_result: CQEResult) -> str:
+    """
+    LLM receives structured data as IMMUTABLE facts.
+    """
+    prompt = f"""
+    Present this location information naturally.
+
+    FACTS (do NOT modify these):
+    - Name: {cqe_result.entity.canonical_name}
+    - Building: {cqe_result.entity.building}
+    - Floor: {cqe_result.entity.floor}
+    - Room: {cqe_result.entity.room}
+
+    Generate a natural sentence using ONLY the facts above.
+    Do NOT add any location details not listed.
+    """
+    return llm.invoke(prompt)
+
+
+WHAT LLM CAN DO:
+  - Convert structured data to natural language
+  - Add transitional phrases ("The nearest restroom is...")
+  - Combine facts into coherent sentences
+
+WHAT LLM CANNOT DO:
+  - Invent locations not in entity registry
+  - Modify building/floor/room values
+  - Add navigation details not in entity data
+
+
+================================================================================
+8. STORAGE JUSTIFICATION: JSON VS SQLITE
+================================================================================
+
+8.1 WHY JSON FOR PHASE 1 (ACADEMIC DEFENSE)
+-------------------------------------------
+
++-------------------+---------------------------+---------------------------+
+| Criterion         | JSON                      | SQLite                    |
++-------------------+---------------------------+---------------------------+
+| Dependencies      | Zero (Python stdlib)      | sqlite3 library required  |
++-------------------+---------------------------+---------------------------+
+| Current Scale     | 220 entities              | Overkill for current      |
+|                   | (fits in memory)          | scale                     |
++-------------------+---------------------------+---------------------------+
+| Index Structures  | MetadataIndex class       | Would require new schema  |
+|                   | already exists            | design                    |
++-------------------+---------------------------+---------------------------+
+| RPi Deployment    | Single file copy          | Database file management  |
+|                   |                           | complexity                |
++-------------------+---------------------------+---------------------------+
+| Admin Updates     | Batch CSV imports         | Optimized for frequent    |
+|                   | (infrequent)              | writes                    |
++-------------------+---------------------------+---------------------------+
+
+THESIS ARGUMENT:
+
+JSON is appropriate for Phase 1 because:
+  1. Entity count (220) is well within in-memory limits
+  2. MetadataIndex already provides O(1) lookups
+  3. Admin updates are infrequent batch operations
+  4. Raspberry Pi deployment benefits from simplicity
+
+
+8.2 SQLITE MIGRATION TRIGGERS
+-----------------------------
+
+Migrate to SQLite when ANY of these conditions apply:
+
+  1. Entity count exceeds 1,000
+  2. Complex join queries required (e.g., "rooms shared between departments")
+  3. Concurrent write access needed (multiple admins)
+  4. Historical versioning required (audit trail)
+
+
+================================================================================
+9. RESPONSE MODES
+================================================================================
+
+class ResponseMode(Enum):
+    # Existing modes
+    EXTRACTOR_AUTHORITATIVE = "extractor"       # Deterministic extractors
+    RAG_AUTHORITATIVE = "rag_authoritative"     # High-confidence RAG
+    RAG_SUPPLEMENTED = "rag_supplemented"       # Medium-confidence RAG
+    GENERAL_KNOWLEDGE = "general"               # LLM general knowledge
+
+    # NEW: Unified CQE mode
+    STRUCTURED_AUTHORITATIVE = "structured"     # CQE index-based resolution
+
+
+STRUCTURED_AUTHORITATIVE Characteristics:
+  - Confidence: Always 100% (deterministic)
+  - Source: Entity registry index
+  - LLM Role: Presentation only
+  - Hallucination Risk: Zero
+
+
+================================================================================
+10. PHASED IMPLEMENTATION ROADMAP
+================================================================================
+
+PHASE 47: DATA MODEL & INDEX FOUNDATION
+---------------------------------------
+
+New Files:
+  - campus_schema.py     Hierarchical dataclasses, RoomType/FloorLevel enums
+  - campus_index.py      CampusQueryIndex with relationship indexes
+  - migrate_entities.py  Convert flat JSON to hierarchical
+
+Deliverables:
+  - Hierarchical schema with type safety
+  - Pre-built indexes: rooms_by_floor, rooms_by_building, rooms_by_type
+  - Migration of 220 existing entities
+  - Backward-compatible EntityRegistry wrapper
+
+
+PHASE 48: UNIFIED QUERY PARSER
+------------------------------
+
+New Files:
+  - structured_query.py      StructuredQuery, QueryIntent, QueryFilter
+  - campus_query_parser.py   Pattern matching + filter extraction
+
+Deliverables:
+  - Intent detection for all 5 query types
+  - Filter extraction (building, floor, type, department)
+  - Unified is_campus_query() detection
+
+
+PHASE 49: QUERY ENGINE + STRUCTURAL PROXIMITY
+---------------------------------------------
+
+New Files:
+  - campus_query_executor.py      Index-based execution
+  - campus_response_formatter.py  Response templates
+
+Deliverables:
+  - LOCATE_SINGLE: Entity lookup
+  - LOCATE_MULTIPLE: Type-based enumeration
+  - NEAREST: Structural proximity algorithm
+  - COUNT/LIST: Index aggregation
+  - STRUCTURED_AUTHORITATIVE response mode
+
+
+PHASE 50: INTEGRATION & VALIDATION
+----------------------------------
+
+Modified Files:
+  - app.py                  Unified CQE routing
+  - response_orchestrator.py Add STRUCTURED mode
+  - intent_classifier.py    CQE patterns
+
+Deliverables:
+  - End-to-end integration
+  - Golden test cases for all query types
+  - Backward compatibility verified
+  - Documentation for thesis
+
+
+================================================================================
+11. FILES TO CREATE/MODIFY
+================================================================================
+
++------------------------------+--------+-------------------------------------+
+| File                         | Action | Purpose                             |
++------------------------------+--------+-------------------------------------+
+| campus_schema.py             | NEW    | Hierarchical dataclasses, enums     |
+| campus_index.py              | NEW    | CampusQueryIndex with indexes       |
+| structured_query.py          | NEW    | StructuredQuery, QueryIntent,       |
+|                              |        | QueryFilter                         |
+| campus_query_parser.py       | NEW    | Unified query parsing + filter      |
+|                              |        | extraction                          |
+| campus_query_executor.py     | NEW    | Index-based execution + structural  |
+|                              |        | proximity                           |
+| campus_response_formatter.py | NEW    | Response templates                  |
+| migrate_entities.py          | NEW    | Flat -> hierarchical migration      |
++------------------------------+--------+-------------------------------------+
+| entity_registry.py           | MODIFY | Backward-compatibility wrapper      |
+| response_orchestrator.py     | MODIFY | Add STRUCTURED_AUTHORITATIVE mode   |
+| intent_classifier.py         | MODIFY | Unified CQE patterns                |
+| app.py                       | MODIFY | Single CQE entry point              |
++------------------------------+--------+-------------------------------------+
+
+
+================================================================================
+12. VERIFICATION CHECKLIST
+================================================================================
+
+SINGLE-ENTITY QUERIES (via unified CQE):
+  [ ] "Where is SP303?" -> Direct lookup, building/floor/room returned
+  [ ] "Where is the library?" -> Alias resolution works
+  [ ] "Where is Building A?" -> Building-level metadata returned
+
+MULTI-ENTITY QUERIES:
+  [ ] "Show all classrooms on Ground Floor" -> Filtered enumeration
+  [ ] "List all offices in A Building" -> Building filter applied
+  [ ] "How many labs are there?" -> Count aggregation
+
+NEAREST QUERIES (Structural Proximity):
+  [ ] "What's the nearest restroom to SP303?" -> Same floor prioritized
+  [ ] "Nearest clinic?" -> Without reference, uses default location
+
+BACKWARD COMPATIBILITY:
+  [ ] entity_registry.get_by_alias() -> Works unchanged
+  [ ] Existing directory query responses unchanged
+  [ ] Disambiguation flow preserved
+
+PERFORMANCE:
+  [ ] Index build < 500ms for 220 entities
+  [ ] Query execution < 10ms
+
+
+================================================================================
+13. DOCUMENTED LIMITATIONS (THESIS DEFENSE)
+================================================================================
+
++-----------------------+-------------------------+---------------------------+
+| Limitation            | Scope Boundary          | Justification             |
++-----------------------+-------------------------+---------------------------+
+| No geometric distance | Structural proximity    | Matches user mental model |
+|                       | only (hierarchy-based)  | of campus navigation      |
++-----------------------+-------------------------+---------------------------+
+| No navigation paths   | Landmarks in entity     | Future phase scope;       |
+|                       | data only               | requires floor plans      |
++-----------------------+-------------------------+---------------------------+
+| JSON storage          | 220 entities, in-memory | Appropriate for current   |
+|                       | operation               | scale; SQLite path ready  |
++-----------------------+-------------------------+---------------------------+
+| No real-time updates  | Admin batch updates     | Static campus data;       |
+|                       | only                    | changes infrequent        |
++-----------------------+-------------------------+---------------------------+
+| Single-campus NEAREST | Cross-campus returns    | Multi-campus adds         |
+|                       | "different campus"      | complexity without value  |
++-----------------------+-------------------------+---------------------------+
+
+
+================================================================================
+14. DESIGN DECISIONS & RATIONALE
+================================================================================
+
+DECISION 1: Unified Campus Query Engine
+----------------------------------------
+Rationale: Single-entity and multi-entity queries both use the same
+hierarchical index. Separating them creates artificial boundaries and
+complicates routing logic.
+
+DECISION 2: Structural Proximity Over Geometric
+------------------------------------------------
+Rationale: Geometric proximity requires floor plans and GPS data we don't have.
+Structural proximity (same floor > same building > same campus) matches how
+users actually think about campus navigation.
+
+DECISION 3: Hierarchical JSON Over Flat
+----------------------------------------
+Rationale: Hierarchical containment is absolute (room cannot be on two floors).
+This eliminates ambiguity and enables O(1) filtered queries via pre-built indexes.
+
+DECISION 4: LLM for Presentation Only
+-------------------------------------
+Rationale: Preserves deterministic-first principle. Location facts come from
+entity registry; LLM only formats the response naturally. This prevents
+hallucination of non-existent locations.
+
+DECISION 5: Backward Compatibility Wrapper
+------------------------------------------
+Rationale: Existing code calls entity_registry.get_by_alias(). Wrapper pattern
+allows gradual migration without breaking existing functionality.
+
+
+================================================================================
+END OF REFINED ARCHITECTURAL PROPOSAL
+================================================================================
