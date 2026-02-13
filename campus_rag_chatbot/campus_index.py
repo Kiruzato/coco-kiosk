@@ -39,6 +39,9 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# Phase 55: Outdoor location marker for flat entity format
+OUTDOOR_MARKER = "_OUTDOOR"
+
 
 class CampusQueryIndex:
     """
@@ -135,6 +138,14 @@ class CampusQueryIndex:
 
                 campus_names.add(campus_name)
 
+                # Phase 55: Skip outdoor entities for building/floor collection
+                is_outdoor = (
+                    building_name.upper() == OUTDOOR_MARKER or
+                    floor_str.upper() == OUTDOOR_MARKER
+                )
+                if is_outdoor:
+                    continue
+
                 campus_id = generate_campus_id(campus_name)
                 building_id = generate_building_id(building_name)
 
@@ -211,16 +222,31 @@ class CampusQueryIndex:
                 if floor_id not in self.floors_by_building[building_id]:
                     self.floors_by_building[building_id].append(floor_id)
 
-            # Second pass: create Room entities
+            # Second pass: create Room and OutdoorLocation entities
             for entity in entities:
-                room = self._convert_flat_entity_to_room(entity)
-                if room:
-                    self.rooms[room.room_id] = room
-                    self._index_room(room)
+                building_name = entity.get('building', '')
+                floor_str = entity.get('floor', '')
+
+                # Phase 55: Check for outdoor location marker
+                is_outdoor = (
+                    building_name.upper() == OUTDOOR_MARKER or
+                    floor_str.upper() == OUTDOOR_MARKER
+                )
+
+                if is_outdoor:
+                    outdoor = self._convert_to_outdoor_location(entity)
+                    if outdoor:
+                        self._index_outdoor_location(outdoor)
+                else:
+                    room = self._convert_flat_entity_to_room(entity)
+                    if room:
+                        self.rooms[room.room_id] = room
+                        self._index_room(room)
 
             self._compute_stats()
             logger.info(
                 f"Loaded CampusQueryIndex: {self._stats['rooms']} rooms, "
+                f"{self._stats.get('outdoor_locations', 0)} outdoor locations, "
                 f"{self._stats['buildings']} buildings, "
                 f"{self._stats['campuses']} campuses, "
                 f"{self._stats['aliases']} aliases"
@@ -311,6 +337,68 @@ class CampusQueryIndex:
 
         except Exception as e:
             logger.warning(f"Failed to convert entity {entity.get('entity_id')}: {e}")
+            return None
+
+    def _convert_to_outdoor_location(self, entity: dict) -> Optional[OutdoorLocation]:
+        """
+        Convert a flat entity with _OUTDOOR marker to an OutdoorLocation.
+
+        Phase 55: Admin Directory Management System
+
+        Args:
+            entity: Flat entity dict with building="_OUTDOOR" or floor="_OUTDOOR"
+
+        Returns:
+            OutdoorLocation object or None if conversion fails
+        """
+        try:
+            entity_id = entity.get('entity_id', '')
+            if not entity_id:
+                return None
+
+            campus_name = entity.get('campus', 'Main Campus')
+            campus_id = generate_campus_id(campus_name)
+
+            # Parse aliases
+            aliases = entity.get('aliases', [])
+            if isinstance(aliases, str):
+                aliases = [a.strip().lower() for a in aliases.split(';') if a.strip()]
+            elif isinstance(aliases, list):
+                parsed_aliases = []
+                for alias in aliases:
+                    if ',' in alias:
+                        parsed_aliases.extend([a.strip().lower() for a in alias.split(',') if a.strip()])
+                    else:
+                        parsed_aliases.append(alias.lower().strip())
+                aliases = parsed_aliases
+
+            # Parse tags
+            tags = entity.get('tags', [])
+            if isinstance(tags, str):
+                tags = [t.strip().lower() for t in tags.split(';') if t.strip()]
+            elif isinstance(tags, list):
+                tags = [t.lower().strip() for t in tags if t]
+
+            # Ensure "outdoor" tag is present
+            if 'outdoor' not in tags:
+                tags.append('outdoor')
+
+            outdoor = OutdoorLocation(
+                location_id=entity_id,
+                campus_id=campus_id,
+                canonical_name=entity.get('canonical_name', entity_id),
+                tags=tags,
+                aliases=aliases,
+                description=entity.get('description'),
+                landmarks=entity.get('landmarks'),
+                status=entity.get('status', 'active')
+            )
+
+            logger.debug(f"Created outdoor location: {entity_id}")
+            return outdoor
+
+        except Exception as e:
+            logger.warning(f"Failed to convert outdoor entity {entity.get('entity_id')}: {e}")
             return None
 
     def _infer_tags_from_name(self, canonical_name: str, existing_tags: List[str]) -> List[str]:

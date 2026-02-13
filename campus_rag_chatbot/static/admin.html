@@ -182,6 +182,33 @@
                             <button id="importEntitiesTrigger" class="btn-secondary">&#8593; Import CSV</button>
                             <input type="file" id="importEntitiesInput" accept=".csv" class="hidden">
                             <button id="refreshEntitiesBtn" class="btn-secondary">&#8635; Refresh</button>
+                            <button id="rebuildIndexBtn" class="btn-secondary" title="Rebuild CQE Index">&#8635; Rebuild Index</button>
+                        </div>
+                    </div>
+
+                    <!-- Phase 55: Index Stats Panel -->
+                    <div id="indexStatsPanel" class="stats-panel card">
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">Rooms</span>
+                                <span class="stat-value" id="indexStatRooms">--</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Outdoor</span>
+                                <span class="stat-value" id="indexStatOutdoor">--</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Buildings</span>
+                                <span class="stat-value" id="indexStatBuildings">--</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Campuses</span>
+                                <span class="stat-value" id="indexStatCampuses">--</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Aliases</span>
+                                <span class="stat-value" id="indexStatAliases">--</span>
+                            </div>
                         </div>
                     </div>
 
@@ -456,6 +483,20 @@
                     <button id="closeEntityModal" class="close-btn">&times;</button>
                 </div>
                 <form id="entityForm">
+                    <!-- Phase 55: Entity Type Selector -->
+                    <div class="form-group">
+                        <label>Entity Type *</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="entityType" value="room" checked onchange="toggleEntityType()">
+                                <span>Room / Indoor Location</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="entityType" value="outdoor" onchange="toggleEntityType()">
+                                <span>Outdoor Location</span>
+                            </label>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <label for="entityId">Entity ID *</label>
                         <input type="text" id="entityId" placeholder="e.g., LIBRARY, CANTEEN" required>
@@ -470,7 +511,13 @@
                         <input type="text" id="aliases" placeholder="e.g., library, reading room">
                         <small>Alternative names users might use to find this location</small>
                     </div>
-                    <div class="form-row">
+                    <!-- Phase 55: Tags Input -->
+                    <div class="form-group">
+                        <label for="tags">Tags (comma-separated)</label>
+                        <input type="text" id="tags" placeholder="e.g., sports, outdoor, court">
+                        <small>Categories for filtering (auto-normalized to lowercase)</small>
+                    </div>
+                    <div class="form-row" id="buildingFloorRow">
                         <div class="form-group">
                             <label for="building">Building *</label>
                             <input type="text" id="building" placeholder="e.g., Saint Peter Building" required>

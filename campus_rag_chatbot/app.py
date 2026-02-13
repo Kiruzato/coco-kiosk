@@ -57,6 +57,7 @@ from intent_classifier import (
 from text_normalizer import normalize_text, canonicalize_directory_query  # Text normalization for consistent retrieval
 from entity_analyzer import check_entity_agreement, should_promote_confidence  # Entity-aware confidence promotion
 from entity_registry import EntityRegistry  # Phase 9: Structured directory entities
+from entity_manager import EntityManager  # Phase 55: Admin entity management with validation
 from entity_resolver import extract_subject, resolve_entity, format_entity_response  # Phase 9: Entity resolution
 from event_tracker import EventTracker, EventType  # Phase 16: Observability
 from retrieval_validator import (  # Phase 17A: Hybrid retrieval & grounding
@@ -250,6 +251,7 @@ ENTITY_REGISTRY_PATH = PROJECT_ROOT / "data" / "directory_entities.json"
 entity_registry = EntityRegistry(str(ENTITY_REGISTRY_PATH))
 
 # Initialize Campus Query Engine index (Phase 49-50)
+_cqe_index = None
 if CAMPUS_QUERY_ENGINE_ENABLED:
     try:
         _cqe_index = get_campus_index(str(ENTITY_REGISTRY_PATH))
@@ -258,6 +260,47 @@ if CAMPUS_QUERY_ENGINE_ENABLED:
     except Exception as e:
         logger.error(f"[CQE] Failed to initialize Campus Query Engine: {e}")
         CAMPUS_QUERY_ENGINE_ENABLED = False
+
+# Phase 55: Initialize EntityManager for admin operations with validation + index rebuild
+entity_manager = EntityManager(
+    registry=entity_registry,
+    index_path=str(ENTITY_REGISTRY_PATH)
+)
+
+
+def rebuild_cqe_index() -> dict:
+    """
+    Rebuild the CQE index from JSON after entity changes.
+
+    Returns:
+        dict with index statistics
+    """
+    global _cqe_index
+
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        return {"error": "CQE not enabled"}
+
+    try:
+        from campus_index import CampusQueryIndex
+        _cqe_index = CampusQueryIndex()
+        _cqe_index.load_from_flat_entities(str(ENTITY_REGISTRY_PATH))
+
+        stats = {
+            "rooms": len(_cqe_index.rooms),
+            "buildings": len(_cqe_index.buildings),
+            "campuses": len(_cqe_index.campuses),
+            "outdoor_locations": len(_cqe_index.outdoor_locations),
+            "aliases": (
+                len(_cqe_index.alias_to_room) +
+                len(_cqe_index.alias_to_building) +
+                len(_cqe_index.alias_to_campus)
+            )
+        }
+        logger.info(f"[CQE] Index rebuilt: {stats}")
+        return stats
+    except Exception as e:
+        logger.error(f"[CQE] Index rebuild failed: {e}")
+        return {"error": str(e)}
 
 # ==============================================================================
 # FASTAPI APP
@@ -4259,10 +4302,14 @@ async def import_entities(file: UploadFile = File(...)):
                 "stats": stats
             }
 
+        # Phase 55: Rebuild CQE index after bulk import
+        index_stats = rebuild_cqe_index()
+
         return {
             "status": "success",
             "message": message,
-            "stats": stats
+            "stats": stats,
+            "index_stats": index_stats
         }
 
     except UnicodeDecodeError:
@@ -4328,13 +4375,17 @@ async def create_entity(entity_data: EntityCreate):
     if not success:
         raise HTTPException(status_code=400, detail=message)
 
+    # Phase 55: Rebuild CQE index after entity change
+    index_stats = rebuild_cqe_index()
+
     # Get the created entity to return
     created_entity = entity_registry.get_by_id(entity_data.entity_id.upper())
 
     return {
         "status": "success",
         "message": message,
-        "entity": asdict(created_entity) if created_entity else None
+        "entity": asdict(created_entity) if created_entity else None,
+        "index_stats": index_stats
     }
 
 
@@ -4392,13 +4443,17 @@ async def update_entity(entity_id: str, entity_data: EntityUpdate):
     if not success:
         raise HTTPException(status_code=400, detail=message)
 
+    # Phase 55: Rebuild CQE index after entity change
+    index_stats = rebuild_cqe_index()
+
     # Get the updated entity to return
     updated_entity = entity_registry.get_by_id(entity_id.upper())
 
     return {
         "status": "success",
         "message": message,
-        "entity": asdict(updated_entity) if updated_entity else None
+        "entity": asdict(updated_entity) if updated_entity else None,
+        "index_stats": index_stats
     }
 
 
@@ -4430,11 +4485,91 @@ async def delete_entity(entity_id: str, hard: bool = False):
     if not success:
         raise HTTPException(status_code=400, detail=message)
 
+    # Phase 55: Rebuild CQE index after entity change
+    index_stats = rebuild_cqe_index()
+
     return {
         "status": "success",
         "message": message,
         "entity_id": entity_id.upper(),
-        "delete_type": "hard" if hard else "soft"
+        "delete_type": "hard" if hard else "soft",
+        "index_stats": index_stats
+    }
+
+
+# ==============================================================================
+# Phase 55: Index Management Endpoints
+# ==============================================================================
+
+class EntityValidateRequest(BaseModel):
+    """Request model for entity validation."""
+    entity_id: str
+    canonical_name: str
+    aliases: List[str] = []
+    building: str
+    floor: str
+    room: Optional[str] = None
+    campus: str = "Main Campus"
+    department: Optional[str] = None
+    landmarks: Optional[str] = None
+    description: Optional[str] = None
+    tags: List[str] = []
+    status: str = "active"
+
+
+@app.post("/admin/entities/validate", dependencies=[Depends(verify_admin_session)])
+async def validate_entity(data: EntityValidateRequest):
+    """
+    Validate entity data without saving.
+
+    Returns validation result with errors and warnings.
+    """
+    result = entity_manager.validate_entity(data.model_dump())
+
+    return {
+        "valid": result.valid,
+        "errors": result.errors,
+        "warnings": result.warnings,
+        "normalized_data": result.normalized_data
+    }
+
+
+@app.get("/admin/index/stats", dependencies=[Depends(verify_admin_session)])
+async def get_index_stats():
+    """
+    Get current CQE index statistics.
+
+    Returns counts of rooms, buildings, campuses, etc.
+    """
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        return {"error": "Campus Query Engine not enabled"}
+
+    stats = entity_manager.get_index_stats()
+    return {
+        "status": "success",
+        "stats": stats
+    }
+
+
+@app.post("/admin/index/rebuild", dependencies=[Depends(verify_admin_session)])
+async def trigger_index_rebuild():
+    """
+    Force rebuild the CQE index from JSON.
+
+    Use this after direct JSON edits or to recover from inconsistent state.
+    """
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    stats = rebuild_cqe_index()
+
+    if "error" in stats:
+        raise HTTPException(status_code=500, detail=stats["error"])
+
+    return {
+        "status": "success",
+        "message": "Index rebuilt successfully",
+        "stats": stats
     }
 
 

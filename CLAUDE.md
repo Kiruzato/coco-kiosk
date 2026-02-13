@@ -6,7 +6,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 
 ## Current State
 
-**Completed through Phase 53** - CQE Schema Alignment
+**Completed through Phase 59** - Admin Directory Management System
 
 ### Phase History
 1. **Phase 1-3**: Core RAG pipeline, document management, multi-format support
@@ -65,6 +65,10 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 54. **Phase 51**: CQE Schema Alignment - Data Model (OutdoorLocation entity, RoomPrimaryType enum, tags field, integer floor levels)
 55. **Phase 52**: CQE Schema Alignment - Parser (FilterField.TAG, FilterField.ENTITY_TYPE, tag detection patterns, outdoor location patterns)
 56. **Phase 53**: CQE Schema Alignment - Executor & Formatter (outdoor location resolution, tag filtering, outdoor formatting)
+57. **Phase 55-56**: Admin Directory Management - EntityManager service with validation, tag normalization, CRUD delegation
+58. **Phase 57**: Admin Directory Management - Index rebuild integration (explicit CQE index rebuild after CRUD)
+59. **Phase 58**: Admin Directory Management - OutdoorLocation support via _OUTDOOR marker convention
+60. **Phase 59**: Admin Directory Management - UI enhancements (entity type selector, tags input, index stats panel)
 
 ## Architecture
 
@@ -77,6 +81,7 @@ campus_rag_chatbot/
 ├── confidence_scorer.py      # Confidence scoring system
 ├── text_normalizer.py        # Text normalization for directory queries
 ├── entity_registry.py        # Directory entity definitions
+├── entity_manager.py         # Phase 55: Admin entity management with validation
 ├── entity_resolver.py        # Entity resolution pipeline
 ├── entity_analyzer.py        # Entity analysis utilities
 ├── query_logger.py           # Query logging

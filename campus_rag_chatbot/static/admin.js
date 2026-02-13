@@ -428,12 +428,67 @@ async function loadEntities() {
             statsDiv.textContent = `Total: ${data.total} entities (${data.active} active)`;
         }
 
+        // Phase 55: Also load index stats
+        await loadIndexStats();
+
     } catch (error) {
         showNotification(`Failed to load entities: ${error.message}`, 'error');
         tableBody.innerHTML = '<tr><td colspan="6" class="error-state">Failed to load entities. Please try again.</td></tr>';
         statsDiv.textContent = '';
     } finally {
         loadingIndicator.classList.add('hidden');
+    }
+}
+
+/**
+ * Phase 55: Load and display CQE index statistics
+ */
+async function loadIndexStats() {
+    try {
+        const data = await apiCall('/admin/index/stats');
+
+        if (data.stats) {
+            const stats = data.stats;
+            const roomsEl = document.getElementById('indexStatRooms');
+            const outdoorEl = document.getElementById('indexStatOutdoor');
+            const buildingsEl = document.getElementById('indexStatBuildings');
+            const campusesEl = document.getElementById('indexStatCampuses');
+            const aliasesEl = document.getElementById('indexStatAliases');
+
+            if (roomsEl) roomsEl.textContent = stats.rooms || 0;
+            if (outdoorEl) outdoorEl.textContent = stats.outdoor_locations || 0;
+            if (buildingsEl) buildingsEl.textContent = stats.buildings || 0;
+            if (campusesEl) campusesEl.textContent = stats.campuses || 0;
+            if (aliasesEl) aliasesEl.textContent = stats.total_aliases || 0;
+        }
+    } catch (error) {
+        console.error('Failed to load index stats:', error);
+    }
+}
+
+/**
+ * Phase 55: Rebuild CQE index manually
+ */
+async function rebuildIndex() {
+    const btn = document.getElementById('rebuildIndexBtn');
+    const originalText = btn.textContent;
+
+    btn.textContent = 'Rebuilding...';
+    btn.disabled = true;
+
+    try {
+        const data = await apiCall('/admin/index/rebuild', {
+            method: 'POST'
+        });
+
+        showNotification('Index rebuilt successfully', 'success');
+        await loadIndexStats();
+
+    } catch (error) {
+        showNotification(`Failed to rebuild index: ${error.message}`, 'error');
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
     }
 }
 
@@ -476,9 +531,16 @@ function showEntityModal(entity = null) {
     const title = document.getElementById('entityModalTitle');
     const entityIdInput = document.getElementById('entityId');
     const statusGroup = document.getElementById('statusGroup');
+    const form = document.getElementById('entityForm');
 
     // Reset form
-    document.getElementById('entityForm').reset();
+    form.reset();
+
+    // Phase 55: Reset entity type to room
+    const roomRadio = document.querySelector('input[name="entityType"][value="room"]');
+    const outdoorRadio = document.querySelector('input[name="entityType"][value="outdoor"]');
+    if (roomRadio) roomRadio.checked = true;
+    toggleEntityType();  // Update visibility
 
     if (entity) {
         // Edit mode
@@ -497,6 +559,18 @@ function showEntityModal(entity = null) {
         document.getElementById('description').value = entity.description || '';
         document.getElementById('entityStatus').value = entity.status || 'active';
         statusGroup.style.display = 'block';
+
+        // Phase 55: Handle tags
+        const tagsInput = document.getElementById('tags');
+        if (tagsInput) {
+            tagsInput.value = (entity.tags || []).join(', ');
+        }
+
+        // Phase 55: Detect outdoor location
+        if (entity.building === '_OUTDOOR' || entity.floor === '_OUTDOOR') {
+            if (outdoorRadio) outdoorRadio.checked = true;
+            toggleEntityType();
+        }
     } else {
         // Add mode
         editingEntityId = null;
@@ -507,6 +581,31 @@ function showEntityModal(entity = null) {
     }
 
     modal.classList.remove('hidden');
+}
+
+/**
+ * Phase 55: Toggle entity type (show/hide building/floor for outdoor locations)
+ */
+function toggleEntityType() {
+    const entityType = document.querySelector('input[name="entityType"]:checked')?.value || 'room';
+    const buildingFloorRow = document.getElementById('buildingFloorRow');
+    const buildingInput = document.getElementById('building');
+    const floorInput = document.getElementById('floor');
+    const form = document.getElementById('entityForm');
+
+    if (entityType === 'outdoor') {
+        // Hide building/floor row for outdoor locations
+        if (buildingFloorRow) buildingFloorRow.style.display = 'none';
+        if (buildingInput) buildingInput.required = false;
+        if (floorInput) floorInput.required = false;
+        if (form) form.classList.add('outdoor-mode');
+    } else {
+        // Show building/floor row for regular rooms
+        if (buildingFloorRow) buildingFloorRow.style.display = 'flex';
+        if (buildingInput) buildingInput.required = true;
+        if (floorInput) floorInput.required = true;
+        if (form) form.classList.remove('outdoor-mode');
+    }
 }
 
 /**
@@ -529,23 +628,46 @@ async function saveEntity(e) {
     const entityId = document.getElementById('entityId').value.trim();
     const canonicalName = document.getElementById('canonicalName').value.trim();
     const aliasesInput = document.getElementById('aliases').value.trim();
-    const building = document.getElementById('building').value.trim();
-    const floor = document.getElementById('floor').value.trim();
-    const room = document.getElementById('room').value.trim();
     const campus = document.getElementById('campus').value.trim();
     const department = document.getElementById('department').value.trim();
     const landmarks = document.getElementById('landmarks').value.trim();
     const description = document.getElementById('description').value.trim();
     const status = document.getElementById('entityStatus').value;
 
+    // Phase 55: Get entity type and tags
+    const entityType = document.querySelector('input[name="entityType"]:checked')?.value || 'room';
+    const tagsInput = document.getElementById('tags')?.value.trim() || '';
+
+    // Phase 55: Handle building and floor based on entity type
+    let building, floor, room;
+    if (entityType === 'outdoor') {
+        building = '_OUTDOOR';
+        floor = '_OUTDOOR';
+        room = '';
+    } else {
+        building = document.getElementById('building').value.trim();
+        floor = document.getElementById('floor').value.trim();
+        room = document.getElementById('room').value.trim();
+    }
+
     // Parse aliases
     const aliases = aliasesInput
         ? aliasesInput.split(',').map(a => a.trim()).filter(a => a)
         : [];
 
+    // Phase 55: Parse tags (normalize to lowercase)
+    const tags = tagsInput
+        ? tagsInput.split(',').map(t => t.trim().toLowerCase()).filter(t => t)
+        : [];
+
     // Validation
-    if (!entityId || !canonicalName || !building || !floor || !campus) {
+    const isOutdoor = entityType === 'outdoor';
+    if (!entityId || !canonicalName || !campus) {
         showNotification('Please fill in all required fields', 'error');
+        return;
+    }
+    if (!isOutdoor && (!building || !floor)) {
+        showNotification('Building and Floor are required for room entities', 'error');
         return;
     }
 
@@ -2089,6 +2211,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Refresh Entities Button
     document.getElementById('refreshEntitiesBtn').addEventListener('click', loadEntities);
+
+    // Phase 55: Rebuild Index Button
+    const rebuildBtn = document.getElementById('rebuildIndexBtn');
+    if (rebuildBtn) {
+        rebuildBtn.addEventListener('click', rebuildIndex);
+    }
 
     // Export Entities Button
     document.getElementById('exportEntitiesBtn').addEventListener('click', exportEntities);
