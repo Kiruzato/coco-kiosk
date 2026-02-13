@@ -1,0 +1,335 @@
+================================================================================
+ADMIN DIRECTORY MANAGEMENT SYSTEM - IMPLEMENTATION REPORT
+================================================================================
+Date: 2026-02-13
+Phases: 55-59
+Status: COMPLETE
+Golden Tests: 41/41 PASSING
+================================================================================
+
+OVERVIEW
+--------
+Implemented a complete Admin Directory Management System for CoCo that allows
+authorized administrators to manage campus entities safely. The system adds
+validation, tag normalization, explicit CQE index rebuilding, and outdoor
+location support.
+
+================================================================================
+FILES CREATED
+================================================================================
+
+1. entity_manager.py (NEW - 450 lines)
+   Location: campus_rag_chatbot/entity_manager.py
+
+   Purpose: High-level entity management wrapper with validation and index rebuild
+
+   Key Classes:
+   - ValidationResult: Dataclass with valid, errors, warnings, normalized_data
+   - EntityManager: Wraps EntityRegistry with safety guarantees
+
+   Key Methods:
+   - validate_entity(data, is_update, existing_id) -> ValidationResult
+   - normalize_tags(tags) -> List[str]  # lowercase, trimmed, no duplicates, sorted
+   - normalize_aliases(aliases) -> List[str]
+   - create_entity(data) -> (bool, str, ValidationResult)
+   - update_entity(entity_id, data) -> (bool, str, ValidationResult)
+   - delete_entity(entity_id, hard) -> (bool, str)
+   - bulk_import(entities_data) -> (bool, str, dict)
+   - rebuild_index() -> (bool, dict)
+   - get_index_stats() -> dict
+
+   Validation Rules:
+   - entity_id: Required, unique, alphanumeric + underscore
+   - canonical_name: Required, non-empty
+   - building: Required (or _OUTDOOR for outdoor locations)
+   - floor: Required (or _OUTDOOR for outdoor locations)
+   - campus: Required
+   - tags: Normalized to lowercase, trimmed, deduplicated, sorted
+   - status: Must be "active" or "inactive"
+
+================================================================================
+FILES MODIFIED
+================================================================================
+
+2. app.py
+   Changes:
+   - Added import: from entity_manager import EntityManager
+   - Added global: entity_manager = EntityManager(registry, index_path)
+   - Added function: rebuild_cqe_index() -> dict
+   - Modified: POST /admin/entities - now calls rebuild_cqe_index() after success
+   - Modified: PUT /admin/entities/{id} - now calls rebuild_cqe_index() after success
+   - Modified: DELETE /admin/entities/{id} - now calls rebuild_cqe_index() after success
+   - Modified: POST /admin/entities/import - now calls rebuild_cqe_index() after success
+   - Added endpoint: POST /admin/entities/validate
+   - Added endpoint: GET /admin/index/stats
+   - Added endpoint: POST /admin/index/rebuild
+
+3. campus_index.py
+   Changes:
+   - Added constant: OUTDOOR_MARKER = "_OUTDOOR"
+   - Modified load_from_flat_entities(): Skip _OUTDOOR entities in building/floor collection
+   - Modified second pass: Detect _OUTDOOR marker and create OutdoorLocation instead of Room
+   - Added method: _convert_to_outdoor_location(entity) -> Optional[OutdoorLocation]
+   - Updated stats logging to include outdoor_locations count
+
+4. admin.html
+   Changes:
+   - Added entity type radio selector (Room vs Outdoor Location) in entity modal
+   - Added tags input field with normalization hint
+   - Added id="buildingFloorRow" wrapper for conditional hiding
+   - Added index stats panel with rooms/outdoor/buildings/campuses/aliases counts
+   - Added "Rebuild Index" button in header actions
+
+5. admin.css
+   Changes:
+   - Added .radio-group and .radio-label styles for entity type selector
+   - Added .stats-panel and .stat-item styles for index stats display
+   - Added .outdoor-mode class to hide building/floor row
+   - Added .validation-warnings styles for displaying validation feedback
+
+6. admin.js
+   Changes:
+   - Modified showEntityModal(): Handle tags field, detect _OUTDOOR for edit mode
+   - Added toggleEntityType(): Show/hide building/floor based on entity type
+   - Modified saveEntity(): Handle entity type, tags, set _OUTDOOR for outdoor
+   - Added loadIndexStats(): Fetch and display CQE index statistics
+   - Added rebuildIndex(): Manual index rebuild with UI feedback
+   - Added event listener for rebuildIndexBtn
+   - Modified loadEntities(): Also call loadIndexStats() after loading
+
+7. CLAUDE.md
+   Changes:
+   - Updated "Completed through Phase 59"
+   - Added phases 55-59 to phase history
+   - Added entity_manager.py to architecture diagram
+
+================================================================================
+NEW API ENDPOINTS
+================================================================================
+
+1. POST /admin/entities/validate
+   Purpose: Validate entity data without saving
+   Auth: Admin session required
+   Request Body: EntityValidateRequest (same fields as EntityCreate + tags)
+   Response: {
+     "valid": boolean,
+     "errors": ["error1", "error2"],
+     "warnings": ["warning1", "warning2"],
+     "normalized_data": {...} or null
+   }
+
+2. GET /admin/index/stats
+   Purpose: Get current CQE index statistics
+   Auth: Admin session required
+   Response: {
+     "status": "success",
+     "stats": {
+       "rooms": 130,
+       "active_rooms": 125,
+       "buildings": 12,
+       "campuses": 2,
+       "outdoor_locations": 0,
+       "departments": 8,
+       "total_aliases": 450
+     }
+   }
+
+3. POST /admin/index/rebuild
+   Purpose: Force rebuild CQE index from JSON
+   Auth: Admin session required
+   Response: {
+     "status": "success",
+     "message": "Index rebuilt successfully",
+     "stats": {...}
+   }
+
+================================================================================
+OUTDOOR LOCATION SUPPORT
+================================================================================
+
+Convention: Use "_OUTDOOR" as marker value for building and floor fields
+
+Flat Entity Format:
+{
+  "entity_id": "COVERED_COURT_1",
+  "canonical_name": "Covered Court",
+  "building": "_OUTDOOR",
+  "floor": "_OUTDOOR",
+  "campus": "Main Campus",
+  "tags": ["sports", "outdoor", "court"],
+  "status": "active"
+}
+
+Behavior:
+- When building="_OUTDOOR" or floor="_OUTDOOR", entity is converted to OutdoorLocation
+- OutdoorLocation has: location_id, campus_id, canonical_name, tags, aliases, description, landmarks, status
+- "outdoor" tag is automatically added if not present
+- OutdoorLocation entities are indexed in: outdoor_locations, alias_to_outdoor, outdoor_by_tag, outdoor_by_campus
+
+Admin UI:
+- Entity type radio selector toggles between "Room/Indoor Location" and "Outdoor Location"
+- When "Outdoor Location" selected, building/floor fields are hidden
+- On save, building and floor are automatically set to "_OUTDOOR"
+
+================================================================================
+TAG NORMALIZATION
+================================================================================
+
+Input: ["Engineering", " lab ", "LAB", "  sports  "]
+Output: ["engineering", "lab", "sports"]
+
+Rules:
+1. Convert to lowercase
+2. Trim whitespace
+3. Remove special characters (except hyphen and underscore)
+4. Remove duplicates
+5. Sort alphabetically
+
+Applied to:
+- Entity creation
+- Entity update
+- Bulk import
+- Validation endpoint
+
+================================================================================
+INDEX REBUILD BEHAVIOR
+================================================================================
+
+Trigger Points:
+- After successful entity creation (POST /admin/entities)
+- After successful entity update (PUT /admin/entities/{id})
+- After successful entity deletion (DELETE /admin/entities/{id})
+- After successful bulk import (POST /admin/entities/import)
+- Manual trigger (POST /admin/index/rebuild)
+
+Process:
+1. Create new CampusQueryIndex instance
+2. Load from directory_entities.json
+3. Build all indexes (rooms, buildings, floors, outdoor, tags, aliases)
+4. Replace global _cqe_index reference
+5. Log statistics
+
+Statistics Returned:
+- rooms: Total room count
+- buildings: Building count
+- campuses: Campus count
+- outdoor_locations: Outdoor location count
+- aliases: Total alias count across all indexes
+
+================================================================================
+VALIDATION FLOW
+================================================================================
+
+1. Client submits entity data
+2. EntityManager.validate_entity() called
+3. Each field checked against rules
+4. Errors collected (block save)
+5. Warnings collected (allow save with notification)
+6. Data normalized (tags, aliases, trimming)
+7. If valid: normalized_data returned
+8. If invalid: errors returned, save blocked
+
+Warning Examples:
+- "Building 'New Building' does not exist - will be created"
+- "Campus 'Branch Campus' does not exist - will be created"
+- "Floor 'Rooftop' has non-standard format"
+- "Tags normalized: ['Engineering', ' lab '] -> ['engineering', 'lab']"
+
+Error Examples:
+- "entity_id is required"
+- "canonical_name is required"
+- "entity_id 'LIBRARY' already exists"
+- "status must be 'active' or 'inactive', got 'pending'"
+
+================================================================================
+ADMIN UI CHANGES
+================================================================================
+
+Entity Modal Form (updated):
++--------------------------------------------------+
+| Entity Type *                                     |
+| ( ) Room / Indoor Location  ( ) Outdoor Location |
++--------------------------------------------------+
+| Entity ID *         [________________]            |
++--------------------------------------------------+
+| Canonical Name *    [________________]            |
++--------------------------------------------------+
+| Aliases             [________________]            |
++--------------------------------------------------+
+| Tags                [________________]            |
+|   (Categories for filtering, auto-normalized)    |
++--------------------------------------------------+
+| Building *   [________]  Floor *   [________]    |
+|   (Hidden when Outdoor Location selected)        |
++--------------------------------------------------+
+| Room         [________________]                  |
++--------------------------------------------------+
+| Campus *     [________]  Department [________]   |
++--------------------------------------------------+
+| Landmarks    [____________________________]      |
++--------------------------------------------------+
+| Description  [____________________________]      |
++--------------------------------------------------+
+| [Cancel]                        [Save Entity]    |
++--------------------------------------------------+
+
+Index Stats Panel (new):
++--------------------------------------------------+
+|  Rooms  |  Outdoor  | Buildings | Campuses | ... |
+|   130   |     0     |    12     |    2     | ... |
++--------------------------------------------------+
+
+Header Actions (updated):
+[+ Add Entity] [Export CSV] [Import CSV] [Refresh] [Rebuild Index]
+
+================================================================================
+BACKWARD COMPATIBILITY
+================================================================================
+
+- All 41 golden tests pass
+- Existing flat entity format unchanged
+- EntityRegistry API unchanged
+- CQE query behavior unchanged
+- Admin UI flows unchanged (enhanced, not replaced)
+
+================================================================================
+CONSTRAINTS ADHERENCE
+================================================================================
+
+| Requirement                          | Status    |
+|--------------------------------------|-----------|
+| Use current JSON persistence         | YES       |
+| Do not redesign schema               | YES       |
+| Do not modify CQE logic (minimal)    | YES       |
+| No new architectural layers          | MINIMAL   |
+| Focus on functional, safe, maintain  | YES       |
+| Tags normalized                      | YES       |
+| Index rebuilt after changes          | YES       |
+| Relationships validated              | YES       |
+| Required fields enforced             | YES       |
+| Invalid references prevented         | YES       |
+
+================================================================================
+TESTING
+================================================================================
+
+Golden Tests: 41/41 passing
+- Query Parsing: 12/12
+- Query Execution: 4/4
+- Response Formatting: 4/4
+- Structural Proximity: 3/3
+- Orchestrator Integration: 4/4
+- Backward Compatibility: 9/9
+- End-to-End Flow: 5/5
+
+Manual Testing Recommended:
+1. Create new room entity -> verify index stats update
+2. Create outdoor location -> verify appears in outdoor count
+3. Update entity tags -> verify normalized in JSON
+4. Delete entity -> verify removed from index
+5. CSV import -> verify bulk validation + index rebuild
+6. Toggle entity type -> verify building/floor hide/show
+
+================================================================================
+END OF REPORT
+================================================================================
