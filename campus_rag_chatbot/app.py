@@ -4574,6 +4574,1022 @@ async def trigger_index_rebuild():
 
 
 # ==============================================================================
+# Phase 60: CQE Admin Reference Data Endpoints
+# ==============================================================================
+
+@app.get("/admin/cqe/campuses", dependencies=[Depends(verify_admin_session)])
+async def get_cqe_campuses():
+    """
+    Get list of all campuses.
+
+    Returns:
+        { campuses: [{ campus_id, name }] }
+    """
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        return {"error": "Campus Query Engine not enabled", "campuses": []}
+
+    index = entity_manager.get_index()
+    campuses = [
+        {"campus_id": c.campus_id, "name": c.name}
+        for c in sorted(index.campuses.values(), key=lambda x: x.name)
+    ]
+    return {"campuses": campuses}
+
+
+@app.get("/admin/cqe/buildings", dependencies=[Depends(verify_admin_session)])
+async def get_cqe_buildings(campus_id: Optional[str] = None):
+    """
+    Get list of buildings, optionally filtered by campus.
+
+    Args:
+        campus_id: Optional campus ID to filter by
+
+    Returns:
+        { buildings: [{ building_id, name, campus_id }] }
+    """
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        return {"error": "Campus Query Engine not enabled", "buildings": []}
+
+    index = entity_manager.get_index()
+    buildings = []
+
+    for b in sorted(index.buildings.values(), key=lambda x: x.name):
+        if campus_id and b.campus_id != campus_id:
+            continue
+        buildings.append({
+            "building_id": b.building_id,
+            "name": b.name,
+            "campus_id": b.campus_id
+        })
+
+    return {"buildings": buildings}
+
+
+@app.get("/admin/cqe/floors", dependencies=[Depends(verify_admin_session)])
+async def get_cqe_floors(building_id: Optional[str] = None):
+    """
+    Get list of floors, optionally filtered by building.
+
+    Args:
+        building_id: Optional building ID to filter by
+
+    Returns:
+        { floors: [{ floor_id, display_name, building_id, level_number }] }
+    """
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        return {"error": "Campus Query Engine not enabled", "floors": []}
+
+    index = entity_manager.get_index()
+    floors = []
+
+    for f in sorted(index.floors.values(), key=lambda x: (x.building_id, x.level_number)):
+        if building_id and f.building_id != building_id:
+            continue
+        floors.append({
+            "floor_id": f.floor_id,
+            "display_name": f.display_name,
+            "building_id": f.building_id,
+            "level_number": f.level_number
+        })
+
+    return {"floors": floors}
+
+
+@app.get("/admin/cqe/departments", dependencies=[Depends(verify_admin_session)])
+async def get_cqe_departments():
+    """
+    Get list of all departments.
+
+    Returns:
+        { departments: [{ department_id, name }] }
+    """
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        return {"error": "Campus Query Engine not enabled", "departments": []}
+
+    index = entity_manager.get_index()
+    departments = [
+        {"department_id": d.department_id, "name": d.name}
+        for d in sorted(index.departments.values(), key=lambda x: x.name)
+    ]
+    return {"departments": departments}
+
+
+@app.get("/admin/cqe/tags", dependencies=[Depends(verify_admin_session)])
+async def get_cqe_tags():
+    """
+    Get list of all unique tags from rooms and outdoor locations.
+
+    Returns:
+        { tags: ["tag1", "tag2", ...] }
+    """
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        return {"error": "Campus Query Engine not enabled", "tags": []}
+
+    index = entity_manager.get_index()
+    tags = set()
+
+    # Collect tags from rooms
+    for room in index.rooms.values():
+        if room.tags:
+            tags.update(room.tags)
+
+    # Collect tags from outdoor locations
+    for outdoor in index.outdoor_locations.values():
+        if outdoor.tags:
+            tags.update(outdoor.tags)
+
+    return {"tags": sorted(tags)}
+
+
+@app.get("/admin/cqe/primary-types", dependencies=[Depends(verify_admin_session)])
+async def get_cqe_primary_types():
+    """
+    Get list of available primary room types.
+
+    Returns:
+        { types: ["classroom", "office", "restroom", "other"] }
+    """
+    from campus_schema import RoomPrimaryType
+    return {"types": [pt.value for pt in RoomPrimaryType]}
+
+
+# ==============================================================================
+# Phase 61: CQE Admin Entity CRUD Endpoints
+# ==============================================================================
+
+# --- Pydantic Models for CQE Admin ---
+
+class CampusCreate(BaseModel):
+    """Request model for creating a campus."""
+    name: str
+    aliases: List[str] = []
+
+
+class CampusUpdate(BaseModel):
+    """Request model for updating a campus."""
+    name: Optional[str] = None
+    aliases: Optional[List[str]] = None
+
+
+class BuildingCreate(BaseModel):
+    """Request model for creating a building."""
+    campus_id: str
+    name: str
+    aliases: List[str] = []
+
+
+class BuildingUpdate(BaseModel):
+    """Request model for updating a building."""
+    campus_id: Optional[str] = None
+    name: Optional[str] = None
+    aliases: Optional[List[str]] = None
+
+
+class FloorCreate(BaseModel):
+    """Request model for creating a floor."""
+    building_id: str
+    level_number: int
+    display_name: str
+    aliases: List[str] = []
+
+
+class FloorUpdate(BaseModel):
+    """Request model for updating a floor."""
+    building_id: Optional[str] = None
+    level_number: Optional[int] = None
+    display_name: Optional[str] = None
+    aliases: Optional[List[str]] = None
+
+
+class RoomCreate(BaseModel):
+    """Request model for creating a room."""
+    room_id: str
+    canonical_name: str
+    campus_id: str
+    building_id: str
+    floor_id: str
+    room_number: Optional[str] = None
+    primary_type: str = "other"
+    department_id: Optional[str] = None
+    tags: List[str] = []
+    aliases: List[str] = []
+    landmarks: Optional[str] = None
+    description: Optional[str] = None
+    status: str = "active"
+
+
+class RoomUpdate(BaseModel):
+    """Request model for updating a room."""
+    canonical_name: Optional[str] = None
+    campus_id: Optional[str] = None
+    building_id: Optional[str] = None
+    floor_id: Optional[str] = None
+    room_number: Optional[str] = None
+    primary_type: Optional[str] = None
+    department_id: Optional[str] = None
+    tags: Optional[List[str]] = None
+    aliases: Optional[List[str]] = None
+    landmarks: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+
+
+class OutdoorCreate(BaseModel):
+    """Request model for creating an outdoor location."""
+    location_id: str
+    canonical_name: str
+    campus_id: str
+    tags: List[str] = []
+    aliases: List[str] = []
+    landmarks: Optional[str] = None
+    description: Optional[str] = None
+    status: str = "active"
+
+
+class OutdoorUpdate(BaseModel):
+    """Request model for updating an outdoor location."""
+    canonical_name: Optional[str] = None
+    campus_id: Optional[str] = None
+    tags: Optional[List[str]] = None
+    aliases: Optional[List[str]] = None
+    landmarks: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+
+
+class DepartmentCreate(BaseModel):
+    """Request model for creating a department."""
+    name: str
+    campus_id: Optional[str] = None
+    aliases: List[str] = []
+    description: Optional[str] = None
+
+
+class DepartmentUpdate(BaseModel):
+    """Request model for updating a department."""
+    name: Optional[str] = None
+    campus_id: Optional[str] = None
+    aliases: Optional[List[str]] = None
+    description: Optional[str] = None
+
+
+# --- Campus CRUD ---
+
+@app.get("/admin/cqe/campus", dependencies=[Depends(verify_admin_session)])
+async def list_cqe_campuses():
+    """List all campuses with full details."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        return {"error": "Campus Query Engine not enabled", "campuses": []}
+
+    index = entity_manager.get_index()
+    campuses = []
+    for c in sorted(index.campuses.values(), key=lambda x: x.name):
+        campuses.append({
+            "campus_id": c.campus_id,
+            "name": c.name,
+            "aliases": c.aliases,
+            "building_ids": c.building_ids,
+            "status": "active"  # Campuses are always active
+        })
+    return {"campuses": campuses}
+
+
+@app.post("/admin/cqe/campus", dependencies=[Depends(verify_admin_session)])
+async def create_cqe_campus(data: CampusCreate):
+    """Create a new campus."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    # Since campuses are auto-created from flat entities, we add a placeholder room
+    # to create the campus in the index
+    from campus_schema import generate_campus_id
+    campus_id = generate_campus_id(data.name)
+
+    index = entity_manager.get_index()
+    if campus_id in index.campuses:
+        raise HTTPException(status_code=400, detail=f"Campus '{data.name}' already exists")
+
+    # Add campus to index manually for now
+    from campus_schema import Campus
+    campus = Campus(
+        campus_id=campus_id,
+        name=data.name,
+        aliases=data.aliases or [data.name.lower()]
+    )
+    index.campuses[campus_id] = campus
+    index._index_campus_aliases(campus)
+
+    return {"status": "success", "campus_id": campus_id, "message": f"Campus '{data.name}' created"}
+
+
+@app.put("/admin/cqe/campus/{campus_id}", dependencies=[Depends(verify_admin_session)])
+async def update_cqe_campus(campus_id: str, data: CampusUpdate):
+    """Update an existing campus."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    index = entity_manager.get_index()
+    if campus_id not in index.campuses:
+        raise HTTPException(status_code=404, detail=f"Campus '{campus_id}' not found")
+
+    campus = index.campuses[campus_id]
+    if data.name:
+        campus.name = data.name
+    if data.aliases is not None:
+        campus.aliases = data.aliases
+
+    return {"status": "success", "message": f"Campus '{campus_id}' updated"}
+
+
+@app.delete("/admin/cqe/campus/{campus_id}", dependencies=[Depends(verify_admin_session)])
+async def delete_cqe_campus(campus_id: str):
+    """Soft delete a campus (not recommended - has cascading effects)."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    index = entity_manager.get_index()
+    if campus_id not in index.campuses:
+        raise HTTPException(status_code=404, detail=f"Campus '{campus_id}' not found")
+
+    # Check for dependent buildings
+    dependent_buildings = index.buildings_by_campus.get(campus_id, [])
+    if dependent_buildings:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete campus with {len(dependent_buildings)} building(s)"
+        )
+
+    del index.campuses[campus_id]
+    return {"status": "success", "message": f"Campus '{campus_id}' deleted"}
+
+
+# --- Building CRUD ---
+
+@app.get("/admin/cqe/building", dependencies=[Depends(verify_admin_session)])
+async def list_cqe_buildings(campus_id: Optional[str] = None):
+    """List all buildings with full details."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        return {"error": "Campus Query Engine not enabled", "buildings": []}
+
+    index = entity_manager.get_index()
+    buildings = []
+    for b in sorted(index.buildings.values(), key=lambda x: x.name):
+        if campus_id and b.campus_id != campus_id:
+            continue
+        buildings.append({
+            "building_id": b.building_id,
+            "name": b.name,
+            "aliases": b.aliases,
+            "campus_id": b.campus_id,
+            "floor_ids": b.floor_ids,
+            "status": "active"
+        })
+    return {"buildings": buildings}
+
+
+@app.post("/admin/cqe/building", dependencies=[Depends(verify_admin_session)])
+async def create_cqe_building(data: BuildingCreate):
+    """Create a new building."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    from campus_schema import generate_building_id, Building
+    building_id = generate_building_id(data.name)
+
+    index = entity_manager.get_index()
+    if building_id in index.buildings:
+        raise HTTPException(status_code=400, detail=f"Building '{data.name}' already exists")
+
+    if data.campus_id not in index.campuses:
+        raise HTTPException(status_code=400, detail=f"Campus '{data.campus_id}' not found")
+
+    building = Building(
+        building_id=building_id,
+        name=data.name,
+        aliases=data.aliases or [data.name.lower()],
+        campus_id=data.campus_id
+    )
+    index.buildings[building_id] = building
+    index._index_building_aliases(building)
+    index.buildings_by_campus[data.campus_id].append(building_id)
+
+    # Add to campus
+    if building_id not in index.campuses[data.campus_id].building_ids:
+        index.campuses[data.campus_id].building_ids.append(building_id)
+
+    return {"status": "success", "building_id": building_id, "message": f"Building '{data.name}' created"}
+
+
+@app.put("/admin/cqe/building/{building_id}", dependencies=[Depends(verify_admin_session)])
+async def update_cqe_building(building_id: str, data: BuildingUpdate):
+    """Update an existing building."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    index = entity_manager.get_index()
+    if building_id not in index.buildings:
+        raise HTTPException(status_code=404, detail=f"Building '{building_id}' not found")
+
+    building = index.buildings[building_id]
+    if data.name:
+        building.name = data.name
+    if data.aliases is not None:
+        building.aliases = data.aliases
+    if data.campus_id:
+        building.campus_id = data.campus_id
+
+    return {"status": "success", "message": f"Building '{building_id}' updated"}
+
+
+@app.delete("/admin/cqe/building/{building_id}", dependencies=[Depends(verify_admin_session)])
+async def delete_cqe_building(building_id: str):
+    """Soft delete a building (not recommended - has cascading effects)."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    index = entity_manager.get_index()
+    if building_id not in index.buildings:
+        raise HTTPException(status_code=404, detail=f"Building '{building_id}' not found")
+
+    # Check for dependent floors
+    dependent_floors = index.floors_by_building.get(building_id, [])
+    if dependent_floors:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete building with {len(dependent_floors)} floor(s)"
+        )
+
+    del index.buildings[building_id]
+    return {"status": "success", "message": f"Building '{building_id}' deleted"}
+
+
+# --- Floor CRUD ---
+
+@app.get("/admin/cqe/floor", dependencies=[Depends(verify_admin_session)])
+async def list_cqe_floors(building_id: Optional[str] = None):
+    """List all floors with full details."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        return {"error": "Campus Query Engine not enabled", "floors": []}
+
+    index = entity_manager.get_index()
+    floors = []
+    for f in sorted(index.floors.values(), key=lambda x: (x.building_id, x.level_number)):
+        if building_id and f.building_id != building_id:
+            continue
+        floors.append({
+            "floor_id": f.floor_id,
+            "building_id": f.building_id,
+            "level_number": f.level_number,
+            "display_name": f.display_name,
+            "aliases": f.aliases,
+            "status": "active"
+        })
+    return {"floors": floors}
+
+
+@app.post("/admin/cqe/floor", dependencies=[Depends(verify_admin_session)])
+async def create_cqe_floor(data: FloorCreate):
+    """Create a new floor."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    from campus_schema import Floor, FloorLevel, generate_floor_id
+
+    index = entity_manager.get_index()
+    if data.building_id not in index.buildings:
+        raise HTTPException(status_code=400, detail=f"Building '{data.building_id}' not found")
+
+    # Determine floor level from level_number
+    floor_level = FloorLevel.from_number(data.level_number) if hasattr(FloorLevel, 'from_number') else FloorLevel.GROUND
+    floor_id = generate_floor_id(data.building_id, floor_level)
+
+    if floor_id in index.floors:
+        raise HTTPException(status_code=400, detail=f"Floor already exists for level {data.level_number}")
+
+    floor = Floor(
+        floor_id=floor_id,
+        building_id=data.building_id,
+        level=floor_level,
+        level_number=data.level_number,
+        display_name=data.display_name,
+        aliases=data.aliases or []
+    )
+    index.floors[floor_id] = floor
+    index._index_floor_aliases(floor)
+    index.floors_by_building[data.building_id].append(floor_id)
+
+    # Add to building
+    if floor_id not in index.buildings[data.building_id].floor_ids:
+        index.buildings[data.building_id].floor_ids.append(floor_id)
+
+    return {"status": "success", "floor_id": floor_id, "message": f"Floor '{data.display_name}' created"}
+
+
+@app.put("/admin/cqe/floor/{floor_id}", dependencies=[Depends(verify_admin_session)])
+async def update_cqe_floor(floor_id: str, data: FloorUpdate):
+    """Update an existing floor."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    index = entity_manager.get_index()
+    if floor_id not in index.floors:
+        raise HTTPException(status_code=404, detail=f"Floor '{floor_id}' not found")
+
+    floor = index.floors[floor_id]
+    if data.display_name:
+        floor.display_name = data.display_name
+    if data.aliases is not None:
+        floor.aliases = data.aliases
+    if data.level_number is not None:
+        floor.level_number = data.level_number
+
+    return {"status": "success", "message": f"Floor '{floor_id}' updated"}
+
+
+@app.delete("/admin/cqe/floor/{floor_id}", dependencies=[Depends(verify_admin_session)])
+async def delete_cqe_floor(floor_id: str):
+    """Soft delete a floor (not recommended - has cascading effects)."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    index = entity_manager.get_index()
+    if floor_id not in index.floors:
+        raise HTTPException(status_code=404, detail=f"Floor '{floor_id}' not found")
+
+    # Check for dependent rooms
+    floor = index.floors[floor_id]
+    dependent_rooms = [r for r in index.rooms.values() if r.floor_id == floor_id]
+    if dependent_rooms:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete floor with {len(dependent_rooms)} room(s)"
+        )
+
+    del index.floors[floor_id]
+    return {"status": "success", "message": f"Floor '{floor_id}' deleted"}
+
+
+# --- Room CRUD ---
+
+@app.get("/admin/cqe/room", dependencies=[Depends(verify_admin_session)])
+async def list_cqe_rooms(
+    campus_id: Optional[str] = None,
+    building_id: Optional[str] = None,
+    floor_id: Optional[str] = None,
+    primary_type: Optional[str] = None,
+    status: Optional[str] = None,
+    q: Optional[str] = None
+):
+    """
+    List rooms with optional filters.
+
+    Args:
+        campus_id: Filter by campus
+        building_id: Filter by building
+        floor_id: Filter by floor
+        primary_type: Filter by primary type (classroom, office, restroom, other)
+        status: Filter by status (active, inactive)
+        q: Search query for name/aliases
+    """
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        return {"error": "Campus Query Engine not enabled", "rooms": []}
+
+    index = entity_manager.get_index()
+    rooms = []
+
+    for r in sorted(index.rooms.values(), key=lambda x: x.canonical_name):
+        # Apply filters
+        if campus_id and r.campus_id != campus_id:
+            continue
+        if building_id and r.building_id != building_id:
+            continue
+        if floor_id and r.floor_id != floor_id:
+            continue
+        if primary_type and r.primary_type.value != primary_type.lower():
+            continue
+        if status and r.status != status.lower():
+            continue
+        if q:
+            q_lower = q.lower()
+            if (q_lower not in r.canonical_name.lower() and
+                not any(q_lower in a for a in r.aliases)):
+                continue
+
+        rooms.append({
+            "room_id": r.room_id,
+            "canonical_name": r.canonical_name,
+            "room_number": r.room_number,
+            "campus_id": r.campus_id,
+            "building_id": r.building_id,
+            "floor_id": r.floor_id,
+            "primary_type": r.primary_type.value,
+            "tags": r.tags,
+            "aliases": r.aliases,
+            "department_id": r.department_id,
+            "landmarks": r.landmarks,
+            "description": r.description,
+            "status": r.status
+        })
+
+    return {"rooms": rooms}
+
+
+@app.post("/admin/cqe/room", dependencies=[Depends(verify_admin_session)])
+async def create_cqe_room(data: RoomCreate):
+    """Create a new room (persists to JSON and rebuilds index)."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    index = entity_manager.get_index()
+
+    # Validate references
+    if data.campus_id not in index.campuses:
+        raise HTTPException(status_code=400, detail=f"Campus '{data.campus_id}' not found")
+    if data.building_id not in index.buildings:
+        raise HTTPException(status_code=400, detail=f"Building '{data.building_id}' not found")
+    if data.floor_id not in index.floors:
+        raise HTTPException(status_code=400, detail=f"Floor '{data.floor_id}' not found")
+
+    # Get building and floor names for flat entity format
+    building = index.buildings[data.building_id]
+    floor = index.floors[data.floor_id]
+    campus = index.campuses[data.campus_id]
+
+    # Create flat entity via entity_manager
+    entity_data = {
+        "entity_id": data.room_id.upper(),
+        "canonical_name": data.canonical_name,
+        "building": building.name,
+        "floor": floor.display_name,
+        "room": data.room_number,
+        "campus": campus.name,
+        "department": None,
+        "aliases": data.aliases,
+        "tags": data.tags,
+        "landmarks": data.landmarks,
+        "description": data.description,
+        "status": data.status
+    }
+
+    # Handle department
+    if data.department_id and data.department_id in index.departments:
+        entity_data["department"] = index.departments[data.department_id].name
+
+    success, message, result = entity_manager.create_entity(entity_data)
+
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    # Rebuild CQE index
+    rebuild_cqe_index()
+
+    return {
+        "status": "success",
+        "room_id": data.room_id.upper(),
+        "message": f"Room '{data.canonical_name}' created",
+        "warnings": result.warnings if result else []
+    }
+
+
+@app.put("/admin/cqe/room/{room_id}", dependencies=[Depends(verify_admin_session)])
+async def update_cqe_room(room_id: str, data: RoomUpdate):
+    """Update an existing room (persists to JSON and rebuilds index)."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    room_id = room_id.upper()
+    index = entity_manager.get_index()
+
+    if room_id not in index.rooms:
+        raise HTTPException(status_code=404, detail=f"Room '{room_id}' not found")
+
+    # Build update data for flat entity
+    update_data = {}
+    if data.canonical_name:
+        update_data["canonical_name"] = data.canonical_name
+    if data.building_id:
+        if data.building_id not in index.buildings:
+            raise HTTPException(status_code=400, detail=f"Building '{data.building_id}' not found")
+        update_data["building"] = index.buildings[data.building_id].name
+    if data.floor_id:
+        if data.floor_id not in index.floors:
+            raise HTTPException(status_code=400, detail=f"Floor '{data.floor_id}' not found")
+        update_data["floor"] = index.floors[data.floor_id].display_name
+    if data.campus_id:
+        if data.campus_id not in index.campuses:
+            raise HTTPException(status_code=400, detail=f"Campus '{data.campus_id}' not found")
+        update_data["campus"] = index.campuses[data.campus_id].name
+    if data.room_number is not None:
+        update_data["room"] = data.room_number
+    if data.aliases is not None:
+        update_data["aliases"] = data.aliases
+    if data.tags is not None:
+        update_data["tags"] = data.tags
+    if data.landmarks is not None:
+        update_data["landmarks"] = data.landmarks
+    if data.description is not None:
+        update_data["description"] = data.description
+    if data.status:
+        update_data["status"] = data.status
+
+    success, message, result = entity_manager.update_entity(room_id, update_data)
+
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    # Rebuild CQE index
+    rebuild_cqe_index()
+
+    return {
+        "status": "success",
+        "message": f"Room '{room_id}' updated",
+        "warnings": result.warnings if result else []
+    }
+
+
+@app.delete("/admin/cqe/room/{room_id}", dependencies=[Depends(verify_admin_session)])
+async def delete_cqe_room(room_id: str, hard: bool = False):
+    """
+    Delete a room (soft or hard delete).
+
+    Args:
+        room_id: Room ID to delete
+        hard: If True, permanently remove; if False, set status to inactive
+    """
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    room_id = room_id.upper()
+
+    success, message = entity_manager.delete_entity(room_id, hard=hard)
+
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    # Rebuild CQE index
+    rebuild_cqe_index()
+
+    return {
+        "status": "success",
+        "message": f"Room '{room_id}' {'permanently deleted' if hard else 'deactivated'}"
+    }
+
+
+# --- OutdoorLocation CRUD ---
+
+@app.get("/admin/cqe/outdoor", dependencies=[Depends(verify_admin_session)])
+async def list_cqe_outdoor_locations(
+    campus_id: Optional[str] = None,
+    status: Optional[str] = None,
+    q: Optional[str] = None
+):
+    """List outdoor locations with optional filters."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        return {"error": "Campus Query Engine not enabled", "outdoor_locations": []}
+
+    index = entity_manager.get_index()
+    locations = []
+
+    for o in sorted(index.outdoor_locations.values(), key=lambda x: x.canonical_name):
+        if campus_id and o.campus_id != campus_id:
+            continue
+        if status and o.status != status.lower():
+            continue
+        if q:
+            q_lower = q.lower()
+            if (q_lower not in o.canonical_name.lower() and
+                not any(q_lower in a for a in o.aliases)):
+                continue
+
+        locations.append({
+            "location_id": o.location_id,
+            "canonical_name": o.canonical_name,
+            "campus_id": o.campus_id,
+            "tags": o.tags,
+            "aliases": o.aliases,
+            "landmarks": o.landmarks,
+            "description": o.description,
+            "status": o.status
+        })
+
+    return {"outdoor_locations": locations}
+
+
+@app.post("/admin/cqe/outdoor", dependencies=[Depends(verify_admin_session)])
+async def create_cqe_outdoor_location(data: OutdoorCreate):
+    """Create a new outdoor location (persists to JSON and rebuilds index)."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    index = entity_manager.get_index()
+
+    # Validate campus
+    if data.campus_id not in index.campuses:
+        raise HTTPException(status_code=400, detail=f"Campus '{data.campus_id}' not found")
+
+    campus = index.campuses[data.campus_id]
+
+    # Create flat entity with _OUTDOOR marker
+    entity_data = {
+        "entity_id": data.location_id.upper(),
+        "canonical_name": data.canonical_name,
+        "building": "_OUTDOOR",
+        "floor": "_OUTDOOR",
+        "campus": campus.name,
+        "aliases": data.aliases,
+        "tags": data.tags,
+        "landmarks": data.landmarks,
+        "description": data.description,
+        "status": data.status
+    }
+
+    success, message, result = entity_manager.create_entity(entity_data)
+
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    # Rebuild CQE index
+    rebuild_cqe_index()
+
+    return {
+        "status": "success",
+        "location_id": data.location_id.upper(),
+        "message": f"Outdoor location '{data.canonical_name}' created",
+        "warnings": result.warnings if result else []
+    }
+
+
+@app.put("/admin/cqe/outdoor/{location_id}", dependencies=[Depends(verify_admin_session)])
+async def update_cqe_outdoor_location(location_id: str, data: OutdoorUpdate):
+    """Update an existing outdoor location."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    location_id = location_id.upper()
+    index = entity_manager.get_index()
+
+    if location_id not in index.outdoor_locations:
+        raise HTTPException(status_code=404, detail=f"Outdoor location '{location_id}' not found")
+
+    # Build update data
+    update_data = {
+        "building": "_OUTDOOR",
+        "floor": "_OUTDOOR"
+    }
+    if data.canonical_name:
+        update_data["canonical_name"] = data.canonical_name
+    if data.campus_id:
+        if data.campus_id not in index.campuses:
+            raise HTTPException(status_code=400, detail=f"Campus '{data.campus_id}' not found")
+        update_data["campus"] = index.campuses[data.campus_id].name
+    if data.aliases is not None:
+        update_data["aliases"] = data.aliases
+    if data.tags is not None:
+        update_data["tags"] = data.tags
+    if data.landmarks is not None:
+        update_data["landmarks"] = data.landmarks
+    if data.description is not None:
+        update_data["description"] = data.description
+    if data.status:
+        update_data["status"] = data.status
+
+    success, message, result = entity_manager.update_entity(location_id, update_data)
+
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    # Rebuild CQE index
+    rebuild_cqe_index()
+
+    return {
+        "status": "success",
+        "message": f"Outdoor location '{location_id}' updated",
+        "warnings": result.warnings if result else []
+    }
+
+
+@app.delete("/admin/cqe/outdoor/{location_id}", dependencies=[Depends(verify_admin_session)])
+async def delete_cqe_outdoor_location(location_id: str, hard: bool = False):
+    """Delete an outdoor location (soft or hard delete)."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    location_id = location_id.upper()
+
+    success, message = entity_manager.delete_entity(location_id, hard=hard)
+
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    # Rebuild CQE index
+    rebuild_cqe_index()
+
+    return {
+        "status": "success",
+        "message": f"Outdoor location '{location_id}' {'permanently deleted' if hard else 'deactivated'}"
+    }
+
+
+# --- Department CRUD ---
+
+@app.get("/admin/cqe/department", dependencies=[Depends(verify_admin_session)])
+async def list_cqe_departments_full():
+    """List all departments with full details."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        return {"error": "Campus Query Engine not enabled", "departments": []}
+
+    index = entity_manager.get_index()
+    departments = []
+    for d in sorted(index.departments.values(), key=lambda x: x.name):
+        departments.append({
+            "department_id": d.department_id,
+            "name": d.name,
+            "aliases": d.aliases,
+            "campus_id": d.campus_id,
+            "description": d.description,
+            "status": "active"
+        })
+    return {"departments": departments}
+
+
+@app.post("/admin/cqe/department", dependencies=[Depends(verify_admin_session)])
+async def create_cqe_department(data: DepartmentCreate):
+    """Create a new department."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    from campus_schema import Department, normalize_id
+    department_id = normalize_id(data.name)
+
+    index = entity_manager.get_index()
+    if department_id in index.departments:
+        raise HTTPException(status_code=400, detail=f"Department '{data.name}' already exists")
+
+    department = Department(
+        department_id=department_id,
+        name=data.name,
+        aliases=data.aliases or [data.name.lower()],
+        campus_id=data.campus_id,
+        description=data.description
+    )
+    index.departments[department_id] = department
+    index._index_department_aliases(department)
+
+    return {"status": "success", "department_id": department_id, "message": f"Department '{data.name}' created"}
+
+
+@app.put("/admin/cqe/department/{department_id}", dependencies=[Depends(verify_admin_session)])
+async def update_cqe_department(department_id: str, data: DepartmentUpdate):
+    """Update an existing department."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    index = entity_manager.get_index()
+    if department_id not in index.departments:
+        raise HTTPException(status_code=404, detail=f"Department '{department_id}' not found")
+
+    dept = index.departments[department_id]
+    if data.name:
+        dept.name = data.name
+    if data.aliases is not None:
+        dept.aliases = data.aliases
+    if data.campus_id is not None:
+        dept.campus_id = data.campus_id
+    if data.description is not None:
+        dept.description = data.description
+
+    return {"status": "success", "message": f"Department '{department_id}' updated"}
+
+
+@app.delete("/admin/cqe/department/{department_id}", dependencies=[Depends(verify_admin_session)])
+async def delete_cqe_department(department_id: str):
+    """Soft delete a department."""
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    index = entity_manager.get_index()
+    if department_id not in index.departments:
+        raise HTTPException(status_code=404, detail=f"Department '{department_id}' not found")
+
+    # Check for rooms using this department
+    dependent_rooms = [r for r in index.rooms.values() if r.department_id == department_id]
+    if dependent_rooms:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete department with {len(dependent_rooms)} room(s) assigned"
+        )
+
+    del index.departments[department_id]
+    return {"status": "success", "message": f"Department '{department_id}' deleted"}
+
+
+@app.get("/admin/cqe")
+async def serve_cqe_admin():
+    """Serve the CQE Admin interface."""
+    return FileResponse(PROJECT_ROOT / "static" / "cqe-admin.html")
+
+
+# ==============================================================================
 # ADMIN LOGIN/LOGOUT ENDPOINTS
 # ==============================================================================
 

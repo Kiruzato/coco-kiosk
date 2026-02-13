@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CQE Admin - Campus Entity Management</title>
+    <link rel="stylesheet" href="/static/cqe-admin.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>CQE Admin</h2>
+                <p class="subtitle">Entity Management</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-section="campus">
+                    <span class="nav-icon">&#127963;</span>
+                    Campus
+                </li>
+                <li class="nav-item" data-section="building">
+                    <span class="nav-icon">&#127970;</span>
+                    Building
+                </li>
+                <li class="nav-item" data-section="floor">
+                    <span class="nav-icon">&#128209;</span>
+                    Floor
+                </li>
+                <li class="nav-item" data-section="room">
+                    <span class="nav-icon">&#128682;</span>
+                    Room
+                </li>
+                <li class="nav-item" data-section="outdoor">
+                    <span class="nav-icon">&#127795;</span>
+                    Outdoor
+                </li>
+                <li class="nav-item" data-section="department">
+                    <span class="nav-icon">&#128188;</span>
+                    Department
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <a href="/admin" class="back-link">&larr; Back to Admin</a>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Campus Section -->
+            <section id="campus-section" class="entity-section active">
+                <div class="section-header">
+                    <h1>Campuses</h1>
+                    <button class="btn btn-primary" onclick="showModal('campus')">+ Add Campus</button>
+                </div>
+                <div class="filter-bar">
+                    <input type="text" id="campus-search" placeholder="Search campuses..." class="search-input">
+                </div>
+                <div class="table-container">
+                    <table class="entity-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Aliases</th>
+                                <th>Buildings</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="campus-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Building Section -->
+            <section id="building-section" class="entity-section">
+                <div class="section-header">
+                    <h1>Buildings</h1>
+                    <button class="btn btn-primary" onclick="showModal('building')">+ Add Building</button>
+                </div>
+                <div class="filter-bar">
+                    <input type="text" id="building-search" placeholder="Search buildings..." class="search-input">
+                    <select id="building-campus-filter" class="filter-select">
+                        <option value="">All Campuses</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table class="entity-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Campus</th>
+                                <th>Aliases</th>
+                                <th>Floors</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="building-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Floor Section -->
+            <section id="floor-section" class="entity-section">
+                <div class="section-header">
+                    <h1>Floors</h1>
+                    <button class="btn btn-primary" onclick="showModal('floor')">+ Add Floor</button>
+                </div>
+                <div class="filter-bar">
+                    <input type="text" id="floor-search" placeholder="Search floors..." class="search-input">
+                    <select id="floor-building-filter" class="filter-select">
+                        <option value="">All Buildings</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table class="entity-table">
+                        <thead>
+                            <tr>
+                                <th>Display Name</th>
+                                <th>Building</th>
+                                <th>Level</th>
+                                <th>Aliases</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="floor-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Room Section -->
+            <section id="room-section" class="entity-section">
+                <div class="section-header">
+                    <h1>Rooms</h1>
+                    <button class="btn btn-primary" onclick="showModal('room')">+ Add Room</button>
+                </div>
+                <div class="filter-bar">
+                    <input type="text" id="room-search" placeholder="Search rooms..." class="search-input">
+                    <select id="room-campus-filter" class="filter-select">
+                        <option value="">All Campuses</option>
+                    </select>
+                    <select id="room-building-filter" class="filter-select">
+                        <option value="">All Buildings</option>
+                    </select>
+                    <select id="room-type-filter" class="filter-select">
+                        <option value="">All Types</option>
+                        <option value="classroom">Classroom</option>
+                        <option value="office">Office</option>
+                        <option value="restroom">Restroom</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <select id="room-status-filter" class="filter-select">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table class="entity-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Building</th>
+                                <th>Floor</th>
+                                <th>Type</th>
+                                <th>Tags</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="room-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Outdoor Location Section -->
+            <section id="outdoor-section" class="entity-section">
+                <div class="section-header">
+                    <h1>Outdoor Locations</h1>
+                    <button class="btn btn-primary" onclick="showModal('outdoor')">+ Add Outdoor Location</button>
+                </div>
+                <div class="filter-bar">
+                    <input type="text" id="outdoor-search" placeholder="Search outdoor locations..." class="search-input">
+                    <select id="outdoor-campus-filter" class="filter-select">
+                        <option value="">All Campuses</option>
+                    </select>
+                    <select id="outdoor-status-filter" class="filter-select">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table class="entity-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Campus</th>
+                                <th>Tags</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="outdoor-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Department Section -->
+            <section id="department-section" class="entity-section">
+                <div class="section-header">
+                    <h1>Departments</h1>
+                    <button class="btn btn-primary" onclick="showModal('department')">+ Add Department</button>
+                </div>
+                <div class="filter-bar">
+                    <input type="text" id="department-search" placeholder="Search departments..." class="search-input">
+                </div>
+                <div class="table-container">
+                    <table class="entity-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Campus</th>
+                                <th>Aliases</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="department-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Campus Modal -->
+    <div id="campus-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="campus-modal-title">Add Campus</h2>
+                <button class="close-btn" onclick="closeModal('campus')">&times;</button>
+            </div>
+            <form id="campus-form" onsubmit="saveCampus(event)">
+                <input type="hidden" id="campus-edit-id">
+                <div class="form-group">
+                    <label for="campus-name">Name *</label>
+                    <input type="text" id="campus-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="campus-aliases">Aliases (comma-separated)</label>
+                    <input type="text" id="campus-aliases" placeholder="e.g., main, mc">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('campus')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Building Modal -->
+    <div id="building-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="building-modal-title">Add Building</h2>
+                <button class="close-btn" onclick="closeModal('building')">&times;</button>
+            </div>
+            <form id="building-form" onsubmit="saveBuilding(event)">
+                <input type="hidden" id="building-edit-id">
+                <div class="form-group">
+                    <label for="building-campus">Campus *</label>
+                    <select id="building-campus" required>
+                        <option value="">Select Campus</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="building-name">Name *</label>
+                    <input type="text" id="building-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="building-aliases">Aliases (comma-separated)</label>
+                    <input type="text" id="building-aliases" placeholder="e.g., bldg a, building a">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('building')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floor Modal -->
+    <div id="floor-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="floor-modal-title">Add Floor</h2>
+                <button class="close-btn" onclick="closeModal('floor')">&times;</button>
+            </div>
+            <form id="floor-form" onsubmit="saveFloor(event)">
+                <input type="hidden" id="floor-edit-id">
+                <div class="form-group">
+                    <label for="floor-building">Building *</label>
+                    <select id="floor-building" required>
+                        <option value="">Select Building</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="floor-level">Level Number * (-2 to 10)</label>
+                    <input type="number" id="floor-level" min="-2" max="10" value="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="floor-display-name">Display Name *</label>
+                    <input type="text" id="floor-display-name" required placeholder="e.g., Ground Floor, 2nd Floor">
+                </div>
+                <div class="form-group">
+                    <label for="floor-aliases">Aliases (comma-separated)</label>
+                    <input type="text" id="floor-aliases" placeholder="e.g., gf, g/f">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('floor')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Room Modal -->
+    <div id="room-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="room-modal-title">Add Room</h2>
+                <button class="close-btn" onclick="closeModal('room')">&times;</button>
+            </div>
+            <form id="room-form" onsubmit="saveRoom(event)">
+                <input type="hidden" id="room-edit-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="room-id">Room ID *</label>
+                        <input type="text" id="room-id" required placeholder="e.g., ROOM_101">
+                    </div>
+                    <div class="form-group">
+                        <label for="room-canonical-name">Canonical Name *</label>
+                        <input type="text" id="room-canonical-name" required placeholder="e.g., Computer Lab 1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="room-campus">Campus *</label>
+                        <select id="room-campus" required onchange="onRoomCampusChange()">
+                            <option value="">Select Campus</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="room-building">Building *</label>
+                        <select id="room-building" required onchange="onRoomBuildingChange()">
+                            <option value="">Select Building</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="room-floor">Floor *</label>
+                        <select id="room-floor" required>
+                            <option value="">Select Floor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="room-number">Room Number</label>
+                        <input type="text" id="room-number" placeholder="e.g., 101">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="room-primary-type">Primary Type *</label>
+                        <select id="room-primary-type" required>
+                            <option value="classroom">Classroom</option>
+                            <option value="office">Office</option>
+                            <option value="restroom">Restroom</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="room-department">Department</label>
+                        <select id="room-department">
+                            <option value="">None</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="room-tags-input">Tags</label>
+                    <div class="tag-input-container">
+                        <div class="tag-list" id="room-tags"></div>
+                        <input type="text" id="room-tags-input" placeholder="Type and press Enter to add tag">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="room-aliases">Aliases (comma-separated)</label>
+                    <input type="text" id="room-aliases" placeholder="e.g., comp lab 1, cl1">
+                </div>
+                <div class="form-group">
+                    <label for="room-landmarks">Landmarks</label>
+                    <input type="text" id="room-landmarks" placeholder="e.g., near the main entrance">
+                </div>
+                <div class="form-group">
+                    <label for="room-description">Description</label>
+                    <textarea id="room-description" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="room-status">Status</label>
+                    <select id="room-status">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-danger" id="room-delete-btn" style="display: none;" onclick="confirmDeleteRoom()">Delete</button>
+                    <div class="spacer"></div>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('room')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Outdoor Location Modal -->
+    <div id="outdoor-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="outdoor-modal-title">Add Outdoor Location</h2>
+                <button class="close-btn" onclick="closeModal('outdoor')">&times;</button>
+            </div>
+            <form id="outdoor-form" onsubmit="saveOutdoor(event)">
+                <input type="hidden" id="outdoor-edit-id">
+                <div class="form-group">
+                    <label for="outdoor-id">Location ID *</label>
+                    <input type="text" id="outdoor-id" required placeholder="e.g., COVERED_COURT_1">
+                </div>
+                <div class="form-group">
+                    <label for="outdoor-canonical-name">Canonical Name *</label>
+                    <input type="text" id="outdoor-canonical-name" required placeholder="e.g., Covered Court">
+                </div>
+                <div class="form-group">
+                    <label for="outdoor-campus">Campus *</label>
+                    <select id="outdoor-campus" required>
+                        <option value="">Select Campus</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="outdoor-tags-input">Tags</label>
+                    <div class="tag-input-container">
+                        <div class="tag-list" id="outdoor-tags"></div>
+                        <input type="text" id="outdoor-tags-input" placeholder="Type and press Enter to add tag">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="outdoor-aliases">Aliases (comma-separated)</label>
+                    <input type="text" id="outdoor-aliases" placeholder="e.g., court, basketball court">
+                </div>
+                <div class="form-group">
+                    <label for="outdoor-landmarks">Landmarks</label>
+                    <input type="text" id="outdoor-landmarks" placeholder="e.g., behind the main building">
+                </div>
+                <div class="form-group">
+                    <label for="outdoor-description">Description</label>
+                    <textarea id="outdoor-description" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="outdoor-status">Status</label>
+                    <select id="outdoor-status">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-danger" id="outdoor-delete-btn" style="display: none;" onclick="confirmDeleteOutdoor()">Delete</button>
+                    <div class="spacer"></div>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('outdoor')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Department Modal -->
+    <div id="department-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="department-modal-title">Add Department</h2>
+                <button class="close-btn" onclick="closeModal('department')">&times;</button>
+            </div>
+            <form id="department-form" onsubmit="saveDepartment(event)">
+                <input type="hidden" id="department-edit-id">
+                <div class="form-group">
+                    <label for="department-name">Name *</label>
+                    <input type="text" id="department-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="department-campus">Campus</label>
+                    <select id="department-campus">
+                        <option value="">All Campuses</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="department-aliases">Aliases (comma-separated)</label>
+                    <input type="text" id="department-aliases" placeholder="e.g., it dept, it">
+                </div>
+                <div class="form-group">
+                    <label for="department-description">Description</label>
+                    <textarea id="department-description" rows="2"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('department')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header danger">
+                <h2>Confirm Delete</h2>
+                <button class="close-btn" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>This will <strong>permanently delete</strong> this entity.</p>
+                <p id="delete-entity-name" class="entity-name"></p>
+                <p class="warning">This action cannot be undone.</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="executeDelete()">Delete Permanently</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/cqe-admin.js"></script>
+</body>
+</html>

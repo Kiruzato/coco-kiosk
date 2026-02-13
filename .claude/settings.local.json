@@ -129,7 +129,12 @@
       "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" test_cqe_golden.py)",
       "Bash(cmd /c \"cd /d C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\campus_rag_chatbot && C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe test_cqe_golden.py\")",
       "Bash(C:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/venv311/Scripts/python.exe:*)",
-      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -m pytest test_cqe_golden.py -v --tb=short)"
+      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -m pytest test_cqe_golden.py -v --tb=short)",
+      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -m pytest tests/test_cqe_golden.py -v --tb=short)",
+      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -c \"from campus_index import CampusQueryIndex; idx = CampusQueryIndex\\(\\); idx.load_from_flat_entities\\(''data/directory_entities.json''\\); print\\(f''Rooms: {len\\(idx.rooms\\)}''\\); print\\(f''Buildings: {len\\(idx.buildings\\)}''\\); print\\(f''Campuses: {len\\(idx.campuses\\)}''\\); print\\(f''Outdoor: {len\\(idx.outdoor_locations\\)}''\\)\")",
+      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -c \"import sys; sys.path.insert\\(0, ''.''\\); from campus_schema import RoomPrimaryType; print\\(''RoomPrimaryType:'', [pt.value for pt in RoomPrimaryType]\\)\")",
+      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -m py_compile app.py)",
+      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -m py_compile entity_manager.py campus_index.py campus_schema.py)"
     ]
   }
 }

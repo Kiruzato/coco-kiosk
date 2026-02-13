@@ -6,7 +6,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 
 ## Current State
 
-**Completed through Phase 59** - Admin Directory Management System
+**Completed through Phase 66** - New CQE Admin UI
 
 ### Phase History
 1. **Phase 1-3**: Core RAG pipeline, document management, multi-format support
@@ -69,6 +69,12 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 58. **Phase 57**: Admin Directory Management - Index rebuild integration (explicit CQE index rebuild after CRUD)
 59. **Phase 58**: Admin Directory Management - OutdoorLocation support via _OUTDOOR marker convention
 60. **Phase 59**: Admin Directory Management - UI enhancements (entity type selector, tags input, index stats panel)
+61. **Phase 60-66**: New CQE Admin UI - Entity-separated management interface
+    - Phase 60: Backend reference endpoints (/admin/cqe/campuses, buildings, floors, departments, tags, primary-types)
+    - Phase 61: Backend entity CRUD endpoints for all 6 entity types (Campus, Building, Floor, Room, OutdoorLocation, Department)
+    - Phase 62: Frontend base structure (cqe-admin.html, cqe-admin.css, cqe-admin.js with sidebar navigation)
+    - Phase 63-65: Entity sections with specific forms, cascading dropdowns, tag input, filtering, hard delete
+    - Phase 66: Testing and verification
 
 ## Architecture
 
@@ -121,7 +127,12 @@ campus_rag_chatbot/
 │       └── edge_tts.py       # Cloud TTS (Microsoft Edge, free)
 ├── voice_routes.py           # Phase 32: Voice API endpoints
 ├── admin.py                  # CLI admin interface
-├── static/                   # Web frontend (index.html, admin.html, etc.)
+├── static/                   # Web frontend
+│   ├── index.html            # User chat interface
+│   ├── admin.html            # Legacy admin interface
+│   ├── cqe-admin.html        # Phase 60-66: New CQE entity management UI
+│   ├── cqe-admin.css         # CQE admin styles
+│   └── cqe-admin.js          # CQE admin logic (CRUD, dropdowns, tags)
 ├── data/                     # Source documents
 │   ├── campus_directory.txt  # Directory/location information
 │   ├── campus_info.txt       # General campus info
@@ -283,6 +294,7 @@ cd campus_rag_chatbot
 # Access points:
 # - User interface: http://localhost:8000/
 # - Admin interface: http://localhost:8000/admin
+# - CQE Admin (entity management): http://localhost:8000/admin/cqe
 # - Developer tools: http://localhost:8000/dev
 # - Voice status: http://localhost:8000/voice/status
 ```
@@ -318,24 +330,24 @@ USAGE_TRACKING_ENABLED=true
 
 ## Current Work / Next Steps
 
-The project has completed Phase 53 (CQE Schema Alignment). Recent additions:
+The project has completed Phase 66 (New CQE Admin UI). Recent additions:
 
-**Phase 51-53: CQE Schema Alignment** (prepares for new schema in `schema.txt`)
-- Phase 51: Data Model Updates
-  - `OutdoorLocation` entity for courts, parking, gardens
-  - `RoomPrimaryType` enum (4 values: CLASSROOM, OFFICE, RESTROOM, OTHER)
-  - `tags` field for free-form categorization (e.g., ["laboratory", "engineering"])
-  - Integer `level_number` for floor levels (supports unlimited floors)
-  - Floor aliases (e.g., "GF", "G/F" → Ground Floor)
-- Phase 52: Parser Updates
-  - `FilterField.TAG`, `FilterField.ENTITY_TYPE`, `FilterField.PRIMARY_TYPE`
-  - Tag detection patterns for composite queries ("engineering labs", "sports facilities")
-  - Outdoor location patterns ("covered court", "parking area")
-- Phase 53: Executor & Formatter Updates
-  - Outdoor location resolution in LOCATE_SINGLE
-  - Tag-based filtering in `_get_matching_room_ids()`
-  - `_format_outdoor_location()` template method
-- Golden test suite: 41/41 tests passing (backward compatibility verified)
+**Phase 60-66: New CQE Admin UI** - Entity-separated management interface
+- Complete rewrite of admin interface for CQE entity management
+- Entity separation: 6 distinct sections (Campus, Building, Floor, Room, OutdoorLocation, Department)
+- Entity-specific forms with relevant fields only (no generic form)
+- Cascading dropdowns: Campus → Building → Floor selection
+- Tag input component with normalization (lowercase, trimmed, no duplicates)
+- Filtering and sorting for all sections
+- Hard delete support for Room and OutdoorLocation with confirmation modal
+- Backend CRUD endpoints at `/admin/cqe/*` with CQE index rebuild after changes
+- Access at: http://localhost:8000/admin/cqe
+
+**Previous: Phase 55-59: Admin Directory Management**
+- EntityManager service with validation and CRUD delegation
+- Tag normalization (lowercase, trimmed, no duplicates, sorted)
+- Automatic CQE index rebuild after create/update/delete
+- OutdoorLocation support via `_OUTDOOR` marker convention
 
 **Previous milestones:**
 - Phase 47-50: Campus Query Engine core implementation

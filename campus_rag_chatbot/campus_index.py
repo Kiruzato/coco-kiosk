@@ -611,6 +611,14 @@ class CampusQueryIndex:
         self.outdoor_locations[location.location_id] = location
         self._index_outdoor_location(location)
 
+    def _index_department_aliases(self, department: Department) -> None:
+        """Index department aliases (Phase 60)."""
+        self.alias_to_department[department.name.lower().strip()] = department.department_id
+        for alias in department.aliases:
+            normalized = alias.lower().strip()
+            if normalized:
+                self.alias_to_department[normalized] = department.department_id
+
     def _compute_stats(self) -> None:
         """Compute index statistics."""
         self._stats["campuses"] = len(self.campuses)
