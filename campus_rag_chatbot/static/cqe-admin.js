@@ -40,14 +40,26 @@ async function apiCall(endpoint, method = 'GET', data = null) {
         options.body = JSON.stringify(data);
     }
 
-    const response = await fetch(endpoint, options);
+    try {
+        const response = await fetch(endpoint, options);
 
-    if (response.status === 401) {
-        window.location.href = '/admin/login';
-        return null;
+        if (response.status === 401) {
+            window.location.href = '/admin/login';
+            return null;
+        }
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            // HTTP error - surface it with error property for callers to detect
+            return { error: result.detail || `HTTP ${response.status}`, detail: result.detail, _httpError: true };
+        }
+
+        return result;
+    } catch (err) {
+        console.error(`[apiCall] ${method} ${endpoint} failed:`, err);
+        return { error: err.message, _networkError: true };
     }
-
-    return response.json();
 }
 
 // =============================================================================
@@ -186,7 +198,7 @@ function renderBuildingTable() {
     const filtered = state.buildings.filter(b => {
         if (campusFilter && b.campus_id !== campusFilter) return false;
         return b.name.toLowerCase().includes(searchQuery) ||
-               b.aliases.some(a => a.toLowerCase().includes(searchQuery));
+            b.aliases.some(a => a.toLowerCase().includes(searchQuery));
     });
 
     if (filtered.length === 0) {
@@ -244,7 +256,7 @@ function renderFloorTable() {
 function renderRoomTable() {
     const tbody = document.getElementById('room-table-body');
 
-    if (state.rooms.length === 0) {
+    if (!state.rooms || state.rooms.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No rooms found</td></tr>';
         return;
     }
@@ -271,7 +283,7 @@ function renderRoomTable() {
 function renderOutdoorTable() {
     const tbody = document.getElementById('outdoor-table-body');
 
-    if (state.outdoorLocations.length === 0) {
+    if (!state.outdoorLocations || state.outdoorLocations.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No outdoor locations found</td></tr>';
         return;
     }
@@ -444,16 +456,34 @@ function showModal(type, editData = null) {
         populateModalForm(type, editData);
     } else {
         title.textContent = `Add ${capitalize(type)}`;
-        // Clear tags for room/outdoor
+        // Clear hidden edit IDs and enable ID fields for creation
+        if (type === 'campus') {
+            document.getElementById('campus-edit-id').value = '';
+        }
+        if (type === 'building') {
+            document.getElementById('building-edit-id').value = '';
+        }
+        if (type === 'floor') {
+            document.getElementById('floor-edit-id').value = '';
+        }
         if (type === 'room') {
+            document.getElementById('room-edit-id').value = '';
+            document.getElementById('room-id').value = '';
+            document.getElementById('room-id').disabled = false;
             roomTags.length = 0;
             renderRoomTags();
             document.getElementById('room-delete-btn').style.display = 'none';
         }
         if (type === 'outdoor') {
+            document.getElementById('outdoor-edit-id').value = '';
+            document.getElementById('outdoor-id').value = '';
+            document.getElementById('outdoor-id').disabled = false;
             outdoorTags.length = 0;
             renderOutdoorTags();
             document.getElementById('outdoor-delete-btn').style.display = 'none';
+        }
+        if (type === 'department') {
+            document.getElementById('department-edit-id').value = '';
         }
     }
 
@@ -463,6 +493,28 @@ function showModal(type, editData = null) {
 function closeModal(type) {
     const modal = document.getElementById(`${type}-modal`);
     modal.classList.remove('active');
+
+    // Always clear edit IDs when closing to prevent stale state
+    if (type === 'room') {
+        document.getElementById('room-edit-id').value = '';
+        document.getElementById('room-id').disabled = false;
+    }
+    if (type === 'outdoor') {
+        document.getElementById('outdoor-edit-id').value = '';
+        document.getElementById('outdoor-id').disabled = false;
+    }
+    if (type === 'floor') {
+        document.getElementById('floor-edit-id').value = '';
+    }
+    if (type === 'building') {
+        document.getElementById('building-edit-id').value = '';
+    }
+    if (type === 'campus') {
+        document.getElementById('campus-edit-id').value = '';
+    }
+    if (type === 'department') {
+        document.getElementById('department-edit-id').value = '';
+    }
 }
 
 function populateModalForm(type, data) {
@@ -596,7 +648,7 @@ async function saveCampus(e) {
         closeModal('campus');
         await loadCampuses();
     } else {
-        showToast(result?.detail || 'Failed to save campus', 'error');
+        showToast(result?.detail || result?.error || 'Failed to save campus', 'error');
     }
 }
 
@@ -621,7 +673,7 @@ async function saveBuilding(e) {
         closeModal('building');
         await loadBuildings();
     } else {
-        showToast(result?.detail || 'Failed to save building', 'error');
+        showToast(result?.detail || result?.error || 'Failed to save building', 'error');
     }
 }
 
@@ -647,7 +699,7 @@ async function saveFloor(e) {
         closeModal('floor');
         await loadFloors();
     } else {
-        showToast(result?.detail || 'Failed to save floor', 'error');
+        showToast(result?.detail || result?.error || 'Failed to save floor', 'error');
     }
 }
 
@@ -685,9 +737,17 @@ async function saveRoom(e) {
         showToast(result.message, 'success');
         closeModal('room');
         document.getElementById('room-id').disabled = false;
+        // Clear filters after creating a new room so it's always visible
+        if (!editId) {
+            document.getElementById('room-campus-filter').value = '';
+            document.getElementById('room-building-filter').value = '';
+            document.getElementById('room-type-filter').value = '';
+            document.getElementById('room-status-filter').value = '';
+            document.getElementById('room-search').value = '';
+        }
         await loadRooms();
     } else {
-        showToast(result?.detail || 'Failed to save room', 'error');
+        showToast(result?.detail || result?.error || 'Failed to save room', 'error');
     }
 }
 
@@ -719,9 +779,15 @@ async function saveOutdoor(e) {
         showToast(result.message, 'success');
         closeModal('outdoor');
         document.getElementById('outdoor-id').disabled = false;
+        // Clear filters after creating a new outdoor location so it's always visible
+        if (!editId) {
+            document.getElementById('outdoor-campus-filter').value = '';
+            document.getElementById('outdoor-status-filter').value = '';
+            document.getElementById('outdoor-search').value = '';
+        }
         await loadOutdoorLocations();
     } else {
-        showToast(result?.detail || 'Failed to save outdoor location', 'error');
+        showToast(result?.detail || result?.error || 'Failed to save outdoor location', 'error');
     }
 }
 
@@ -747,7 +813,7 @@ async function saveDepartment(e) {
         closeModal('department');
         await loadDepartments();
     } else {
-        showToast(result?.detail || 'Failed to save department', 'error');
+        showToast(result?.detail || result?.error || 'Failed to save department', 'error');
     }
 }
 

@@ -256,6 +256,28 @@ class FloorLevel(Enum):
         }
         return names.get(self, "Unknown Floor")
 
+    @classmethod
+    def from_number(cls, level_number: int) -> "FloorLevel":
+        """
+        Get FloorLevel from integer level number.
+
+        Args:
+            level_number: Integer floor level (-1=basement, 0=ground, 1=first, etc.)
+
+        Returns:
+            Matching FloorLevel enum value, or GROUND as default
+        """
+        number_mapping = {
+            -1: cls.BASEMENT,
+            0: cls.GROUND,
+            1: cls.FIRST,
+            2: cls.SECOND,
+            3: cls.THIRD,
+            4: cls.FOURTH,
+            5: cls.FIFTH,
+        }
+        return number_mapping.get(level_number, cls.GROUND)
+
 
 @dataclass
 class Room:

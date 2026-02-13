@@ -19,7 +19,7 @@ import logging
 import os
 import tempfile
 import threading
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -33,21 +33,32 @@ _file_lock = threading.Lock()
 @dataclass
 class DirectoryEntity:
     """
-    Structured representation of a campus directory location.
+    Structured representation of a campus directory entity.
+
+    Phase 3 (Arch Remediation): Unified entity storage for all types.
+    Supports: room, outdoor, campus, building, floor, department
 
     Attributes:
-        entity_id: Unique identifier (e.g., "CANTEEN", "LIBRARY")
+        entity_id: Unique identifier (e.g., "CANTEEN", "LIBRARY", "MAIN", "A_BUILDING")
         canonical_name: Official display name (e.g., "Main Library")
         aliases: List of alternative names/phrases that map to this entity
-        building: Building name where the location is found
-        floor: Floor level (e.g., "Ground Floor", "2nd Floor")
+        building: Building name (empty for campus/outdoor/department entities)
+        floor: Floor level string (empty for campus/building/outdoor/department)
         room: Room number(s) if applicable, None otherwise
-        campus: Campus where the location is found (e.g., "Main Campus")
-        department: Department the location belongs to (optional)
+        campus: Campus name (for all entity types except campus itself)
+        department: Department the location belongs to (optional, for rooms)
         landmarks: Navigation hints to help find the location
-        description: Brief description of the location's purpose
+        description: Brief description of the entity's purpose
+        tags: Free-form tags for classification (Phase 1 - Arch Remediation)
+        entity_type: Entity type discriminator (Phase 2 - Arch Remediation)
+            Values: room, outdoor, campus, building, floor, department
         status: Entity status - "active" or "inactive" (default: "active")
         last_updated: ISO timestamp of last modification
+
+    Phase 3 Fields (for non-room entity types):
+        level_number: Integer floor level (for floor entities, -2 to N)
+        child_ids: List of child entity IDs (for campus: building_ids, for building: floor_ids)
+        office_room_ids: List of office room IDs (for department entities)
     """
     entity_id: str
     canonical_name: str
@@ -59,8 +70,14 @@ class DirectoryEntity:
     department: Optional[str]
     landmarks: Optional[str]
     description: Optional[str]
+    tags: List[str] = field(default_factory=list)
+    entity_type: str = "room"  # room, outdoor, campus, building, floor, department
     status: str = "active"
     last_updated: Optional[str] = None
+    # Phase 3: Fields for non-room entity types
+    level_number: Optional[int] = None  # For floor entities
+    child_ids: List[str] = field(default_factory=list)  # For campus/building: child entity IDs
+    office_room_ids: List[str] = field(default_factory=list)  # For department entities
 
 
 class EntityRegistry:
@@ -101,19 +118,35 @@ class EntityRegistry:
             entities_data = data.get('entities', [])
 
             for entry in entities_data:
+                # Infer entity_type from building marker if not stored
+                building_val = entry.get('building', '')
+                stored_entity_type = entry.get('entity_type')
+                if stored_entity_type:
+                    entity_type = stored_entity_type
+                elif building_val == "_OUTDOOR":
+                    entity_type = "outdoor"
+                else:
+                    entity_type = "room"
+
                 entity = DirectoryEntity(
                     entity_id=entry['entity_id'],
                     canonical_name=entry['canonical_name'],
                     aliases=entry.get('aliases', []),
-                    building=entry['building'],
-                    floor=entry['floor'],
+                    building=entry.get('building', ''),
+                    floor=entry.get('floor', ''),
                     room=entry.get('room'),
                     campus=entry.get('campus', 'Main Campus'),  # Default for backward compat
                     department=entry.get('department'),
                     landmarks=entry.get('landmarks'),
                     description=entry.get('description'),
+                    tags=entry.get('tags', []),  # Phase 1: Read tags from JSON
+                    entity_type=entity_type,      # Phase 2: Read entity_type from JSON
                     status=entry.get('status', 'active'),
-                    last_updated=entry.get('last_updated')
+                    last_updated=entry.get('last_updated'),
+                    # Phase 3: Non-room entity fields
+                    level_number=entry.get('level_number'),
+                    child_ids=entry.get('child_ids', []),
+                    office_room_ids=entry.get('office_room_ids', [])
                 )
 
                 # Store entity by ID (all entities, including inactive)
@@ -308,13 +341,18 @@ class EntityRegistry:
         entity_id: str,
         canonical_name: str,
         aliases: List[str],
-        building: str,
-        floor: str,
+        building: str = "",
+        floor: str = "",
         room: Optional[str] = None,
         campus: str = "Main Campus",
         department: Optional[str] = None,
         landmarks: Optional[str] = None,
-        description: Optional[str] = None
+        description: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        entity_type: str = "room",
+        level_number: Optional[int] = None,
+        child_ids: Optional[List[str]] = None,
+        office_room_ids: Optional[List[str]] = None
     ) -> Tuple[bool, str]:
         """
         Add a new entity to the registry.
@@ -323,13 +361,18 @@ class EntityRegistry:
             entity_id: Unique identifier (will be uppercased)
             canonical_name: Official display name
             aliases: List of alternative names
-            building: Building name
-            floor: Floor level
+            building: Building name (required for room/floor, optional for others)
+            floor: Floor level (required for room, optional for others)
             room: Room number (optional)
-            campus: Campus name (required)
+            campus: Campus name (required for most types)
             department: Department name (optional)
             landmarks: Navigation hints (optional)
             description: Brief description (optional)
+            tags: Free-form tags (optional, Phase 1)
+            entity_type: Entity type - room, outdoor, campus, building, floor, department (Phase 2)
+            level_number: Integer floor level (for floor entities, Phase 3)
+            child_ids: List of child entity IDs (for campus/building, Phase 3)
+            office_room_ids: List of office room IDs (for department, Phase 3)
 
         Returns:
             Tuple of (success: bool, message: str)
@@ -337,7 +380,7 @@ class EntityRegistry:
         # Normalize entity_id
         entity_id = entity_id.upper().strip()
 
-        # Validation
+        # Basic validation
         if not entity_id:
             return False, "Entity ID cannot be empty"
 
@@ -347,14 +390,35 @@ class EntityRegistry:
         if not canonical_name or not canonical_name.strip():
             return False, "Canonical name cannot be empty"
 
-        if not building or not building.strip():
-            return False, "Building cannot be empty"
-
-        if not floor or not floor.strip():
-            return False, "Floor cannot be empty"
-
-        if not campus or not campus.strip():
-            return False, "Campus cannot be empty"
+        # Entity-type-specific validation (Phase 3)
+        if entity_type in ("room", "outdoor"):
+            # Rooms need building and floor (outdoor uses _OUTDOOR marker)
+            if entity_type == "room":
+                if not building or not building.strip():
+                    return False, "Building cannot be empty for room entities"
+                if not floor or not floor.strip():
+                    return False, "Floor cannot be empty for room entities"
+        elif entity_type == "campus":
+            # Campus doesn't need building/floor
+            building = ""
+            floor = ""
+        elif entity_type == "building":
+            # Building needs campus, no floor
+            floor = ""
+            if not campus or not campus.strip():
+                return False, "Campus cannot be empty for building entities"
+        elif entity_type == "floor":
+            # Floor needs building and campus
+            if not building or not building.strip():
+                return False, "Building cannot be empty for floor entities"
+            if not campus or not campus.strip():
+                return False, "Campus cannot be empty for floor entities"
+        elif entity_type == "department":
+            # Department needs campus
+            building = ""
+            floor = ""
+            if not campus or not campus.strip():
+                return False, "Campus cannot be empty for department entities"
 
         # Normalize aliases (lowercase, trimmed, deduplicated)
         normalized_aliases = []
@@ -365,20 +429,37 @@ class EntityRegistry:
                 normalized_aliases.append(normalized)
                 seen.add(normalized)
 
+        # Normalize tags (lowercase, trimmed, deduplicated, sorted) - Phase 1
+        normalized_tags = []
+        if tags:
+            seen_tags = set()
+            for tag in tags:
+                normalized_tag = tag.lower().strip()
+                if normalized_tag and normalized_tag not in seen_tags:
+                    normalized_tags.append(normalized_tag)
+                    seen_tags.add(normalized_tag)
+            normalized_tags.sort()
+
         # Create entity
         entity = DirectoryEntity(
             entity_id=entity_id,
             canonical_name=canonical_name.strip(),
             aliases=normalized_aliases,
-            building=building.strip(),
-            floor=floor.strip(),
+            building=building.strip() if building else "",
+            floor=floor.strip() if floor else "",
             room=room.strip() if room else None,
-            campus=campus.strip(),
+            campus=campus.strip() if campus else "",
             department=department.strip() if department else None,
             landmarks=landmarks.strip() if landmarks else None,
             description=description.strip() if description else None,
+            tags=normalized_tags,
+            entity_type=entity_type,
             status="active",
-            last_updated=datetime.now().isoformat()
+            last_updated=datetime.now().isoformat(),
+            # Phase 3: Non-room entity fields
+            level_number=level_number,
+            child_ids=child_ids if child_ids else [],
+            office_room_ids=office_room_ids if office_room_ids else []
         )
 
         # Add to registry
@@ -410,13 +491,23 @@ class EntityRegistry:
         department: Optional[str] = None,
         landmarks: Optional[str] = None,
         description: Optional[str] = None,
-        status: Optional[str] = None
+        tags: Optional[List[str]] = None,
+        entity_type: Optional[str] = None,
+        status: Optional[str] = None,
+        level_number: Optional[int] = None,
+        child_ids: Optional[List[str]] = None,
+        office_room_ids: Optional[List[str]] = None
     ) -> Tuple[bool, str]:
         """
         Update an existing entity.
 
         Args:
             entity_id: Entity to update
+            tags: Free-form tags (Phase 1)
+            entity_type: Entity type discriminator (Phase 2)
+            level_number: Integer floor level (Phase 3)
+            child_ids: List of child entity IDs (Phase 3)
+            office_room_ids: List of office room IDs (Phase 3)
             Other args: Fields to update (None = keep existing)
 
         Returns:
@@ -447,14 +538,16 @@ class EntityRegistry:
             entity.aliases = normalized_aliases
 
         if building is not None:
-            if not building.strip():
-                return False, "Building cannot be empty"
-            entity.building = building.strip()
+            # Allow empty building for non-room entity types
+            if not building.strip() and entity.entity_type in ("room",):
+                return False, "Building cannot be empty for room entities"
+            entity.building = building.strip() if building else ""
 
         if floor is not None:
-            if not floor.strip():
-                return False, "Floor cannot be empty"
-            entity.floor = floor.strip()
+            # Allow empty floor for non-room entity types
+            if not floor.strip() and entity.entity_type in ("room",):
+                return False, "Floor cannot be empty for room entities"
+            entity.floor = floor.strip() if floor else ""
 
         if room is not None:
             entity.room = room.strip() if room.strip() else None
@@ -472,6 +565,34 @@ class EntityRegistry:
 
         if description is not None:
             entity.description = description.strip() if description.strip() else None
+
+        # Phase 1: Handle tags update
+        if tags is not None:
+            normalized_tags = []
+            seen_tags = set()
+            for tag in tags:
+                normalized_tag = tag.lower().strip()
+                if normalized_tag and normalized_tag not in seen_tags:
+                    normalized_tags.append(normalized_tag)
+                    seen_tags.add(normalized_tag)
+            entity.tags = sorted(normalized_tags)
+
+        # Phase 2: Handle entity_type update
+        if entity_type is not None:
+            valid_types = ("room", "outdoor", "campus", "building", "floor", "department")
+            if entity_type not in valid_types:
+                return False, f"entity_type must be one of {valid_types}"
+            entity.entity_type = entity_type
+
+        # Phase 3: Handle non-room entity fields
+        if level_number is not None:
+            entity.level_number = level_number
+
+        if child_ids is not None:
+            entity.child_ids = child_ids.copy()
+
+        if office_room_ids is not None:
+            entity.office_room_ids = office_room_ids.copy()
 
         if status is not None:
             if status not in ("active", "inactive"):
@@ -614,6 +735,19 @@ class EntityRegistry:
             landmarks = str(data.get('landmarks', '')).strip() or None
             description = str(data.get('description', '')).strip() or None
 
+            # Phase 1: Parse tags
+            tags = data.get('tags', [])
+            if isinstance(tags, str):
+                tags = [t.strip().lower() for t in tags.split(';') if t.strip()]
+            else:
+                tags = [t.lower().strip() for t in tags if t]
+            tags = sorted(set(tags))  # Deduplicate and sort
+
+            # Phase 2: Determine entity_type
+            entity_type = data.get('entity_type', '')
+            if not entity_type:
+                entity_type = "outdoor" if building == "_OUTDOOR" else "room"
+
             status = str(data.get('status', 'active')).strip().lower()
             if status not in ('active', 'inactive'):
                 status = 'active'
@@ -629,6 +763,8 @@ class EntityRegistry:
                 'department': department,
                 'landmarks': landmarks,
                 'description': description,
+                'tags': tags,
+                'entity_type': entity_type,
                 'status': status,
                 'is_new': entity_id not in self.entities
             })
@@ -655,6 +791,8 @@ class EntityRegistry:
                     department=entity_data['department'],
                     landmarks=entity_data['landmarks'],
                     description=entity_data['description'],
+                    tags=entity_data['tags'],
+                    entity_type=entity_data['entity_type'],
                     status=entity_data['status'],
                     last_updated=datetime.now().isoformat()
                 )
@@ -672,6 +810,8 @@ class EntityRegistry:
                 entity.department = entity_data['department']
                 entity.landmarks = entity_data['landmarks']
                 entity.description = entity_data['description']
+                entity.tags = entity_data['tags']
+                entity.entity_type = entity_data['entity_type']
                 entity.status = entity_data['status']
                 entity.last_updated = datetime.now().isoformat()
                 stats["updated"] += 1

@@ -4548,12 +4548,14 @@ async def list_cqe_campuses():
 
 @app.post("/admin/cqe/campus", dependencies=[Depends(verify_admin_session)])
 async def create_cqe_campus(data: CampusCreate):
-    """Create a new campus."""
+    """
+    Create a new campus.
+
+    Phase 3 (Arch Remediation): Persists to JSON via EntityRegistry.
+    """
     if not CAMPUS_QUERY_ENGINE_ENABLED:
         raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
 
-    # Since campuses are auto-created from flat entities, we add a placeholder room
-    # to create the campus in the index
     from campus_schema import generate_campus_id
     campus_id = generate_campus_id(data.name)
 
@@ -4561,24 +4563,36 @@ async def create_cqe_campus(data: CampusCreate):
     if campus_id in index.campuses:
         raise HTTPException(status_code=400, detail=f"Campus '{data.name}' already exists")
 
-    # Add campus to index manually for now
-    from campus_schema import Campus
-    campus = Campus(
-        campus_id=campus_id,
-        name=data.name,
+    # Phase 3: Persist via EntityRegistry
+    success, message = entity_registry.add_entity(
+        entity_id=campus_id,
+        canonical_name=data.name,
         aliases=data.aliases or [data.name.lower()],
-        description=data.description,  # Phase 5
-        landmarks=data.landmarks        # Phase 5
+        building="",  # Campus has no building
+        floor="",     # Campus has no floor
+        campus=data.name,  # Campus name is self-referential
+        entity_type="campus",
+        description=data.description,
+        landmarks=data.landmarks,
+        child_ids=[]  # Buildings will be added later
     )
-    index.campuses[campus_id] = campus
-    index._index_campus_aliases(campus)
+
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    # Rebuild CQE index from JSON
+    entity_manager.rebuild_index()
 
     return {"status": "success", "campus_id": campus_id, "message": f"Campus '{data.name}' created"}
 
 
 @app.put("/admin/cqe/campus/{campus_id}", dependencies=[Depends(verify_admin_session)])
 async def update_cqe_campus(campus_id: str, data: CampusUpdate):
-    """Update an existing campus."""
+    """
+    Update an existing campus.
+
+    Phase 3 (Arch Remediation): Persists to JSON via EntityRegistry.
+    """
     if not CAMPUS_QUERY_ENGINE_ENABLED:
         raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
 
@@ -4586,15 +4600,37 @@ async def update_cqe_campus(campus_id: str, data: CampusUpdate):
     if campus_id not in index.campuses:
         raise HTTPException(status_code=404, detail=f"Campus '{campus_id}' not found")
 
-    campus = index.campuses[campus_id]
-    if data.name:
-        campus.name = data.name
-    if data.aliases is not None:
-        campus.aliases = data.aliases
-    if data.description is not None:  # Phase 5
-        campus.description = data.description
-    if data.landmarks is not None:    # Phase 5
-        campus.landmarks = data.landmarks
+    # Phase 3: Check if entity exists in registry, if not create it first
+    if campus_id not in entity_registry.entities:
+        # Entity only exists in index, create it in registry first
+        campus = index.campuses[campus_id]
+        entity_registry.add_entity(
+            entity_id=campus_id,
+            canonical_name=campus.name,
+            aliases=campus.aliases,
+            building="",
+            floor="",
+            campus=campus.name,
+            entity_type="campus",
+            description=getattr(campus, 'description', None),
+            landmarks=getattr(campus, 'landmarks', None),
+            child_ids=campus.building_ids
+        )
+
+    # Phase 3: Update via EntityRegistry
+    success, message = entity_registry.update_entity(
+        entity_id=campus_id,
+        canonical_name=data.name if data.name else None,
+        aliases=data.aliases if data.aliases is not None else None,
+        description=data.description if data.description is not None else None,
+        landmarks=data.landmarks if data.landmarks is not None else None
+    )
+
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    # Rebuild CQE index from JSON
+    entity_manager.rebuild_index()
 
     return {"status": "success", "message": f"Campus '{campus_id}' updated"}
 
@@ -4640,11 +4676,15 @@ async def list_cqe_buildings(campus_id: Optional[str] = None):
 
 @app.post("/admin/cqe/building", dependencies=[Depends(verify_admin_session)])
 async def create_cqe_building(data: BuildingCreate):
-    """Create a new building."""
+    """
+    Create a new building.
+
+    Phase 3 (Arch Remediation): Persists to JSON via EntityRegistry.
+    """
     if not CAMPUS_QUERY_ENGINE_ENABLED:
         raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
 
-    from campus_schema import generate_building_id, Building
+    from campus_schema import generate_building_id
     building_id = generate_building_id(data.name)
 
     index = entity_manager.get_index()
@@ -4654,28 +4694,39 @@ async def create_cqe_building(data: BuildingCreate):
     if data.campus_id not in index.campuses:
         raise HTTPException(status_code=400, detail=f"Campus '{data.campus_id}' not found")
 
-    building = Building(
-        building_id=building_id,
-        name=data.name,
-        aliases=data.aliases or [data.name.lower()],
-        campus_id=data.campus_id,
-        description=data.description,  # Phase 5
-        landmarks=data.landmarks        # Phase 5
-    )
-    index.buildings[building_id] = building
-    index._index_building_aliases(building)
-    index.buildings_by_campus[data.campus_id].append(building_id)
+    # Get campus name from index
+    campus_name = index.campuses[data.campus_id].name
 
-    # Add to campus
-    if building_id not in index.campuses[data.campus_id].building_ids:
-        index.campuses[data.campus_id].building_ids.append(building_id)
+    # Phase 3: Persist via EntityRegistry
+    success, message = entity_registry.add_entity(
+        entity_id=building_id,
+        canonical_name=data.name,
+        aliases=data.aliases or [data.name.lower()],
+        building=data.name,  # Building name stored in building field
+        floor="",            # Building has no floor
+        campus=campus_name,
+        entity_type="building",
+        description=data.description,
+        landmarks=data.landmarks,
+        child_ids=[]  # Floors will be added later
+    )
+
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    # Rebuild CQE index from JSON
+    entity_manager.rebuild_index()
 
     return {"status": "success", "building_id": building_id, "message": f"Building '{data.name}' created"}
 
 
 @app.put("/admin/cqe/building/{building_id}", dependencies=[Depends(verify_admin_session)])
 async def update_cqe_building(building_id: str, data: BuildingUpdate):
-    """Update an existing building."""
+    """
+    Update an existing building.
+
+    Phase 3 (Arch Remediation): Persists to JSON via EntityRegistry.
+    """
     if not CAMPUS_QUERY_ENGINE_ENABLED:
         raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
 
@@ -4684,16 +4735,49 @@ async def update_cqe_building(building_id: str, data: BuildingUpdate):
         raise HTTPException(status_code=404, detail=f"Building '{building_id}' not found")
 
     building = index.buildings[building_id]
+
+    # Phase 3: Check if entity exists in registry, if not create it first
+    if building_id not in entity_registry.entities:
+        # Get campus name
+        campus_name = index.campuses.get(building.campus_id, None)
+        campus_name = campus_name.name if campus_name else "Main Campus"
+
+        entity_registry.add_entity(
+            entity_id=building_id,
+            canonical_name=building.name,
+            aliases=building.aliases,
+            building=building.name,
+            floor="",
+            campus=campus_name,
+            entity_type="building",
+            description=getattr(building, 'description', None),
+            landmarks=getattr(building, 'landmarks', None),
+            child_ids=building.floor_ids
+        )
+
+    # Phase 3: Update via EntityRegistry
+    update_fields = {}
     if data.name:
-        building.name = data.name
+        update_fields['canonical_name'] = data.name
+        update_fields['building'] = data.name
     if data.aliases is not None:
-        building.aliases = data.aliases
+        update_fields['aliases'] = data.aliases
     if data.campus_id:
-        building.campus_id = data.campus_id
-    if data.description is not None:  # Phase 5
-        building.description = data.description
-    if data.landmarks is not None:    # Phase 5
-        building.landmarks = data.landmarks
+        campus = index.campuses.get(data.campus_id)
+        if campus:
+            update_fields['campus'] = campus.name
+    if data.description is not None:
+        update_fields['description'] = data.description
+    if data.landmarks is not None:
+        update_fields['landmarks'] = data.landmarks
+
+    if update_fields:
+        success, message = entity_registry.update_entity(entity_id=building_id, **update_fields)
+        if not success:
+            raise HTTPException(status_code=400, detail=message)
+
+        # Rebuild CQE index from JSON
+        entity_manager.rebuild_index()
 
     return {"status": "success", "message": f"Building '{building_id}' updated"}
 
@@ -4782,45 +4866,60 @@ async def list_cqe_floors(building_id: Optional[str] = None):
 
 @app.post("/admin/cqe/floor", dependencies=[Depends(verify_admin_session)])
 async def create_cqe_floor(data: FloorCreate):
-    """Create a new floor."""
+    """
+    Create a new floor.
+
+    Phase 3 (Arch Remediation): Persists to JSON via EntityRegistry.
+    """
     if not CAMPUS_QUERY_ENGINE_ENABLED:
         raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
 
-    from campus_schema import Floor, FloorLevel, generate_floor_id
+    from campus_schema import generate_floor_id
 
     index = entity_manager.get_index()
     if data.building_id not in index.buildings:
         raise HTTPException(status_code=400, detail=f"Building '{data.building_id}' not found")
 
-    # Determine floor level from level_number
-    floor_level = FloorLevel.from_number(data.level_number) if hasattr(FloorLevel, 'from_number') else FloorLevel.GROUND
-    floor_id = generate_floor_id(data.building_id, floor_level)
+    # Generate floor_id using level_number directly (supports any level, not just -1 to 5)
+    floor_id = generate_floor_id(data.building_id, data.level_number)
 
     if floor_id in index.floors:
         raise HTTPException(status_code=400, detail=f"Floor already exists for level {data.level_number}")
 
-    floor = Floor(
-        floor_id=floor_id,
-        building_id=data.building_id,
-        level=floor_level,
-        level_number=data.level_number,
-        display_name=data.display_name,
-        aliases=data.aliases or []
-    )
-    index.floors[floor_id] = floor
-    index._index_floor_aliases(floor)
-    index.floors_by_building[data.building_id].append(floor_id)
+    # Get building and campus info
+    building = index.buildings[data.building_id]
+    campus = index.campuses.get(building.campus_id)
+    campus_name = campus.name if campus else "Main Campus"
 
-    # Add to building
-    if floor_id not in index.buildings[data.building_id].floor_ids:
-        index.buildings[data.building_id].floor_ids.append(floor_id)
+    # Phase 3: Persist via EntityRegistry
+    success, message = entity_registry.add_entity(
+        entity_id=floor_id,
+        canonical_name=data.display_name,
+        aliases=data.aliases or [],
+        building=building.name,
+        floor=data.display_name,
+        campus=campus_name,
+        entity_type="floor",
+        level_number=data.level_number,
+        child_ids=[]  # Rooms will be added later
+    )
+
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    # Rebuild CQE index from JSON
+    entity_manager.rebuild_index()
 
     return {"status": "success", "floor_id": floor_id, "message": f"Floor '{data.display_name}' created"}
 
 
 @app.put("/admin/cqe/floor/{floor_id}", dependencies=[Depends(verify_admin_session)])
 async def update_cqe_floor(floor_id: str, data: FloorUpdate):
-    """Update an existing floor."""
+    """
+    Update an existing floor.
+
+    Phase 3 (Arch Remediation): Persists to JSON via EntityRegistry.
+    """
     if not CAMPUS_QUERY_ENGINE_ENABLED:
         raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
 
@@ -4829,12 +4928,43 @@ async def update_cqe_floor(floor_id: str, data: FloorUpdate):
         raise HTTPException(status_code=404, detail=f"Floor '{floor_id}' not found")
 
     floor = index.floors[floor_id]
+
+    # Phase 3: Check if entity exists in registry, if not create it first
+    if floor_id not in entity_registry.entities:
+        building = index.buildings.get(floor.building_id)
+        campus = index.campuses.get(building.campus_id) if building else None
+        campus_name = campus.name if campus else "Main Campus"
+        building_name = building.name if building else ""
+
+        entity_registry.add_entity(
+            entity_id=floor_id,
+            canonical_name=floor.display_name,
+            aliases=floor.aliases,
+            building=building_name,
+            floor=floor.display_name,
+            campus=campus_name,
+            entity_type="floor",
+            level_number=floor.level_number,
+            child_ids=floor.room_ids
+        )
+
+    # Phase 3: Update via EntityRegistry
+    update_fields = {}
     if data.display_name:
-        floor.display_name = data.display_name
+        update_fields['canonical_name'] = data.display_name
+        update_fields['floor'] = data.display_name
     if data.aliases is not None:
-        floor.aliases = data.aliases
+        update_fields['aliases'] = data.aliases
     if data.level_number is not None:
-        floor.level_number = data.level_number
+        update_fields['level_number'] = data.level_number
+
+    if update_fields:
+        success, message = entity_registry.update_entity(entity_id=floor_id, **update_fields)
+        if not success:
+            raise HTTPException(status_code=400, detail=message)
+
+        # Rebuild CQE index from JSON
+        entity_manager.rebuild_index()
 
     return {"status": "success", "message": f"Floor '{floor_id}' updated"}
 
@@ -4973,8 +5103,7 @@ async def create_cqe_room(data: RoomCreate):
     if not success:
         raise HTTPException(status_code=400, detail=message)
 
-    # Rebuild CQE index
-    rebuild_cqe_index()
+    # Phase 4: EntityManager.create_entity() already calls rebuild_index() internally
 
     return {
         "status": "success",
@@ -5030,8 +5159,7 @@ async def update_cqe_room(room_id: str, data: RoomUpdate):
     if not success:
         raise HTTPException(status_code=400, detail=message)
 
-    # Rebuild CQE index
-    rebuild_cqe_index()
+    # Phase 4: EntityManager.update_entity() already calls rebuild_index() internally
 
     return {
         "status": "success",
@@ -5059,8 +5187,7 @@ async def delete_cqe_room(room_id: str, hard: bool = False):
     if not success:
         raise HTTPException(status_code=400, detail=message)
 
-    # Rebuild CQE index
-    rebuild_cqe_index()
+    # Phase 4: EntityManager.delete_entity() already calls rebuild_index() internally
 
     return {
         "status": "success",
@@ -5141,8 +5268,7 @@ async def create_cqe_outdoor_location(data: OutdoorCreate):
     if not success:
         raise HTTPException(status_code=400, detail=message)
 
-    # Rebuild CQE index
-    rebuild_cqe_index()
+    # Phase 4: EntityManager.create_entity() already calls rebuild_index() internally
 
     return {
         "status": "success",
@@ -5191,8 +5317,7 @@ async def update_cqe_outdoor_location(location_id: str, data: OutdoorUpdate):
     if not success:
         raise HTTPException(status_code=400, detail=message)
 
-    # Rebuild CQE index
-    rebuild_cqe_index()
+    # Phase 4: EntityManager.update_entity() already calls rebuild_index() internally
 
     return {
         "status": "success",
@@ -5214,8 +5339,7 @@ async def delete_cqe_outdoor_location(location_id: str, hard: bool = False):
     if not success:
         raise HTTPException(status_code=400, detail=message)
 
-    # Rebuild CQE index
-    rebuild_cqe_index()
+    # Phase 4: EntityManager.delete_entity() already calls rebuild_index() internally
 
     return {
         "status": "success",
@@ -5248,34 +5372,55 @@ async def list_cqe_departments_full():
 
 @app.post("/admin/cqe/department", dependencies=[Depends(verify_admin_session)])
 async def create_cqe_department(data: DepartmentCreate):
-    """Create a new department."""
+    """
+    Create a new department.
+
+    Phase 3 (Arch Remediation): Persists to JSON via EntityRegistry.
+    """
     if not CAMPUS_QUERY_ENGINE_ENABLED:
         raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
 
-    from campus_schema import Department, normalize_id
+    from campus_schema import normalize_id
     department_id = normalize_id(data.name)
 
     index = entity_manager.get_index()
     if department_id in index.departments:
         raise HTTPException(status_code=400, detail=f"Department '{data.name}' already exists")
 
-    department = Department(
-        department_id=department_id,
-        name=data.name,
+    # Get campus name
+    campus = index.campuses.get(data.campus_id)
+    campus_name = campus.name if campus else "Main Campus"
+
+    # Phase 3: Persist via EntityRegistry
+    success, message = entity_registry.add_entity(
+        entity_id=department_id,
+        canonical_name=data.name,
         aliases=data.aliases or [data.name.lower()],
-        campus_id=data.campus_id,
+        building="",  # Department has no building
+        floor="",     # Department has no floor
+        campus=campus_name,
+        entity_type="department",
         description=data.description,
-        landmarks=data.landmarks  # Phase 5
+        landmarks=data.landmarks,
+        office_room_ids=[]  # Office rooms will be added later
     )
-    index.departments[department_id] = department
-    index._index_department_aliases(department)
+
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    # Rebuild CQE index from JSON
+    entity_manager.rebuild_index()
 
     return {"status": "success", "department_id": department_id, "message": f"Department '{data.name}' created"}
 
 
 @app.put("/admin/cqe/department/{department_id}", dependencies=[Depends(verify_admin_session)])
 async def update_cqe_department(department_id: str, data: DepartmentUpdate):
-    """Update an existing department."""
+    """
+    Update an existing department.
+
+    Phase 3 (Arch Remediation): Persists to JSON via EntityRegistry.
+    """
     if not CAMPUS_QUERY_ENGINE_ENABLED:
         raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
 
@@ -5284,16 +5429,47 @@ async def update_cqe_department(department_id: str, data: DepartmentUpdate):
         raise HTTPException(status_code=404, detail=f"Department '{department_id}' not found")
 
     dept = index.departments[department_id]
+
+    # Phase 3: Check if entity exists in registry, if not create it first
+    if department_id not in entity_registry.entities:
+        campus = index.campuses.get(dept.campus_id)
+        campus_name = campus.name if campus else "Main Campus"
+
+        entity_registry.add_entity(
+            entity_id=department_id,
+            canonical_name=dept.name,
+            aliases=dept.aliases,
+            building="",
+            floor="",
+            campus=campus_name,
+            entity_type="department",
+            description=dept.description,
+            landmarks=getattr(dept, 'landmarks', None),
+            office_room_ids=dept.office_room_ids
+        )
+
+    # Phase 3: Update via EntityRegistry
+    update_fields = {}
     if data.name:
-        dept.name = data.name
+        update_fields['canonical_name'] = data.name
     if data.aliases is not None:
-        dept.aliases = data.aliases
+        update_fields['aliases'] = data.aliases
     if data.campus_id is not None:
-        dept.campus_id = data.campus_id
+        campus = index.campuses.get(data.campus_id)
+        if campus:
+            update_fields['campus'] = campus.name
     if data.description is not None:
-        dept.description = data.description
-    if data.landmarks is not None:  # Phase 5
-        dept.landmarks = data.landmarks
+        update_fields['description'] = data.description
+    if data.landmarks is not None:
+        update_fields['landmarks'] = data.landmarks
+
+    if update_fields:
+        success, message = entity_registry.update_entity(entity_id=department_id, **update_fields)
+        if not success:
+            raise HTTPException(status_code=400, detail=message)
+
+        # Rebuild CQE index from JSON
+        entity_manager.rebuild_index()
 
     return {"status": "success", "message": f"Department '{department_id}' updated"}
 

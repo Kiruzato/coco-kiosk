@@ -106,6 +106,10 @@ class CampusQueryIndex:
         """
         Load index from flat v1.x directory_entities.json format.
 
+        Phase 3 (Arch Remediation): Now processes entity_type field to load
+        Campus, Building, Floor, Department entities directly from JSON,
+        in addition to deriving them from room entities.
+
         This is the primary loading method for existing data.
 
         Args:
@@ -126,12 +130,147 @@ class CampusQueryIndex:
 
             entities = data.get('entities', [])
 
-            # First pass: collect unique campuses, buildings, floors
+            # Phase 3: First pass - load explicitly stored entities by type
+            explicit_campuses = {}  # campus_id -> entity dict
+            explicit_buildings = {}  # building_id -> entity dict
+            explicit_floors = {}  # floor_id -> entity dict
+            explicit_departments = {}  # dept_id -> entity dict
+
+            for entity in entities:
+                entity_type = entity.get('entity_type', 'room')
+
+                if entity_type == 'campus':
+                    campus_id = entity.get('entity_id', '').upper()
+                    if campus_id:
+                        explicit_campuses[campus_id] = entity
+                elif entity_type == 'building':
+                    building_id = entity.get('entity_id', '').upper()
+                    if building_id:
+                        explicit_buildings[building_id] = entity
+                elif entity_type == 'floor':
+                    floor_id = entity.get('entity_id', '').upper()
+                    if floor_id:
+                        explicit_floors[floor_id] = entity
+                elif entity_type == 'department':
+                    dept_id = entity.get('entity_id', '').upper()
+                    if dept_id:
+                        explicit_departments[dept_id] = entity
+
+            # Load explicit Campus entities
+            for campus_id, entity in explicit_campuses.items():
+                aliases = entity.get('aliases', [])
+                if isinstance(aliases, str):
+                    aliases = [a.strip().lower() for a in aliases.split(';') if a.strip()]
+                campus = Campus(
+                    campus_id=campus_id,
+                    name=entity.get('canonical_name', campus_id),
+                    aliases=aliases,
+                    building_ids=entity.get('child_ids', []),
+                    description=entity.get('description'),
+                    landmarks=entity.get('landmarks')
+                )
+                self.campuses[campus_id] = campus
+                self._index_campus_aliases(campus)
+                logger.debug(f"[Phase3] Loaded explicit campus: {campus_id}")
+
+            # Load explicit Building entities
+            for building_id, entity in explicit_buildings.items():
+                aliases = entity.get('aliases', [])
+                if isinstance(aliases, str):
+                    aliases = [a.strip().lower() for a in aliases.split(';') if a.strip()]
+                campus_name = entity.get('campus', 'Main Campus')
+                campus_id = generate_campus_id(campus_name)
+                building = Building(
+                    building_id=building_id,
+                    name=entity.get('canonical_name', entity.get('building', building_id)),
+                    aliases=aliases,
+                    campus_id=campus_id,
+                    floor_ids=entity.get('child_ids', []),
+                    description=entity.get('description'),
+                    landmarks=entity.get('landmarks')
+                )
+                self.buildings[building_id] = building
+                self._index_building_aliases(building)
+
+                # Add to campus
+                if campus_id not in self.campuses:
+                    # Create campus if not explicitly stored
+                    campus = Campus(campus_id=campus_id, name=campus_name, aliases=[campus_name.lower()])
+                    self.campuses[campus_id] = campus
+                    self._index_campus_aliases(campus)
+                if building_id not in self.campuses[campus_id].building_ids:
+                    self.campuses[campus_id].building_ids.append(building_id)
+                if building_id not in self.buildings_by_campus[campus_id]:
+                    self.buildings_by_campus[campus_id].append(building_id)
+
+                logger.debug(f"[Phase3] Loaded explicit building: {building_id}")
+
+            # Load explicit Floor entities
+            for floor_id, entity in explicit_floors.items():
+                aliases = entity.get('aliases', [])
+                if isinstance(aliases, str):
+                    aliases = [a.strip().lower() for a in aliases.split(';') if a.strip()]
+                building_name = entity.get('building', '')
+                building_id = generate_building_id(building_name) if building_name else ''
+                floor_str = entity.get('floor', entity.get('canonical_name', ''))
+                floor_level = FloorLevel.from_string(floor_str)
+                level_number = entity.get('level_number')
+                if level_number is None:
+                    level_number = floor_level_to_number(floor_level)
+
+                floor = Floor(
+                    floor_id=floor_id,
+                    building_id=building_id,
+                    level=floor_level,
+                    display_name=entity.get('canonical_name', floor_str),
+                    level_number=level_number,
+                    aliases=aliases
+                )
+                self.floors[floor_id] = floor
+                self._index_floor_aliases(floor)
+
+                # Add to building
+                if building_id and building_id in self.buildings:
+                    if floor_id not in self.buildings[building_id].floor_ids:
+                        self.buildings[building_id].floor_ids.append(floor_id)
+                if building_id and floor_id not in self.floors_by_building[building_id]:
+                    self.floors_by_building[building_id].append(floor_id)
+
+                logger.debug(f"[Phase3] Loaded explicit floor: {floor_id}")
+
+            # Load explicit Department entities
+            for dept_id, entity in explicit_departments.items():
+                aliases = entity.get('aliases', [])
+                if isinstance(aliases, str):
+                    aliases = [a.strip().lower() for a in aliases.split(';') if a.strip()]
+                campus_name = entity.get('campus', 'Main Campus')
+                campus_id = generate_campus_id(campus_name)
+                dept = Department(
+                    department_id=dept_id,
+                    name=entity.get('canonical_name', dept_id),
+                    aliases=aliases,
+                    campus_id=campus_id,
+                    office_room_ids=entity.get('office_room_ids', []),
+                    description=entity.get('description'),
+                    landmarks=entity.get('landmarks'),
+                    status=entity.get('status', 'active')
+                )
+                self.departments[dept_id] = dept
+                self._index_department_aliases(dept)
+                logger.debug(f"[Phase3] Loaded explicit department: {dept_id}")
+
+            # Second pass: collect unique campuses, buildings, floors from room entities
+            # (for backward compatibility - derive from rooms if not explicitly stored)
             campus_names: Set[str] = set()
             building_names: Dict[str, str] = {}  # building_name -> campus_id
             floor_keys: Set[Tuple[str, str, str]] = set()  # (building_id, floor_str, campus_id)
 
             for entity in entities:
+                entity_type = entity.get('entity_type', 'room')
+                # Only process room entities for deriving hierarchy
+                if entity_type not in ('room',):
+                    continue
+
                 campus_name = entity.get('campus', 'Main Campus')
                 building_name = entity.get('building', 'Unknown Building')
                 floor_str = entity.get('floor', 'Ground Floor')
@@ -152,39 +291,41 @@ class CampusQueryIndex:
                 building_names[building_name] = campus_id
                 floor_keys.add((building_id, floor_str, campus_id))
 
-            # Create Campus entities
+            # Create Campus entities (only if not already explicitly loaded)
             for campus_name in campus_names:
                 campus_id = generate_campus_id(campus_name)
-                campus = Campus(
-                    campus_id=campus_id,
-                    name=campus_name,
-                    aliases=[campus_name.lower()]
-                )
-                self.campuses[campus_id] = campus
-                self._index_campus_aliases(campus)
+                if campus_id not in self.campuses:
+                    campus = Campus(
+                        campus_id=campus_id,
+                        name=campus_name,
+                        aliases=[campus_name.lower()]
+                    )
+                    self.campuses[campus_id] = campus
+                    self._index_campus_aliases(campus)
 
-            # Create Building entities
+            # Create Building entities (only if not already explicitly loaded)
             for building_name, campus_id in building_names.items():
                 building_id = generate_building_id(building_name)
 
-                # Generate aliases
-                aliases = [building_name.lower()]
-                # Add common variations
-                name_lower = building_name.lower()
-                if "building" in name_lower:
-                    aliases.append(name_lower.replace(" building", ""))
-                    aliases.append(name_lower.replace("building", "").strip())
+                if building_id not in self.buildings:
+                    # Generate aliases
+                    aliases = [building_name.lower()]
+                    # Add common variations
+                    name_lower = building_name.lower()
+                    if "building" in name_lower:
+                        aliases.append(name_lower.replace(" building", ""))
+                        aliases.append(name_lower.replace("building", "").strip())
 
-                building = Building(
-                    building_id=building_id,
-                    name=building_name,
-                    aliases=aliases,
-                    campus_id=campus_id
-                )
-                self.buildings[building_id] = building
-                self._index_building_aliases(building)
+                    building = Building(
+                        building_id=building_id,
+                        name=building_name,
+                        aliases=aliases,
+                        campus_id=campus_id
+                    )
+                    self.buildings[building_id] = building
+                    self._index_building_aliases(building)
 
-                # Add to campus
+                # Add to campus (always update relationship)
                 if campus_id in self.campuses:
                     if building_id not in self.campuses[campus_id].building_ids:
                         self.campuses[campus_id].building_ids.append(building_id)
@@ -193,27 +334,29 @@ class CampusQueryIndex:
                 if building_id not in self.buildings_by_campus[campus_id]:
                     self.buildings_by_campus[campus_id].append(building_id)
 
-            # Create Floor entities
+            # Create Floor entities (only if not already explicitly loaded)
             for building_id, floor_str, campus_id in floor_keys:
                 floor_level = FloorLevel.from_string(floor_str)
                 floor_id = generate_floor_id(building_id, floor_level)
-                level_number = floor_level_to_number(floor_level)
 
-                # Generate floor aliases
-                floor_aliases = self._generate_floor_aliases(floor_str, level_number)
+                if floor_id not in self.floors:
+                    level_number = floor_level_to_number(floor_level)
 
-                floor = Floor(
-                    floor_id=floor_id,
-                    building_id=building_id,
-                    level=floor_level,
-                    display_name=floor_str,
-                    level_number=level_number,
-                    aliases=floor_aliases
-                )
-                self.floors[floor_id] = floor
-                self._index_floor_aliases(floor)
+                    # Generate floor aliases
+                    floor_aliases = self._generate_floor_aliases(floor_str, level_number)
 
-                # Add to building
+                    floor = Floor(
+                        floor_id=floor_id,
+                        building_id=building_id,
+                        level=floor_level,
+                        display_name=floor_str,
+                        level_number=level_number,
+                        aliases=floor_aliases
+                    )
+                    self.floors[floor_id] = floor
+                    self._index_floor_aliases(floor)
+
+                # Add to building (always update relationship)
                 if building_id in self.buildings:
                     if floor_id not in self.buildings[building_id].floor_ids:
                         self.buildings[building_id].floor_ids.append(floor_id)
@@ -222,13 +365,20 @@ class CampusQueryIndex:
                 if floor_id not in self.floors_by_building[building_id]:
                     self.floors_by_building[building_id].append(floor_id)
 
-            # Second pass: create Room and OutdoorLocation entities
+            # Third pass: create Room and OutdoorLocation entities
             for entity in entities:
+                entity_type = entity.get('entity_type', 'room')
+
+                # Skip non-location entity types (they were processed in first pass)
+                if entity_type in ('campus', 'building', 'floor', 'department'):
+                    continue
+
                 building_name = entity.get('building', '')
                 floor_str = entity.get('floor', '')
 
-                # Phase 55: Check for outdoor location marker
+                # Phase 55: Check for outdoor location marker or explicit outdoor type
                 is_outdoor = (
+                    entity_type == 'outdoor' or
                     building_name.upper() == OUTDOOR_MARKER or
                     floor_str.upper() == OUTDOOR_MARKER
                 )
@@ -236,6 +386,7 @@ class CampusQueryIndex:
                 if is_outdoor:
                     outdoor = self._convert_to_outdoor_location(entity)
                     if outdoor:
+                        self.outdoor_locations[outdoor.location_id] = outdoor
                         self._index_outdoor_location(outdoor)
                 else:
                     room = self._convert_flat_entity_to_room(entity)
@@ -435,9 +586,9 @@ class CampusQueryIndex:
             return RoomType.from_string(entity['room_type'])
 
         # Infer from canonical name
-        canonical = entity.get('canonical_name', '').lower()
-        entity_id = entity.get('entity_id', '').lower()
-        description = entity.get('description', '').lower()
+        canonical = (entity.get('canonical_name') or '').lower()
+        entity_id = (entity.get('entity_id') or '').lower()
+        description = (entity.get('description') or '').lower()
 
         # Classroom detection
         if any(kw in canonical for kw in ['classroom', 'lecture', 'class room']):

@@ -1,189 +1,101 @@
-Act as a senior engineer. Execute the following refactor in strict order.
+# 📌 Antigravity Claude Opus – CQE Architecture Audit Prompt
 
-Do not redesign architecture.
-Do not propose alternatives.
-Do not expand scope.
-Keep responses concise and implementation-focused.
-Ask only blocking questions if absolutely necessary.
+Act as a senior systems architect performing a comprehensive architectural audit.
 
----
+You are reviewing the current CQE implementation against the specification defined in:
 
-# PHASE 1 — Fix JSON Persistence (Highest Priority)
+`cqe_architecture_checklist.md`
 
-Stabilize entity persistence:
+Your objective is to evaluate whether the system faithfully implements the intended JSON-based CQE architecture, including:
 
-* Ensure a single source-of-truth JSON file.
-* Implement atomic write (write to temp file → replace original).
-* Implement file lock during writes.
-* Rebuild CQE index only after successful write.
-* Ensure create/edit/delete survive restart.
-
-Do not introduce database.
-Do not implement reload-merge logic.
-Keep solution minimal for single-process FastAPI + Uvicorn.
-
-Verify persistence stability before continuing.
+* Single source-of-truth integrity
+* Full schema correctness
+* Admin management wiring
+* Deletion rule enforcement
+* Data load and restart integrity
+* Proper schema integration into CQE
+* Deterministic index rebuilding
+* Structural consistency of the admin UI
+* Absence of architectural drift
 
 ---
 
-# PHASE 2 — Absorb Legacy Directory
+## Audit Expectations
 
-* Fully absorb Directory Engine into CQE.
-* Remove `/admin#entities` UI and backend routes.
-* Backup removed legacy code to a folder in project root.
-* Ensure only one admin data path and one index builder remain.
+Perform a deep, implementation-aware review.
 
----
+For each section in the checklist:
 
-# PHASE 3 — Enforce Deletion Rules (Server-Side Only)
+1. Determine whether the implementation is:
 
-Floor:
+   * Compliant
+   * Partially compliant
+   * Structurally incorrect
 
-* Block delete if rooms exist.
-* If no rooms, allow delete.
+2. Identify mismatches or inconsistencies.
 
-Building:
+3. For each issue:
 
-* Block delete if any room exists in the building.
-* If no rooms:
+   * Explain the architectural impact.
+   * Identify the root cause.
+   * Apply corrections where appropriate.
 
-  * Show confirmation: building and its floors will be deleted.
-  * Delete building and its floors.
-
-Campus:
-
-* No delete function.
-
-Room & OutdoorLocation:
-
-* Hard delete allowed.
-* Require confirmation.
-* Rebuild index after delete.
-
-Tags:
-
-* Standalone tag registry allowed.
-* Block delete if tag is in use.
-
-IDs:
-
-* All entity IDs immutable (visible but not editable).
+This is not a feature expansion task.
+It is an architectural compliance and integrity review.
 
 ---
 
-# PHASE 4 — Refactor and Integrate Existing CQE Admin
+## Areas of Focus
 
-Refactor the existing `/admin/cqe` implementation and integrate it into `/admin`.
+Give special attention to:
 
-* Move CQE Admin functionality into `/admin` navigation.
-* Remove `/admin/cqe` route after integration.
-* Ensure `/admin#entities` no longer exists.
-* Ensure there is only one entity management interface under `/admin`.
-
-Do not build a new admin from scratch.
-Enhance and restructure the existing CQE Admin.
-
----
-
-## UI Structure Requirements
-
-Under `/admin`, implement sidebar sections:
-
-* Campus
-* Buildings
-* Rooms
-* Outdoor Locations
-* Departments
-* Tags
-
-Remove standalone Floor tab.
+* Whether JSON is truly the only source of truth.
+* Whether all mutations flow through registry → save → rebuild.
+* Whether the CQE index strictly derives from stored entity data.
+* Whether schema fields are fully and correctly integrated into CQE.
+* Whether any schema fields are unused or partially mapped.
+* Whether any CQE logic references outdated or mismatched structure.
+* Whether admin UI operations are fully wired to persistence.
+* Whether deletion rules are deterministic and hierarchy-safe.
+* Whether restart behavior preserves full system integrity.
 
 ---
 
-## Building–Floor Hierarchy
+## Output Structure
 
-In Buildings section:
+Provide:
 
-* Clicking a building expands its floors.
-* Floor rows have edit/delete.
-* “Add Floor” appears only inside expanded building.
-* Floor auto-associates with parent building.
-* Block floor delete if rooms exist.
+### 1. Executive Summary
 
----
+Overall architectural health and maturity of CQE.
 
-## Structured Fields
+### 2. Section-by-Section Evaluation
 
-Use dropdowns for:
+For each major checklist category:
 
-* Campus
-* Building
-* Floor
-* Department
-* Primary type
+* Current state
+* Compliance assessment
+* Observations
 
-No free-text for structured relationships.
+### 3. Identified Issues & Corrections
 
-Implement:
+For each mismatch:
 
-* Search by name
-* Status filter
-* Name sorting
+* Description
+* Impact
+* Root cause
+* Correction applied (if fixed)
 
-Rooms additionally support:
+### 4. Final Verdict
 
-* Filter by campus
-* Filter by building
-* Filter by primary type
+Answer clearly:
 
----
+* Is CQE architecturally consistent?
+* Is it deterministic and restart-safe?
+* Is schema properly integrated into CQE?
+* Is admin fully wired to the source of truth?
+* Is any architectural redundancy remaining?
 
-## Tags Section
+Approach this review with professional judgment and implementation awareness.
 
-Add dedicated Tags section:
-
-* List tags with usage count.
-* Clicking tag shows entities using it.
-* Create tag (unused tags allowed).
-* Delete tag (blocked if in use).
-
-Tags apply to:
-
-* Room
-* OutdoorLocation
-
----
-
-# PHASE 5 — Field Additions
-
-Add and support in Admin + CQE:
-
-Campus:
-
-* description
-* landmarks
-
-Building:
-
-* description
-* landmarks
-
-Department:
-
-* landmarks
-
-Ensure fields persist and appear in CQE responses.
-
----
-
-# Execution Order (Mandatory)
-
-1. Persistence Fix
-2. Directory Absorption
-3. Deletion Rules
-4. CQE Admin Refactor + Integration
-5. Field Additions
-
-Keep output concise.
-Avoid theory and re-explanations.
-Provide only necessary implementation details.
+Begin the audit.

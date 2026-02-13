@@ -363,6 +363,9 @@ class EntityManager:
         # Extract normalized data
         nd = result.normalized_data
 
+        # Determine entity_type from building marker
+        entity_type = "outdoor" if nd['building'] == OUTDOOR_MARKER else "room"
+
         # Create via registry
         success, message = self.registry.add_entity(
             entity_id=nd['entity_id'],
@@ -374,7 +377,9 @@ class EntityManager:
             campus=nd['campus'],
             department=nd['department'],
             landmarks=nd['landmarks'],
-            description=nd['description']
+            description=nd['description'],
+            tags=nd.get('tags', []),
+            entity_type=entity_type
         )
 
         if success:
@@ -444,6 +449,7 @@ class EntityManager:
             department=nd['department'] if 'department' in data else None,
             landmarks=nd['landmarks'] if 'landmarks' in data else None,
             description=nd['description'] if 'description' in data else None,
+            tags=nd['tags'] if 'tags' in data else None,
             status=nd['status'] if 'status' in data else None
         )
 
