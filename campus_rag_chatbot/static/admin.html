@@ -38,10 +38,29 @@
                         </a>
                     </div>
 
-                    <a href="#entities" class="nav-item" data-section="entities">
-                        <span class="nav-icon">&#9679;</span>
-                        <span class="nav-label">Directory Entities</span>
-                    </a>
+                    <div class="nav-group">
+                        <span class="nav-group-label">Campus Directory</span>
+                        <a href="/admin/cqe#campus" class="nav-item">
+                            <span class="nav-icon">&#127963;</span>
+                            <span class="nav-label">Campuses</span>
+                        </a>
+                        <a href="/admin/cqe#building" class="nav-item">
+                            <span class="nav-icon">&#127970;</span>
+                            <span class="nav-label">Buildings</span>
+                        </a>
+                        <a href="/admin/cqe#room" class="nav-item">
+                            <span class="nav-icon">&#128682;</span>
+                            <span class="nav-label">Rooms</span>
+                        </a>
+                        <a href="/admin/cqe#outdoor" class="nav-item">
+                            <span class="nav-icon">&#127795;</span>
+                            <span class="nav-label">Outdoor</span>
+                        </a>
+                        <a href="/admin/cqe#department" class="nav-item">
+                            <span class="nav-icon">&#128188;</span>
+                            <span class="nav-label">Departments</span>
+                        </a>
+                    </div>
 
                     <a href="#voice" class="nav-item" data-section="voice">
                         <span class="nav-icon">&#9834;</span>
@@ -172,71 +191,8 @@
                     </div>
                 </section>
 
-                <!-- Section: Directory Entities -->
-                <section id="section-entities" class="admin-section">
-                    <div class="section-header">
-                        <h2>Directory Entities</h2>
-                        <div class="header-actions">
-                            <button id="addEntityBtn" class="btn-primary">+ Add Entity</button>
-                            <button id="exportEntitiesBtn" class="btn-secondary">&#8595; Export CSV</button>
-                            <button id="importEntitiesTrigger" class="btn-secondary">&#8593; Import CSV</button>
-                            <input type="file" id="importEntitiesInput" accept=".csv" class="hidden">
-                            <button id="refreshEntitiesBtn" class="btn-secondary">&#8635; Refresh</button>
-                            <button id="rebuildIndexBtn" class="btn-secondary" title="Rebuild CQE Index">&#8635; Rebuild Index</button>
-                        </div>
-                    </div>
-
-                    <!-- Phase 55: Index Stats Panel -->
-                    <div id="indexStatsPanel" class="stats-panel card">
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <span class="stat-label">Rooms</span>
-                                <span class="stat-value" id="indexStatRooms">--</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">Outdoor</span>
-                                <span class="stat-value" id="indexStatOutdoor">--</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">Buildings</span>
-                                <span class="stat-value" id="indexStatBuildings">--</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">Campuses</span>
-                                <span class="stat-value" id="indexStatCampuses">--</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">Aliases</span>
-                                <span class="stat-value" id="indexStatAliases">--</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="entitiesLoadingIndicator" class="loading hidden">Loading entities...</div>
-
-                    <div class="card">
-                        <div class="table-container">
-                            <table id="entitiesTable">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Name</th>
-                                        <th>Building</th>
-                                        <th>Floor</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="entitiesBody">
-                                    <tr>
-                                        <td colspan="6" class="empty-state">No entities loaded. Click "Refresh" to load directory entities.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div id="entitiesStats" class="table-stats"></div>
-                    </div>
-                </section>
+                <!-- Directory Entities section removed in Phase 2 -->
+                <!-- Use /admin/cqe for Campus Directory management -->
 
                 <!-- Section: Voice Configuration (Phase 36) -->
                 <section id="section-voice" class="admin-section">
@@ -475,94 +431,7 @@
             </main>
         </div>
 
-        <!-- Entity Modal (shared across sections) -->
-        <div id="entityModal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 id="entityModalTitle">Add Entity</h3>
-                    <button id="closeEntityModal" class="close-btn">&times;</button>
-                </div>
-                <form id="entityForm">
-                    <!-- Phase 55: Entity Type Selector -->
-                    <div class="form-group">
-                        <label>Entity Type *</label>
-                        <div class="radio-group">
-                            <label class="radio-label">
-                                <input type="radio" name="entityType" value="room" checked onchange="toggleEntityType()">
-                                <span>Room / Indoor Location</span>
-                            </label>
-                            <label class="radio-label">
-                                <input type="radio" name="entityType" value="outdoor" onchange="toggleEntityType()">
-                                <span>Outdoor Location</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="entityId">Entity ID *</label>
-                        <input type="text" id="entityId" placeholder="e.g., LIBRARY, CANTEEN" required>
-                        <small>Uppercase identifier, cannot be changed after creation</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="canonicalName">Canonical Name *</label>
-                        <input type="text" id="canonicalName" placeholder="e.g., Main Library" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="aliases">Aliases (comma-separated)</label>
-                        <input type="text" id="aliases" placeholder="e.g., library, reading room">
-                        <small>Alternative names users might use to find this location</small>
-                    </div>
-                    <!-- Phase 55: Tags Input -->
-                    <div class="form-group">
-                        <label for="tags">Tags (comma-separated)</label>
-                        <input type="text" id="tags" placeholder="e.g., sports, outdoor, court">
-                        <small>Categories for filtering (auto-normalized to lowercase)</small>
-                    </div>
-                    <div class="form-row" id="buildingFloorRow">
-                        <div class="form-group">
-                            <label for="building">Building *</label>
-                            <input type="text" id="building" placeholder="e.g., Saint Peter Building" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="floor">Floor *</label>
-                            <input type="text" id="floor" placeholder="e.g., 2nd Floor" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="room">Room</label>
-                        <input type="text" id="room" placeholder="e.g., SP-201">
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="campus">Campus *</label>
-                            <input type="text" id="campus" placeholder="e.g., Main Campus" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="department">Department</label>
-                            <input type="text" id="department" placeholder="e.g., Student Services">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="landmarks">Landmarks</label>
-                        <textarea id="landmarks" rows="2" placeholder="e.g., Located above the Main Lobby"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="description">Description</label>
-                        <textarea id="description" rows="2" placeholder="Brief description of this location"></textarea>
-                    </div>
-                    <div class="form-group" id="statusGroup" style="display: none;">
-                        <label for="entityStatus">Status</label>
-                        <select id="entityStatus">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-                    <div class="modal-actions">
-                        <button type="button" id="cancelEntityBtn" class="btn-secondary">Cancel</button>
-                        <button type="submit" id="saveEntityBtn" class="btn-primary">Save Entity</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <!-- Entity Modal removed in Phase 2 - use /admin/cqe instead -->
     </div>
 
     <script src="/static/admin.js"></script>

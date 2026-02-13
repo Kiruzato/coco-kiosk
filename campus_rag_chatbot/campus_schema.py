@@ -318,23 +318,31 @@ class Floor:
 class Building:
     """
     Represents a building within a campus.
+
+    Phase 5: Added description and landmarks fields.
     """
     building_id: str                    # Unique ID (e.g., "A_BUILDING")
     name: str                           # Display name (e.g., "A Building")
     aliases: List[str] = field(default_factory=list)  # Alternative names
     campus_id: str = ""                 # FK to Campus
     floor_ids: List[str] = field(default_factory=list)  # Child floors
+    description: Optional[str] = None   # Phase 5: Building description
+    landmarks: Optional[str] = None     # Phase 5: Nearby landmarks
 
 
 @dataclass
 class Campus:
     """
     Represents a campus (top-level entity).
+
+    Phase 5: Added description and landmarks fields.
     """
     campus_id: str                      # Unique ID (e.g., "MAIN")
     name: str                           # Display name (e.g., "Main Campus")
     aliases: List[str] = field(default_factory=list)  # Alternative names
     building_ids: List[str] = field(default_factory=list)  # Child buildings
+    description: Optional[str] = None   # Phase 5: Campus description
+    landmarks: Optional[str] = None     # Phase 5: Nearby landmarks
 
 
 @dataclass
@@ -344,6 +352,7 @@ class Department:
 
     Departments can span multiple rooms across buildings.
     Phase 51: Now a first-class entity with FK relationship from Room.
+    Phase 5: Added landmarks field.
     """
     department_id: str                  # Unique ID (e.g., "DEPT_CBA")
     name: str                           # Display name
@@ -351,6 +360,7 @@ class Department:
     campus_id: str = ""                 # Primary campus
     office_room_ids: List[str] = field(default_factory=list)  # Primary offices
     description: Optional[str] = None
+    landmarks: Optional[str] = None     # Phase 5: Nearby landmarks
     status: str = "active"
 
 

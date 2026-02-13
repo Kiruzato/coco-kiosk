@@ -16,12 +16,18 @@ can optionally use the hierarchical CampusQueryIndex for enhanced queries.
 
 import json
 import logging
+import os
+import tempfile
+import threading
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
+
+# Phase 1: Module-level lock for atomic file operations (single-process safety)
+_file_lock = threading.Lock()
 
 
 @dataclass
@@ -243,7 +249,10 @@ class EntityRegistry:
 
     def save_entities(self) -> Tuple[bool, str]:
         """
-        Save all entities to the JSON file.
+        Save all entities to the JSON file atomically.
+
+        Phase 1: Uses temp file + os.replace() for atomic write.
+        Thread-safe via module-level lock.
 
         Returns:
             Tuple of (success: bool, message: str)
@@ -265,8 +274,27 @@ class EntityRegistry:
             }
 
             path = Path(self._json_path)
-            with open(path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
+
+            # Acquire lock for thread safety
+            with _file_lock:
+                # Write to temp file in same directory (ensures same filesystem)
+                fd, temp_path = tempfile.mkstemp(
+                    suffix='.tmp',
+                    prefix='entities_',
+                    dir=path.parent
+                )
+                try:
+                    with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                        json.dump(data, f, indent=2, ensure_ascii=False)
+
+                    # Atomic overwrite using os.replace() - cross-platform safe
+                    os.replace(temp_path, str(path))
+
+                except Exception:
+                    # Cleanup temp file on failure
+                    if os.path.exists(temp_path):
+                        os.unlink(temp_path)
+                    raise
 
             logger.info(f"Saved {len(entities_list)} entities to {self._json_path}")
             return True, f"Saved {len(entities_list)} entities"

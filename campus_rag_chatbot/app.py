@@ -414,38 +414,6 @@ class ResetRequest(BaseModel):
 
 
 # ==============================================================================
-# ENTITY MANAGEMENT MODELS - Phase 10
-# ==============================================================================
-
-class EntityCreate(BaseModel):
-    """Request model for creating a new directory entity."""
-    entity_id: str
-    canonical_name: str
-    aliases: List[str]
-    building: str
-    floor: str
-    room: Optional[str] = None
-    campus: str = "Main Campus"
-    department: Optional[str] = None
-    landmarks: Optional[str] = None
-    description: Optional[str] = None
-
-
-class EntityUpdate(BaseModel):
-    """Request model for updating an existing directory entity."""
-    canonical_name: Optional[str] = None
-    aliases: Optional[List[str]] = None
-    building: Optional[str] = None
-    floor: Optional[str] = None
-    room: Optional[str] = None
-    campus: Optional[str] = None
-    department: Optional[str] = None
-    landmarks: Optional[str] = None
-    description: Optional[str] = None
-    status: Optional[str] = None
-
-
-# ==============================================================================
 # SESSION MANAGEMENT
 # ==============================================================================
 
@@ -4165,374 +4133,32 @@ async def download_test_harness_results():
 
 
 # ==============================================================================
-# ADMIN ENTITY ENDPOINTS - Phase 10
+# LEGACY /admin/entities REDIRECT - Phase 2 Absorption
 # ==============================================================================
 
-@app.get("/admin/entities", dependencies=[Depends(verify_admin_session)])
-async def list_entities():
-    """
-    List all directory entities.
-
-    Returns:
-        List of entities with metadata including status
-    """
-    from dataclasses import asdict
-
-    entities = []
-    for entity in entity_registry.get_all_entities():
-        entity_dict = asdict(entity)
-        entities.append(entity_dict)
-
-    # Sort by entity_id for consistent ordering
-    entities.sort(key=lambda x: x['entity_id'])
-
-    return {
-        "entities": entities,
-        "total": len(entities),
-        "active": len([e for e in entities if e.get('status', 'active') == 'active'])
-    }
-
-
-# ==============================================================================
-# ENTITY CSV IMPORT/EXPORT - Phase 10 Extension
-# Note: These routes MUST be defined before the {entity_id} route
-# ==============================================================================
-
-@app.get("/admin/entities/export", dependencies=[Depends(verify_admin_session)])
-async def export_entities():
-    """
-    Export all directory entities to CSV format.
-
-    Returns:
-        CSV file download with all entities
-    """
-    import csv
-    import io
-    from fastapi.responses import StreamingResponse
-
-    # Create CSV in memory
-    output = io.StringIO()
-    writer = csv.writer(output)
-
-    # Write header
-    headers = [
-        'entity_id', 'canonical_name', 'aliases', 'building', 'floor',
-        'room', 'campus', 'department', 'landmarks', 'description', 'status', 'last_updated'
-    ]
-    writer.writerow(headers)
-
-    # Write entity rows
-    for entity in sorted(entity_registry.get_all_entities(), key=lambda e: e.entity_id):
-        # Join aliases with semicolon
-        aliases_str = ';'.join(entity.aliases) if entity.aliases else ''
-
-        row = [
-            entity.entity_id,
-            entity.canonical_name,
-            aliases_str,
-            entity.building,
-            entity.floor,
-            entity.room or '',
-            entity.campus,
-            entity.department or '',
-            entity.landmarks or '',
-            entity.description or '',
-            entity.status,
-            entity.last_updated or ''
-        ]
-        writer.writerow(row)
-
-    # Prepare response
-    output.seek(0)
-    filename = f"directory_entities_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-
-    return StreamingResponse(
-        iter([output.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
-    )
-
-
-@app.post("/admin/entities/import", dependencies=[Depends(verify_admin_session)])
-async def import_entities(file: UploadFile = File(...)):
-    """
-    Import directory entities from CSV file.
-
-    CSV must have columns: entity_id, canonical_name, aliases, building, floor,
-    room, landmarks, description, status
-
-    Import rules:
-    - If entity_id exists → update entity
-    - If entity_id is new → create entity
-    - If status is 'inactive' → soft delete
-    - Changes applied atomically (all-or-nothing)
-
-    Args:
-        file: CSV file upload
-
-    Returns:
-        Import result with stats
-    """
-    import csv
-    import io
-
-    # Validate file type
-    if not file.filename.endswith('.csv'):
-        raise HTTPException(status_code=400, detail="File must be a CSV")
-
-    try:
-        # Read file content
-        content = await file.read()
-        text = content.decode('utf-8-sig')  # Handle BOM from Excel
-
-        # Parse CSV
-        reader = csv.DictReader(io.StringIO(text))
-        entities_data = list(reader)
-
-        if not entities_data:
-            raise HTTPException(status_code=400, detail="CSV file is empty")
-
-        # Perform bulk import
-        success, message, stats = entity_registry.bulk_import(entities_data)
-
-        if not success:
-            return {
-                "status": "error",
-                "message": message,
-                "stats": stats
-            }
-
-        # Phase 55: Rebuild CQE index after bulk import
-        index_stats = rebuild_cqe_index()
-
-        return {
-            "status": "success",
-            "message": message,
-            "stats": stats,
-            "index_stats": index_stats
-        }
-
-    except UnicodeDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid file encoding. Please use UTF-8.")
-    except csv.Error as e:
-        raise HTTPException(status_code=400, detail=f"CSV parsing error: {str(e)}")
-
-
-@app.get("/admin/entities/{entity_id}", dependencies=[Depends(verify_admin_session)])
-async def get_entity(entity_id: str):
-    """
-    Get a single directory entity by ID.
-
-    Args:
-        entity_id: Entity identifier
-
-    Returns:
-        Entity data
-
-    Raises:
-        404: Entity not found
-    """
-    from dataclasses import asdict
-
-    entity = entity_registry.get_by_id(entity_id.upper())
-    if not entity:
-        raise HTTPException(status_code=404, detail=f"Entity '{entity_id}' not found")
-
-    return {
-        "entity": asdict(entity)
-    }
-
-
-@app.post("/admin/entities", dependencies=[Depends(verify_admin_session)])
-async def create_entity(entity_data: EntityCreate):
-    """
-    Create a new directory entity.
-
-    Args:
-        entity_data: Entity creation data
-
-    Returns:
-        Success message with created entity
-
-    Raises:
-        400: Validation error or duplicate ID
-    """
-    from dataclasses import asdict
-
-    success, message = entity_registry.add_entity(
-        entity_id=entity_data.entity_id,
-        canonical_name=entity_data.canonical_name,
-        aliases=entity_data.aliases,
-        building=entity_data.building,
-        floor=entity_data.floor,
-        room=entity_data.room,
-        campus=entity_data.campus,
-        department=entity_data.department,
-        landmarks=entity_data.landmarks,
-        description=entity_data.description
-    )
-
-    if not success:
-        raise HTTPException(status_code=400, detail=message)
-
-    # Phase 55: Rebuild CQE index after entity change
-    index_stats = rebuild_cqe_index()
-
-    # Get the created entity to return
-    created_entity = entity_registry.get_by_id(entity_data.entity_id.upper())
-
-    return {
-        "status": "success",
-        "message": message,
-        "entity": asdict(created_entity) if created_entity else None,
-        "index_stats": index_stats
-    }
-
-
-@app.put("/admin/entities/{entity_id}", dependencies=[Depends(verify_admin_session)])
-async def update_entity(entity_id: str, entity_data: EntityUpdate):
-    """
-    Update an existing directory entity.
-
-    Args:
-        entity_id: Entity identifier
-        entity_data: Fields to update (only non-None values)
-
-    Returns:
-        Success message with updated entity
-
-    Raises:
-        400: Validation error
-        404: Entity not found
-    """
-    from dataclasses import asdict
-
-    # Check if entity exists
-    existing = entity_registry.get_by_id(entity_id.upper())
-    if not existing:
-        raise HTTPException(status_code=404, detail=f"Entity '{entity_id}' not found")
-
-    # Build update kwargs from non-None fields
-    update_kwargs = {}
-    if entity_data.canonical_name is not None:
-        update_kwargs['canonical_name'] = entity_data.canonical_name
-    if entity_data.aliases is not None:
-        update_kwargs['aliases'] = entity_data.aliases
-    if entity_data.building is not None:
-        update_kwargs['building'] = entity_data.building
-    if entity_data.floor is not None:
-        update_kwargs['floor'] = entity_data.floor
-    if entity_data.room is not None:
-        update_kwargs['room'] = entity_data.room
-    if entity_data.campus is not None:
-        update_kwargs['campus'] = entity_data.campus
-    if entity_data.department is not None:
-        update_kwargs['department'] = entity_data.department
-    if entity_data.landmarks is not None:
-        update_kwargs['landmarks'] = entity_data.landmarks
-    if entity_data.description is not None:
-        update_kwargs['description'] = entity_data.description
-    if entity_data.status is not None:
-        update_kwargs['status'] = entity_data.status
-
-    if not update_kwargs:
-        raise HTTPException(status_code=400, detail="No fields to update")
-
-    success, message = entity_registry.update_entity(entity_id, **update_kwargs)
-
-    if not success:
-        raise HTTPException(status_code=400, detail=message)
-
-    # Phase 55: Rebuild CQE index after entity change
-    index_stats = rebuild_cqe_index()
-
-    # Get the updated entity to return
-    updated_entity = entity_registry.get_by_id(entity_id.upper())
-
-    return {
-        "status": "success",
-        "message": message,
-        "entity": asdict(updated_entity) if updated_entity else None,
-        "index_stats": index_stats
-    }
-
-
-@app.delete("/admin/entities/{entity_id}", dependencies=[Depends(verify_admin_session)])
-async def delete_entity(entity_id: str, hard: bool = False):
-    """
-    Delete a directory entity (soft or hard delete).
-
-    Soft delete (default): Sets status to 'inactive', entity remains in storage.
-    Hard delete: Permanently removes entity from storage (use with caution).
-
-    Args:
-        entity_id: Entity identifier
-        hard: If True, permanently remove entity
-
-    Returns:
-        Success message
-
-    Raises:
-        404: Entity not found
-    """
-    # Check if entity exists
-    existing = entity_registry.get_by_id(entity_id.upper())
-    if not existing:
-        raise HTTPException(status_code=404, detail=f"Entity '{entity_id}' not found")
-
-    success, message = entity_registry.delete_entity(entity_id, hard=hard)
-
-    if not success:
-        raise HTTPException(status_code=400, detail=message)
-
-    # Phase 55: Rebuild CQE index after entity change
-    index_stats = rebuild_cqe_index()
-
-    return {
-        "status": "success",
-        "message": message,
-        "entity_id": entity_id.upper(),
-        "delete_type": "hard" if hard else "soft",
-        "index_stats": index_stats
-    }
+@app.get("/admin/entities")
+async def redirect_legacy_entities():
+    """Redirect legacy entity route to /admin."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/admin", status_code=302)
+
+
+# Legacy routes removed in Phase 2 (Directory Absorption):
+# - GET /admin/entities (list) -> use /admin/cqe/* endpoints
+# - GET /admin/entities/export (CSV) -> use /admin/cqe/* endpoints
+# - POST /admin/entities/import (CSV) -> removed
+# - GET /admin/entities/{id} -> use /admin/cqe/* endpoints
+# - POST /admin/entities -> use /admin/cqe/* endpoints
+# - PUT /admin/entities/{id} -> use /admin/cqe/* endpoints
+# - DELETE /admin/entities/{id} -> use /admin/cqe/* endpoints
+# - POST /admin/entities/validate -> use /admin/cqe/* endpoints
+
+# (Legacy route implementations removed - see legacy_backup/app_routes_entities.py)
 
 
 # ==============================================================================
 # Phase 55: Index Management Endpoints
 # ==============================================================================
-
-class EntityValidateRequest(BaseModel):
-    """Request model for entity validation."""
-    entity_id: str
-    canonical_name: str
-    aliases: List[str] = []
-    building: str
-    floor: str
-    room: Optional[str] = None
-    campus: str = "Main Campus"
-    department: Optional[str] = None
-    landmarks: Optional[str] = None
-    description: Optional[str] = None
-    tags: List[str] = []
-    status: str = "active"
-
-
-@app.post("/admin/entities/validate", dependencies=[Depends(verify_admin_session)])
-async def validate_entity(data: EntityValidateRequest):
-    """
-    Validate entity data without saving.
-
-    Returns validation result with errors and warnings.
-    """
-    result = entity_manager.validate_entity(data.model_dump())
-
-    return {
-        "valid": result.valid,
-        "errors": result.errors,
-        "warnings": result.warnings,
-        "normalized_data": result.normalized_data
-    }
-
 
 @app.get("/admin/index/stats", dependencies=[Depends(verify_admin_session)])
 async def get_index_stats():
@@ -4677,28 +4303,82 @@ async def get_cqe_departments():
 @app.get("/admin/cqe/tags", dependencies=[Depends(verify_admin_session)])
 async def get_cqe_tags():
     """
-    Get list of all unique tags from rooms and outdoor locations.
+    Get list of all unique tags from rooms and outdoor locations with usage counts.
+
+    Phase 3: Enhanced to include usage counts for deletion rules.
 
     Returns:
-        { tags: ["tag1", "tag2", ...] }
+        { tags: [{ name: "tag1", count: 5, entities: ["ROOM1", "ROOM2", ...] }, ...] }
     """
     if not CAMPUS_QUERY_ENGINE_ENABLED:
         return {"error": "Campus Query Engine not enabled", "tags": []}
 
     index = entity_manager.get_index()
-    tags = set()
+    tag_usage = {}  # tag_name -> list of entity_ids
 
     # Collect tags from rooms
     for room in index.rooms.values():
         if room.tags:
-            tags.update(room.tags)
+            for tag in room.tags:
+                if tag not in tag_usage:
+                    tag_usage[tag] = []
+                tag_usage[tag].append(room.room_id)
 
     # Collect tags from outdoor locations
     for outdoor in index.outdoor_locations.values():
         if outdoor.tags:
-            tags.update(outdoor.tags)
+            for tag in outdoor.tags:
+                if tag not in tag_usage:
+                    tag_usage[tag] = []
+                tag_usage[tag].append(outdoor.location_id)
 
-    return {"tags": sorted(tags)}
+    # Format response with usage counts
+    tags = [
+        {"name": tag, "count": len(entities), "entities": entities}
+        for tag, entities in sorted(tag_usage.items())
+    ]
+
+    return {"tags": tags}
+
+
+@app.delete("/admin/cqe/tag/{tag_name}", dependencies=[Depends(verify_admin_session)])
+async def delete_cqe_tag(tag_name: str):
+    """
+    Delete a tag from all entities.
+
+    Phase 3: Tag deletion is blocked if any entities use the tag.
+    To delete a tag, first remove it from all entities using it.
+    """
+    if not CAMPUS_QUERY_ENGINE_ENABLED:
+        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+
+    tag_name = tag_name.lower().strip()
+    index = entity_manager.get_index()
+
+    # Find all entities using this tag
+    entities_using_tag = []
+
+    for room in index.rooms.values():
+        if room.tags and tag_name in room.tags:
+            entities_using_tag.append(room.room_id)
+
+    for outdoor in index.outdoor_locations.values():
+        if outdoor.tags and tag_name in outdoor.tags:
+            entities_using_tag.append(outdoor.location_id)
+
+    if entities_using_tag:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete tag '{tag_name}': used by {len(entities_using_tag)} entity(ies). "
+                   f"Remove tag from these entities first: {', '.join(entities_using_tag[:5])}"
+                   + (f" and {len(entities_using_tag) - 5} more" if len(entities_using_tag) > 5 else "")
+        )
+
+    # Tag not in use - nothing to delete (tag doesn't have standalone storage)
+    return {
+        "status": "success",
+        "message": f"Tag '{tag_name}' is not in use and can be safely removed from any tag lists."
+    }
 
 
 @app.get("/admin/cqe/primary-types", dependencies=[Depends(verify_admin_session)])
@@ -4723,12 +4403,16 @@ class CampusCreate(BaseModel):
     """Request model for creating a campus."""
     name: str
     aliases: List[str] = []
+    description: Optional[str] = None  # Phase 5
+    landmarks: Optional[str] = None    # Phase 5
 
 
 class CampusUpdate(BaseModel):
     """Request model for updating a campus."""
     name: Optional[str] = None
     aliases: Optional[List[str]] = None
+    description: Optional[str] = None  # Phase 5
+    landmarks: Optional[str] = None    # Phase 5
 
 
 class BuildingCreate(BaseModel):
@@ -4736,6 +4420,8 @@ class BuildingCreate(BaseModel):
     campus_id: str
     name: str
     aliases: List[str] = []
+    description: Optional[str] = None  # Phase 5
+    landmarks: Optional[str] = None    # Phase 5
 
 
 class BuildingUpdate(BaseModel):
@@ -4743,6 +4429,8 @@ class BuildingUpdate(BaseModel):
     campus_id: Optional[str] = None
     name: Optional[str] = None
     aliases: Optional[List[str]] = None
+    description: Optional[str] = None  # Phase 5
+    landmarks: Optional[str] = None    # Phase 5
 
 
 class FloorCreate(BaseModel):
@@ -4823,6 +4511,7 @@ class DepartmentCreate(BaseModel):
     campus_id: Optional[str] = None
     aliases: List[str] = []
     description: Optional[str] = None
+    landmarks: Optional[str] = None  # Phase 5
 
 
 class DepartmentUpdate(BaseModel):
@@ -4831,6 +4520,7 @@ class DepartmentUpdate(BaseModel):
     campus_id: Optional[str] = None
     aliases: Optional[List[str]] = None
     description: Optional[str] = None
+    landmarks: Optional[str] = None  # Phase 5
 
 
 # --- Campus CRUD ---
@@ -4849,6 +4539,8 @@ async def list_cqe_campuses():
             "name": c.name,
             "aliases": c.aliases,
             "building_ids": c.building_ids,
+            "description": getattr(c, 'description', None),  # Phase 5
+            "landmarks": getattr(c, 'landmarks', None),      # Phase 5
             "status": "active"  # Campuses are always active
         })
     return {"campuses": campuses}
@@ -4874,7 +4566,9 @@ async def create_cqe_campus(data: CampusCreate):
     campus = Campus(
         campus_id=campus_id,
         name=data.name,
-        aliases=data.aliases or [data.name.lower()]
+        aliases=data.aliases or [data.name.lower()],
+        description=data.description,  # Phase 5
+        landmarks=data.landmarks        # Phase 5
     )
     index.campuses[campus_id] = campus
     index._index_campus_aliases(campus)
@@ -4897,30 +4591,25 @@ async def update_cqe_campus(campus_id: str, data: CampusUpdate):
         campus.name = data.name
     if data.aliases is not None:
         campus.aliases = data.aliases
+    if data.description is not None:  # Phase 5
+        campus.description = data.description
+    if data.landmarks is not None:    # Phase 5
+        campus.landmarks = data.landmarks
 
     return {"status": "success", "message": f"Campus '{campus_id}' updated"}
 
 
 @app.delete("/admin/cqe/campus/{campus_id}", dependencies=[Depends(verify_admin_session)])
 async def delete_cqe_campus(campus_id: str):
-    """Soft delete a campus (not recommended - has cascading effects)."""
-    if not CAMPUS_QUERY_ENGINE_ENABLED:
-        raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
+    """
+    Campus deletion is not allowed.
 
-    index = entity_manager.get_index()
-    if campus_id not in index.campuses:
-        raise HTTPException(status_code=404, detail=f"Campus '{campus_id}' not found")
-
-    # Check for dependent buildings
-    dependent_buildings = index.buildings_by_campus.get(campus_id, [])
-    if dependent_buildings:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Cannot delete campus with {len(dependent_buildings)} building(s)"
-        )
-
-    del index.campuses[campus_id]
-    return {"status": "success", "message": f"Campus '{campus_id}' deleted"}
+    Phase 3: Campuses cannot be deleted to maintain data integrity.
+    """
+    raise HTTPException(
+        status_code=403,
+        detail="Campus deletion is not allowed. Contact system administrator."
+    )
 
 
 # --- Building CRUD ---
@@ -4942,6 +4631,8 @@ async def list_cqe_buildings(campus_id: Optional[str] = None):
             "aliases": b.aliases,
             "campus_id": b.campus_id,
             "floor_ids": b.floor_ids,
+            "description": getattr(b, 'description', None),  # Phase 5
+            "landmarks": getattr(b, 'landmarks', None),      # Phase 5
             "status": "active"
         })
     return {"buildings": buildings}
@@ -4967,7 +4658,9 @@ async def create_cqe_building(data: BuildingCreate):
         building_id=building_id,
         name=data.name,
         aliases=data.aliases or [data.name.lower()],
-        campus_id=data.campus_id
+        campus_id=data.campus_id,
+        description=data.description,  # Phase 5
+        landmarks=data.landmarks        # Phase 5
     )
     index.buildings[building_id] = building
     index._index_building_aliases(building)
@@ -4997,13 +4690,22 @@ async def update_cqe_building(building_id: str, data: BuildingUpdate):
         building.aliases = data.aliases
     if data.campus_id:
         building.campus_id = data.campus_id
+    if data.description is not None:  # Phase 5
+        building.description = data.description
+    if data.landmarks is not None:    # Phase 5
+        building.landmarks = data.landmarks
 
     return {"status": "success", "message": f"Building '{building_id}' updated"}
 
 
 @app.delete("/admin/cqe/building/{building_id}", dependencies=[Depends(verify_admin_session)])
 async def delete_cqe_building(building_id: str):
-    """Soft delete a building (not recommended - has cascading effects)."""
+    """
+    Delete a building.
+
+    Phase 3: Building deletion is blocked if any rooms exist in the building.
+    If no rooms exist, the building and all its floors are automatically deleted.
+    """
     if not CAMPUS_QUERY_ENGINE_ENABLED:
         raise HTTPException(status_code=400, detail="Campus Query Engine not enabled")
 
@@ -5011,16 +4713,47 @@ async def delete_cqe_building(building_id: str):
     if building_id not in index.buildings:
         raise HTTPException(status_code=404, detail=f"Building '{building_id}' not found")
 
-    # Check for dependent floors
-    dependent_floors = index.floors_by_building.get(building_id, [])
-    if dependent_floors:
+    # Phase 3: Check for rooms in ANY floor of this building (not just floors)
+    rooms_in_building = [r for r in index.rooms.values() if r.building_id == building_id]
+    if rooms_in_building:
         raise HTTPException(
             status_code=400,
-            detail=f"Cannot delete building with {len(dependent_floors)} floor(s)"
+            detail=f"Cannot delete building with {len(rooms_in_building)} room(s). Delete all rooms first."
         )
 
+    # No rooms - auto-delete all floors in this building
+    floors_to_delete = list(index.floors_by_building.get(building_id, []))
+    deleted_floors = []
+    for floor_id in floors_to_delete:
+        if floor_id in index.floors:
+            del index.floors[floor_id]
+            deleted_floors.append(floor_id)
+
+    # Clean up floor index
+    if building_id in index.floors_by_building:
+        del index.floors_by_building[building_id]
+
+    # Delete the building
+    building = index.buildings[building_id]
+    campus_id = building.campus_id
+
+    # Remove from campus building list
+    if campus_id in index.buildings_by_campus:
+        if building_id in index.buildings_by_campus[campus_id]:
+            index.buildings_by_campus[campus_id].remove(building_id)
+
+    # Remove from campus object
+    if campus_id in index.campuses:
+        if building_id in index.campuses[campus_id].building_ids:
+            index.campuses[campus_id].building_ids.remove(building_id)
+
     del index.buildings[building_id]
-    return {"status": "success", "message": f"Building '{building_id}' deleted"}
+
+    return {
+        "status": "success",
+        "message": f"Building '{building_id}' deleted with {len(deleted_floors)} floor(s)",
+        "deleted_floors": deleted_floors
+    }
 
 
 # --- Floor CRUD ---
@@ -5507,6 +5240,7 @@ async def list_cqe_departments_full():
             "aliases": d.aliases,
             "campus_id": d.campus_id,
             "description": d.description,
+            "landmarks": getattr(d, 'landmarks', None),  # Phase 5
             "status": "active"
         })
     return {"departments": departments}
@@ -5530,7 +5264,8 @@ async def create_cqe_department(data: DepartmentCreate):
         name=data.name,
         aliases=data.aliases or [data.name.lower()],
         campus_id=data.campus_id,
-        description=data.description
+        description=data.description,
+        landmarks=data.landmarks  # Phase 5
     )
     index.departments[department_id] = department
     index._index_department_aliases(department)
@@ -5557,6 +5292,8 @@ async def update_cqe_department(department_id: str, data: DepartmentUpdate):
         dept.campus_id = data.campus_id
     if data.description is not None:
         dept.description = data.description
+    if data.landmarks is not None:  # Phase 5
+        dept.landmarks = data.landmarks
 
     return {"status": "success", "message": f"Department '{department_id}' updated"}
 

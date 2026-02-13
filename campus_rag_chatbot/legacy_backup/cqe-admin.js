@@ -421,11 +421,6 @@ function switchSection(section) {
     });
 
     state.currentSection = section;
-
-    // Phase 4: Update URL hash for bookmarking/linking
-    if (window.location.hash.slice(1) !== section) {
-        history.replaceState(null, '', `#${section}`);
-    }
 }
 
 // =============================================================================
@@ -1022,19 +1017,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load all data
     loadAllData();
-
-    // Phase 4: Hash-based navigation (supports links like /admin/cqe#building)
-    const handleHashNavigation = () => {
-        const hash = window.location.hash.slice(1); // Remove '#'
-        const validSections = ['campus', 'building', 'floor', 'room', 'outdoor', 'department'];
-        if (hash && validSections.includes(hash)) {
-            switchSection(hash);
-        }
-    };
-
-    // Handle initial hash on page load
-    handleHashNavigation();
-
-    // Handle hash changes (browser back/forward)
-    window.addEventListener('hashchange', handleHashNavigation);
 });

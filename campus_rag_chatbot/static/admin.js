@@ -9,8 +9,7 @@
 
 let isUploading = false;
 let isDeleting = false;
-let isSavingEntity = false;
-let editingEntityId = null;  // Track which entity is being edited
+// Entity state removed in Phase 2 - use /admin/cqe for entity management
 let currentSection = 'analytics';  // Current active section
 let voiceConfigChanged = false;  // Track unsaved voice config changes
 
@@ -75,9 +74,7 @@ function loadSectionData(sectionId) {
         case 'documents':
             loadDocuments();
             break;
-        case 'entities':
-            loadEntities();
-            break;
+        // 'entities' case removed in Phase 2 - use /admin/cqe
         case 'voice':
             loadVoiceConfig();
             break;
@@ -2203,52 +2200,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('refreshBtn').addEventListener('click', loadDocuments);
 
     // ==============================================================================
-    // ENTITY MANAGEMENT EVENT LISTENERS (Phase 10)
+    // ENTITY MANAGEMENT EVENT LISTENERS - Removed in Phase 2
+    // Use /admin/cqe for Campus Directory management
     // ==============================================================================
-
-    // Add Entity Button
-    document.getElementById('addEntityBtn').addEventListener('click', () => showEntityModal());
-
-    // Refresh Entities Button
-    document.getElementById('refreshEntitiesBtn').addEventListener('click', loadEntities);
-
-    // Phase 55: Rebuild Index Button
-    const rebuildBtn = document.getElementById('rebuildIndexBtn');
-    if (rebuildBtn) {
-        rebuildBtn.addEventListener('click', rebuildIndex);
-    }
-
-    // Export Entities Button
-    document.getElementById('exportEntitiesBtn').addEventListener('click', exportEntities);
-
-    // Import Entities Button (trigger file input)
-    document.getElementById('importEntitiesTrigger').addEventListener('click', () => {
-        document.getElementById('importEntitiesInput').click();
-    });
-
-    // Import Entities File Input
-    document.getElementById('importEntitiesInput').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            importEntities(file);
-        }
-    });
-
-    // Entity Modal Close Button
-    document.getElementById('closeEntityModal').addEventListener('click', hideEntityModal);
-
-    // Entity Modal Cancel Button
-    document.getElementById('cancelEntityBtn').addEventListener('click', hideEntityModal);
-
-    // Entity Form Submit
-    document.getElementById('entityForm').addEventListener('submit', saveEntity);
-
-    // Close modal when clicking outside
-    document.getElementById('entityModal').addEventListener('click', (e) => {
-        if (e.target.id === 'entityModal') {
-            hideEntityModal();
-        }
-    });
 
     // ==============================================================================
     // ANALYTICS EVENT LISTENERS - Phase 16
