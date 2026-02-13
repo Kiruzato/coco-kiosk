@@ -124,7 +124,12 @@
       "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\":*)",
       "Bash(C:UserschannOneDriveDesktoprestartcocovibecoding_cocovenv311Scriptspython.exe test_campus_query_engine.py)",
       "Bash(\"C:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/venv311/Scripts/python.exe\" test_campus_query_engine.py)",
-      "Bash(\"C:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/venv311/Scripts/python.exe\" test_cqe_golden.py)"
+      "Bash(\"C:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/venv311/Scripts/python.exe\" test_cqe_golden.py)",
+      "Bash(\"C:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/venv311/Scripts/python.exe\" -c \"\nfrom campus_index import get_campus_index\nfrom campus_query_parser import is_campus_query, parse_campus_query\nfrom campus_query_executor import CampusQueryExecutor\nfrom campus_response_formatter import format_query_result\n\n# Initialize index \\(same as app.py does\\)\nENTITIES_PATH = ''data/directory_entities.json''\nindex = get_campus_index\\(ENTITIES_PATH\\)\nprint\\(f''[OK] Index initialized: {len\\(index.rooms\\)} rooms''\\)\n\n# Test query\nquery = ''Where is the library?''\nprint\\(f''Query: {query}''\\)\nprint\\(f''is_campus_query: {is_campus_query\\(query\\)}''\\)\n\nparsed = parse_campus_query\\(query\\)\nprint\\(f''Intent: {parsed.intent.value}''\\)\n\nexecutor = CampusQueryExecutor\\(index\\)\nresult = executor.execute\\(parsed\\)\nprint\\(f''Success: {result.success}, Entities: {len\\(result.entities\\)}''\\)\n\nresponse = format_query_result\\(result\\)\nprint\\(f''Response: {response}''\\)\n\")",
+      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" test_cqe_golden.py)",
+      "Bash(cmd /c \"cd /d C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\campus_rag_chatbot && C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe test_cqe_golden.py\")",
+      "Bash(C:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/venv311/Scripts/python.exe:*)",
+      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -m pytest test_cqe_golden.py -v --tb=short)"
     ]
   }
 }

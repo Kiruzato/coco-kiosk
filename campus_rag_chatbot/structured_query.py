@@ -4,6 +4,7 @@ Structured Query Representation
 Data structures for representing parsed campus queries.
 
 Phase 48: Unified Query Parser
+Phase 52: Schema Alignment (TAG, ENTITY_TYPE, PRIMARY_TYPE filters)
 
 Provides:
 - QueryIntent: Enum of query intents (LOCATE_SINGLE, LOCATE_MULTIPLE, NEAREST, COUNT, LIST)
@@ -17,9 +18,9 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 try:
-    from .campus_schema import RoomType, FloorLevel
+    from .campus_schema import RoomType, RoomPrimaryType, FloorLevel
 except ImportError:
-    from campus_schema import RoomType, FloorLevel
+    from campus_schema import RoomType, RoomPrimaryType, FloorLevel
 
 
 class QueryIntent(Enum):
@@ -50,12 +51,18 @@ class QueryIntent(Enum):
 class FilterField(Enum):
     """
     Fields that can be filtered on in structured queries.
+
+    Phase 52: Added TAG, ENTITY_TYPE, PRIMARY_TYPE for new schema support.
     """
-    ROOM_TYPE = "room_type"
+    ROOM_TYPE = "room_type"           # Legacy 10-value RoomType
     FLOOR_LEVEL = "floor_level"
     BUILDING = "building"
     CAMPUS = "campus"
     DEPARTMENT = "department"
+    # Phase 52: New filter fields
+    TAG = "tag"                       # Free-form tag filtering
+    ENTITY_TYPE = "entity_type"       # "room" or "outdoor"
+    PRIMARY_TYPE = "primary_type"     # New 4-value RoomPrimaryType
 
 
 class FilterOperator(Enum):

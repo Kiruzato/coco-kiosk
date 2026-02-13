@@ -4,11 +4,12 @@ Campus Query Parser
 Unified parser for campus location queries with filter extraction.
 
 Phase 48: Unified Query Parser
+Phase 52: Schema Alignment (tag detection, outdoor location patterns)
 
 Provides:
 - is_campus_query(): Detect if a query is a campus/location query
 - CampusQueryParser: Parse queries into StructuredQuery objects
-- Filter extraction for building, floor, room type, department
+- Filter extraction for building, floor, room type, department, tags (Phase 52)
 
 Supports all 5 query intents:
 - LOCATE_SINGLE: "Where is SP303?", "Where is the library?"
@@ -24,14 +25,14 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
 try:
-    from .campus_schema import RoomType, FloorLevel
+    from .campus_schema import RoomType, RoomPrimaryType, FloorLevel
     from .structured_query import (
         StructuredQuery, QueryIntent, QueryFilter,
         FilterField, FilterOperator,
         single_entity_query, multi_entity_query, nearest_query, count_query, list_query
     )
 except ImportError:
-    from campus_schema import RoomType, FloorLevel
+    from campus_schema import RoomType, RoomPrimaryType, FloorLevel
     from structured_query import (
         StructuredQuery, QueryIntent, QueryFilter,
         FilterField, FilterOperator,
@@ -215,6 +216,74 @@ DEPARTMENT_PATTERNS = [
     r"\b(cba|coe|cas|ccs|ced|chs)\b",  # Common department abbreviations
     r"\b(college\s+of\s+[A-Za-z]+(?:\s+[A-Za-z]+)*)\b",
     r"\b(basic\s+education)\b",
+]
+
+
+# =============================================================================
+# Phase 52: Tag and Outdoor Location Patterns
+# =============================================================================
+
+# Tag patterns - detect queries referencing tags
+TAG_KEYWORDS = {
+    # Academic tags
+    "engineering": "engineering",
+    "cba": "cba",
+    "ccs": "ccs",
+    "cas": "cas",
+    "coe": "coe",
+    "ced": "ced",
+    "chs": "chs",
+
+    # Facility tags
+    "sports": "sports",
+    "athletic": "sports",
+    "computer": "computer",
+    "science": "science",
+    "canteen": "canteen",
+    "clinic": "clinic",
+    "chapel": "chapel",
+    "library": "library",
+    "gym": "gym",
+    "auditorium": "auditorium",
+}
+
+# Composite tag patterns (e.g., "engineering labs", "sports facilities")
+TAG_COMPOSITE_PATTERNS = [
+    (r"\b(engineering|cba|ccs|cas|coe)\s+(?:labs?|laboratories|rooms?|offices?)\b", ["engineering"]),
+    (r"\b(sports?|athletic)\s+(?:facilities|areas?|courts?)\b", ["sports"]),
+    (r"\bcomputer\s+(?:labs?|laboratories|rooms?)\b", ["computer", "laboratory"]),
+    (r"\bscience\s+(?:labs?|laboratories|rooms?)\b", ["science", "laboratory"]),
+]
+
+# Outdoor location keywords
+OUTDOOR_KEYWORDS = [
+    "court",
+    "covered court",
+    "open court",
+    "basketball court",
+    "volleyball court",
+    "field",
+    "parking",
+    "parking lot",
+    "parking area",
+    "garden",
+    "plaza",
+    "open area",
+    "grounds",
+    "playground",
+    "quadrangle",
+    "quad",
+]
+
+# Outdoor location detection patterns
+OUTDOOR_PATTERNS = [
+    r"\b(covered\s+court)\b",
+    r"\b(open\s+court)\b",
+    r"\b(basketball\s+court)\b",
+    r"\b(volleyball\s+court)\b",
+    r"\b(parking\s+(?:lot|area)?)\b",
+    r"\bthe\s+(court)\b",
+    r"\b(field|garden|plaza|playground|quadrangle|quad)\b",
 ]
 
 
@@ -405,6 +474,89 @@ def extract_department(query: str) -> Optional[Tuple[str, str]]:
     return None
 
 
+def extract_tags(query: str) -> List[Tuple[str, str]]:
+    """
+    Extract tags from query (Phase 52).
+
+    Args:
+        query: User query string
+
+    Returns:
+        List of (tag, matched_text) tuples
+    """
+    query_lower = query.lower()
+    tags = []
+    matched_texts = []
+
+    # Check composite patterns first (more specific)
+    for pattern, tag_list in TAG_COMPOSITE_PATTERNS:
+        match = re.search(pattern, query_lower, re.IGNORECASE)
+        if match:
+            matched_text = match.group(0)
+            for tag in tag_list:
+                if tag not in [t[0] for t in tags]:
+                    tags.append((tag, matched_text))
+
+    # Check single tag keywords
+    for keyword, tag in TAG_KEYWORDS.items():
+        if keyword in query_lower:
+            # Avoid duplicates
+            if tag not in [t[0] for t in tags]:
+                tags.append((tag, keyword))
+
+    return tags
+
+
+def is_outdoor_query(query: str) -> bool:
+    """
+    Detect if query is asking about an outdoor location (Phase 52).
+
+    Args:
+        query: User query string
+
+    Returns:
+        True if query references outdoor locations
+    """
+    query_lower = query.lower()
+
+    # Check outdoor patterns
+    for pattern in OUTDOOR_PATTERNS:
+        if re.search(pattern, query_lower, re.IGNORECASE):
+            return True
+
+    # Check outdoor keywords
+    for keyword in OUTDOOR_KEYWORDS:
+        if keyword in query_lower:
+            return True
+
+    return False
+
+
+def extract_outdoor_target(query: str) -> Optional[str]:
+    """
+    Extract the outdoor location name from a query (Phase 52).
+
+    Args:
+        query: User query string
+
+    Returns:
+        Outdoor location name or None
+    """
+    query_lower = query.lower()
+
+    for pattern in OUTDOOR_PATTERNS:
+        match = re.search(pattern, query_lower, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+
+    # Check for outdoor keywords in "where is" patterns
+    for keyword in OUTDOOR_KEYWORDS:
+        if keyword in query_lower:
+            return keyword
+
+    return None
+
+
 def extract_target_entity(query: str) -> Optional[str]:
     """
     Extract the target entity name from a single-entity query.
@@ -590,6 +742,25 @@ class CampusQueryParser:
                 operator=FilterOperator.EQUALS,
                 value=dept_name,
                 raw_text=raw_text
+            ))
+
+        # Phase 52: Extract tags
+        tag_results = extract_tags(query)
+        for tag, raw_text in tag_results:
+            filters.append(QueryFilter(
+                field=FilterField.TAG,
+                operator=FilterOperator.EQUALS,
+                value=tag,
+                raw_text=raw_text
+            ))
+
+        # Phase 52: Mark outdoor queries
+        if is_outdoor_query(query):
+            filters.append(QueryFilter(
+                field=FilterField.ENTITY_TYPE,
+                operator=FilterOperator.EQUALS,
+                value="outdoor",
+                raw_text=""
             ))
 
         return filters

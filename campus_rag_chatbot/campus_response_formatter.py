@@ -4,21 +4,23 @@ Campus Response Formatter
 Formats QueryResult objects into natural language responses.
 
 Phase 49: Query Engine + Structural Proximity
+Phase 53: Schema Alignment (outdoor location formatting)
 
 Provides:
 - CampusResponseFormatter: Format results for presentation
 - Template-based response generation (deterministic)
 - LLM-free formatting for all query types
+- Outdoor location formatting (Phase 53)
 """
 
 import logging
 from typing import List, Optional, Any
 
 try:
-    from .campus_schema import Room, Building, Campus, RoomType, FloorLevel
+    from .campus_schema import Room, Building, Campus, OutdoorLocation, RoomType, FloorLevel
     from .structured_query import StructuredQuery, QueryIntent, QueryResult, FilterField
 except ImportError:
-    from campus_schema import Room, Building, Campus, RoomType, FloorLevel
+    from campus_schema import Room, Building, Campus, OutdoorLocation, RoomType, FloorLevel
     from structured_query import StructuredQuery, QueryIntent, QueryResult, FilterField
 
 logger = logging.getLogger(__name__)
@@ -87,6 +89,8 @@ class CampusResponseFormatter:
             return self._format_building(entity)
         elif entity_type == "campus":
             return self._format_campus(entity)
+        elif entity_type == "outdoor":
+            return self._format_outdoor_location(entity)
         else:
             return self._format_room(entity)
 
@@ -127,6 +131,36 @@ class CampusResponseFormatter:
         """Format a campus."""
         buildings = len(campus.building_ids)
         response = f"{campus.name} has {buildings} building(s)."
+        return response
+
+    def _format_outdoor_location(self, location: OutdoorLocation) -> str:
+        """
+        Format an outdoor location (Phase 53).
+
+        Args:
+            location: OutdoorLocation entity
+
+        Returns:
+            Formatted response string
+        """
+        # Get campus name
+        campus_name = location.campus_id.replace("_", " ").title()
+
+        response = f"{location.canonical_name} is an outdoor area on {campus_name}."
+
+        # Add tags description
+        if location.tags:
+            tag_desc = ", ".join(location.tags[:3])  # First 3 tags
+            response += f" It is a {tag_desc} area."
+
+        # Add landmarks
+        if location.landmarks:
+            response += f" {location.landmarks}"
+
+        # Add description
+        if location.description:
+            response += f" {location.description}"
+
         return response
 
     def _format_locate_multiple(self, result: QueryResult) -> str:

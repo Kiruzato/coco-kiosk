@@ -4,11 +4,13 @@ Campus Query Index
 Pre-built indexes for O(1) structured queries in the Campus Query Engine.
 
 Phase 47: Data Model Foundation
+Phase 51: Schema Alignment (OutdoorLocation, Tags, RoomPrimaryType)
 
 Provides:
-- Primary indexes: campuses, buildings, floors, rooms by ID
-- Alias indexes: alias -> entity_id mapping
+- Primary indexes: campuses, buildings, floors, rooms, outdoor_locations by ID
+- Alias indexes: alias -> entity_id mapping (including floor aliases)
 - Relationship indexes: rooms_by_floor, rooms_by_building, rooms_by_type
+- Tag indexes: rooms_by_tag, outdoor_by_tag (Phase 51)
 - Structural proximity support: floor_level ordering
 """
 
@@ -18,21 +20,21 @@ from collections import defaultdict
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 try:
     from .campus_schema import (
-        Campus, Building, Floor, Room, Department,
-        RoomType, FloorLevel,
+        Campus, Building, Floor, Room, Department, OutdoorLocation,
+        RoomType, RoomPrimaryType, FloorLevel,
         generate_building_id, generate_floor_id, generate_campus_id,
-        normalize_id
+        normalize_id, floor_level_to_number
     )
 except ImportError:
     from campus_schema import (
-        Campus, Building, Floor, Room, Department,
-        RoomType, FloorLevel,
+        Campus, Building, Floor, Room, Department, OutdoorLocation,
+        RoomType, RoomPrimaryType, FloorLevel,
         generate_building_id, generate_floor_id, generate_campus_id,
-        normalize_id
+        normalize_id, floor_level_to_number
     )
 
 logger = logging.getLogger(__name__)
@@ -44,6 +46,8 @@ class CampusQueryIndex:
 
     All indexes are built at load time from hierarchical JSON data.
     Supports both hierarchical (v2) and flat (v1) entity formats.
+
+    Phase 51: Added outdoor_locations, tag indexes, floor aliases.
     """
 
     def __init__(self):
@@ -53,12 +57,15 @@ class CampusQueryIndex:
         self.floors: Dict[str, Floor] = {}
         self.rooms: Dict[str, Room] = {}
         self.departments: Dict[str, Department] = {}
+        self.outdoor_locations: Dict[str, OutdoorLocation] = {}  # Phase 51
 
         # Alias indexes (normalized alias -> entity_id)
         self.alias_to_room: Dict[str, str] = {}
         self.alias_to_building: Dict[str, str] = {}
         self.alias_to_campus: Dict[str, str] = {}
         self.alias_to_department: Dict[str, str] = {}
+        self.alias_to_outdoor: Dict[str, str] = {}  # Phase 51
+        self.alias_to_floor: Dict[str, str] = {}    # Phase 51
 
         # Relationship indexes (for filtered queries)
         self.rooms_by_floor: Dict[str, List[str]] = defaultdict(list)
@@ -67,8 +74,15 @@ class CampusQueryIndex:
         self.rooms_by_type: Dict[RoomType, List[str]] = defaultdict(list)
         self.rooms_by_department: Dict[str, List[str]] = defaultdict(list)
 
+        # Phase 51: Tag indexes
+        self.rooms_by_tag: Dict[str, List[str]] = defaultdict(list)
+        self.outdoor_by_tag: Dict[str, List[str]] = defaultdict(list)
+        self.rooms_by_primary_type: Dict[RoomPrimaryType, List[str]] = defaultdict(list)
+        self.outdoor_by_campus: Dict[str, List[str]] = defaultdict(list)
+
         # Composite indexes
         self.rooms_by_building_floor: Dict[Tuple[str, FloorLevel], List[str]] = defaultdict(list)
+        self.rooms_by_building_level: Dict[Tuple[str, int], List[str]] = defaultdict(list)  # Phase 51
 
         # Floors by building (for structural proximity)
         self.floors_by_building: Dict[str, List[str]] = defaultdict(list)
@@ -80,7 +94,9 @@ class CampusQueryIndex:
             "active_rooms": 0,
             "buildings": 0,
             "campuses": 0,
-            "aliases": 0
+            "aliases": 0,
+            "outdoor_locations": 0,  # Phase 51
+            "tags": 0                # Phase 51
         }
 
     def load_from_flat_entities(self, entities_json_path: str) -> bool:
@@ -170,14 +186,21 @@ class CampusQueryIndex:
             for building_id, floor_str, campus_id in floor_keys:
                 floor_level = FloorLevel.from_string(floor_str)
                 floor_id = generate_floor_id(building_id, floor_level)
+                level_number = floor_level_to_number(floor_level)
+
+                # Generate floor aliases
+                floor_aliases = self._generate_floor_aliases(floor_str, level_number)
 
                 floor = Floor(
                     floor_id=floor_id,
                     building_id=building_id,
                     level=floor_level,
-                    display_name=floor_str
+                    display_name=floor_str,
+                    level_number=level_number,
+                    aliases=floor_aliases
                 )
                 self.floors[floor_id] = floor
+                self._index_floor_aliases(floor)
 
                 # Add to building
                 if building_id in self.buildings:
@@ -223,6 +246,7 @@ class CampusQueryIndex:
             building_id = generate_building_id(building_name)
             floor_level = FloorLevel.from_string(floor_str)
             floor_id = generate_floor_id(building_id, floor_level)
+            level_number = floor_level_to_number(floor_level)
 
             # Parse aliases (may be list or semicolon-separated string)
             aliases = entity.get('aliases', [])
@@ -238,8 +262,26 @@ class CampusQueryIndex:
                         parsed_aliases.append(alias.lower().strip())
                 aliases = parsed_aliases
 
-            # Infer room type from various signals
+            # Infer room type from various signals (legacy)
             room_type = self._infer_room_type(entity)
+
+            # Phase 51: Convert to primary_type and tags
+            primary_type = room_type.to_primary_type()
+            tags = room_type.to_tags().copy()
+
+            # Add any explicit tags from entity
+            entity_tags = entity.get('tags', [])
+            if isinstance(entity_tags, list):
+                for tag in entity_tags:
+                    if tag and tag.lower() not in tags:
+                        tags.append(tag.lower())
+
+            # Infer additional tags from canonical name
+            tags.extend(self._infer_tags_from_name(entity.get('canonical_name', ''), tags))
+
+            # Phase 51: Department ID
+            department_str = entity.get('department')
+            department_id = normalize_id(department_str) if department_str else None
 
             room = Room(
                 room_id=entity_id,
@@ -251,7 +293,13 @@ class CampusQueryIndex:
                 building_id=building_id,
                 campus_id=campus_id,
                 floor_level=floor_level,
-                department=entity.get('department'),
+                # Phase 51 fields
+                primary_type=primary_type,
+                tags=tags,
+                level_number=level_number,
+                department_id=department_id,
+                # Legacy fields
+                department=department_str,
                 landmarks=entity.get('landmarks'),
                 description=entity.get('description'),
                 status=entity.get('status', 'active'),
@@ -264,6 +312,33 @@ class CampusQueryIndex:
         except Exception as e:
             logger.warning(f"Failed to convert entity {entity.get('entity_id')}: {e}")
             return None
+
+    def _infer_tags_from_name(self, canonical_name: str, existing_tags: List[str]) -> List[str]:
+        """Infer additional tags from canonical name."""
+        tags = []
+        name_lower = canonical_name.lower()
+
+        # Facility-specific tags
+        tag_keywords = {
+            "canteen": "canteen",
+            "cafeteria": "canteen",
+            "gym": "gym",
+            "gymnasium": "gym",
+            "clinic": "clinic",
+            "chapel": "chapel",
+            "auditorium": "auditorium",
+            "court": "court",
+            "library": "library",
+            "computer": "computer",
+            "science": "science",
+            "engineering": "engineering",
+        }
+
+        for keyword, tag in tag_keywords.items():
+            if keyword in name_lower and tag not in existing_tags and tag not in tags:
+                tags.append(tag)
+
+        return tags
 
     def _infer_room_type(self, entity: dict) -> RoomType:
         """Infer room type from entity data."""
@@ -350,6 +425,16 @@ class CampusQueryIndex:
         # Composite index
         self.rooms_by_building_floor[(room.building_id, room.floor_level)].append(room_id)
 
+        # Phase 51: Tag and primary_type indexes
+        self.rooms_by_primary_type[room.primary_type].append(room_id)
+        for tag in room.tags:
+            tag_normalized = tag.lower().strip()
+            if tag_normalized:
+                self.rooms_by_tag[tag_normalized].append(room_id)
+
+        # Phase 51: Integer floor level index
+        self.rooms_by_building_level[(room.building_id, room.level_number)].append(room_id)
+
         # Add to floor's room list
         if room.floor_id in self.floors:
             if room_id not in self.floors[room.floor_id].room_ids:
@@ -371,13 +456,87 @@ class CampusQueryIndex:
             if normalized:
                 self.alias_to_building[normalized] = building.building_id
 
+    def _generate_floor_aliases(self, floor_str: str, level_number: int) -> List[str]:
+        """Generate aliases for a floor based on its display name and level."""
+        aliases = []
+        floor_lower = floor_str.lower()
+
+        # Common abbreviations
+        alias_patterns = {
+            "ground floor": ["gf", "g/f", "ground"],
+            "first floor": ["1f", "1/f", "1st", "1st floor"],
+            "second floor": ["2f", "2/f", "2nd", "2nd floor"],
+            "third floor": ["3f", "3/f", "3rd", "3rd floor"],
+            "fourth floor": ["4f", "4/f", "4th", "4th floor"],
+            "fifth floor": ["5f", "5/f", "5th", "5th floor"],
+            "basement": ["b1", "b/1", "b-1"],
+        }
+
+        for pattern, pattern_aliases in alias_patterns.items():
+            if pattern in floor_lower:
+                aliases.extend(pattern_aliases)
+
+        # Add level number variations
+        if level_number > 0:
+            aliases.append(f"{level_number}f")
+            aliases.append(f"{level_number}/f")
+        elif level_number < 0:
+            aliases.append(f"b{abs(level_number)}")
+
+        return list(set(aliases))
+
+    def _index_floor_aliases(self, floor: Floor) -> None:
+        """Index floor aliases."""
+        self.alias_to_floor[floor.display_name.lower().strip()] = floor.floor_id
+        for alias in floor.aliases:
+            normalized = alias.lower().strip()
+            if normalized:
+                self.alias_to_floor[normalized] = floor.floor_id
+
+    def _index_outdoor_location(self, location: OutdoorLocation) -> None:
+        """Add outdoor location to all relevant indexes (Phase 51)."""
+        if location.status != "active":
+            return
+
+        location_id = location.location_id
+
+        # Alias index
+        canonical_normalized = location.canonical_name.lower().strip()
+        self.alias_to_outdoor[canonical_normalized] = location_id
+
+        for alias in location.aliases:
+            alias_normalized = alias.lower().strip()
+            if alias_normalized and alias_normalized not in self.alias_to_outdoor:
+                self.alias_to_outdoor[alias_normalized] = location_id
+
+        # Campus index
+        self.outdoor_by_campus[location.campus_id].append(location_id)
+
+        # Tag index
+        for tag in location.tags:
+            tag_normalized = tag.lower().strip()
+            if tag_normalized:
+                self.outdoor_by_tag[tag_normalized].append(location_id)
+
+    def add_outdoor_location(self, location: OutdoorLocation) -> None:
+        """Add an outdoor location to the index (Phase 51)."""
+        self.outdoor_locations[location.location_id] = location
+        self._index_outdoor_location(location)
+
     def _compute_stats(self) -> None:
         """Compute index statistics."""
         self._stats["campuses"] = len(self.campuses)
         self._stats["buildings"] = len(self.buildings)
         self._stats["rooms"] = len(self.rooms)
         self._stats["active_rooms"] = len([r for r in self.rooms.values() if r.status == "active"])
-        self._stats["aliases"] = len(self.alias_to_room) + len(self.alias_to_building) + len(self.alias_to_campus)
+        self._stats["aliases"] = (
+            len(self.alias_to_room) + len(self.alias_to_building) +
+            len(self.alias_to_campus) + len(self.alias_to_outdoor) +
+            len(self.alias_to_floor)
+        )
+        # Phase 51 stats
+        self._stats["outdoor_locations"] = len(self.outdoor_locations)
+        self._stats["tags"] = len(self.rooms_by_tag) + len(self.outdoor_by_tag)
 
     # -------------------------------------------------------------------------
     # Query Methods
@@ -449,6 +608,71 @@ class CampusQueryIndex:
         dept_id = normalize_id(department)
         room_ids = self.rooms_by_department.get(dept_id, [])
         return [self.rooms[rid] for rid in room_ids if rid in self.rooms]
+
+    # -------------------------------------------------------------------------
+    # Phase 51: Outdoor Location Queries
+    # -------------------------------------------------------------------------
+
+    def resolve_outdoor_location(self, alias: str) -> Optional[OutdoorLocation]:
+        """
+        Resolve an outdoor location by alias or canonical name.
+
+        Args:
+            alias: Name or alias to look up (case-insensitive)
+
+        Returns:
+            OutdoorLocation if found, None otherwise
+        """
+        normalized = alias.lower().strip()
+        location_id = self.alias_to_outdoor.get(normalized)
+        if location_id:
+            return self.outdoor_locations.get(location_id)
+        return None
+
+    def get_outdoor_by_campus(self, campus_id: str) -> List[OutdoorLocation]:
+        """Get all outdoor locations on a campus."""
+        location_ids = self.outdoor_by_campus.get(campus_id, [])
+        return [self.outdoor_locations[lid] for lid in location_ids if lid in self.outdoor_locations]
+
+    def get_all_outdoor_locations(self) -> List[OutdoorLocation]:
+        """Get all outdoor locations."""
+        return [loc for loc in self.outdoor_locations.values() if loc.status == "active"]
+
+    # -------------------------------------------------------------------------
+    # Phase 51: Tag-Based Queries
+    # -------------------------------------------------------------------------
+
+    def get_rooms_by_tag(self, tag: str) -> List[Room]:
+        """Get all rooms with a specific tag."""
+        tag_normalized = tag.lower().strip()
+        room_ids = self.rooms_by_tag.get(tag_normalized, [])
+        return [self.rooms[rid] for rid in room_ids if rid in self.rooms and self.rooms[rid].status == "active"]
+
+    def get_outdoor_by_tag(self, tag: str) -> List[OutdoorLocation]:
+        """Get all outdoor locations with a specific tag."""
+        tag_normalized = tag.lower().strip()
+        location_ids = self.outdoor_by_tag.get(tag_normalized, [])
+        return [self.outdoor_locations[lid] for lid in location_ids
+                if lid in self.outdoor_locations and self.outdoor_locations[lid].status == "active"]
+
+    def get_entities_by_tag(self, tag: str) -> List[Union[Room, OutdoorLocation]]:
+        """Get all entities (rooms and outdoor locations) with a specific tag."""
+        rooms = self.get_rooms_by_tag(tag)
+        outdoor = self.get_outdoor_by_tag(tag)
+        return rooms + outdoor
+
+    def get_rooms_by_primary_type(self, primary_type: RoomPrimaryType) -> List[Room]:
+        """Get all rooms of a specific primary type."""
+        room_ids = self.rooms_by_primary_type.get(primary_type, [])
+        return [self.rooms[rid] for rid in room_ids if rid in self.rooms and self.rooms[rid].status == "active"]
+
+    def resolve_floor(self, alias: str) -> Optional[Floor]:
+        """Resolve a floor by alias."""
+        normalized = alias.lower().strip()
+        floor_id = self.alias_to_floor.get(normalized)
+        if floor_id:
+            return self.floors.get(floor_id)
+        return None
 
     # -------------------------------------------------------------------------
     # Structural Proximity (NEAREST)

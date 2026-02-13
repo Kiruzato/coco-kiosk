@@ -58,6 +58,9 @@ o	Voice: Text Response → TTS (Piper) → Audio Out (Phase 32)
 
 Key Modules
 •	API & routing: app.py
+•	Response orchestration: response_orchestrator.py (Phase 44)
+•	Campus Query Engine: campus_query_parser.py, campus_query_executor.py, campus_response_formatter.py (Phase 47-50)
+•	Campus data model: campus_schema.py, campus_index.py (Phase 47)
 •	Voice Modality: voice/ package (orchestrator, STT/TTS services)
 •	Ingestion & FAISS: document_manager.py
 •	Hybrid scoring + grounding: retrieval_validator.py
@@ -65,6 +68,7 @@ Key Modules
 •	Structured answers: response_formatter.py
 •	Directory system: entity_registry.py, entity_resolver.py
 •	Intent detection: intent_classifier.py
+•	Math processing: math_engine.py, input_preprocessor.py (Phase 46)
 •	Observability: event_tracker.py, query_logger.py
 ________________________________________
 4. Core Design Rules (Critical)
@@ -220,6 +224,13 @@ ________________________________________
 •	Phase 40: Silent TTS with implicit interruption (background audio, auto-stop on input)
 •	Phase 41: Voice bug fixes & Python 3.11 migration
 •	Phase 42: Windows setup & UI enhancements (fullscreen, auto-focus, TTS full response)
+•	Phase 44: LLM-as-Final-Synthesizer architecture (4-layer orchestration, semantic relevance scoring)
+•	Phase 45: Response Style Policy for kiosk/voice UX (query analyzer, style hints, LaTeX stripping)
+•	Phase 46: Arithmetic Query Processing (input preprocessor, deterministic math engine, STT artifact cleanup)
+•	Phase 47: Campus Query Engine Data Model (hierarchical schema, CampusQueryIndex, structural proximity)
+•	Phase 48: Unified Query Parser (StructuredQuery, QueryIntent, filter extraction, is_campus_query)
+•	Phase 49: Query Executor & Response Formatter (index-based execution, template formatting, NEAREST algorithm)
+•	Phase 50: CQE Integration (STRUCTURED_AUTHORITATIVE mode, app.py routing, golden tests, backward compatibility)
 ________________________________________
 11. Recent Phases Details
 Phase 19 — Contiguous Context Reconstruction
@@ -746,6 +757,126 @@ o	campus_rag_chatbot/static/app.js (fullscreen toggle, TTS engine from header)
 o	campus_rag_chatbot/voice/tts_service.py (removed truncation)
 o	campus_rag_chatbot/voice_routes.py (increased max_text_length to 10000)
 o	campus_rag_chatbot/requirements_py311.txt (edge-tts, python-magic-bin)
+
+Phase 44 — LLM-as-Final-Synthesizer Architecture
+•	Goal: Unified response orchestration where ALL paths terminate in LLM for natural language
+•	Implementation:
+o	Created response_orchestrator.py with 4-layer architecture
+o	Layer 1: Governance (intent classification, safety checks)
+o	Layer 2: Retrieval (hybrid search, grounding validation)
+o	Layer 3: Extraction (deterministic extractors)
+o	Layer 4: LLM Synthesis (final response generation)
+o	Response modes: EXTRACTOR_AUTHORITATIVE, RAG_AUTHORITATIVE, RAG_SUPPLEMENTED, GENERAL_KNOWLEDGE
+o	Semantic relevance scoring (HIGH/MEDIUM/LOW) prevents lexical confusion
+•	Files:
+o	campus_rag_chatbot/response_orchestrator.py
+
+Phase 45 — Response Style Policy
+•	Goal: Optimize LLM output for kiosk/voice UX
+•	Implementation:
+o	Created query_analyzer.py for query type detection
+o	Query types: MATH, GREETING, DEFINITION, CONVERSATIONAL
+o	Style hints injected into LLM prompts based on query type
+o	LaTeX stripping for voice-friendly math responses
+•	Files:
+o	campus_rag_chatbot/query_analyzer.py
+o	campus_rag_chatbot/response_orchestrator.py (style hints)
+
+Phase 46 — Arithmetic Query Processing
+•	Goal: Handle math queries deterministically without LLM
+•	Implementation:
+o	Created math_engine.py with AST-based evaluation (no eval())
+o	Created input_preprocessor.py for STT artifact cleanup
+o	Number normalization: "5,000" → "5000", "five" → "5"
+o	Supports: +, -, *, /, **, parentheses, word operators
+o	Voice-friendly output: "The answer is 42."
+•	Files:
+o	campus_rag_chatbot/math_engine.py
+o	campus_rag_chatbot/input_preprocessor.py
+
+Phase 47 — Campus Query Engine Data Model
+•	Goal: Hierarchical data model for deterministic location queries
+•	Implementation:
+o	Created campus_schema.py with dataclasses:
+	Campus → Building → Floor → Room hierarchy
+	RoomType enum: CLASSROOM, OFFICE, LABORATORY, RESTROOM, etc.
+	FloorLevel enum: BASEMENT, GROUND, FIRST, SECOND, etc.
+o	Created campus_index.py with CampusQueryIndex:
+	Primary indexes: campuses, buildings, floors, rooms
+	Relationship indexes: rooms_by_type, rooms_by_building, rooms_by_floor
+	Alias resolution: alias_to_room mapping
+o	Migrated 220 rooms, 12 buildings, 2 campuses from directory_entities.json
+•	Files:
+o	campus_rag_chatbot/campus_schema.py
+o	campus_rag_chatbot/campus_index.py
+o	campus_rag_chatbot/migrate_entities.py
+
+Phase 48 — Unified Query Parser
+•	Goal: Parse location queries into structured representations
+•	Implementation:
+o	Created structured_query.py with dataclasses:
+	QueryIntent enum: LOCATE_SINGLE, LOCATE_MULTIPLE, NEAREST, COUNT, LIST
+	StructuredQuery: intent, target, filters, confidence
+	QueryFilter: field, operator, value
+o	Created campus_query_parser.py:
+	is_campus_query(): Unified detection for all 5 intents
+	CampusQueryParser.parse(): Extracts intent + filters
+	Pattern groups for each intent type
+	Filter extraction: room type, floor, building, department
+•	Files:
+o	campus_rag_chatbot/structured_query.py
+o	campus_rag_chatbot/campus_query_parser.py
+
+Phase 49 — Query Executor & Response Formatter
+•	Goal: Execute queries and format responses deterministically
+•	Implementation:
+o	Created campus_query_executor.py:
+	CampusQueryExecutor with execute() method
+	_execute_locate_single(): Alias/ID lookup
+	_execute_locate_multiple(): Filter intersection
+	_execute_nearest(): Structural proximity algorithm
+	_execute_count(): Aggregation
+	_execute_list(): Entity enumeration
+o	Created campus_response_formatter.py:
+	Template-based formatting (no LLM)
+	Intent-specific formatters
+	Natural language output
+o	Structural Proximity Algorithm (NEAREST):
+	Tier 0: Same floor (highest priority)
+	Tier 1: Same building, different floor
+	Tier 2: Same campus, different building
+	Tier 3: Different campus (fallback)
+•	Files:
+o	campus_rag_chatbot/campus_query_executor.py
+o	campus_rag_chatbot/campus_response_formatter.py
+o	campus_rag_chatbot/test_campus_query_engine.py
+
+Phase 50 — Campus Query Engine Integration
+•	Goal: Wire CQE into app.py and validate end-to-end
+•	Implementation:
+o	Added STRUCTURED_AUTHORITATIVE response mode to orchestrator
+o	Added CQE routing in app.py before legacy is_directory_query()
+o	Added campus index initialization at app startup
+o	Updated intent_classifier.py with CQE patterns
+o	Created golden test suite (41/41 tests passing)
+o	Backward compatibility: is_directory_query() preserved as fallback
+•	Key Integration Points:
+o	app.py: is_campus_query() check routes to orchestrator
+o	response_orchestrator.py: _try_campus_query_engine() fast path
+o	STRUCTURED_AUTHORITATIVE mode: 100% confidence, no LLM
+•	Test Results:
+o	Query Parsing: 12/12 passed
+o	Query Execution: 4/4 passed
+o	Response Formatting: 4/4 passed
+o	Structural Proximity: 3/3 passed
+o	Orchestrator Integration: 4/4 passed
+o	Backward Compatibility: 9/9 passed
+o	End-to-End Flow: 5/5 passed
+•	Files:
+o	campus_rag_chatbot/app.py (CQE routing, index initialization)
+o	campus_rag_chatbot/response_orchestrator.py (STRUCTURED mode)
+o	campus_rag_chatbot/intent_classifier.py (CQE patterns)
+o	campus_rag_chatbot/test_cqe_golden.py (golden tests)
 ________________________________________
 12. Phase 18 Details (Entity Consolidation)
 Phase 18.0 — Entity-Centric Chunk Consolidation
@@ -806,12 +937,23 @@ python app.py
 •	Dev tools: /dev
 ________________________________________
 13. Current Production Status
-Version: Phase 42 (Windows Setup & UI Enhancements)
+Version: Phase 50 (Campus Query Engine Integration)
 Python: 3.11.9 (required for Piper TTS - Python 3.13 has compatibility issues)
 Virtual Environment: venv311/
-Golden Tests: 32 test cases, 87.5% pass rate (28/32)
+Golden Tests: 41/41 CQE tests passing + 32 RAG test cases
 RAG Architecture: Hybrid RAG (vector + BM25 via RRF)
 Cross-Platform: Windows (win-setup.ps1) + Raspberry Pi (pi-setup.sh)
+
+Campus Query Engine (Phase 47-50):
+•	Thesis Position: "Deterministic Structured Campus Query Engine with Controlled Generative Augmentation"
+•	5 Query Intents: LOCATE_SINGLE, LOCATE_MULTIPLE, NEAREST, COUNT, LIST
+•	220 rooms, 12 buildings, 2 campuses indexed
+•	Structural proximity for NEAREST (4-tier: floor > building > campus > different)
+•	100% deterministic responses (no LLM for location facts)
+•	STRUCTURED_AUTHORITATIVE response mode
+•	O(1) index lookups via pre-built relationship indexes
+•	Template-based response formatting
+
 Voice: Full frontend UI + API layer OPERATIONAL
 •	STT: Google Cloud STT (primary), Whisper.cpp (fallback)
 •	TTS: Piper (primary, offline), edge-tts (fallback)
@@ -819,9 +961,10 @@ Voice: Full frontend UI + API layer OPERATIONAL
 •	Admin: Provider selection, credential management, debug panel toggle
 •	UX: Silent TTS playback with implicit interruption (Phase 40)
 •	TTS: Full response reading without truncation (Phase 42)
+
 Known Issues:
 •	404 "General Information" section warnings (detection gaps in PDF parsing)
-•	3-4 golden test failures (prayer content, school motto, tuition query routing - LLM variability)
+•	3-4 RAG golden test failures (prayer content, school motto - LLM variability)
 •	Python 3.13 not supported (Piper TTS espeakbridge incompatibility) - use Python 3.11
 •	Cloud providers require credential configuration via Admin UI
 
@@ -839,4 +982,5 @@ Debug Panel (Phase 39B):
 •	Shows: LLM model, retrieval mode, chunks retrieved, grounding status, timing
 •	Works for both text and voice requests
 •	STT/TTS engine info shown for voice requests
-Last Updated: 2026-02-10 (Phase 42 - Windows Setup & UI Enhancements)
+•	CQE queries show: mode=structured, routing_path=cqe:structured
+Last Updated: 2026-02-12 (Phase 50 - Campus Query Engine Integration)

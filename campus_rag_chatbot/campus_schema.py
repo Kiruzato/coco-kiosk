@@ -4,23 +4,53 @@ Campus Query Engine Schema
 Hierarchical dataclasses and enums for the Campus Query Engine (CQE).
 
 Phase 47: Data Model Foundation
+Phase 51: Schema Alignment (OutdoorLocation, Tags, RoomPrimaryType)
 
 Hierarchy:
     Campus (Level 0)
         └── Building (Level 1)
-              └── Floor (Level 2)
-                    └── Room (Level 3)
-                          └── RoomType, Department (Attributes)
+        │     └── Floor (Level 2)
+        │           └── Room (Level 3)
+        │                 └── RoomPrimaryType, Tags, Department (Attributes)
+        └── OutdoorLocation (Level 1, no floor/building)
+        └── Department (Level 1, spans multiple rooms)
 """
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
+
+
+class RoomPrimaryType(Enum):
+    """
+    Primary room type classification (Phase 51 schema).
+
+    Simplified to 4 categories. Use tags for secondary classification
+    (e.g., primary_type=OTHER + tags=["laboratory", "engineering"]).
+    """
+    CLASSROOM = "classroom"
+    OFFICE = "office"
+    RESTROOM = "restroom"
+    OTHER = "other"
+
+    @classmethod
+    def from_string(cls, value: str) -> "RoomPrimaryType":
+        """Parse primary type from string."""
+        if not value:
+            return cls.OTHER
+        value_lower = value.lower().strip()
+        for ptype in cls:
+            if ptype.value == value_lower:
+                return ptype
+        return cls.OTHER
 
 
 class RoomType(Enum):
     """
     Enumeration of room types for structured queries.
+
+    LEGACY: Kept for backward compatibility. Maps to RoomPrimaryType + tags.
+    New code should use RoomPrimaryType with tags for secondary classification.
 
     Enables queries like "Show all classrooms" or "Find nearest restroom".
     """
@@ -34,6 +64,27 @@ class RoomType(Enum):
     UTILITY = "utility"        # electric room, server room
     LIBRARY = "library"
     UNKNOWN = "unknown"
+
+    def to_primary_type(self) -> RoomPrimaryType:
+        """Convert legacy RoomType to RoomPrimaryType."""
+        mapping = {
+            RoomType.CLASSROOM: RoomPrimaryType.CLASSROOM,
+            RoomType.OFFICE: RoomPrimaryType.OFFICE,
+            RoomType.RESTROOM: RoomPrimaryType.RESTROOM,
+        }
+        return mapping.get(self, RoomPrimaryType.OTHER)
+
+    def to_tags(self) -> List[str]:
+        """Get tags for this RoomType (for non-primary types)."""
+        tag_mapping = {
+            RoomType.LABORATORY: ["laboratory"],
+            RoomType.CONFERENCE: ["conference"],
+            RoomType.FACILITY: ["facility"],
+            RoomType.STORAGE: ["storage"],
+            RoomType.UTILITY: ["utility"],
+            RoomType.LIBRARY: ["library"],
+        }
+        return tag_mapping.get(self, [])
 
     @classmethod
     def from_string(cls, value: str) -> "RoomType":
@@ -213,10 +264,12 @@ class Room:
 
     This is the leaf node in the campus hierarchy.
     Denormalized fields (building_id, campus_id) enable fast filtering.
+
+    Phase 51: Added primary_type, tags, level_number for new schema alignment.
     """
     room_id: str                        # Unique ID (e.g., "A103_CLASSROOM")
     room_number: Optional[str]          # Room number (e.g., "A103", "SP303")
-    room_type: RoomType                 # Type for structured queries
+    room_type: RoomType                 # LEGACY: Type for structured queries
     canonical_name: str                 # Display name
     aliases: List[str]                  # Alternative lookup names
 
@@ -224,10 +277,16 @@ class Room:
     floor_id: str                       # FK to Floor
     building_id: str                    # Denormalized for fast filtering
     campus_id: str                      # Denormalized for fast filtering
-    floor_level: FloorLevel             # Denormalized for proximity
+    floor_level: FloorLevel             # LEGACY: Denormalized for proximity
+
+    # Phase 51: New schema fields
+    primary_type: RoomPrimaryType = RoomPrimaryType.OTHER  # New 4-value type
+    tags: List[str] = field(default_factory=list)          # Free-form tags
+    level_number: int = 0                                  # Integer floor level
+    department_id: Optional[str] = None                    # FK to Department
 
     # Optional metadata
-    department: Optional[str] = None
+    department: Optional[str] = None    # LEGACY: String department name
     landmarks: Optional[str] = None
     description: Optional[str] = None
     status: str = "active"
@@ -241,12 +300,18 @@ class Room:
 class Floor:
     """
     Represents a floor within a building.
+
+    Phase 51: Added level_number (int) and aliases.
     """
     floor_id: str                       # Unique ID (e.g., "A_BUILDING_GF")
     building_id: str                    # FK to Building
-    level: FloorLevel                   # Numeric level for ordering
+    level: FloorLevel                   # LEGACY: Numeric level for ordering
     display_name: str                   # Human-readable name
     room_ids: List[str] = field(default_factory=list)  # Child rooms
+
+    # Phase 51: New schema fields
+    level_number: int = 0               # Integer floor level (-2, -1, 0, 1, 2...)
+    aliases: List[str] = field(default_factory=list)   # Alternative names (e.g., ["GF", "G/F"])
 
 
 @dataclass
@@ -278,12 +343,37 @@ class Department:
     Represents an academic/administrative department.
 
     Departments can span multiple rooms across buildings.
+    Phase 51: Now a first-class entity with FK relationship from Room.
     """
-    department_id: str                  # Unique ID (e.g., "CBA")
+    department_id: str                  # Unique ID (e.g., "DEPT_CBA")
     name: str                           # Display name
     aliases: List[str] = field(default_factory=list)
     campus_id: str = ""                 # Primary campus
     office_room_ids: List[str] = field(default_factory=list)  # Primary offices
+    description: Optional[str] = None
+    status: str = "active"
+
+
+@dataclass
+class OutdoorLocation:
+    """
+    Represents an outdoor location on campus (Phase 51).
+
+    OutdoorLocations are campus-level entities without building/floor hierarchy.
+    Examples: Covered Court, Parking Area, Garden, Field, Plaza.
+    """
+    location_id: str                    # Unique ID (e.g., "MAIN_COVERED_COURT")
+    campus_id: str                      # FK to Campus
+    canonical_name: str                 # Display name
+
+    # Phase 51: Tag-based classification
+    tags: List[str] = field(default_factory=list)   # e.g., ["court", "sports", "covered"]
+    aliases: List[str] = field(default_factory=list)
+
+    # Optional metadata
+    description: Optional[str] = None
+    landmarks: Optional[str] = None
+    status: str = "active"
 
 
 # Utility functions for ID generation
@@ -317,18 +407,56 @@ def generate_building_id(building_name: str) -> str:
     return normalize_id(building_name)
 
 
-def generate_floor_id(building_id: str, floor_level: FloorLevel) -> str:
-    """Generate a floor ID from building and level."""
-    floor_suffix = {
-        FloorLevel.BASEMENT: "B1",
-        FloorLevel.GROUND: "GF",
-        FloorLevel.FIRST: "1F",
-        FloorLevel.SECOND: "2F",
-        FloorLevel.THIRD: "3F",
-        FloorLevel.FOURTH: "4F",
-        FloorLevel.FIFTH: "5F",
-    }
-    return f"{building_id}_{floor_suffix.get(floor_level, 'GF')}"
+def generate_floor_id(building_id: str, floor_level: Union[FloorLevel, int]) -> str:
+    """
+    Generate a floor ID from building and level.
+
+    Args:
+        building_id: Building ID
+        floor_level: FloorLevel enum or integer level number
+
+    Returns:
+        Floor ID string
+    """
+    # Convert to integer if FloorLevel enum
+    if isinstance(floor_level, FloorLevel):
+        level_num = floor_level.value
+    else:
+        level_num = floor_level
+
+    # Generate suffix based on level number
+    if level_num < 0:
+        return f"{building_id}_B{abs(level_num)}"
+    elif level_num == 0:
+        return f"{building_id}_GF"
+    else:
+        return f"{building_id}_{level_num}F"
+
+
+def floor_level_to_number(floor_level: FloorLevel) -> int:
+    """Convert FloorLevel enum to integer level_number."""
+    return floor_level.value
+
+
+def number_to_display_name(level_number: int) -> str:
+    """
+    Convert integer level_number to display name.
+
+    Args:
+        level_number: Integer floor level (-2, -1, 0, 1, 2...)
+
+    Returns:
+        Human-readable floor name
+    """
+    if level_number < 0:
+        return f"Basement {abs(level_number)}" if abs(level_number) > 1 else "Basement"
+    elif level_number == 0:
+        return "Ground Floor"
+    else:
+        ordinals = {1: "First", 2: "Second", 3: "Third", 4: "Fourth", 5: "Fifth",
+                   6: "Sixth", 7: "Seventh", 8: "Eighth", 9: "Ninth", 10: "Tenth"}
+        ordinal = ordinals.get(level_number, f"{level_number}th")
+        return f"{ordinal} Floor"
 
 
 def generate_campus_id(campus_name: str) -> str:

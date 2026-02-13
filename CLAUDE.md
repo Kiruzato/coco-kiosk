@@ -6,7 +6,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 
 ## Current State
 
-**Completed through Phase 50** - Campus Query Engine Integration
+**Completed through Phase 53** - CQE Schema Alignment
 
 ### Phase History
 1. **Phase 1-3**: Core RAG pipeline, document management, multi-format support
@@ -62,6 +62,9 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 51. **Phase 48**: Unified Query Parser (StructuredQuery, QueryIntent, filter extraction, is_campus_query)
 52. **Phase 49**: Query Executor & Response Formatter (index-based execution, template formatting, structural proximity)
 53. **Phase 50**: CQE Integration (STRUCTURED_AUTHORITATIVE mode, app.py routing, golden tests)
+54. **Phase 51**: CQE Schema Alignment - Data Model (OutdoorLocation entity, RoomPrimaryType enum, tags field, integer floor levels)
+55. **Phase 52**: CQE Schema Alignment - Parser (FilterField.TAG, FilterField.ENTITY_TYPE, tag detection patterns, outdoor location patterns)
+56. **Phase 53**: CQE Schema Alignment - Executor & Formatter (outdoor location resolution, tag filtering, outdoor formatting)
 
 ## Architecture
 
@@ -184,7 +187,7 @@ campus_rag_chatbot/
 - Handles concatenated single-line content via title pattern splitting
 - Filters false positives with role/college pattern matching
 
-### Campus Query Engine (Phase 47-50)
+### Campus Query Engine (Phase 47-53)
 - **Thesis Position**: "Deterministic Structured Campus Query Engine with Controlled Generative Augmentation"
 - Unified handling of ALL location queries with 100% deterministic responses
 - No LLM calls for location facts - facts come directly from index
@@ -195,6 +198,10 @@ campus_rag_chatbot/
   - `COUNT`: "How many offices?", "Number of labs in A Building"
   - `LIST`: "List all buildings", "Show departments"
 - **Hierarchical Data Model**: Campus → Building → Floor → Room
+  - Phase 51: Added `OutdoorLocation` entity (courts, parking, gardens)
+  - Phase 51: `RoomPrimaryType` enum (CLASSROOM, OFFICE, RESTROOM, OTHER)
+  - Phase 51: `tags` field for free-form categorization
+  - Phase 51: Integer `level_number` for floors (supports >5 floors)
 - **Structural Proximity** (NEAREST): 4-tier algorithm
   - Tier 0: Same Floor (highest priority)
   - Tier 1: Same Building, different floor
@@ -202,6 +209,11 @@ campus_rag_chatbot/
   - Tier 3: Different Campus
 - **Index-based execution**: O(1) lookups via pre-built indexes
   - `rooms_by_type`, `rooms_by_building`, `rooms_by_floor`, `rooms_by_building_floor`
+  - Phase 51: `rooms_by_tag`, `outdoor_by_tag`, `rooms_by_primary_type`
+  - Phase 51: `alias_to_outdoor`, `alias_to_floor`
+- **Filter Fields** (Phase 52):
+  - ROOM_TYPE, FLOOR_LEVEL, BUILDING, CAMPUS, DEPARTMENT (original)
+  - TAG, ENTITY_TYPE, PRIMARY_TYPE (Phase 52)
 - **Template-based formatting**: Natural language responses without LLM variability
 - Files: `campus_schema.py`, `campus_index.py`, `campus_query_parser.py`, `campus_query_executor.py`, `campus_response_formatter.py`
 
@@ -301,17 +313,27 @@ USAGE_TRACKING_ENABLED=true
 
 ## Current Work / Next Steps
 
-The project has completed Phase 50 (Campus Query Engine Integration). Recent additions:
-- **Phase 47-50: Campus Query Engine** - Complete deterministic location handling
-  - Phase 47: Hierarchical data model (Campus/Building/Floor/Room)
-  - Phase 48: Unified query parser with filter extraction
-  - Phase 49: Index-based executor + template formatter + structural proximity
-  - Phase 50: Integration with app.py routing + STRUCTURED_AUTHORITATIVE mode
-- Golden test suite: 41/41 tests passing (CQE golden tests)
-- All 5 query intents working: LOCATE_SINGLE, LOCATE_MULTIPLE, NEAREST, COUNT, LIST
-- Backward compatibility preserved: `is_directory_query()` still works
+The project has completed Phase 53 (CQE Schema Alignment). Recent additions:
 
-Previous milestones:
+**Phase 51-53: CQE Schema Alignment** (prepares for new schema in `schema.txt`)
+- Phase 51: Data Model Updates
+  - `OutdoorLocation` entity for courts, parking, gardens
+  - `RoomPrimaryType` enum (4 values: CLASSROOM, OFFICE, RESTROOM, OTHER)
+  - `tags` field for free-form categorization (e.g., ["laboratory", "engineering"])
+  - Integer `level_number` for floor levels (supports unlimited floors)
+  - Floor aliases (e.g., "GF", "G/F" → Ground Floor)
+- Phase 52: Parser Updates
+  - `FilterField.TAG`, `FilterField.ENTITY_TYPE`, `FilterField.PRIMARY_TYPE`
+  - Tag detection patterns for composite queries ("engineering labs", "sports facilities")
+  - Outdoor location patterns ("covered court", "parking area")
+- Phase 53: Executor & Formatter Updates
+  - Outdoor location resolution in LOCATE_SINGLE
+  - Tag-based filtering in `_get_matching_room_ids()`
+  - `_format_outdoor_location()` template method
+- Golden test suite: 41/41 tests passing (backward compatibility verified)
+
+**Previous milestones:**
+- Phase 47-50: Campus Query Engine core implementation
 - Phase 44-46: LLM-as-Final-Synthesizer, Response Style Policy, Math Engine
 - Phase 40-42: Silent TTS, Voice bug fixes, Windows setup
 

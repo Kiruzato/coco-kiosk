@@ -4,26 +4,29 @@ Campus Query Executor
 Executes structured queries against the CampusQueryIndex.
 
 Phase 49: Query Engine + Structural Proximity
+Phase 53: Schema Alignment (outdoor location resolution, tag filtering)
 
 Provides:
 - CampusQueryExecutor: Execute StructuredQuery objects
 - Index-based lookups for all 5 query intents
 - Structural proximity search for NEAREST queries
 - Filter intersection for multi-filter queries
+- Outdoor location resolution (Phase 53)
+- Tag-based filtering (Phase 53)
 """
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, Union
 
 try:
-    from .campus_schema import RoomType, FloorLevel, Room
+    from .campus_schema import RoomType, RoomPrimaryType, FloorLevel, Room, OutdoorLocation
     from .campus_index import CampusQueryIndex, get_campus_index
     from .structured_query import (
         StructuredQuery, QueryIntent, QueryResult, QueryFilter,
         FilterField, FilterOperator
     )
 except ImportError:
-    from campus_schema import RoomType, FloorLevel, Room
+    from campus_schema import RoomType, RoomPrimaryType, FloorLevel, Room, OutdoorLocation
     from campus_index import CampusQueryIndex, get_campus_index
     from structured_query import (
         StructuredQuery, QueryIntent, QueryResult, QueryFilter,
@@ -103,6 +106,7 @@ class CampusQueryExecutor:
         Execute a LOCATE_SINGLE query.
 
         Looks up a single entity by alias or ID.
+        Phase 53: Added outdoor location resolution.
         """
         target = query.target_entity
         if not target:
@@ -111,6 +115,23 @@ class CampusQueryExecutor:
                 success=False,
                 error="No target entity specified"
             )
+
+        # Check if this is specifically an outdoor query
+        is_outdoor = query.has_filter(FilterField.ENTITY_TYPE)
+        outdoor_filter = query.get_filter(FilterField.ENTITY_TYPE)
+        prefer_outdoor = outdoor_filter and outdoor_filter.value == "outdoor"
+
+        # Phase 53: Try outdoor location first if query suggests outdoor
+        if prefer_outdoor:
+            outdoor = self.index.resolve_outdoor_location(target)
+            if outdoor:
+                return QueryResult(
+                    query=query,
+                    success=True,
+                    entities=[outdoor],
+                    execution_mode="index_outdoor",
+                    metadata={"entity_type": "outdoor"}
+                )
 
         # Try room lookup first
         room = self.index.resolve_room(target)
@@ -121,6 +142,18 @@ class CampusQueryExecutor:
                 entities=[room],
                 execution_mode="index_alias"
             )
+
+        # Phase 53: Try outdoor location (if not already tried)
+        if not prefer_outdoor:
+            outdoor = self.index.resolve_outdoor_location(target)
+            if outdoor:
+                return QueryResult(
+                    query=query,
+                    success=True,
+                    entities=[outdoor],
+                    execution_mode="index_outdoor",
+                    metadata={"entity_type": "outdoor"}
+                )
 
         # Try building lookup
         building = self.index.resolve_building(target)
@@ -396,6 +429,24 @@ class CampusQueryExecutor:
                 if room.department and dept_name in room.department.lower():
                     matching.add(room.room_id)
             return matching
+
+        # Phase 53: Tag filtering
+        elif filter.field == FilterField.TAG:
+            tag = filter.value.lower()
+            return set(self.index.rooms_by_tag.get(tag, []))
+
+        # Phase 53: Primary type filtering
+        elif filter.field == FilterField.PRIMARY_TYPE:
+            primary_type = filter.value
+            if isinstance(primary_type, str):
+                primary_type = RoomPrimaryType.from_string(primary_type)
+            return set(self.index.rooms_by_primary_type.get(primary_type, []))
+
+        # Phase 53: Entity type filter (skip for room ID matching)
+        elif filter.field == FilterField.ENTITY_TYPE:
+            # This is a metadata filter, not a room filter
+            # Return all rooms (don't filter by this)
+            return set(r.room_id for r in self.index.get_all_active_rooms())
 
         return set()
 

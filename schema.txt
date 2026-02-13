@@ -1,0 +1,163 @@
+ENTITY TYPES:
+=====================================================
+  Campus
+  Building
+  Floor
+  Room
+  OutdoorLocation
+  Department
+
+
+=====================================================
+ROOM ENTITY
+=====================================================
+Room:
+  room_id (REQUIRED, PRIMARY KEY)
+  campus_id (REQUIRED, FK → Campus)
+  building_id (REQUIRED, FK → Building)
+  floor_id (REQUIRED, FK → Floor)
+  room_number (OPTIONAL)
+  canonical_name (REQUIRED)
+  primary_type (REQUIRED, RoomPrimaryType enum)
+  department_id (OPTIONAL, FK → Department)
+  tags (OPTIONAL, list[string])        # e.g. ["library", "engineering", "quiet-zone"]
+  aliases (OPTIONAL, list[string])
+  description (OPTIONAL)
+  landmarks (OPTIONAL)
+  status (REQUIRED)  # ACTIVE / INACTIVE
+
+
+=====================================================
+OUTDOOR LOCATION ENTITY
+=====================================================
+OutdoorLocation:
+  location_id (REQUIRED, PRIMARY KEY)
+  campus_id (REQUIRED, FK → Campus)
+  canonical_name (REQUIRED)
+  tags (OPTIONAL, list[string])        # e.g. ["court", "sports", "covered"]
+  aliases (OPTIONAL, list[string])
+  description (OPTIONAL)
+  landmarks (OPTIONAL)
+  status (REQUIRED)  # ACTIVE / INACTIVE
+
+
+=======================================================
+FLOOR ENTITY
+=======================================================
+Floor:
+  floor_id (REQUIRED, PRIMARY KEY)
+  building_id (REQUIRED, FK → Building)
+  level_number (REQUIRED, integer)     # -2, -1, 0, 1, 2, 3...
+  display_name (REQUIRED)              # "Basement", "Ground Floor", "2nd Floor"
+  aliases (OPTIONAL, list[string])
+  status (REQUIRED)
+
+
+=======================================================
+DEPARTMENT ENTITY
+=======================================================
+Department:
+  department_id (REQUIRED, PRIMARY KEY)
+  campus_id (REQUIRED, FK → Campus)
+  name (REQUIRED)
+  aliases (OPTIONAL, list[string])
+  description (OPTIONAL)
+  status (REQUIRED)
+
+
+=======================================================
+BUILDING ENTITY
+=======================================================
+Building:
+  building_id (REQUIRED, PRIMARY KEY)
+  campus_id (REQUIRED, FK → Campus)
+  name (REQUIRED)
+  aliases (OPTIONAL, list[string])
+  description (OPTIONAL)
+  status (REQUIRED)
+
+
+=======================================================
+CAMPUS ENTITY
+=======================================================
+Campus:
+  campus_id (REQUIRED, PRIMARY KEY)
+  name (REQUIRED)
+  aliases (OPTIONAL, list[string])
+  description (OPTIONAL)
+  status (REQUIRED)  # ACTIVE / INACTIVE
+
+
+=======================================================
+RELATIONSHIPS
+=======================================================
+
+Campus (1)
+  ├── Building (many)
+  │     └── Floor (many)
+  │           └── Room (many)
+  │
+  ├── OutdoorLocation (many)
+  │
+  └── Department (many)
+
+Department (1)
+  └── Room (many, optional relationship)
+
+
+=======================================================
+ENUMS - RoomPrimaryType
+=======================================================
+RoomPrimaryType:
+  CLASSROOM
+  OFFICE
+  RESTROOM
+  OTHER
+
+
+=======================================================
+TAG RULES (IMPORTANT FOR ADMIN)
+=======================================================
+
+- Tags are lowercase
+- No spaces (use hyphen if needed)
+- Unique per entity
+- Free-form but normalized
+- Examples:
+    "library"
+    "engineering"
+    "sports"
+    "quiet-zone"
+    "clinic"
+    "registrar"
+
+
+=======================================================
+ID FORMAT (BEST PRACTICE) (EXAMPLES)
+=======================================================
+
+Campus:
+  MAIN
+  BARRETTO
+
+Building:
+  MAIN_A
+  MAIN_B
+  BARRETTO_C
+
+Floor:
+  MAIN_A_GF
+  MAIN_A_1F
+
+Room:
+  MAIN_A_101
+  MAIN_A_102
+
+OutdoorLocation:
+  MAIN_COVERED_COURT
+  MAIN_PARKING
+  BARRETTO_FIELD
+
+Department:
+  DEPT_ENGINEERING
+  DEPT_CBA

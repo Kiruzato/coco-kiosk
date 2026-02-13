@@ -76,11 +76,15 @@ from response_orchestrator import ResponseOrchestrator, ResponseMode, SemanticRe
 # Phase 49-50: Campus Query Engine (unified query handling)
 try:
     from campus_query_parser import is_campus_query
+    from campus_index import get_campus_index
     CAMPUS_QUERY_ENGINE_ENABLED = True
-except ImportError:
+except ImportError as e:
     CAMPUS_QUERY_ENGINE_ENABLED = False
+    logger.warning(f"[CQE] Campus Query Engine not available: {e}")
     def is_campus_query(query):
         return False
+    def get_campus_index(path=None):
+        return None
 
 # Phase 32: Voice Integration
 import voice_routes
@@ -244,6 +248,16 @@ event_tracker = EventTracker(log_dir=LOG_DIR)
 # Initialize entity registry for directory queries (Phase 9)
 ENTITY_REGISTRY_PATH = PROJECT_ROOT / "data" / "directory_entities.json"
 entity_registry = EntityRegistry(str(ENTITY_REGISTRY_PATH))
+
+# Initialize Campus Query Engine index (Phase 49-50)
+if CAMPUS_QUERY_ENGINE_ENABLED:
+    try:
+        _cqe_index = get_campus_index(str(ENTITY_REGISTRY_PATH))
+        logger.info(f"[CQE] Campus Query Engine initialized: {len(_cqe_index.rooms)} rooms, "
+                   f"{len(_cqe_index.buildings)} buildings indexed")
+    except Exception as e:
+        logger.error(f"[CQE] Failed to initialize Campus Query Engine: {e}")
+        CAMPUS_QUERY_ENGINE_ENABLED = False
 
 # ==============================================================================
 # FASTAPI APP
