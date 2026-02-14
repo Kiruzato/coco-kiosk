@@ -23,10 +23,7 @@
                     <span class="nav-icon">&#127970;</span>
                     Building
                 </li>
-                <li class="nav-item" data-section="floor">
-                    <span class="nav-icon">&#128209;</span>
-                    Floor
-                </li>
+
                 <li class="nav-item" data-section="room">
                     <span class="nav-icon">&#128682;</span>
                     Room
@@ -101,34 +98,7 @@
                 </div>
             </section>
 
-            <!-- Floor Section -->
-            <section id="floor-section" class="entity-section">
-                <div class="section-header">
-                    <h1>Floors</h1>
-                    <button class="btn btn-primary" onclick="showModal('floor')">+ Add Floor</button>
-                </div>
-                <div class="filter-bar">
-                    <input type="text" id="floor-search" placeholder="Search floors..." class="search-input">
-                    <select id="floor-building-filter" class="filter-select">
-                        <option value="">All Buildings</option>
-                    </select>
-                </div>
-                <div class="table-container">
-                    <table class="entity-table">
-                        <thead>
-                            <tr>
-                                <th>Display Name</th>
-                                <th>Building</th>
-                                <th>Level</th>
-                                <th>Aliases</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="floor-table-body">
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+
 
             <!-- Room Section -->
             <section id="room-section" class="entity-section">
@@ -286,6 +256,8 @@
                     <input type="text" id="building-aliases" placeholder="e.g., bldg a, building a">
                 </div>
                 <div class="modal-actions">
+                    <button type="button" class="btn btn-danger" id="building-delete-btn" style="display: none;" onclick="confirmDeleteBuilding()">Delete</button>
+                    <div class="spacer"></div>
                     <button type="button" class="btn btn-secondary" onclick="closeModal('building')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save</button>
                 </div>
@@ -321,6 +293,8 @@
                     <input type="text" id="floor-aliases" placeholder="e.g., gf, g/f">
                 </div>
                 <div class="modal-actions">
+                    <button type="button" class="btn btn-danger" id="floor-delete-btn" style="display: none;" onclick="confirmDeleteFloor()">Delete</button>
+                    <div class="spacer"></div>
                     <button type="button" class="btn btn-secondary" onclick="closeModal('floor')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save</button>
                 </div>
@@ -513,6 +487,8 @@
                     <textarea id="department-description" rows="2"></textarea>
                 </div>
                 <div class="modal-actions">
+                    <button type="button" class="btn btn-danger" id="department-delete-btn" style="display: none;" onclick="confirmDeleteDepartment()">Delete</button>
+                    <div class="spacer"></div>
                     <button type="button" class="btn btn-secondary" onclick="closeModal('department')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save</button>
                 </div>

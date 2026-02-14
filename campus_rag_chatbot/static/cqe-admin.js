@@ -16,7 +16,8 @@ const state = {
     departments: [],
     tags: [],
     currentSection: 'campus',
-    deleteTarget: null
+    deleteTarget: null,
+    expandedBuildings: new Set()
 };
 
 // Tag state for Room and Outdoor modals
@@ -88,7 +89,8 @@ async function loadFloors() {
     const data = await apiCall('/admin/cqe/floor');
     if (data && !data.error) {
         state.floors = data.floors;
-        renderFloorTable();
+        // Floors are now embedded in building table, re-render it
+        renderBuildingTable();
     }
 }
 
@@ -206,51 +208,99 @@ function renderBuildingTable() {
         return;
     }
 
-    tbody.innerHTML = filtered.map(b => {
+    let html = '';
+    for (const b of filtered) {
         const campus = state.campuses.find(c => c.campus_id === b.campus_id);
-        return `
-            <tr>
-                <td>${escapeHtml(b.name)}</td>
+        const isExpanded = state.expandedBuildings.has(b.building_id);
+        const buildingFloors = state.floors
+            .filter(f => f.building_id === b.building_id)
+            .sort((a, b) => a.level_number - b.level_number);
+        const floorCount = buildingFloors.length;
+        const toggleIcon = isExpanded ? '▼' : '▶';
+
+        html += `
+            <tr class="building-row${isExpanded ? ' expanded' : ''}">
+                <td>
+                    <button class="btn-toggle" onclick="toggleBuildingFloors('${b.building_id}')" title="${isExpanded ? 'Collapse' : 'Expand'} floors">${toggleIcon}</button>
+                    ${escapeHtml(b.name)}
+                </td>
                 <td>${campus ? escapeHtml(campus.name) : '-'}</td>
                 <td>${b.aliases.map(a => `<span class="tag">${escapeHtml(a)}</span>`).join(' ')}</td>
-                <td>${b.floor_ids.length}</td>
+                <td>${floorCount}</td>
                 <td class="actions">
                     <button class="btn-icon" onclick="editBuilding('${b.building_id}')" title="Edit">Edit</button>
                 </td>
             </tr>
         `;
-    }).join('');
-}
 
-function renderFloorTable() {
-    const tbody = document.getElementById('floor-table-body');
-    const searchQuery = document.getElementById('floor-search').value.toLowerCase();
-    const buildingFilter = document.getElementById('floor-building-filter').value;
+        // Render embedded floor rows when expanded
+        if (isExpanded) {
+            html += `
+            <tr class="floor-embed-row">
+                <td colspan="5">
+                    <div class="floor-embed-container">
+                        <div class="floor-embed-header">
+                            <span class="floor-embed-title">Floors in ${escapeHtml(b.name)}</span>
+                            <button class="btn btn-sm btn-primary" onclick="addFloorToBuilding('${b.building_id}')">+ Add Floor</button>
+                        </div>
+                        <table class="entity-table floor-table">
+                            <thead>
+                                <tr>
+                                    <th>Display Name</th>
+                                    <th>Level</th>
+                                    <th>Aliases</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
 
-    const filtered = state.floors.filter(f => {
-        if (buildingFilter && f.building_id !== buildingFilter) return false;
-        return f.display_name.toLowerCase().includes(searchQuery);
-    });
+            if (buildingFloors.length === 0) {
+                html += '<tr><td colspan="4" class="empty-state">No floors — add one above</td></tr>';
+            } else {
+                for (const f of buildingFloors) {
+                    html += `
+                                <tr>
+                                    <td>${escapeHtml(f.display_name)}</td>
+                                    <td>${f.level_number}</td>
+                                    <td>${f.aliases.map(a => `<span class="tag">${escapeHtml(a)}</span>`).join(' ')}</td>
+                                    <td class="actions">
+                                        <button class="btn-icon" onclick="editFloor('${f.floor_id}')" title="Edit">Edit</button>
+                                        <button class="btn-icon btn-icon-danger" onclick="confirmDeleteFloor('${f.floor_id}')" title="Delete">Delete</button>
+                                    </td>
+                                </tr>
+                    `;
+                }
+            }
 
-    if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No floors found</td></tr>';
-        return;
-    }
-
-    tbody.innerHTML = filtered.map(f => {
-        const building = state.buildings.find(b => b.building_id === f.building_id);
-        return `
-            <tr>
-                <td>${escapeHtml(f.display_name)}</td>
-                <td>${building ? escapeHtml(building.name) : '-'}</td>
-                <td>${f.level_number}</td>
-                <td>${f.aliases.map(a => `<span class="tag">${escapeHtml(a)}</span>`).join(' ')}</td>
-                <td class="actions">
-                    <button class="btn-icon" onclick="editFloor('${f.floor_id}')" title="Edit">Edit</button>
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
                 </td>
             </tr>
-        `;
-    }).join('');
+            `;
+        }
+    }
+
+    tbody.innerHTML = html;
+}
+
+function toggleBuildingFloors(buildingId) {
+    if (state.expandedBuildings.has(buildingId)) {
+        state.expandedBuildings.delete(buildingId);
+    } else {
+        state.expandedBuildings.add(buildingId);
+    }
+    renderBuildingTable();
+}
+
+function addFloorToBuilding(buildingId) {
+    showModal('floor');
+    // Pre-fill the building dropdown
+    setTimeout(() => {
+        document.getElementById('floor-building').value = buildingId;
+    }, 50);
 }
 
 function renderRoomTable() {
@@ -462,9 +512,11 @@ function showModal(type, editData = null) {
         }
         if (type === 'building') {
             document.getElementById('building-edit-id').value = '';
+            document.getElementById('building-delete-btn').style.display = 'none';
         }
         if (type === 'floor') {
             document.getElementById('floor-edit-id').value = '';
+            document.getElementById('floor-delete-btn').style.display = 'none';
         }
         if (type === 'room') {
             document.getElementById('room-edit-id').value = '';
@@ -484,6 +536,7 @@ function showModal(type, editData = null) {
         }
         if (type === 'department') {
             document.getElementById('department-edit-id').value = '';
+            document.getElementById('department-delete-btn').style.display = 'none';
         }
     }
 
@@ -530,6 +583,7 @@ function populateModalForm(type, data) {
             document.getElementById('building-campus').value = data.campus_id;
             document.getElementById('building-name').value = data.name;
             document.getElementById('building-aliases').value = data.aliases.join(', ');
+            document.getElementById('building-delete-btn').style.display = 'block';
             break;
 
         case 'floor':
@@ -538,6 +592,7 @@ function populateModalForm(type, data) {
             document.getElementById('floor-level').value = data.level_number;
             document.getElementById('floor-display-name').value = data.display_name;
             document.getElementById('floor-aliases').value = data.aliases.join(', ');
+            document.getElementById('floor-delete-btn').style.display = 'block';
             break;
 
         case 'room':
@@ -589,6 +644,7 @@ function populateModalForm(type, data) {
             document.getElementById('department-campus').value = data.campus_id || '';
             document.getElementById('department-aliases').value = data.aliases.join(', ');
             document.getElementById('department-description').value = data.description || '';
+            document.getElementById('department-delete-btn').style.display = 'block';
             break;
     }
 }
@@ -841,6 +897,36 @@ function confirmDeleteOutdoor() {
     }
 }
 
+function confirmDeleteBuilding(buildingIdArg) {
+    const buildingId = buildingIdArg || document.getElementById('building-edit-id').value;
+    const building = state.buildings.find(b => b.building_id === buildingId);
+    if (building) {
+        state.deleteTarget = { type: 'building', id: buildingId, name: building.name };
+        document.getElementById('delete-entity-name').textContent = building.name;
+        document.getElementById('delete-modal').classList.add('active');
+    }
+}
+
+function confirmDeleteFloor(floorIdArg) {
+    const floorId = floorIdArg || document.getElementById('floor-edit-id').value;
+    const floor = state.floors.find(f => f.floor_id === floorId);
+    if (floor) {
+        state.deleteTarget = { type: 'floor', id: floorId, name: floor.display_name };
+        document.getElementById('delete-entity-name').textContent = floor.display_name;
+        document.getElementById('delete-modal').classList.add('active');
+    }
+}
+
+function confirmDeleteDepartment() {
+    const deptId = document.getElementById('department-edit-id').value;
+    const dept = state.departments.find(d => d.department_id === deptId);
+    if (dept) {
+        state.deleteTarget = { type: 'department', id: deptId, name: dept.name };
+        document.getElementById('delete-entity-name').textContent = dept.name;
+        document.getElementById('delete-modal').classList.add('active');
+    }
+}
+
 function closeDeleteModal() {
     document.getElementById('delete-modal').classList.remove('active');
     state.deleteTarget = null;
@@ -856,6 +942,12 @@ async function executeDelete() {
         endpoint = `/admin/cqe/room/${id}?hard=true`;
     } else if (type === 'outdoor') {
         endpoint = `/admin/cqe/outdoor/${id}?hard=true`;
+    } else if (type === 'building') {
+        endpoint = `/admin/cqe/building/${id}`;
+    } else if (type === 'floor') {
+        endpoint = `/admin/cqe/floor/${id}`;
+    } else if (type === 'department') {
+        endpoint = `/admin/cqe/department/${id}`;
     }
 
     const result = await apiCall(endpoint, 'DELETE');
@@ -867,12 +959,20 @@ async function executeDelete() {
         if (type === 'room') {
             document.getElementById('room-id').disabled = false;
             await loadRooms();
-        } else {
+        } else if (type === 'outdoor') {
             document.getElementById('outdoor-id').disabled = false;
             await loadOutdoorLocations();
+        } else if (type === 'building') {
+            await loadBuildings();
+            await loadFloors();
+        } else if (type === 'floor') {
+            await loadFloors();
+            await loadBuildings();
+        } else if (type === 'department') {
+            await loadDepartments();
         }
     } else {
-        showToast(result?.detail || 'Failed to delete', 'error');
+        showToast(result?.detail || result?.error || 'Failed to delete', 'error');
     }
 }
 
@@ -1037,11 +1137,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('building-campus-filter').addEventListener('change', renderBuildingTable);
 
-    // Floor search and filter
-    document.getElementById('floor-search').addEventListener('input', () => {
-        debounceSearch(renderFloorTable);
-    });
-    document.getElementById('floor-building-filter').addEventListener('change', renderFloorTable);
 
     // Room search and filters
     document.getElementById('room-search').addEventListener('input', () => {
@@ -1092,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Phase 4: Hash-based navigation (supports links like /admin/cqe#building)
     const handleHashNavigation = () => {
         const hash = window.location.hash.slice(1); // Remove '#'
-        const validSections = ['campus', 'building', 'floor', 'room', 'outdoor', 'department'];
+        const validSections = ['campus', 'building', 'room', 'outdoor', 'department'];
         if (hash && validSections.includes(hash)) {
             switchSection(hash);
         }

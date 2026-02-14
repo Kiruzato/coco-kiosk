@@ -18,5 +18,35 @@
     "num_chunks": 77,
     "chunk_size": 500,
     "chunk_overlap": 50
+  },
+  "565cbefdf59ead6725f13b82ba760f9d": {
+    "document_name": "CoCo_AI-Integrated_Information_Assistant_Thesis.pdf",
+    "file_type": ".pdf",
+    "file_hash": "a550d04bf048b4c3f1310b813fcfaeabc199a44163fa2b0182e1b9bb5db92df3",
+    "file_path": "C:\\Users\\chann\\OneDrive\\Desktop\\restartcoco\\vibecoding_coco\\campus_rag_chatbot\\data\\uploaded\\CoCo_AI-Integrated_Information_Assistant_Thesis.pdf",
+    "ingestion_timestamp": "2026-02-14T07:31:42.597895",
+    "num_chunks": 5,
+    "chunk_size": 500,
+    "chunk_overlap": 50
+  },
+  "8ec394498e9c4d1f55be5d781da80d14": {
+    "document_name": "CoCo_Official_Identity_and_System_Information.pdf",
+    "file_type": ".pdf",
+    "file_hash": "c71c122d311225fa8db74078d060145624da400a80667161ba3ce666d5672c30",
+    "file_path": "C:\\Users\\chann\\OneDrive\\Desktop\\restartcoco\\vibecoding_coco\\campus_rag_chatbot\\data\\uploaded\\CoCo_Official_Identity_and_System_Information.pdf",
+    "ingestion_timestamp": "2026-02-14T07:35:43.932467",
+    "num_chunks": 9,
+    "chunk_size": 500,
+    "chunk_overlap": 50
+  },
+  "8c03b1f182c30eed83047a03b674b41b": {
+    "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+    "file_type": ".pdf",
+    "file_hash": "6fd381f1960898b6945ce504caad969248b010737fb820fdeb3a54fdf9278ea8",
+    "file_path": "C:\\Users\\chann\\OneDrive\\Desktop\\restartcoco\\vibecoding_coco\\campus_rag_chatbot\\data\\uploaded\\Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+    "ingestion_timestamp": "2026-02-14T08:01:00.148046",
+    "num_chunks": 254,
+    "chunk_size": 500,
+    "chunk_overlap": 50
   }
 }
