@@ -1,0 +1,31 @@
+================================================================================
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:53520 - "GET /static/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53520 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53520 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53520 - "GET /static/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53542 - "GET /static/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53528 - "GET /images/coco-logo-pixel.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53520 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53520 - "GET /voice/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53520 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53520 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53528 - "GET /images/coco-logo-pixel.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53520 - "GET /static/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53542 - "GET /static/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53528 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53528 - "GET /voice/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53528 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+2026-02-14 13:05:00,597 - INFO - [AUDIO] Input format: webm, size: 54687 bytes
+2026-02-14 13:05:00,601 - ERROR - [STT] Audio preprocessing failed: Cannot convert webm format: pydub not installed. Install with: pip install pydub
+2026-02-14 13:05:00,601 - INFO - [VOICE] STT complete: confidence=0.00, text=''
+2026-02-14 13:05:00,602 - WARNING - [VOICE] Low STT confidence: 0.00
+2026-02-14 13:05:00,602 - WARNING - [VOICE] Empty transcription - no speech detected
+INFO:     127.0.0.1:53558 - "POST /voice/chat HTTP/1.1" 200 OK
+2026-02-14 13:05:35,042 - INFO - [AUDIO] Input format: webm, size: 46895 bytes
+2026-02-14 13:05:35,047 - ERROR - [STT] Audio preprocessing failed: Cannot convert webm format: pydub not installed. Install with: pip install pydub
+2026-02-14 13:05:35,047 - INFO - [VOICE] STT complete: confidence=0.00, text=''
+2026-02-14 13:05:35,047 - WARNING - [VOICE] Low STT confidence: 0.00
+2026-02-14 13:05:35,048 - WARNING - [VOICE] Empty transcription - no speech detected
+INFO:     127.0.0.1:37400 - "POST /voice/chat HTTP/1.1" 200 OK
