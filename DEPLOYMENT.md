@@ -93,17 +93,21 @@ git checkout iteration_5
 
 ```bash
 # Make script executable
-chmod +x scripts/pi-setup.sh
+chmod +x pi-setup.sh
 
 # Run setup
-./scripts/pi-setup.sh
+./pi-setup.sh
 ```
 
 The script will:
-1. Create a Python virtual environment
-2. Install all dependencies
-3. Create `.env` file from template
-4. Prompt you to configure API keys
+1. Install system packages (Python 3.11, ffmpeg, espeak-ng, etc.)
+2. Check Python version (3.11 recommended for Piper TTS)
+3. Create a Python virtual environment
+4. Install dependencies from `requirements_rpi.txt` (ARM64 optimized)
+5. Create `.env` file from template
+6. Optionally download voice models (~135MB) for offline STT/TTS
+7. Ingest documents into vector store
+8. Test application startup
 
 ### 2.5 Configure Environment Variables
 
@@ -356,6 +360,26 @@ If that fails:
 # Install from conda-forge (alternative)
 pip install faiss-cpu==1.7.4
 ```
+
+### Issue: Voice not working (Piper TTS)
+
+Piper TTS requires Python 3.11. Check your Python version:
+
+```bash
+python --version
+```
+
+If not 3.11, voice will automatically use cloud fallback (edge-tts).
+
+To manually download voice models:
+
+```bash
+./download-voice-models.sh
+```
+
+This downloads:
+- Whisper STT model (~75MB) for offline speech-to-text
+- Piper TTS model (~60MB) for offline text-to-speech
 
 ### Issue: "No vector store found"
 

@@ -30,7 +30,7 @@ echo "App directory: $APP_DIR"
 echo ""
 
 # Step 1: Install system packages
-echo -e "${YELLOW}[1/7] Installing system packages...${NC}"
+echo -e "${YELLOW}[1/8] Installing system packages...${NC}"
 echo "This requires sudo access."
 
 sudo apt update
@@ -66,7 +66,7 @@ echo -e "${GREEN}System packages installed${NC}"
 echo ""
 
 # Step 2: Check Python version (prefer 3.11 for Piper TTS)
-echo -e "${YELLOW}[2/7] Checking Python version...${NC}"
+echo -e "${YELLOW}[2/8] Checking Python version...${NC}"
 
 if command -v python3.11 &> /dev/null; then
     PYTHON_CMD="python3.11"
@@ -87,7 +87,7 @@ fi
 echo ""
 
 # Step 3: Create virtual environment
-echo -e "${YELLOW}[3/7] Creating virtual environment...${NC}"
+echo -e "${YELLOW}[3/8] Creating virtual environment...${NC}"
 VENV_DIR="$PROJECT_ROOT/venv"
 
 if [ -d "$VENV_DIR" ]; then
@@ -107,14 +107,17 @@ fi
 echo ""
 
 # Step 4: Activate virtual environment and install dependencies
-echo -e "${YELLOW}[4/7] Installing dependencies...${NC}"
+echo -e "${YELLOW}[4/8] Installing dependencies...${NC}"
 source "$VENV_DIR/bin/activate"
 
 # Upgrade pip first
-pip install --upgrade pip
+pip install --upgrade pip wheel setuptools
 
-# Install requirements (use py311 version for Piper TTS compatibility)
-if [ -f "$APP_DIR/requirements_py311.txt" ]; then
+# Install requirements (use RPi-specific version)
+if [ -f "$APP_DIR/requirements_rpi.txt" ]; then
+    echo "Installing from requirements_rpi.txt (ARM64 optimized)..."
+    pip install -r "$APP_DIR/requirements_rpi.txt"
+elif [ -f "$APP_DIR/requirements_py311.txt" ]; then
     echo "Installing from requirements_py311.txt (Python 3.11)..."
     pip install -r "$APP_DIR/requirements_py311.txt"
 else
@@ -122,11 +125,17 @@ else
     pip install -r "$APP_DIR/requirements.txt"
 fi
 
+# Handle potential faiss-cpu ARM64 issue
+if ! python -c "import faiss" 2>/dev/null; then
+    echo -e "${YELLOW}Reinstalling faiss-cpu for ARM64...${NC}"
+    pip install faiss-cpu --no-cache-dir
+fi
+
 echo -e "${GREEN}Dependencies installed${NC}"
 echo ""
 
 # Step 5: Setup environment file
-echo -e "${YELLOW}[5/7] Setting up environment file...${NC}"
+echo -e "${YELLOW}[5/8] Setting up environment file...${NC}"
 ENV_FILE="$APP_DIR/.env"
 ENV_EXAMPLE="$APP_DIR/.env.example"
 
@@ -164,8 +173,26 @@ echo ""
 read -p "Press Enter when you have configured your .env file..."
 echo ""
 
-# Step 6: Ingest documents
-echo -e "${YELLOW}[6/7] Ingesting documents...${NC}"
+# Step 6: Download voice models (optional)
+echo -e "${YELLOW}[6/8] Voice model setup...${NC}"
+VOICE_SCRIPT="$PROJECT_ROOT/download-voice-models.sh"
+
+if [ -f "$VOICE_SCRIPT" ]; then
+    read -p "Download voice models for offline STT/TTS? (~135MB) (y/N): " download_voice
+    if [ "$download_voice" = "y" ] || [ "$download_voice" = "Y" ]; then
+        chmod +x "$VOICE_SCRIPT"
+        "$VOICE_SCRIPT"
+    else
+        echo "Skipping voice model download"
+        echo -e "${YELLOW}Note: Voice will use cloud fallback (edge-tts) if models not present${NC}"
+    fi
+else
+    echo -e "${YELLOW}Voice model download script not found. Skipping...${NC}"
+fi
+echo ""
+
+# Step 7: Ingest documents
+echo -e "${YELLOW}[7/8] Ingesting documents...${NC}"
 cd "$APP_DIR"
 
 # Documents are in documents_to_ingest/ folder
@@ -186,8 +213,8 @@ fi
 echo -e "${GREEN}Document ingestion complete${NC}"
 echo ""
 
-# Step 7: Test startup
-echo -e "${YELLOW}[7/7] Testing application startup...${NC}"
+# Step 8: Test startup
+echo -e "${YELLOW}[8/8] Testing application startup...${NC}"
 echo "Starting server for quick test (will stop after 5 seconds)..."
 
 # Start server in background

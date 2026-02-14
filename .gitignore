@@ -75,8 +75,13 @@ ui_design/
 question_generator/test_archive/
 question_generator/*.json
 
-# === Whisper.cpp source (models are in voice/models/) ===
+# === Whisper.cpp source ===
 whisper.cpp/
+
+# === Voice models (download separately with download-voice-models.sh) ===
+campus_rag_chatbot/voice/models/whisper/*.bin
+campus_rag_chatbot/voice/models/piper/*.onnx
+campus_rag_chatbot/voice/models/piper/*.onnx.json
 
 # === Backup directories ===
 backups/

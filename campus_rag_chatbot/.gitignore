@@ -63,3 +63,8 @@ data/*.backup*
 
 # === Audio test files ===
 *.wav
+
+# === Voice models (download separately with download-voice-models.sh) ===
+voice/models/whisper/*.bin
+voice/models/piper/*.onnx
+voice/models/piper/*.onnx.json
