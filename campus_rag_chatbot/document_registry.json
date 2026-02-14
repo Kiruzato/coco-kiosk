@@ -1,14 +1,4 @@
 {
-  "b547c1a2ba47701280e41334dc1435c5": {
-    "document_name": "2022_student_manual-test.pdf",
-    "file_type": ".pdf",
-    "file_hash": "d284c5c757a1ac08773f1d3b364a4749491e36f96651508e81d1a98486917a6f",
-    "file_path": "C:\\Users\\chann\\OneDrive\\Desktop\\restartcoco\\vibecoding_coco\\campus_rag_chatbot\\data\\uploaded\\2022_student_manual-test.pdf",
-    "ingestion_timestamp": "2026-02-08T08:46:37.775375",
-    "num_chunks": 507,
-    "chunk_size": 500,
-    "chunk_overlap": 50
-  },
   "942192a0730f55b50e526432a3c5cb27": {
     "document_name": "2026_Columban Info-test.pdf",
     "file_type": ".pdf",
@@ -16,6 +6,16 @@
     "file_path": "C:\\Users\\chann\\OneDrive\\Desktop\\restartcoco\\vibecoding_coco\\campus_rag_chatbot\\data\\uploaded\\2026_Columban Info-test.pdf",
     "ingestion_timestamp": "2026-02-08T08:47:23.033207",
     "num_chunks": 77,
+    "chunk_size": 500,
+    "chunk_overlap": 50
+  },
+  "017070a58eaf42a4c2efa8fbf2f8d325": {
+    "document_name": "2022_student_manual-test.pdf",
+    "file_type": ".pdf",
+    "file_hash": "d284c5c757a1ac08773f1d3b364a4749491e36f96651508e81d1a98486917a6f",
+    "file_path": "C:\\Users\\chann\\OneDrive\\Desktop\\restartcoco\\vibecoding_coco\\campus_rag_chatbot\\data\\uploaded\\2022_student_manual-test.pdf",
+    "ingestion_timestamp": "2026-02-14T13:49:14.051422",
+    "num_chunks": 507,
     "chunk_size": 500,
     "chunk_overlap": 50
   }

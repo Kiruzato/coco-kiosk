@@ -1,0 +1,26 @@
+# Fresh Install Commands for RPi
+# Run these one section at a time
+
+# 1. Delete existing directory
+cd /home/pi
+rm -rf coco
+
+# 2. Clone repository (replace with your actual repo URL)
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git coco
+
+# 3. Enter directory and checkout branch
+cd coco
+git checkout model-1.1
+
+# 4. Run setup script
+chmod +x pi-setup.sh
+./pi-setup.sh
+
+# 5. Start the app (after setup completes)
+cd /home/pi/coco/campus_rag_chatbot
+source ../venv/bin/activate
+python app.py
+
+# --- OR use systemd service ---
+# sudo systemctl restart coco
+# sudo systemctl status coco

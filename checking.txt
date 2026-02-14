@@ -1,31 +1,43 @@
-================================================================================
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:53520 - "GET /static/style.css HTTP/1.1" 304 Not Modified
-INFO:     127.0.0.1:53520 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:53520 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53520 - "GET /static/style.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53542 - "GET /static/app.js HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53528 - "GET /images/coco-logo-pixel.png HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53520 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:53520 - "GET /voice/status HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53520 - "GET /favicon.ico HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:53520 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53528 - "GET /images/coco-logo-pixel.png HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53520 - "GET /static/style.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53542 - "GET /static/app.js HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53528 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:53528 - "GET /voice/status HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53528 - "GET /favicon.ico HTTP/1.1" 404 Not Found
-2026-02-14 13:05:00,597 - INFO - [AUDIO] Input format: webm, size: 54687 bytes
-2026-02-14 13:05:00,601 - ERROR - [STT] Audio preprocessing failed: Cannot convert webm format: pydub not installed. Install with: pip install pydub
-2026-02-14 13:05:00,601 - INFO - [VOICE] STT complete: confidence=0.00, text=''
-2026-02-14 13:05:00,602 - WARNING - [VOICE] Low STT confidence: 0.00
-2026-02-14 13:05:00,602 - WARNING - [VOICE] Empty transcription - no speech detected
-INFO:     127.0.0.1:53558 - "POST /voice/chat HTTP/1.1" 200 OK
-2026-02-14 13:05:35,042 - INFO - [AUDIO] Input format: webm, size: 46895 bytes
-2026-02-14 13:05:35,047 - ERROR - [STT] Audio preprocessing failed: Cannot convert webm format: pydub not installed. Install with: pip install pydub
-2026-02-14 13:05:35,047 - INFO - [VOICE] STT complete: confidence=0.00, text=''
-2026-02-14 13:05:35,047 - WARNING - [VOICE] Low STT confidence: 0.00
-2026-02-14 13:05:35,048 - WARNING - [VOICE] Empty transcription - no speech detected
-INFO:     127.0.0.1:37400 - "POST /voice/chat HTTP/1.1" 200 OK
+pi@coco-kiosk:~ $   sudo apt install -y tesseract-ocr tesseract-ocr-eng
+sudo: unable to resolve host coco-kiosk: Name or service not known
+Installing:                     
+  tesseract-ocr  tesseract-ocr-eng
+
+Installing dependencies:
+  libleptonica6  libtesseract5  tesseract-ocr-osd
+
+Summary:
+  Upgrading: 0, Installing: 5, Removing: 0, Not Upgrading: 124
+  Download size: 7,207 kB
+  Space needed: 24.5 MB / 47.9 GB available
+
+Get:1 http://deb.debian.org/debian trixie/main arm64 libleptonica6 arm64 1.84.1-4 [994 kB]
+Get:2 http://deb.debian.org/debian trixie/main arm64 libtesseract5 arm64 5.5.0-1+b1 [1,237 kB]
+Get:3 http://deb.debian.org/debian trixie/main arm64 tesseract-ocr-eng all 1:4.1.0-2 [1,594 kB]
+Get:4 http://deb.debian.org/debian trixie/main arm64 tesseract-ocr-osd all 1:4.1.0-2 [2,992 kB]
+Get:5 http://deb.debian.org/debian trixie/main arm64 tesseract-ocr arm64 5.5.0-1+b1 [389 kB]
+Fetched 7,207 kB in 10s (723 kB/s)                                             
+Selecting previously unselected package libleptonica6:arm64.
+(Reading database ... 121788 files and directories currently installed.)
+Preparing to unpack .../libleptonica6_1.84.1-4_arm64.deb ...
+Unpacking libleptonica6:arm64 (1.84.1-4) ...
+Selecting previously unselected package libtesseract5:arm64.
+Preparing to unpack .../libtesseract5_5.5.0-1+b1_arm64.deb ...
+Unpacking libtesseract5:arm64 (5.5.0-1+b1) ...
+Selecting previously unselected package tesseract-ocr-eng.
+Preparing to unpack .../tesseract-ocr-eng_1%3a4.1.0-2_all.deb ...           ] 
+Unpacking tesseract-ocr-eng (1:4.1.0-2) ...
+Selecting previously unselected package tesseract-ocr-osd.
+Preparing to unpack .../tesseract-ocr-osd_1%3a4.1.0-2_all.deb ...
+Unpacking tesseract-ocr-osd (1:4.1.0-2) ...
+Selecting previously unselected package tesseract-ocr.
+Preparing to unpack .../tesseract-ocr_5.5.0-1+b1_arm64.deb ...
+Unpacking tesseract-ocr (5.5.0-1+b1) ...
+Setting up libleptonica6:arm64 (1.84.1-4) ...
+Setting up tesseract-ocr-eng (1:4.1.0-2) ...
+Setting up libtesseract5:arm64 (5.5.0-1+b1) ...
+Setting up tesseract-ocr-osd (1:4.1.0-2) ...
+Setting up tesseract-ocr (5.5.0-1+b1) ...
+Processing triggers for man-db (2.13.1-1) ...
+Processing triggers for libc-bin (2.41-12+rpt1) ...
+pi@coco-kiosk:~ $ 

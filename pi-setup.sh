@@ -42,6 +42,8 @@ sudo apt install -y \
     python3-venv \
     libmagic-dev \
     poppler-utils \
+    tesseract-ocr \
+    tesseract-ocr-eng \
     ffmpeg \
     libffi-dev \
     libssl-dev \
