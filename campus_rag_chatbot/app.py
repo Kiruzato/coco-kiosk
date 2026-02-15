@@ -217,6 +217,14 @@ llm = ChatOpenAI(
     openai_api_key=OPENAI_API_KEY
 )
 
+# Phase 47: Streaming LLM instance for SSE responses
+llm_streaming = ChatOpenAI(
+    model_name="gpt-4o-mini",
+    temperature=0,
+    openai_api_key=OPENAI_API_KEY,
+    streaming=True
+)
+
 # Initialize Response Orchestrator (Phase 44: LLM-as-Final-Synthesizer)
 # Singleton instance reused across all requests
 response_orchestrator = ResponseOrchestrator(
@@ -231,6 +239,20 @@ response_orchestrator = ResponseOrchestrator(
     }
 )
 logger.info("[PHASE44] ResponseOrchestrator initialized (singleton)")
+
+# Phase 47: Streaming Response Orchestrator
+response_orchestrator_streaming = ResponseOrchestrator(
+    llm=llm_streaming,
+    doc_manager=doc_manager,
+    config={
+        "retrieval_top_k": RETRIEVAL_TOP_K,
+        "relevance_threshold": RELEVANCE_SCORE_THRESHOLD,
+        "min_grounding_terms": MIN_GROUNDING_TERMS,
+        "semantic_threshold_high": 0.78,
+        "semantic_threshold_medium": 0.65
+    }
+)
+logger.info("[PHASE47] Streaming ResponseOrchestrator initialized")
 
 # Initialize query logger
 query_logger = QueryLogger(log_dir=LOG_DIR)
@@ -2672,6 +2694,73 @@ async def chat(request: ChatRequest):
         mode=mode_str,
         debug_info=_debug_info
     )
+
+
+# ==============================================================================
+# PHASE 47: STREAMING CHAT ENDPOINT
+# ==============================================================================
+
+class StreamChatRequest(BaseModel):
+    """Streaming chat request model."""
+    message: str
+    session_id: Optional[str] = None
+
+
+@app.post("/chat/stream")
+async def chat_stream(request: StreamChatRequest):
+    """
+    Handle a chat message with streaming response via SSE.
+
+    Returns Server-Sent Events with progressive token delivery.
+
+    Event types:
+    - metadata: Sources, confidence, mode (sent first)
+    - token: Individual LLM tokens
+    - complete: Timing and final status
+    - error: Error information
+
+    Args:
+        request: Chat request with message and optional session_id
+
+    Returns:
+        EventSourceResponse with streaming events
+    """
+    import json
+
+    # Get or create session
+    session_id, session = get_or_create_session(request.session_id)
+    memory = session["memory"]
+    session["query_count"] += 1
+
+    query = request.message.strip()
+
+    if not query:
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    # Check RAG-only mode from session
+    rag_only_mode = session.get("rag_only_mode", False)
+
+    async def generate():
+        """SSE event generator."""
+        try:
+            async for event in response_orchestrator_streaming.process_query_streaming(
+                query=query,
+                session_id=session_id,
+                memory=memory,
+                rag_only_mode=rag_only_mode
+            ):
+                yield {
+                    "event": event["event"],
+                    "data": json.dumps(event["data"])
+                }
+        except Exception as e:
+            logger.error(f"[STREAM] Error: {e}")
+            yield {
+                "event": "error",
+                "data": json.dumps({"message": str(e), "code": "stream_error"})
+            }
+
+    return EventSourceResponse(generate())
 
 
 @app.post("/feedback")

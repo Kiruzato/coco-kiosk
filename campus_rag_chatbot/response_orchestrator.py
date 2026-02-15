@@ -26,9 +26,10 @@ Response Modes:
 """
 
 import logging
+import time
 from enum import Enum
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Tuple, Any
+from typing import List, Dict, Optional, Tuple, Any, AsyncGenerator
 
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -345,6 +346,226 @@ class ResponseOrchestrator:
                 logger.warning(f"[ORCHESTRATOR] Failed to save memory: {e}")
 
         return response
+
+    async def process_query_streaming(
+        self,
+        query: str,
+        session_id: str,
+        memory: Any = None,
+        rag_only_mode: bool = False
+    ) -> AsyncGenerator[Dict, None]:
+        """
+        Process a query with streaming LLM synthesis.
+
+        Yields events in this order:
+        1. "metadata" - sources, confidence, mode (BEFORE tokens)
+        2. "token" - individual LLM tokens
+        3. "complete" - final timing and status
+
+        Args:
+            query: The user's question
+            session_id: Session identifier
+            memory: Conversation memory (optional)
+            rag_only_mode: If True, only allow RAG responses
+
+        Yields:
+            Dict events with 'event' and 'data' keys
+        """
+        logger.info(f"[ORCHESTRATOR] Streaming query: {query[:50]}...")
+        start_time = time.perf_counter()
+
+        # Phase 46: Preprocess input
+        query = preprocess_input(query)
+
+        # Phase 46: Fast path for simple arithmetic (deterministic, no streaming needed)
+        if MATH_ENGINE_AVAILABLE and is_calculable_expression(query):
+            success, answer, result = try_calculate(query)
+            if success and answer:
+                logger.info(f"[ORCHESTRATOR] Math engine: '{query}' = {result}")
+                yield {
+                    "event": "metadata",
+                    "data": {
+                        "session_id": session_id,
+                        "mode": "general",
+                        "confidence_level": "High",
+                        "confidence_score": 100.0,
+                        "sources": [],
+                        "response_mode": "general",
+                        "extractor_used": "math_engine",
+                        "grounding_mode": "deterministic",
+                        "debug_info": {
+                            "response_mode": "general",
+                            "semantic_relevance": "high",
+                            "query_terms": [],
+                            "grounded": True,
+                            "extractor_matched": True,
+                            "extractor_name": "math_engine"
+                        }
+                    }
+                }
+                yield {"event": "token", "data": {"content": answer, "index": 0}}
+                yield {
+                    "event": "complete",
+                    "data": {
+                        "timing": {"retrieval_ms": 0, "llm_ms": 0, "total_ms": 0},
+                        "rejected": False,
+                        "token_count": 1
+                    }
+                }
+                return
+
+        # Layer 1: Governance (sync)
+        governance = self._apply_governance(query)
+        logger.info(f"[ORCHESTRATOR] Governance: intent={governance.intent}, safe={governance.is_safe}")
+
+        # Layer 2: Retrieval (sync)
+        retrieval_start = time.perf_counter()
+        retrieval = self._perform_retrieval(query)
+        retrieval_ms = (time.perf_counter() - retrieval_start) * 1000
+        logger.info(f"[ORCHESTRATOR] Retrieval: {len(retrieval.documents)} docs, "
+                   f"grounded={retrieval.grounding.is_grounded if retrieval.grounding else False}")
+
+        # Layer 3: Extraction (sync)
+        extraction = self._try_extractors(query, retrieval.context)
+        logger.info(f"[ORCHESTRATOR] Extraction: matched={extraction.matched}")
+
+        # Determine response mode
+        mode = self._determine_response_mode(
+            governance, retrieval, extraction, rag_only_mode
+        )
+        logger.info(f"[ORCHESTRATOR] Response mode: {mode.value}")
+
+        # Determine grounding mode string
+        grounding_mode = "none"
+        if retrieval.grounding:
+            grounding_mode = retrieval.grounding.grounding_mode or "keyword"
+
+        # Build sources list
+        sources = []
+        for doc in retrieval.documents[:4]:
+            sources.append({
+                "document_name": doc.metadata.get("document_name", "Unknown"),
+                "section": doc.metadata.get("section", "Unknown"),
+                "chunk_id": doc.metadata.get("chunk_id", 0)
+            })
+
+        # Yield metadata event FIRST (before any tokens)
+        yield {
+            "event": "metadata",
+            "data": {
+                "session_id": session_id,
+                "mode": "campus" if mode != ResponseMode.GENERAL_KNOWLEDGE else "general",
+                "confidence_level": retrieval.confidence_level.value if retrieval.confidence_level else "LOW",
+                "confidence_score": retrieval.confidence_score,
+                "sources": sources,
+                "response_mode": mode.value,
+                "extractor_used": extraction.extractor_name,
+                "grounding_mode": grounding_mode,
+                "debug_info": {
+                    "response_mode": mode.value,
+                    "semantic_relevance": retrieval.semantic_relevance.value,
+                    "query_terms": retrieval.query_terms,
+                    "grounded": retrieval.grounding.is_grounded if retrieval.grounding else False,
+                    "extractor_matched": extraction.matched,
+                    "extractor_name": extraction.extractor_name
+                }
+            }
+        }
+
+        # Layer 4: Streaming LLM Synthesis
+        prompt = self._build_prompt_for_mode(query, mode, retrieval, extraction)
+        messages = [HumanMessage(content=prompt)]
+
+        llm_start = time.perf_counter()
+        token_count = 0
+        full_response = ""
+
+        try:
+            # Single LLM call with streaming - accumulate tokens locally
+            async for chunk in self.llm.astream(messages):
+                if chunk.content:
+                    token_count += 1
+                    full_response += chunk.content
+                    yield {
+                        "event": "token",
+                        "data": {"content": chunk.content, "index": token_count}
+                    }
+        except Exception as e:
+            logger.error(f"[ORCHESTRATOR] Streaming error: {e}")
+            yield {
+                "event": "error",
+                "data": {"message": str(e), "code": "llm_error"}
+            }
+            return
+
+        llm_ms = (time.perf_counter() - llm_start) * 1000
+        total_ms = (time.perf_counter() - start_time) * 1000
+
+        # Save to memory AFTER streaming completes (using accumulated full_response)
+        if memory:
+            try:
+                memory.save_context({"question": query}, {"answer": full_response})
+            except Exception as e:
+                logger.warning(f"[ORCHESTRATOR] Failed to save memory: {e}")
+
+        # Yield complete event
+        yield {
+            "event": "complete",
+            "data": {
+                "timing": {
+                    "retrieval_ms": round(retrieval_ms, 1),
+                    "llm_ms": round(llm_ms, 1),
+                    "total_ms": round(total_ms, 1)
+                },
+                "rejected": False,
+                "token_count": token_count
+            }
+        }
+
+    def _build_prompt_for_mode(
+        self,
+        query: str,
+        mode: ResponseMode,
+        retrieval: 'RetrievalResult',
+        extraction: 'ExtractionResult'
+    ) -> str:
+        """
+        Build prompt string for given response mode.
+
+        Extracted from _synthesize_response for reuse in streaming.
+        """
+        from query_analyzer import analyze_query, QueryType
+
+        query_analysis = analyze_query(query)
+        query_type = query_analysis["query_type"]
+
+        prompt_template = SYNTHESIS_PROMPTS[mode]
+
+        # Prepare prompt variables
+        prompt_vars = {"query": query}
+
+        if mode == ResponseMode.EXTRACTOR_AUTHORITATIVE:
+            prompt_vars["extractor_output"] = extraction.formatted_output or ""
+        elif mode in [ResponseMode.RAG_AUTHORITATIVE, ResponseMode.RAG_SUPPLEMENTED]:
+            prompt_vars["context"] = retrieval.context or "No relevant documents found."
+
+        # Add style hints for GENERAL_KNOWLEDGE and RAG_SUPPLEMENTED modes
+        if mode in [ResponseMode.GENERAL_KNOWLEDGE, ResponseMode.RAG_SUPPLEMENTED]:
+            if query_type == QueryType.MATH:
+                if query_analysis["complexity"].value == "simple":
+                    prompt_vars["style_hints"] = STYLE_HINTS.get("math_simple", "")
+                else:
+                    prompt_vars["style_hints"] = STYLE_HINTS.get("math_complex", "")
+            elif query_type == QueryType.GREETING:
+                prompt_vars["style_hints"] = STYLE_HINTS.get("greeting", "")
+            elif query_type == QueryType.DEFINITION:
+                prompt_vars["style_hints"] = STYLE_HINTS.get("definition", "")
+            else:
+                prompt_vars["style_hints"] = STYLE_HINTS.get("default", "")
+        else:
+            prompt_vars["style_hints"] = ""
+
+        return prompt_template.format(**prompt_vars)
 
     def _apply_governance(self, query: str) -> GovernanceResult:
         """
@@ -692,38 +913,9 @@ class ResponseOrchestrator:
         # Phase 45: Analyze query for response formatting
         query_analysis = analyze_query(query)
         query_type = query_analysis["query_type"]
-        style_key = query_analysis["formatting_hints"].get("style_key", "default")
 
-        prompt_template = SYNTHESIS_PROMPTS[mode]
-
-        # Prepare prompt variables
-        prompt_vars = {"query": query}
-
-        if mode == ResponseMode.EXTRACTOR_AUTHORITATIVE:
-            prompt_vars["extractor_output"] = extraction.formatted_output or ""
-        elif mode in [ResponseMode.RAG_AUTHORITATIVE, ResponseMode.RAG_SUPPLEMENTED]:
-            prompt_vars["context"] = retrieval.context or "No relevant documents found."
-
-        # Phase 45: Add style hints for GENERAL_KNOWLEDGE and RAG_SUPPLEMENTED modes
-        if mode in [ResponseMode.GENERAL_KNOWLEDGE, ResponseMode.RAG_SUPPLEMENTED]:
-            # Map query type to style hint key
-            if query_type == QueryType.MATH:
-                if query_analysis["complexity"].value == "simple":
-                    prompt_vars["style_hints"] = STYLE_HINTS.get("math_simple", "")
-                else:
-                    prompt_vars["style_hints"] = STYLE_HINTS.get("math_complex", "")
-            elif query_type == QueryType.GREETING:
-                prompt_vars["style_hints"] = STYLE_HINTS.get("greeting", "")
-            elif query_type == QueryType.DEFINITION:
-                prompt_vars["style_hints"] = STYLE_HINTS.get("definition", "")
-            else:
-                prompt_vars["style_hints"] = STYLE_HINTS.get("default", "")
-        else:
-            # Ensure style_hints is defined even if not used
-            prompt_vars["style_hints"] = ""
-
-        # Format the prompt
-        prompt = prompt_template.format(**prompt_vars)
+        # Build prompt using extracted helper
+        prompt = self._build_prompt_for_mode(query, mode, retrieval, extraction)
 
         # Call LLM
         try:

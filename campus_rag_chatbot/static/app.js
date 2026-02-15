@@ -272,6 +272,200 @@ async function sendMessage(message) {
     }
 }
 
+// ============================================================================
+// PHASE 47: STREAMING RESPONSE SUPPORT
+// ============================================================================
+
+// Streaming mode toggle - can be enabled/disabled
+let streamingEnabled = true;
+
+/**
+ * Phase 47: Send message with streaming response via SSE
+ * Progressive token delivery for improved responsiveness
+ */
+async function sendMessageStreaming(message) {
+    // Create streaming message container
+    const messageDiv = createStreamingMessageContainer();
+    chatContainer.appendChild(messageDiv);
+
+    const contentDiv = messageDiv.querySelector('.streaming-content');
+    const metadataDiv = messageDiv.querySelector('.streaming-metadata');
+
+    let fullAnswer = '';
+    let metadata = null;
+    let currentEvent = null;
+
+    try {
+        const response = await fetch('/chat/stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: message,
+                session_id: sessionId
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        // Read SSE stream using ReadableStream
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';  // Keep incomplete line in buffer
+
+            for (const line of lines) {
+                if (line.startsWith('event:')) {
+                    currentEvent = line.slice(6).trim();
+                } else if (line.startsWith('data:') && currentEvent) {
+                    const data = JSON.parse(line.slice(5).trim());
+
+                    if (currentEvent === 'metadata') {
+                        metadata = data;
+                        updateSessionId(data.session_id);
+                        renderStreamingMetadata(metadataDiv, metadata);
+                        // Hide loading indicator once metadata arrives
+                        loadingIndicator.style.display = 'none';
+                    } else if (currentEvent === 'token') {
+                        fullAnswer += data.content;
+                        // Update content with formatted text and cursor
+                        contentDiv.innerHTML = formatAnswerText(fullAnswer) +
+                            '<span class="streaming-cursor">▋</span>';
+                        scrollToBottom();
+                    } else if (currentEvent === 'complete') {
+                        // Finalize the message
+                        finalizeStreamingMessage(messageDiv, metadata, data, fullAnswer);
+                    } else if (currentEvent === 'error') {
+                        throw new Error(data.message);
+                    }
+
+                    currentEvent = null;  // Reset for next event
+                }
+            }
+        }
+
+        return { answer: fullAnswer, metadata: metadata };
+
+    } catch (error) {
+        console.error('Streaming error:', error);
+        contentDiv.innerHTML = `<span class="error-text">Error: ${escapeHtml(error.message)}</span>`;
+        messageDiv.classList.remove('streaming');
+        throw error;
+    }
+}
+
+/**
+ * Phase 47: Create container for streaming message with cursor
+ */
+function createStreamingMessageContainer() {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message assistant-message streaming';
+    messageDiv.innerHTML = `
+        <div class="message-content">
+            <div class="streaming-metadata"></div>
+            <div class="streaming-content">
+                <span class="streaming-cursor">▋</span>
+            </div>
+        </div>
+    `;
+    return messageDiv;
+}
+
+/**
+ * Phase 47: Render metadata (confidence, sources, mode) immediately
+ */
+function renderStreamingMetadata(container, metadata) {
+    let html = '';
+
+    // Confidence badge
+    const confidenceClass = `confidence-${metadata.confidence_level.toLowerCase()}`;
+    html += `
+        <div class="confidence-badge ${confidenceClass}">
+            Confidence: ${metadata.confidence_level}
+        </div>
+        <div class="confidence-score">
+            Score: ${Math.round(metadata.confidence_score)}/100
+        </div>
+    `;
+
+    // Mode badge
+    if (metadata.mode === 'campus') {
+        html += `<div class="mode-badge mode-campus">📚 Based on campus documents</div>`;
+    } else if (metadata.mode === 'general') {
+        html += `<div class="mode-badge mode-general">🤖 Based on general AI knowledge</div>`;
+    }
+
+    container.innerHTML = html;
+}
+
+/**
+ * Phase 47: Finalize streaming message with complete data
+ */
+function finalizeStreamingMessage(messageDiv, metadata, completeData, fullAnswer) {
+    messageDiv.classList.remove('streaming');
+
+    // Remove cursor
+    const cursor = messageDiv.querySelector('.streaming-cursor');
+    if (cursor) cursor.remove();
+
+    // Update content without cursor
+    const contentDiv = messageDiv.querySelector('.streaming-content');
+    contentDiv.innerHTML = `<div class="large-text">${formatAnswerText(fullAnswer)}</div>`;
+
+    // Add sources
+    if (metadata.sources && metadata.sources.length > 0) {
+        const sourcesHtml = `
+            <div class="sources">
+                <div class="sources-title">Sources:</div>
+                ${metadata.sources.map(s => `
+                    <div class="source-item">
+                        ${escapeHtml(s.document_name)} - ${escapeHtml(s.section)}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        messageDiv.querySelector('.message-content').insertAdjacentHTML('beforeend', sourcesHtml);
+    }
+
+    // Add feedback buttons
+    const feedbackId = `feedback-${Date.now()}`;
+    const feedbackHtml = `
+        <div class="feedback-container" id="${feedbackId}">
+            <div class="feedback-icons">
+                <button class="feedback-icon-btn thumbs-up" onclick="submitFeedback('${feedbackId}', true)" aria-label="Helpful" title="Helpful">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+                        <path d="M2 20h2c.55 0 1-.45 1-1v-9c0-.55-.45-1-1-1H2v11zm19.83-7.12c.11-.25.17-.52.17-.8V11c0-1.1-.9-2-2-2h-5.5l.92-4.65c.05-.22.02-.46-.08-.66-.23-.45-.52-.86-.88-1.22L14 2 7.59 8.41C7.21 8.79 7 9.3 7 9.83v7.84C7 18.95 8.05 20 9.34 20h8.11c.7 0 1.36-.37 1.72-.97l2.66-6.15z"/>
+                    </svg>
+                </button>
+                <button class="feedback-icon-btn thumbs-down" onclick="submitFeedback('${feedbackId}', false)" aria-label="Not helpful" title="Not helpful">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+                        <path d="M22 4h-2c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h2V4zM2.17 11.12c-.11.25-.17.52-.17.8V13c0 1.1.9 2 2 2h5.5l-.92 4.65c-.05.22-.02.46.08.66.23.45.52.86.88 1.22L10 22l6.41-6.41c.38-.38.59-.89.59-1.42V6.34C17 5.05 15.95 4 14.66 4h-8.1c-.71 0-1.36.37-1.72.97l-2.67 6.15z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+    messageDiv.querySelector('.message-content').insertAdjacentHTML('beforeend', feedbackHtml);
+
+    // Add debug panel if debug_info is present
+    if (metadata.debug_info) {
+        // Add timing from complete event
+        metadata.debug_info.timing = completeData.timing;
+        const debugHtml = renderDebugPanel(metadata.debug_info);
+        messageDiv.querySelector('.message-content').insertAdjacentHTML('beforeend', debugHtml);
+    }
+
+    scrollToBottom();
+}
+
 /**
  * Submit feedback for a response
  */
@@ -377,46 +571,57 @@ async function handleSubmit(event) {
     loadingIndicator.style.display = 'flex';
 
     try {
-        // Send to API
-        const data = await sendMessage(message);
+        // Phase 47: Use streaming if enabled (and TTS disabled for now)
+        // Streaming provides progressive token delivery for better UX
+        // Note: TTS currently not compatible with streaming - use non-streaming for TTS
+        if (streamingEnabled && !ttsEnabled) {
+            console.log('[Phase 47] Using streaming response...');
+            const result = await sendMessageStreaming(message);
+            lastQueryId = Date.now();
 
-        // Store query ID for feedback
-        lastQueryId = data.timestamp;
-
-        // Phase 41: Synchronized text-voice delivery
-        // If TTS enabled, synthesize audio BEFORE showing text
-        // Note: TTS plays for ALL answers including graceful refusals (rejected=true)
-        console.log('[Phase 41] TTS check:', { ttsEnabled, hasAnswer: !!data.answer });
-        if (ttsEnabled && data.answer) {
-            // Update loading text to indicate preparing response
-            if (loadingText) loadingText.textContent = 'Preparing response...';
-
-            // Synthesize TTS (keep loading indicator visible)
-            console.log('[Phase 41] Synthesizing TTS for typed input...');
-            const ttsResult = await synthesizeTTSOnly(data.answer);
-            console.log('[Phase 41] TTS synthesis result:', ttsResult ? `Blob size: ${ttsResult.blob.size}, Engine: ${ttsResult.engine}` : 'null');
-
-            // Add TTS engine info to debug_info from synthesis response header
-            if (ttsResult && data.debug_info) {
-                data.debug_info.tts_engine = ttsResult.engine;
-            }
-
-            // Hide loading indicator
-            loadingIndicator.style.display = 'none';
-
-            // Show text and play audio together
-            addAssistantMessage(data);
-            if (ttsResult) {
-                console.log('[Phase 41] Playing audio blob...');
-                playAudioBlob(ttsResult.blob);
-            } else {
-                console.log('[Phase 41] No audio blob to play');
-            }
         } else {
-            // No TTS - show text immediately
-            console.log('[Phase 41] Skipping TTS:', { ttsEnabled, hasAnswer: !!data.answer });
-            loadingIndicator.style.display = 'none';
-            addAssistantMessage(data);
+            // Non-streaming path (original behavior)
+            // Send to API
+            const data = await sendMessage(message);
+
+            // Store query ID for feedback
+            lastQueryId = data.timestamp;
+
+            // Phase 41: Synchronized text-voice delivery
+            // If TTS enabled, synthesize audio BEFORE showing text
+            // Note: TTS plays for ALL answers including graceful refusals (rejected=true)
+            console.log('[Phase 41] TTS check:', { ttsEnabled, hasAnswer: !!data.answer });
+            if (ttsEnabled && data.answer) {
+                // Update loading text to indicate preparing response
+                if (loadingText) loadingText.textContent = 'Preparing response...';
+
+                // Synthesize TTS (keep loading indicator visible)
+                console.log('[Phase 41] Synthesizing TTS for typed input...');
+                const ttsResult = await synthesizeTTSOnly(data.answer);
+                console.log('[Phase 41] TTS synthesis result:', ttsResult ? `Blob size: ${ttsResult.blob.size}, Engine: ${ttsResult.engine}` : 'null');
+
+                // Add TTS engine info to debug_info from synthesis response header
+                if (ttsResult && data.debug_info) {
+                    data.debug_info.tts_engine = ttsResult.engine;
+                }
+
+                // Hide loading indicator
+                loadingIndicator.style.display = 'none';
+
+                // Show text and play audio together
+                addAssistantMessage(data);
+                if (ttsResult) {
+                    console.log('[Phase 41] Playing audio blob...');
+                    playAudioBlob(ttsResult.blob);
+                } else {
+                    console.log('[Phase 41] No audio blob to play');
+                }
+            } else {
+                // No TTS - show text immediately
+                console.log('[Phase 41] Skipping TTS:', { ttsEnabled, hasAnswer: !!data.answer });
+                loadingIndicator.style.display = 'none';
+                addAssistantMessage(data);
+            }
         }
 
     } catch (error) {

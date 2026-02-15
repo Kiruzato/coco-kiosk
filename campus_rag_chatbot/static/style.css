@@ -1377,3 +1377,55 @@ body {
         min-width: 100px;
     }
 }
+
+/* ============================================================================
+   Phase 47: Streaming Response Support
+   ============================================================================ */
+
+/* Streaming message container */
+.message.streaming {
+    position: relative;
+}
+
+/* Streaming content area */
+.streaming-content {
+    min-height: 2em;
+}
+
+/* Streaming metadata shown immediately */
+.streaming-metadata {
+    margin-bottom: 10px;
+}
+
+/* Blinking cursor animation */
+.streaming-cursor {
+    display: inline;
+    animation: blink 1s step-end infinite;
+    color: #1e3c72;
+    font-weight: bold;
+}
+
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0;
+    }
+}
+
+/* Streaming message transitions */
+.message.streaming .message-content {
+    transition: all 0.2s ease;
+}
+
+/* Remove cursor animation when streaming completes */
+.message:not(.streaming) .streaming-cursor {
+    display: none;
+}
+
+/* Error text in streaming */
+.error-text {
+    color: #f44336;
+    font-weight: 500;
+}
