@@ -19,14 +19,14 @@ SSH into your Raspberry Pi 5:
     ssh pi@<rpi5-ip>
 
 Create project directory and clone:
-
+    rm -rf /home/pi/coco
     mkdir -p /home/pi/coco
     cd /home/pi/coco
-    git clone -b antigravity-dev-2 https://github.com/Kiruzato/coco-kiosk.git .
+    git clone -b model-1.1 https://github.com/Kiruzato/coco-kiosk.git .
 
 Or if already cloned, pull latest:
 
-    git pull origin antigravity-dev-2
+    git pull origin model-1.1
 
 Verify files are present:
 
