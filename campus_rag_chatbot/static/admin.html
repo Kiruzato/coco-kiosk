@@ -28,9 +28,9 @@
 
                     <div class="nav-group">
                         <span class="nav-group-label">Documents</span>
-                        <a href="#upload" class="nav-item" data-section="upload">
-                            <span class="nav-icon">&#8593;</span>
-                            <span class="nav-label">Upload</span>
+                        <a href="#rag-package" class="nav-item" data-section="rag-package">
+                            <span class="nav-icon">&#128230;</span>
+                            <span class="nav-label">RAG Package</span>
                         </a>
                         <a href="#documents" class="nav-item" data-section="documents">
                             <span class="nav-icon">&#9783;</span>
@@ -113,31 +113,50 @@
                     </div>
                 </section>
 
-                <!-- Section: Upload Document -->
-                <section id="section-upload" class="admin-section">
+                <!-- Section: RAG Package Upload -->
+                <section id="section-rag-package" class="admin-section">
                     <div class="section-header">
-                        <h2>Upload Document</h2>
+                        <h2>RAG Package Upload</h2>
+                        <p class="section-subtitle">Upload a pre-built vector store package</p>
                     </div>
 
                     <div class="card">
-                        <form id="uploadForm">
-                            <div class="upload-area">
-                                <input
-                                    type="file"
-                                    id="fileInput"
-                                    accept=".pdf,.docx,.txt"
-                                    class="file-input"
-                                >
-                                <label for="fileInput" class="file-label">
-                                    <span class="file-icon">&#9776;</span>
-                                    <span id="fileName">Choose a file or drag & drop</span>
-                                    <span class="file-types">Supported: PDF, DOCX, TXT</span>
-                                </label>
-                                <button type="submit" id="uploadBtn" class="btn-primary" disabled>
-                                    Upload Document
-                                </button>
-                            </div>
-                        </form>
+                        <div class="rag-upload-area" id="ragUploadArea">
+                            <input
+                                type="file"
+                                id="ragFileInput"
+                                accept=".zip"
+                                class="file-input"
+                            >
+                            <label for="ragFileInput" class="file-label rag-label">
+                                <span class="file-icon">&#128230;</span>
+                                <span id="ragFileName">Choose a .zip file or drag & drop</span>
+                                <span class="file-types">Vector store package (.zip)</span>
+                            </label>
+                            <button type="button" id="ragUploadBtn" class="btn-primary" disabled>
+                                Upload RAG Package
+                            </button>
+                        </div>
+
+                        <div id="ragUploadStatus" class="upload-status"></div>
+
+                        <div class="info-box">
+                            <h4>How to Create a RAG Package</h4>
+                            <ol>
+                                <li>On your development machine, run:
+                                    <code>python -m coco_ingestion.ingest &lt;documents_folder&gt;</code>
+                                </li>
+                                <li>Find the generated package at:
+                                    <code>Desktop/CoCo_RAG_Packages/</code>
+                                </li>
+                                <li>Upload the <code>.zip</code> file here</li>
+                            </ol>
+                            <h4>Package Requirements</h4>
+                            <ul>
+                                <li>Must be a <code>.zip</code> file</li>
+                                <li>Must contain: <code>index.faiss</code>, <code>index.pkl</code></li>
+                            </ul>
+                        </div>
                     </div>
                 </section>
 

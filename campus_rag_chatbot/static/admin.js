@@ -219,40 +219,61 @@ async function apiCall(endpoint, options = {}) {
  * Upload document to server
  */
 async function uploadDocument(file) {
+    // DEPRECATED: Document upload is no longer supported
+    // Use uploadRAGPackage instead
+    showNotification('Document upload is no longer supported. Use RAG Package upload instead.', 'error');
+}
+
+/**
+ * Upload RAG Package (vector store .zip) to server
+ */
+async function uploadRAGPackage(file) {
     if (isUploading) return;
 
+    // Validate file type
+    if (!file.name.endsWith('.zip')) {
+        showNotification('File must be a .zip archive', 'error');
+        return;
+    }
+
     isUploading = true;
-    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadBtn = document.getElementById('ragUploadBtn');
+    const statusDiv = document.getElementById('ragUploadStatus');
     const originalText = uploadBtn.textContent;
+
     uploadBtn.textContent = 'Uploading...';
     uploadBtn.disabled = true;
+    statusDiv.innerHTML = '<span class="status-loading">Uploading and processing package...</span>';
 
     try {
         const formData = new FormData();
         formData.append('file', file);
 
-        const data = await apiCall('/admin/upload', {
+        const data = await apiCall('/admin/upload_rag_package', {
             method: 'POST',
             body: formData
         });
 
-        showNotification(`Document "${data.document.document_name}" uploaded successfully`, 'success');
+        const docCount = data.documents || 0;
+        statusDiv.innerHTML = `<span class="status-success">Package uploaded successfully! ${docCount} documents loaded.</span>`;
+        showNotification(`RAG package uploaded successfully! ${docCount} documents loaded.`, 'success');
 
         // Reset file input
-        const fileInput = document.getElementById('fileInput');
-        fileInput.value = '';
-        document.getElementById('fileName').textContent = 'Choose a file';
+        const ragFileInput = document.getElementById('ragFileInput');
+        ragFileInput.value = '';
+        document.getElementById('ragFileName').textContent = 'Choose a .zip file or drag & drop';
         uploadBtn.disabled = true;
 
         // Reload documents table
         await loadDocuments();
 
     } catch (error) {
-        showNotification(`Upload failed: ${error.message}`, 'error');
+        statusDiv.innerHTML = `<span class="status-error">Upload failed: ${error.message}</span>`;
+        showNotification(`RAG package upload failed: ${error.message}`, 'error');
     } finally {
         isUploading = false;
         uploadBtn.textContent = originalText;
-        uploadBtn.disabled = !document.getElementById('fileInput').files.length;
+        uploadBtn.disabled = !document.getElementById('ragFileInput').files.length;
     }
 }
 
@@ -2053,29 +2074,53 @@ document.addEventListener('DOMContentLoaded', () => {
     // Logout Button
     document.getElementById('logoutBtn').addEventListener('click', logout);
 
-    // File Input
-    const fileInput = document.getElementById('fileInput');
-    const uploadBtn = document.getElementById('uploadBtn');
+    // RAG Package Upload
+    const ragFileInput = document.getElementById('ragFileInput');
+    const ragUploadBtn = document.getElementById('ragUploadBtn');
+    const ragUploadArea = document.getElementById('ragUploadArea');
 
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            document.getElementById('fileName').textContent = file.name;
-            uploadBtn.disabled = false;
-        } else {
-            document.getElementById('fileName').textContent = 'Choose a file or drag & drop';
-            uploadBtn.disabled = true;
-        }
-    });
+    if (ragFileInput && ragUploadBtn) {
+        ragFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('ragFileName').textContent = file.name;
+                ragUploadBtn.disabled = false;
+            } else {
+                document.getElementById('ragFileName').textContent = 'Choose a .zip file or drag & drop';
+                ragUploadBtn.disabled = true;
+            }
+        });
 
-    // Upload Form
-    document.getElementById('uploadForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const file = fileInput.files[0];
-        if (file) {
-            uploadDocument(file);
+        ragUploadBtn.addEventListener('click', () => {
+            const file = ragFileInput.files[0];
+            if (file) {
+                uploadRAGPackage(file);
+            }
+        });
+
+        // Drag and drop support
+        if (ragUploadArea) {
+            ragUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                ragUploadArea.classList.add('dragover');
+            });
+
+            ragUploadArea.addEventListener('dragleave', () => {
+                ragUploadArea.classList.remove('dragover');
+            });
+
+            ragUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                ragUploadArea.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    const file = e.dataTransfer.files[0];
+                    document.getElementById('ragFileName').textContent = file.name;
+                    ragUploadBtn.disabled = false;
+                    ragFileInput.files = e.dataTransfer.files;
+                }
+            });
         }
-    });
+    }
 
     // Refresh Button
     document.getElementById('refreshBtn').addEventListener('click', loadDocuments);

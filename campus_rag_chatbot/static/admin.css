@@ -298,6 +298,97 @@ button {
 }
 
 /* ==============================================================================
+   RAG PACKAGE UPLOAD
+   ============================================================================== */
+
+.rag-upload-area {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.rag-label {
+    border: 2px dashed #28a745;
+    background: #f0fff4;
+}
+
+.rag-label:hover {
+    background: #e6ffe6;
+    border-color: #218838;
+}
+
+.rag-upload-area.dragover .rag-label {
+    background: #d4edda;
+    border-color: #28a745;
+    border-style: solid;
+}
+
+#ragFileName {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.upload-status {
+    padding: 10px 0;
+}
+
+.status-loading {
+    color: #667eea;
+    font-style: italic;
+}
+
+.status-success {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.status-error {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.info-box {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.info-box h4 {
+    color: #495057;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.info-box ol,
+.info-box ul {
+    margin-left: 20px;
+    color: #666;
+    font-size: 14px;
+}
+
+.info-box li {
+    margin-bottom: 8px;
+}
+
+.info-box code {
+    background: #e9ecef;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 13px;
+}
+
+.section-subtitle {
+    color: #666;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+/* ==============================================================================
    TABLE
    ============================================================================== */
 

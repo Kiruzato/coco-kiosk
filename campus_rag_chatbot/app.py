@@ -194,7 +194,13 @@ doc_manager = DocumentManager(
 doc_manager.load_vector_store()
 
 if doc_manager.vector_store is None:
-    raise RuntimeError("No vector store found. Please ingest documents first.")
+    raise RuntimeError(
+        "No vector store found. This server runs in RUNTIME MODE only.\n"
+        "To create a vector store:\n"
+        "  1. On your dev machine: python -m coco_ingestion.ingest <documents_folder>\n"
+        "  2. Upload via Admin UI > RAG Package, OR\n"
+        "  3. Copy vector_store/ folder and restart server"
+    )
 
 # Phase 25: Load metadata index
 from metadata_index import MetadataIndex
@@ -2722,65 +2728,195 @@ async def reset_session(request: ResetRequest):
 @app.post("/admin/upload", dependencies=[Depends(verify_admin_session)])
 async def upload_document(file: UploadFile = File(...)):
     """
-    Upload and ingest a document into the knowledge base.
+    DEPRECATED: Document upload/ingestion is no longer supported on the server.
 
-    Args:
-        file: Uploaded file (PDF, DOCX, or TXT)
+    The server runs in RUNTIME MODE only - it loads pre-built vector stores
+    but does not perform document ingestion.
+
+    To add documents:
+    1. Run ingestion on your development machine:
+       python -m coco_ingestion.ingest <documents_folder>
+    2. Upload the generated .zip package via /admin/upload_rag_package
 
     Returns:
-        Success response with document metadata
-
-    Raises:
-        400: Unsupported file type
-        500: Ingestion failed
+        410 Gone: Endpoint deprecated
     """
-    # Validate file type
-    allowed_extensions = ['.pdf', '.docx', '.txt']
-    file_ext = Path(file.filename).suffix.lower()
+    raise HTTPException(
+        status_code=410,
+        detail=(
+            "Document ingestion is no longer supported on the server. "
+            "Use the standalone ingestion module on your development machine: "
+            "python -m coco_ingestion.ingest <documents_folder>. "
+            "Then upload the RAG package via Admin UI > RAG Package."
+        )
+    )
 
-    if file_ext not in allowed_extensions:
+
+# ==============================================================================
+# RAG PACKAGE UPLOAD - Runtime Vector Store Replacement
+# ==============================================================================
+
+@app.post("/admin/upload_rag_package", dependencies=[Depends(verify_admin_session)])
+async def upload_rag_package(file: UploadFile = File(...)):
+    """
+    Upload and replace the vector store with a new RAG package.
+
+    Accepts a .zip file containing:
+    - vector_store/index.faiss (required)
+    - vector_store/index.pkl (required)
+    - document_registry.json (optional)
+
+    The vector store is replaced atomically with backup/rollback on failure.
+    After successful upload, the vector store is reloaded in memory.
+
+    Returns:
+        Success response with document count
+    """
+    global doc_manager, metadata_index
+    import zipfile
+    import tempfile
+
+    # Validate file type
+    if not file.filename.endswith('.zip'):
         raise HTTPException(
             status_code=400,
-            detail=f"Unsupported file type '{file_ext}'. Allowed: {', '.join(allowed_extensions)}"
+            detail="File must be a .zip archive"
         )
 
-    # Create upload directory if needed
-    upload_dir = PROJECT_ROOT / "data" / "uploaded"
-    upload_dir.mkdir(parents=True, exist_ok=True)
+    logger.info(f"[RAG_UPLOAD] Received package: {file.filename}")
 
-    # Save file to disk
-    file_path = upload_dir / file.filename
     try:
-        with open(file_path, "wb") as f:
-            shutil.copyfileobj(file.file, f)
+        # Save to temp location
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            zip_path = temp_path / "upload.zip"
+
+            # Save uploaded file
+            content = await file.read()
+            with open(zip_path, "wb") as f:
+                f.write(content)
+
+            logger.info(f"[RAG_UPLOAD] Saved zip ({len(content)} bytes)")
+
+            # Extract zip
+            extract_dir = temp_path / "extracted"
+            try:
+                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(extract_dir)
+            except zipfile.BadZipFile:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid zip file"
+                )
+
+            # Find vector_store folder (may be at root or nested)
+            vs_path = None
+            for root, dirs, files in os.walk(extract_dir):
+                if "index.faiss" in files and "index.pkl" in files:
+                    vs_path = Path(root)
+                    break
+
+            if not vs_path:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid package: missing index.faiss or index.pkl"
+                )
+
+            logger.info(f"[RAG_UPLOAD] Found vector store at: {vs_path}")
+
+            # Validate required files
+            required_files = ["index.faiss", "index.pkl"]
+            for req in required_files:
+                if not (vs_path / req).exists():
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Missing required file: {req}"
+                    )
+
+            # Atomic replacement with backup
+            target = VECTOR_STORE_PATH
+            backup = target.parent / "vector_store_backup_upload"
+
+            # Backup existing
+            if target.exists():
+                if backup.exists():
+                    shutil.rmtree(backup)
+                shutil.move(str(target), str(backup))
+                logger.info(f"[RAG_UPLOAD] Backed up existing vector store")
+
+            try:
+                # Copy new vector store
+                shutil.copytree(str(vs_path), str(target))
+                logger.info(f"[RAG_UPLOAD] Copied new vector store")
+
+                # Check for document_registry.json at package root or vs folder
+                registry_path = None
+                for check_path in [
+                    extract_dir / "document_registry.json",
+                    vs_path / "document_registry.json",
+                    vs_path.parent / "document_registry.json"
+                ]:
+                    if check_path.exists():
+                        registry_path = check_path
+                        break
+
+                if registry_path:
+                    shutil.copy(str(registry_path), str(REGISTRY_PATH))
+                    logger.info(f"[RAG_UPLOAD] Copied document registry from {registry_path}")
+                    # Reload registry into memory
+                    doc_manager.registry.documents = doc_manager.registry._load_registry()
+                    logger.info(f"[RAG_UPLOAD] Reloaded document registry: {len(doc_manager.registry.documents)} documents")
+                else:
+                    logger.warning(f"[RAG_UPLOAD] No document_registry.json found in package")
+
+                # Reload vector store in memory
+                doc_manager.load_vector_store()
+
+                if doc_manager.vector_store is None:
+                    raise Exception("Failed to load new vector store")
+
+                # Rebuild metadata index
+                metadata_index.build_from_vector_store(doc_manager.vector_store)
+                metadata_index.save()
+                logger.info(f"[RAG_UPLOAD] Rebuilt metadata index")
+
+                # Remove backup on success
+                if backup.exists():
+                    shutil.rmtree(backup)
+
+                # Get document count from registry
+                doc_count = len(doc_manager.registry.documents) if doc_manager.registry.documents else 0
+
+                logger.info(f"[RAG_UPLOAD] Success! {doc_count} documents loaded")
+
+                return {
+                    "success": True,
+                    "message": "RAG package uploaded and loaded successfully",
+                    "documents": doc_count
+                }
+
+            except Exception as e:
+                # Restore backup on failure
+                logger.error(f"[RAG_UPLOAD] Failed: {e}")
+                if backup.exists():
+                    if target.exists():
+                        shutil.rmtree(target)
+                    shutil.move(str(backup), str(target))
+                    doc_manager.load_vector_store()
+                    logger.info(f"[RAG_UPLOAD] Restored backup")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Upload failed, restored previous vector store: {str(e)}"
+                )
+
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
-
-    # Ingest into vector store
-    success, message = doc_manager.ingest_document(file_path)
-
-    if not success:
-        # Clean up file on failure
-        file_path.unlink(missing_ok=True)
-        raise HTTPException(status_code=500, detail=f"Ingestion failed: {message}")
-
-    # Extract document ID from success message (format: "Document <id> ingested successfully...")
-    # The message format from document_manager is: "Document {doc_id} ingested successfully with {num_chunks} chunks."
-    import re
-    match = re.search(r'Document ([a-f0-9]+) ingested', message)
-    if match:
-        doc_id = match.group(1)
-        doc_info = doc_manager.registry.get_document(doc_id)
-    else:
-        # Fallback: get the most recently added document
-        docs = doc_manager.list_documents()
-        doc_info = docs[-1] if docs else {}
-
-    return {
-        "status": "success",
-        "message": "Document uploaded and ingested successfully",
-        "document": doc_info
-    }
+        logger.error(f"[RAG_UPLOAD] Unexpected error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Upload failed: {str(e)}"
+        )
 
 
 # ==============================================================================
