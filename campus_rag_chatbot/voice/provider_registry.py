@@ -91,18 +91,6 @@ STT_PROVIDERS = [
         "status_label": None,
         "can_be_fallback": True,  # Can be fallback if model available
     },
-    {
-        "id": "whisper-openai",
-        "name": "OpenAI Whisper (Cloud)",
-        "is_local": False,
-        "requires_model": False,
-        "requires_api_key": "OPENAI_API_KEY",
-        # Phase 37 fields
-        "is_selectable": False,  # NOT selectable - paid cloud service
-        "pricing_tier": "paid",
-        "status_label": "Cloud - Not Operational",
-        "can_be_fallback": False,  # Cannot be fallback - costs money
-    },
     # Phase 38: Google Cloud STT
     {
         "id": "google-cloud-stt",
@@ -136,29 +124,6 @@ TTS_PROVIDERS = [
         "pricing_tier": "free",
         "status_label": None,
         "can_be_fallback": True,  # Can be fallback if model available
-    },
-    {
-        "id": "edge-tts",
-        "name": "Microsoft Edge TTS",
-        "is_local": True,  # Doesn't require API key, uses MS servers
-        "requires_model": False,
-        # Phase 37 fields
-        "is_selectable": True,  # NOW SELECTABLE as primary
-        "pricing_tier": "free",
-        "status_label": None,
-        "can_be_fallback": True,  # Good fallback - always available
-    },
-    {
-        "id": "openai-tts",
-        "name": "OpenAI TTS (Cloud)",
-        "is_local": False,
-        "requires_model": False,
-        "requires_api_key": "OPENAI_API_KEY",
-        # Phase 37 fields
-        "is_selectable": False,  # NOT selectable - paid cloud service
-        "pricing_tier": "paid",
-        "status_label": "Cloud - Not Operational",
-        "can_be_fallback": False,  # Cannot be fallback - costs money
     }
 ]
 
@@ -363,11 +328,6 @@ class ProviderRegistry:
             creds_path = os.getenv(provider_def["requires_credentials"])
             if not creds_path or not Path(creds_path).exists():
                 return False
-
-        # Special cases
-        if provider_id == "edge-tts":
-            # edge-tts is always available (uses MS servers, no API key needed)
-            return True
 
         return True
 

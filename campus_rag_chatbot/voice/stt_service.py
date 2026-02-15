@@ -7,13 +7,13 @@ Phase 32: Voice Infrastructure Foundation
 Provides speech-to-text transcription with automatic engine fallback.
 
 Strategy:
-1. Try primary engine (Whisper.cpp, offline)
-2. If confidence < threshold, retry with cloud engine (if enabled)
+1. Try primary engine (Whisper.cpp or Google Cloud STT)
+2. If confidence < threshold, retry with fallback engine (if enabled)
 3. Return best result with confidence metadata
 
 Supported Engines:
-- whisper.cpp (primary, offline)
-- OpenAI Whisper API (fallback, cloud)
+- whisper.cpp (local, offline)
+- Google Cloud STT (cloud, free-tier)
 """
 
 from abc import ABC, abstractmethod
@@ -154,22 +154,35 @@ class STTService:
                 except Exception as e:
                     logger.warning(f"[STT] Failed to initialize Google Cloud STT fallback: {e}")
 
-            else:  # Default: OpenAI Whisper
+            elif fallback_type == 'whisper.cpp':
                 try:
-                    from .engines.whisper_openai import WhisperOpenAIEngine
-                    self.fallback_engine = WhisperOpenAIEngine(fallback_config)
-                    logger.info(f"[STT] Fallback engine initialized: {self.fallback_engine.engine_name}")
+                    from .engines.whisper_cpp import WhisperCppEngine
+                    self.fallback_engine = WhisperCppEngine(fallback_config)
+                    if self.fallback_engine.is_available():
+                        logger.info(f"[STT] Fallback engine initialized: {self.fallback_engine.engine_name}")
+                    else:
+                        logger.warning("[STT] Whisper.cpp fallback not available (model missing)")
+                        self.fallback_engine = None
                 except Exception as e:
-                    logger.warning(f"[STT] Failed to initialize fallback engine: {e}")
+                    logger.warning(f"[STT] Failed to initialize Whisper.cpp fallback: {e}")
 
     def _init_fallback_as_primary(self):
         """Use fallback engine as primary if primary fails to initialize."""
         fallback_config = self.config.get('fallback', {})
         if fallback_config.get('enabled', False):
+            fallback_type = fallback_config.get('engine', 'google-cloud-stt')
             try:
-                from .engines.whisper_openai import WhisperOpenAIEngine
-                self.primary_engine = WhisperOpenAIEngine(fallback_config)
-                logger.info("[STT] Using fallback engine as primary")
+                if fallback_type == 'google-cloud-stt':
+                    from .engines.google_cloud_stt import GoogleCloudSTTEngine
+                    self.primary_engine = GoogleCloudSTTEngine(fallback_config)
+                else:
+                    from .engines.whisper_cpp import WhisperCppEngine
+                    self.primary_engine = WhisperCppEngine(fallback_config)
+                if self.primary_engine.is_available():
+                    logger.info("[STT] Using fallback engine as primary")
+                else:
+                    logger.error("[STT] Fallback engine not available")
+                    self.primary_engine = None
             except Exception as e:
                 logger.error(f"[STT] Failed to initialize any STT engine: {e}")
 

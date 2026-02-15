@@ -61,8 +61,5 @@ pywhispercpp>=1.4.0
 # May need: pip install piper-tts --no-build-isolation
 piper-tts>=1.2.0
 
-# Cloud TTS fallback (works on all platforms)
-edge-tts>=6.1.0
-
 # Google Cloud STT (optional - requires service account)
 google-cloud-speech>=2.21.0

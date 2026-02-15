@@ -3,7 +3,6 @@ Text-to-Speech Service
 ======================
 
 Phase 32: Voice Infrastructure Foundation
-Phase 37: Edge-TTS as selectable primary engine
 
 Provides text-to-speech synthesis with automatic engine fallback.
 
@@ -13,9 +12,8 @@ Features:
 - Abbreviation expansion
 - Automatic fallback on primary engine failure
 
-Supported Engines (Phase 37):
+Supported Engines:
 - Piper TTS (primary, offline)
-- Edge-TTS (primary or fallback, free)
 - espeak-ng (fallback, offline)
 """
 
@@ -133,26 +131,13 @@ class TTSService:
             except Exception as e:
                 logger.warning(f"[TTS] Failed to initialize Piper: {e}")
 
-        # Phase 37: Support edge-tts as primary engine
-        elif engine_type == 'edge-tts':
-            try:
-                from .engines.edge_tts import EdgeTTSEngine
-                self.primary_engine = EdgeTTSEngine(primary_config)
-                logger.info(f"[TTS] Primary engine initialized: {self.primary_engine.engine_name}")
-            except Exception as e:
-                logger.warning(f"[TTS] Failed to initialize Edge TTS as primary: {e}")
-
-        # Phase 37: Log warning for non-selectable engines
-        elif engine_type == 'openai-tts':
-            logger.warning("[TTS] OpenAI TTS is not supported as primary engine (paid cloud service)")
-
         else:
             logger.warning(f"[TTS] Unknown engine type: {engine_type}")
 
         # Initialize fallback engine
-        fallback_type = fallback_config.get('engine', 'edge-tts')
+        fallback_type = fallback_config.get('engine', 'espeak-ng')
 
-        # Phase 37: Skip if fallback is same as primary
+        # Skip if fallback is same as primary
         if fallback_type == engine_type:
             logger.info(f"[TTS] Fallback engine '{fallback_type}' is same as primary, skipping fallback init")
         elif fallback_type == 'espeak-ng':
@@ -162,13 +147,6 @@ class TTSService:
                 logger.info(f"[TTS] Fallback engine initialized: {self.fallback_engine.engine_name}")
             except Exception as e:
                 logger.warning(f"[TTS] Failed to initialize espeak-ng fallback: {e}")
-        elif fallback_type == 'edge-tts':
-            try:
-                from .engines.edge_tts import EdgeTTSEngine
-                self.fallback_engine = EdgeTTSEngine(fallback_config)
-                logger.info(f"[TTS] Fallback engine initialized: {self.fallback_engine.engine_name}")
-            except Exception as e:
-                logger.warning(f"[TTS] Failed to initialize edge-tts fallback: {e}")
         elif fallback_type == 'piper':
             try:
                 from .engines.piper_tts import PiperTTSEngine

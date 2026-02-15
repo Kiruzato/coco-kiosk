@@ -109,15 +109,9 @@ VOICE_CONFIG: Dict[str, Any] = {
             "speaker_id": 0,
         },
         "fallback": {
-            "engine": "edge-tts",
-            "voice": "en-US-JennyNeural",
-            "rate": "+0%",
-        },
-        "cloud_fallback": {
-            "engine": "openai-tts",
-            "voice": "nova",
-            "model": "tts-1",
-            "enabled": _get_bool_env("TTS_CLOUD_FALLBACK", False),
+            "engine": "espeak-ng",
+            "voice": "en-us",
+            "rate": 150,
         },
         "max_chars": _get_int_env("TTS_MAX_CHARS", 10000),  # No truncation - reads full response
     },
