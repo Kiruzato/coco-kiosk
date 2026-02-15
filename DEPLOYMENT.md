@@ -43,12 +43,34 @@ git tag -a v1.0-deploy -m "First deployment version"
 git push origin v1.0-deploy
 ```
 
-### 1.3 Verify Repository is Clean
+### 1.3 Pre-Ingest Documents (REQUIRED)
+
+**CRITICAL**: The Raspberry Pi runs in runtime mode only. You must ingest documents on your development machine before deploying.
+
+```bash
+# Navigate to app directory
+cd campus_rag_chatbot
+
+# Ingest documents (creates vector_store/ folder)
+python admin.py ingest documents_to_ingest/
+
+# Verify vector store was created
+ls -la vector_store/
+# Should show: index.faiss, index.pkl
+
+# Commit the vector store
+git add vector_store/
+git commit -m "Add pre-ingested vector store for RPi deployment"
+git push
+```
+
+### 1.4 Verify Repository is Clean
 
 Before deploying, ensure:
 - [ ] No `.env` files are committed (check with `git ls-files | grep .env`)
 - [ ] API keys are not in any committed files
 - [ ] `.gitignore` excludes sensitive files
+- [ ] **Vector store is committed** (check with `git ls-files vector_store/`)
 
 ---
 
@@ -100,14 +122,15 @@ chmod +x pi-setup.sh
 ```
 
 The script will:
-1. Install system packages (Python 3.11, ffmpeg, espeak-ng, etc.)
+1. Install system packages (Python 3.11, ffmpeg, espeak-ng, tesseract-ocr, etc.)
 2. Check Python version (3.11 recommended for Piper TTS)
 3. Create a Python virtual environment
 4. Install dependencies from `requirements_rpi.txt` (ARM64 optimized)
 5. Create `.env` file from template
 6. Optionally download voice models (~135MB) for offline STT/TTS
-7. Ingest documents into vector store
-8. Test application startup
+7. Verify pre-ingested vector store exists (NO ingestion on RPi)
+
+**IMPORTANT**: The Raspberry Pi runs in **runtime mode only**. Document ingestion must be performed on the development machine before deployment.
 
 ### 2.5 Configure Environment Variables
 
@@ -133,18 +156,31 @@ python3 -c "import uuid; print(uuid.uuid4())"
 
 Save and exit (Ctrl+X, Y, Enter).
 
-### 2.6 Ingest Documents
+### 2.6 Vector Store (Pre-Ingested)
+
+**The RPi does NOT perform document ingestion.** The vector store must be pre-ingested on your development machine and included in the git repository.
+
+If you see "Vector store not found" error, follow these steps on your **development machine**:
 
 ```bash
-# Activate virtual environment
-source ~/coco-kiosk/venv/bin/activate
+# On your development machine (Windows/Mac/Linux)
+cd campus_rag_chatbot
+python admin.py ingest documents_to_ingest/
 
-# Navigate to app directory
-cd ~/coco-kiosk/campus_rag_chatbot
-
-# Ingest the default documents
-python admin.py ingest data/
+# Commit the vector store to git
+git add vector_store/
+git commit -m "Add pre-ingested vector store"
+git push
 ```
+
+Then on the Raspberry Pi:
+
+```bash
+cd ~/coco-kiosk
+git pull
+```
+
+The setup script will verify the vector store exists during Step 7.
 
 ---
 

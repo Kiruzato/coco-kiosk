@@ -1,8 +1,12 @@
 #!/bin/bash
 #
-# CoCo Raspberry Pi Setup Script
-# ==============================
+# CoCo Raspberry Pi Setup Script (Runtime Mode)
+# ==============================================
 # This script sets up the CoCo campus information kiosk on Raspberry Pi.
+#
+# IMPORTANT: This script assumes the vector store was pre-ingested on the
+# development machine and is included in the repository. The Pi does NOT
+# run ingestion - it only loads and uses the existing vector store.
 #
 # Usage: ./pi-setup.sh
 #
@@ -30,7 +34,7 @@ echo "App directory: $APP_DIR"
 echo ""
 
 # Step 1: Install system packages
-echo -e "${YELLOW}[1/8] Installing system packages...${NC}"
+echo -e "${YELLOW}[1/7] Installing system packages...${NC}"
 echo "This requires sudo access."
 
 sudo apt update
@@ -68,7 +72,7 @@ echo -e "${GREEN}System packages installed${NC}"
 echo ""
 
 # Step 2: Check Python version (prefer 3.11 for Piper TTS)
-echo -e "${YELLOW}[2/8] Checking Python version...${NC}"
+echo -e "${YELLOW}[2/7] Checking Python version...${NC}"
 
 if command -v python3.11 &> /dev/null; then
     PYTHON_CMD="python3.11"
@@ -89,7 +93,7 @@ fi
 echo ""
 
 # Step 3: Create virtual environment
-echo -e "${YELLOW}[3/8] Creating virtual environment...${NC}"
+echo -e "${YELLOW}[3/7] Creating virtual environment...${NC}"
 VENV_DIR="$PROJECT_ROOT/venv"
 
 if [ -d "$VENV_DIR" ]; then
@@ -109,7 +113,7 @@ fi
 echo ""
 
 # Step 4: Activate virtual environment and install dependencies
-echo -e "${YELLOW}[4/8] Installing dependencies...${NC}"
+echo -e "${YELLOW}[4/7] Installing dependencies...${NC}"
 source "$VENV_DIR/bin/activate"
 
 # Upgrade pip first
@@ -137,7 +141,7 @@ echo -e "${GREEN}Dependencies installed${NC}"
 echo ""
 
 # Step 5: Setup environment file
-echo -e "${YELLOW}[5/8] Setting up environment file...${NC}"
+echo -e "${YELLOW}[5/7] Setting up environment file...${NC}"
 ENV_FILE="$APP_DIR/.env"
 ENV_EXAMPLE="$APP_DIR/.env.example"
 
@@ -176,7 +180,7 @@ read -p "Press Enter when you have configured your .env file..."
 echo ""
 
 # Step 6: Download voice models (optional)
-echo -e "${YELLOW}[6/8] Voice model setup...${NC}"
+echo -e "${YELLOW}[6/7] Voice model setup...${NC}"
 VOICE_SCRIPT="$PROJECT_ROOT/download-voice-models.sh"
 
 if [ -f "$VOICE_SCRIPT" ]; then
@@ -193,30 +197,58 @@ else
 fi
 echo ""
 
-# Step 7: Ingest documents
-echo -e "${YELLOW}[7/8] Ingesting documents...${NC}"
+# Step 7: Verify vector store (pre-ingested from dev machine)
+echo -e "${YELLOW}[7/7] Verifying vector store...${NC}"
 cd "$APP_DIR"
 
-# Documents are in documents_to_ingest/ folder
-DOCS_DIR="documents_to_ingest"
+VECTOR_STORE_DIR="vector_store"
 
-if [ -d "vector_store" ]; then
-    echo "Vector store already exists"
-    read -p "Re-ingest documents? (y/N): " reingest
-    if [ "$reingest" = "y" ] || [ "$reingest" = "Y" ]; then
-        python admin.py ingest "$DOCS_DIR/"
+if [ -d "$VECTOR_STORE_DIR" ]; then
+    # Check for essential files
+    if [ -f "$VECTOR_STORE_DIR/index.faiss" ] && [ -f "$VECTOR_STORE_DIR/index.pkl" ]; then
+        echo -e "${GREEN}Vector store found and valid${NC}"
+        echo "  - index.faiss: $(ls -lh $VECTOR_STORE_DIR/index.faiss | awk '{print $5}')"
+        echo "  - index.pkl: $(ls -lh $VECTOR_STORE_DIR/index.pkl | awk '{print $5}')"
     else
-        echo "Skipping document ingestion"
+        echo -e "${RED}ERROR: Vector store directory exists but is incomplete${NC}"
+        echo "Missing required files (index.faiss and/or index.pkl)"
+        echo ""
+        echo "The vector store must be pre-ingested on the development machine"
+        echo "and included in the git repository before deploying to RPi."
+        echo ""
+        echo "On your development machine, run:"
+        echo "  cd campus_rag_chatbot"
+        echo "  python admin.py ingest documents_to_ingest/"
+        echo "  git add vector_store/"
+        echo "  git commit -m 'Add pre-ingested vector store'"
+        echo "  git push"
+        echo ""
+        echo "Then on RPi, run: git pull"
+        exit 1
     fi
 else
-    echo "Ingesting documents from $DOCS_DIR/..."
-    python admin.py ingest "$DOCS_DIR/"
+    echo -e "${RED}ERROR: Vector store not found${NC}"
+    echo ""
+    echo "The Raspberry Pi runs in RUNTIME MODE only."
+    echo "It does NOT perform document ingestion."
+    echo ""
+    echo "The vector store must be pre-ingested on the development machine"
+    echo "and included in the git repository."
+    echo ""
+    echo "On your development machine, run:"
+    echo "  cd campus_rag_chatbot"
+    echo "  python admin.py ingest documents_to_ingest/"
+    echo "  git add vector_store/"
+    echo "  git commit -m 'Add pre-ingested vector store'"
+    echo "  git push"
+    echo ""
+    echo "Then on RPi, run: git pull"
+    exit 1
 fi
-echo -e "${GREEN}Document ingestion complete${NC}"
 echo ""
 
-# Step 8: Test startup
-echo -e "${YELLOW}[8/8] Testing application startup...${NC}"
+# Test startup
+echo -e "${YELLOW}Testing application startup...${NC}"
 echo "Starting server for quick test (will stop after 5 seconds)..."
 
 # Start server in background

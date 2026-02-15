@@ -1,4 +1,8 @@
-# Fresh Install Commands for RPi
+# Fresh Install Commands for RPi (Runtime Mode)
+# ==============================================
+# The RPi runs in runtime mode only - it does NOT perform ingestion.
+# The vector store must be pre-ingested on the dev machine and pushed to git.
+#
 # Run these one section at a time
 
 # 1. Delete existing directory
@@ -12,7 +16,7 @@ git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git coco
 cd coco
 git checkout model-1.1
 
-# 4. Run setup script
+# 4. Run setup script (7 steps, NO ingestion)
 chmod +x pi-setup.sh
 ./pi-setup.sh
 
@@ -24,3 +28,28 @@ python app.py
 # --- OR use systemd service ---
 # sudo systemctl restart coco
 # sudo systemctl status coco
+
+# ============================================
+# TROUBLESHOOTING
+# ============================================
+#
+# ERROR: "Vector store not found"
+# --------------------------------
+# The vector store must be pre-ingested on your dev machine.
+# On your Windows/Mac development machine:
+#   cd campus_rag_chatbot
+#   python admin.py ingest documents_to_ingest/
+#   git add vector_store/
+#   git commit -m "Add pre-ingested vector store"
+#   git push
+#
+# Then on RPi:
+#   cd /home/pi/coco
+#   git pull
+#   ./pi-setup.sh
+#
+# ERROR: "pydub not installed" or audio issues
+# ---------------------------------------------
+# Ensure audioop-lts is installed (required for Python 3.13+):
+#   pip install audioop-lts
+#
