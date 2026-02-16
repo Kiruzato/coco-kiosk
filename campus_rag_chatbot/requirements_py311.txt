@@ -54,6 +54,7 @@ audioop-lts>=0.2.0; python_version >= "3.13"  # Python 3.13+ removed audioop fro
 pydub>=0.25.0            # Audio format conversion
 pywhispercpp>=1.4.0      # Offline STT (Whisper.cpp Python bindings)
 piper-tts>=1.2.0         # Offline TTS (Piper neural voice) - may not work on Windows
+edge-tts>=6.1.0          # Cloud TTS fallback (Microsoft Edge, free) - Windows compatible
 numpy>=1.26.0            # Audio array processing
 google-cloud-speech>=2.21.0  # Google Cloud STT (Phase 38)
 

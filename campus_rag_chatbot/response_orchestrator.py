@@ -456,7 +456,7 @@ class ResponseOrchestrator:
                 "session_id": session_id,
                 "mode": "campus" if mode != ResponseMode.GENERAL_KNOWLEDGE else "general",
                 "confidence_level": retrieval.confidence_level.value if retrieval.confidence_level else "LOW",
-                "confidence_score": retrieval.confidence_score,
+                "confidence_score": float(retrieval.confidence_score) if retrieval.confidence_score else 0.0,
                 "sources": sources,
                 "response_mode": mode.value,
                 "extractor_used": extraction.extractor_name,

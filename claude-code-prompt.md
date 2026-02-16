@@ -1,26 +1,27 @@
-I want to implement **Streaming Response Support** so the system can deliver responses progressively instead of waiting for the full response to complete.
+Please check whether the project's Windows setup is fully ready for development and execution.
 
-The streaming should apply to the response generation stage, allowing the client to receive the output incrementally as it is produced.
+Review the current Windows setup scripts, configuration files, dependencies, environment handling, and startup process to determine if everything works correctly on a Windows machine.
 
-The goal is to improve responsiveness and prepare the system for future real-time features such as voice streaming and more advanced response handling.
+Verify that:
 
----
+* the project can be set up from scratch on Windows
+* dependencies install correctly
+* the environment initializes correctly
+* the application starts successfully without manual fixes
 
-While implementing this, perform proper refactorization and modularization where appropriate.
+If anything is missing, broken, inconsistent, or not Windows-ready, make the necessary changes to ensure the project can be reliably set up and run on Windows.
 
-Ensure the implementation follows clean architectural principles, maintains separation of responsibilities, and remains compatible with future refactoring, modularization, and system evolution.
+While doing this, apply proper refactorization and modularization where appropriate, and ensure the setup process is clean, maintainable, and compatible with future improvements.
 
-Avoid tightly coupled logic and ensure the design remains maintainable and extensible.
-
----
-
-The implementation should integrate naturally into the existing architecture and preserve current functionality while adding streaming capability.
+Prefer clear, reliable, and standard setup practices.
 
 ---
 
 Provide:
 
-* explanation of architectural and refactorization decisions
-* list of modified files
-* full updated code for modified files
-* explanation of how streaming integrates into the current system
+* summary of issues found (if any)
+* explanation of changes made
+* list of modified or created files
+* full contents of modified or created setup-related files
+
+Ensure the final result allows a clean and reliable Windows setup experience from scratch.

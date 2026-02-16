@@ -185,7 +185,7 @@ def validate_config() -> Dict[str, bool]:
 
     # Check fallback configuration
     results["stt_fallback_configured"] = VOICE_CONFIG["stt"]["fallback"].get("enabled", False)
-    results["tts_fallback_configured"] = VOICE_CONFIG["tts"]["cloud_fallback"].get("enabled", False)
+    results["tts_fallback_configured"] = VOICE_CONFIG["tts"]["fallback"].get("engine") is not None
 
     if not results["stt_model_exists"]:
         logger.warning(f"[VOICE] STT model not found at: {stt_model_path}")
