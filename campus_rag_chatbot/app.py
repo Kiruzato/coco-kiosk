@@ -58,6 +58,7 @@ from text_normalizer import normalize_text, canonicalize_directory_query  # Text
 from entity_analyzer import check_entity_agreement, should_promote_confidence  # Entity-aware confidence promotion
 from entity_registry import EntityRegistry  # Phase 9: Structured directory entities
 from entity_resolver import extract_subject, resolve_entity, format_entity_response  # Phase 9: Entity resolution
+from advertisement_manager import AdvertisementManager  # Phase 48: Advertisement panel
 from event_tracker import EventTracker, EventType  # Phase 16: Observability
 from retrieval_validator import (  # Phase 17A: Hybrid retrieval & grounding
     extract_query_terms,
@@ -263,6 +264,10 @@ event_tracker = EventTracker(log_dir=LOG_DIR)
 # Initialize entity registry for directory queries (Phase 9)
 ENTITY_REGISTRY_PATH = PROJECT_ROOT / "data" / "directory_entities.json"
 entity_registry = EntityRegistry(str(ENTITY_REGISTRY_PATH))
+
+# Initialize advertisement manager for kiosk display (Phase 48)
+advertisement_manager = AdvertisementManager(data_dir=PROJECT_ROOT / "data")
+logger.info(f"[PHASE48] AdvertisementManager initialized")
 
 # ==============================================================================
 # FASTAPI APP
@@ -4551,6 +4556,142 @@ async def delete_entity(entity_id: str, hard: bool = False):
 
 
 # ==============================================================================
+# ADVERTISEMENT MANAGEMENT ENDPOINTS (PHASE 48)
+# ==============================================================================
+
+@app.get("/api/advertisements")
+async def get_advertisements():
+    """
+    Get all active advertisements for the kiosk display.
+
+    This is a public endpoint (no auth required) for the frontend slideshow.
+
+    Returns:
+        List of active advertisements with URLs
+    """
+    ads = advertisement_manager.list_active()
+    return {
+        "advertisements": [
+            {
+                "id": ad.id,
+                "url": advertisement_manager.get_image_url(ad),
+                "display_order": ad.display_order
+            }
+            for ad in ads
+        ]
+    }
+
+
+@app.get("/admin/advertisements", dependencies=[Depends(verify_admin_session)])
+async def admin_list_advertisements():
+    """
+    Get all advertisements for admin management.
+
+    Returns:
+        List of all advertisements with full metadata
+    """
+    ads = advertisement_manager.list_all()
+    return {
+        "advertisements": [
+            {
+                "id": ad.id,
+                "filename": ad.filename,
+                "original_name": ad.original_name,
+                "url": advertisement_manager.get_image_url(ad),
+                "mime_type": ad.mime_type,
+                "file_size": ad.file_size,
+                "uploaded_at": ad.uploaded_at,
+                "status": ad.status,
+                "display_order": ad.display_order
+            }
+            for ad in ads
+        ]
+    }
+
+
+@app.post("/admin/advertisements/upload", dependencies=[Depends(verify_admin_session)])
+async def upload_advertisement(file: UploadFile = File(...)):
+    """
+    Upload a new advertisement image.
+
+    Args:
+        file: Image file (JPG, JPEG, PNG, max 5MB)
+
+    Returns:
+        The created advertisement data
+    """
+    # Read file content
+    content = await file.read()
+
+    try:
+        ad = await advertisement_manager.upload(
+            filename=file.filename,
+            content_type=file.content_type,
+            file_data=content
+        )
+        return {
+            "status": "success",
+            "message": f"Advertisement '{file.filename}' uploaded successfully",
+            "advertisement": {
+                "id": ad.id,
+                "filename": ad.filename,
+                "original_name": ad.original_name,
+                "url": advertisement_manager.get_image_url(ad),
+                "uploaded_at": ad.uploaded_at,
+                "display_order": ad.display_order
+            }
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.delete("/admin/advertisements/{ad_id}", dependencies=[Depends(verify_admin_session)])
+async def delete_advertisement(ad_id: str):
+    """
+    Delete an advertisement.
+
+    Args:
+        ad_id: Advertisement ID
+
+    Returns:
+        Success message
+    """
+    if not advertisement_manager.delete(ad_id):
+        raise HTTPException(status_code=404, detail=f"Advertisement '{ad_id}' not found")
+
+    return {
+        "status": "success",
+        "message": "Advertisement deleted successfully",
+        "id": ad_id
+    }
+
+
+class ReorderRequest(BaseModel):
+    """Request model for reordering advertisements."""
+    ad_ids: List[str]
+
+
+@app.post("/admin/advertisements/reorder", dependencies=[Depends(verify_admin_session)])
+async def reorder_advertisements(request: ReorderRequest):
+    """
+    Reorder advertisements.
+
+    Args:
+        request: List of advertisement IDs in new order
+
+    Returns:
+        Success message
+    """
+    if not advertisement_manager.reorder(request.ad_ids):
+        raise HTTPException(status_code=400, detail="Failed to reorder advertisements")
+
+    return {
+        "status": "success",
+        "message": f"Reordered {len(request.ad_ids)} advertisements"
+    }
+
+
+# ==============================================================================
 # ADMIN LOGIN/LOGOUT ENDPOINTS
 # ==============================================================================
 
@@ -4628,6 +4769,11 @@ app.mount("/static", StaticFiles(directory=PROJECT_ROOT / "static"), name="stati
 
 # Serve images from project root images directory (for logo, etc.)
 app.mount("/images", StaticFiles(directory=PROJECT_ROOT.parent / "images"), name="images")
+
+# Serve advertisement images (Phase 48)
+_ADS_DIR = PROJECT_ROOT / "data" / "advertisements"
+_ADS_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/advertisements", StaticFiles(directory=_ADS_DIR), name="advertisements")
 
 
 # ==============================================================================

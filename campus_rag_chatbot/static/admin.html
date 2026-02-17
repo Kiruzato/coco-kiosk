@@ -43,6 +43,11 @@
                         <span class="nav-label">Directory Entities</span>
                     </a>
 
+                    <a href="#advertisements" class="nav-item" data-section="advertisements">
+                        <span class="nav-icon">&#128247;</span>
+                        <span class="nav-label">Advertisements</span>
+                    </a>
+
                     <a href="#voice" class="nav-item" data-section="voice">
                         <span class="nav-icon">&#9834;</span>
                         <span class="nav-label">Voice Config</span>
@@ -60,7 +65,7 @@
                 </nav>
 
                 <div class="sidebar-footer">
-                    <span class="version-tag">Phase 42</span>
+                    <span class="version-tag">Phase 48</span>
                 </div>
             </aside>
 
@@ -228,6 +233,34 @@
                         </div>
                         <div id="entitiesStats" class="table-stats"></div>
                     </div>
+                </section>
+
+                <!-- Section: Advertisement Management (Phase 48) -->
+                <section id="section-advertisements" class="admin-section">
+                    <div class="section-header">
+                        <h2>Advertisement Management</h2>
+                        <button id="refreshAdsBtn" class="btn-secondary">&#8635; Refresh</button>
+                    </div>
+
+                    <div id="adsLoadingIndicator" class="loading hidden">Loading advertisements...</div>
+
+                    <!-- Upload Area -->
+                    <div class="ad-upload-area">
+                        <input type="file" id="adFileInput" accept=".jpg,.jpeg,.png" hidden>
+                        <label for="adFileInput" class="ad-upload-label">
+                            <span class="upload-icon">&#128247;</span>
+                            <span class="upload-text">Click or drag image to upload</span>
+                            <span class="file-types">JPG, JPEG, PNG (max 5MB)</span>
+                        </label>
+                        <div id="adUploadStatus" class="upload-status"></div>
+                    </div>
+
+                    <!-- Advertisement Grid -->
+                    <div class="ad-grid" id="adGrid">
+                        <div class="ad-empty-state">No advertisements uploaded yet</div>
+                    </div>
+
+                    <div id="adsStats" class="table-stats"></div>
                 </section>
 
                 <!-- Section: Voice Configuration (Phase 36) -->

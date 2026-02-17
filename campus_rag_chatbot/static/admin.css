@@ -2232,3 +2232,187 @@ body {
         font-size: 20px;
     }
 }
+
+/* ==============================================================================
+   PHASE 48: ADVERTISEMENT MANAGEMENT
+   ============================================================================== */
+
+/* Upload Area */
+.ad-upload-area {
+    margin-bottom: 24px;
+}
+
+.ad-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    border: 2px dashed #667eea;
+    border-radius: 12px;
+    background: #f8f9ff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.ad-upload-label:hover {
+    background: #eef1ff;
+    border-color: #5a6fd6;
+}
+
+.ad-upload-label.dragover {
+    background: #e0e5ff;
+    border-color: #4a5fc6;
+    border-style: solid;
+}
+
+.ad-upload-label .upload-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.ad-upload-label .upload-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.ad-upload-label .file-types {
+    font-size: 13px;
+    color: #666;
+}
+
+.upload-status {
+    margin-top: 12px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.upload-status.uploading {
+    color: #667eea;
+    font-style: italic;
+}
+
+.upload-status.error {
+    color: #dc3545;
+}
+
+/* Advertisement Grid */
+.ad-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.ad-empty-state,
+.ad-error-state {
+    grid-column: 1 / -1;
+    padding: 60px 20px;
+    text-align: center;
+    color: #666;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+.ad-error-state {
+    color: #dc3545;
+    background: #fff5f5;
+}
+
+/* Advertisement Card */
+.ad-card {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: #fff;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ad-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.ad-card img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    display: block;
+}
+
+.ad-card-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+    color: white;
+}
+
+.ad-card-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ad-card-size {
+    display: block;
+    font-size: 11px;
+    opacity: 0.8;
+    margin-top: 2px;
+}
+
+.ad-card-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.ad-card:hover .ad-card-actions {
+    opacity: 1;
+}
+
+.ad-delete-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: #dc3545;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.ad-delete-btn:hover {
+    background: #c82333;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ad-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+    }
+
+    .ad-upload-label {
+        padding: 30px 20px;
+    }
+
+    .ad-upload-label .upload-icon {
+        font-size: 36px;
+    }
+}

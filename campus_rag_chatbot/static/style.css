@@ -1108,9 +1108,9 @@ body.fullscreen-active {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-left: 3px solid #e0e0e0;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow-y: auto;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
 }
 
 .info-panel-content {
@@ -1428,4 +1428,219 @@ body {
 .error-text {
     color: #f44336;
     font-weight: 500;
+}
+
+/* ============================================================================
+   Phase 48: Advertisement Slideshow
+   ============================================================================ */
+
+/* Advertisement Slideshow Container */
+.ad-slideshow {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    background: #1e3c72;
+}
+
+/* Advertisement Image Container */
+.ad-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Individual Advertisement Image */
+.ad-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #1e3c72;
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out;
+    pointer-events: none;
+}
+
+.ad-image.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Navigation Zones (invisible click areas) */
+.ad-nav-zone {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    cursor: pointer;
+    z-index: 100;
+    background: transparent;
+}
+
+.ad-nav-zone:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.ad-nav-zone:active {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.ad-nav-left {
+    left: 0;
+}
+
+.ad-nav-right {
+    right: 0;
+}
+
+/* Navigation zone hover arrows */
+.ad-nav-left::after,
+.ad-nav-right::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.6);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.ad-nav-zone:hover::after {
+    opacity: 1;
+}
+
+.ad-nav-left::after {
+    left: 20px;
+    border-right: none;
+    border-top: none;
+    transform: translateY(-50%) rotate(45deg);
+}
+
+.ad-nav-right::after {
+    right: 20px;
+    border-left: none;
+    border-bottom: none;
+    transform: translateY(-50%) rotate(45deg);
+}
+
+/* Indicator Dots Container */
+.ad-indicators {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 20;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 20px;
+}
+
+/* Individual Indicator Dot */
+.ad-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.ad-indicator:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: scale(1.1);
+}
+
+.ad-indicator.active {
+    background: #ffffff;
+    transform: scale(1.2);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Hide slideshow when no ads, show placeholder */
+.ad-slideshow.hidden {
+    display: none;
+}
+
+/* Placeholder styling when no advertisements */
+.info-panel-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-align: center;
+}
+
+.info-panel-placeholder.hidden {
+    display: none;
+}
+
+/* Single ad - hide navigation and indicators */
+.ad-slideshow.single-ad .ad-nav-zone,
+.ad-slideshow.single-ad .ad-indicators {
+    display: none;
+}
+
+/* Responsive adjustments for advertisement panel */
+@media (max-width: 1200px) {
+    .ad-indicators {
+        bottom: 15px;
+        gap: 8px;
+        padding: 6px 12px;
+    }
+
+    .ad-indicator {
+        width: 10px;
+        height: 10px;
+    }
+
+    .ad-nav-left::after,
+    .ad-nav-right::after {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+@media (max-width: 992px) {
+    /* Stacked layout - slideshow becomes banner */
+    .info-panel {
+        position: relative;
+    }
+
+    .ad-slideshow {
+        position: relative;
+        max-height: 150px;
+        height: 150px;
+    }
+
+    .ad-image {
+        object-fit: cover;
+    }
+
+    .ad-indicators {
+        bottom: 10px;
+    }
+
+    .ad-indicator {
+        width: 8px;
+        height: 8px;
+    }
 }

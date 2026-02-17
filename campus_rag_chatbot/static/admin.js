@@ -78,6 +78,9 @@ function loadSectionData(sectionId) {
         case 'entities':
             loadEntities();
             break;
+        case 'advertisements':
+            loadAdvertisements();
+            break;
         case 'voice':
             loadVoiceConfig();
             break;
@@ -1571,6 +1574,145 @@ async function toggleDebugMode(enabled) {
 }
 
 // ==============================================================================
+// PHASE 48: ADVERTISEMENT MANAGEMENT
+// ==============================================================================
+
+/**
+ * Load advertisements for admin management
+ */
+async function loadAdvertisements() {
+    const grid = document.getElementById('adGrid');
+    const stats = document.getElementById('adsStats');
+    const loading = document.getElementById('adsLoadingIndicator');
+
+    if (!grid) return;
+
+    // Show loading
+    if (loading) loading.classList.remove('hidden');
+
+    try {
+        const data = await apiCall('/admin/advertisements');
+        const ads = data.advertisements || [];
+
+        if (ads.length === 0) {
+            grid.innerHTML = '<div class="ad-empty-state">No advertisements uploaded yet</div>';
+        } else {
+            grid.innerHTML = ads.map(ad => `
+                <div class="ad-card" data-id="${ad.id}">
+                    <img src="${ad.url}" alt="${ad.original_name}" loading="lazy">
+                    <div class="ad-card-overlay">
+                        <span class="ad-card-name">${ad.original_name}</span>
+                        <span class="ad-card-size">${formatFileSize(ad.file_size)}</span>
+                    </div>
+                    <div class="ad-card-actions">
+                        <button class="ad-delete-btn" onclick="deleteAdvertisement('${ad.id}')" title="Delete">
+                            &#10005;
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update stats
+        if (stats) {
+            const activeCount = ads.filter(a => a.status === 'active').length;
+            stats.textContent = `${ads.length} advertisement${ads.length !== 1 ? 's' : ''} (${activeCount} active)`;
+        }
+    } catch (error) {
+        grid.innerHTML = `<div class="ad-error-state">Failed to load advertisements: ${error.message}</div>`;
+        showNotification(`Failed to load advertisements: ${error.message}`, 'error');
+    } finally {
+        if (loading) loading.classList.add('hidden');
+    }
+}
+
+/**
+ * Format file size for display
+ */
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+/**
+ * Upload a new advertisement image
+ */
+async function uploadAdvertisement(file) {
+    const statusEl = document.getElementById('adUploadStatus');
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+        showNotification('Invalid file type. Please upload JPG, JPEG, or PNG.', 'error');
+        return;
+    }
+
+    // Validate file size (5MB max)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+        showNotification('File too large. Maximum size is 5MB.', 'error');
+        return;
+    }
+
+    // Show uploading status
+    if (statusEl) {
+        statusEl.textContent = `Uploading ${file.name}...`;
+        statusEl.className = 'upload-status uploading';
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const data = await apiCall('/admin/advertisements/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        showNotification(`Advertisement "${file.name}" uploaded successfully`, 'success');
+
+        // Clear status
+        if (statusEl) {
+            statusEl.textContent = '';
+            statusEl.className = 'upload-status';
+        }
+
+        // Reload the grid
+        loadAdvertisements();
+    } catch (error) {
+        showNotification(`Upload failed: ${error.message}`, 'error');
+        if (statusEl) {
+            statusEl.textContent = `Failed: ${error.message}`;
+            statusEl.className = 'upload-status error';
+        }
+    }
+}
+
+/**
+ * Delete an advertisement
+ */
+async function deleteAdvertisement(adId) {
+    if (!confirm('Are you sure you want to delete this advertisement?')) {
+        return;
+    }
+
+    try {
+        await apiCall(`/admin/advertisements/${adId}`, {
+            method: 'DELETE'
+        });
+
+        showNotification('Advertisement deleted successfully', 'success');
+        loadAdvertisements();
+    } catch (error) {
+        showNotification(`Delete failed: ${error.message}`, 'error');
+    }
+}
+
+// Make deleteAdvertisement available globally for onclick handlers
+window.deleteAdvertisement = deleteAdvertisement;
+
+// ==============================================================================
 // PHASE 42: TEST HARNESS
 // ==============================================================================
 
@@ -2288,6 +2430,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadResultsBtn = document.getElementById('downloadResultsBtn');
     if (downloadResultsBtn) {
         downloadResultsBtn.addEventListener('click', downloadTestResults);
+    }
+
+    // ==============================================================================
+    // ADVERTISEMENT MANAGEMENT EVENT LISTENERS (Phase 48)
+    // ==============================================================================
+
+    // Refresh Advertisements Button
+    const refreshAdsBtn = document.getElementById('refreshAdsBtn');
+    if (refreshAdsBtn) {
+        refreshAdsBtn.addEventListener('click', loadAdvertisements);
+    }
+
+    // Advertisement File Input
+    const adFileInput = document.getElementById('adFileInput');
+    if (adFileInput) {
+        adFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                uploadAdvertisement(file);
+                e.target.value = ''; // Reset for next upload
+            }
+        });
+    }
+
+    // Advertisement Upload Area - Drag and Drop
+    const adUploadLabel = document.querySelector('.ad-upload-label');
+    if (adUploadLabel) {
+        adUploadLabel.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            adUploadLabel.classList.add('dragover');
+        });
+        adUploadLabel.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            adUploadLabel.classList.remove('dragover');
+        });
+        adUploadLabel.addEventListener('drop', (e) => {
+            e.preventDefault();
+            adUploadLabel.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                uploadAdvertisement(file);
+            }
+        });
     }
 
     // ==============================================================================

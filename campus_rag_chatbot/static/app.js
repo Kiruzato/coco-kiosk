@@ -14,6 +14,12 @@ let sessionId = sessionStorage.getItem('chatSessionId') || null;
 let lastQueryId = null;
 let isWaiting = false;
 
+// Phase 48: Advertisement slideshow state
+let advertisements = [];
+let currentAdIndex = 0;
+let adRotationTimer = null;
+const AD_ROTATION_INTERVAL = 60000; // 1 minute per ad
+
 // Helper to update sessionId both in memory and sessionStorage
 function updateSessionId(newId) {
     sessionId = newId;
@@ -54,7 +60,201 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
 
     // Note: Auto-focus disabled to prevent virtual keyboard from obstructing view on RPi
+
+    // Phase 48: Initialize advertisement slideshow
+    initAdvertisementSlideshow();
 });
+
+// ============================================================================
+// PHASE 48: ADVERTISEMENT SLIDESHOW
+// ============================================================================
+
+/**
+ * Initialize the advertisement slideshow
+ */
+async function initAdvertisementSlideshow() {
+    // Set up navigation click handlers
+    const navLeft = document.getElementById('adNavLeft');
+    const navRight = document.getElementById('adNavRight');
+
+    if (navLeft) {
+        navLeft.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('[ADS] Left nav clicked, going to previous');
+            previousAdvertisement();
+        });
+    }
+    if (navRight) {
+        navRight.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('[ADS] Right nav clicked, going to next');
+            nextAdvertisement();
+        });
+    }
+
+    console.log('[ADS] Navigation handlers set up:', { navLeft: !!navLeft, navRight: !!navRight });
+
+    // Load advertisements
+    await loadAdvertisements();
+}
+
+/**
+ * Load advertisements from the API
+ */
+async function loadAdvertisements() {
+    try {
+        const response = await fetch('/api/advertisements');
+        if (!response.ok) throw new Error('Failed to load advertisements');
+
+        const data = await response.json();
+        advertisements = data.advertisements || [];
+
+        renderSlideshow();
+    } catch (error) {
+        console.error('[ADS] Failed to load advertisements:', error);
+        showPlaceholder();
+    }
+}
+
+/**
+ * Render the slideshow based on loaded advertisements
+ */
+function renderSlideshow() {
+    const slideshow = document.getElementById('adSlideshow');
+    const placeholder = document.getElementById('adPlaceholder');
+    const container = document.getElementById('adContainer');
+    const indicators = document.getElementById('adIndicators');
+
+    if (!slideshow || !placeholder || !container || !indicators) return;
+
+    if (advertisements.length === 0) {
+        // No ads - show placeholder
+        showPlaceholder();
+        return;
+    }
+
+    // Show slideshow, hide placeholder
+    slideshow.style.display = 'block';
+    placeholder.style.display = 'none';
+
+    // Render images
+    container.innerHTML = advertisements.map((ad, index) => `
+        <img src="${ad.url}" alt="Advertisement ${index + 1}" class="ad-image ${index === 0 ? 'active' : ''}" data-index="${index}">
+    `).join('');
+
+    // Render indicators
+    indicators.innerHTML = advertisements.map((ad, index) => `
+        <div class="ad-indicator ${index === 0 ? 'active' : ''}" data-index="${index}"></div>
+    `).join('');
+
+    // Add click handlers to indicators
+    indicators.querySelectorAll('.ad-indicator').forEach(dot => {
+        dot.addEventListener('click', () => {
+            showAdvertisement(parseInt(dot.dataset.index));
+            resetAdRotation();
+        });
+    });
+
+    // Reset to first ad
+    currentAdIndex = 0;
+
+    // Start auto-rotation if more than one ad
+    if (advertisements.length > 1) {
+        startAdRotation();
+    }
+}
+
+/**
+ * Show the placeholder when no advertisements are available
+ */
+function showPlaceholder() {
+    const slideshow = document.getElementById('adSlideshow');
+    const placeholder = document.getElementById('adPlaceholder');
+
+    if (slideshow) slideshow.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'flex';
+
+    stopAdRotation();
+}
+
+/**
+ * Show a specific advertisement by index
+ */
+function showAdvertisement(index) {
+    const container = document.getElementById('adContainer');
+    const indicators = document.getElementById('adIndicators');
+
+    console.log('[ADS] showAdvertisement called:', { index, totalAds: advertisements.length, currentAdIndex });
+
+    if (!container || !indicators || advertisements.length === 0) {
+        console.log('[ADS] Cannot show ad - missing container/indicators or no ads');
+        return;
+    }
+
+    // Clamp index
+    if (index < 0) index = advertisements.length - 1;
+    if (index >= advertisements.length) index = 0;
+
+    currentAdIndex = index;
+    console.log('[ADS] Showing ad index:', currentAdIndex);
+
+    // Update images
+    container.querySelectorAll('.ad-image').forEach((img, i) => {
+        img.classList.toggle('active', i === index);
+    });
+
+    // Update indicators
+    indicators.querySelectorAll('.ad-indicator').forEach((dot, i) => {
+        dot.classList.toggle('active', i === index);
+    });
+}
+
+/**
+ * Go to the next advertisement
+ */
+function nextAdvertisement() {
+    showAdvertisement(currentAdIndex + 1);
+    resetAdRotation();
+}
+
+/**
+ * Go to the previous advertisement
+ */
+function previousAdvertisement() {
+    showAdvertisement(currentAdIndex - 1);
+    resetAdRotation();
+}
+
+/**
+ * Start the auto-rotation timer
+ */
+function startAdRotation() {
+    stopAdRotation();
+    if (advertisements.length > 1) {
+        adRotationTimer = setInterval(() => {
+            showAdvertisement(currentAdIndex + 1);
+        }, AD_ROTATION_INTERVAL);
+    }
+}
+
+/**
+ * Stop the auto-rotation timer
+ */
+function stopAdRotation() {
+    if (adRotationTimer) {
+        clearInterval(adRotationTimer);
+        adRotationTimer = null;
+    }
+}
+
+/**
+ * Reset the auto-rotation timer (called after manual navigation)
+ */
+function resetAdRotation() {
+    startAdRotation();
+}
 
 // ============================================================================
 // MESSAGE HANDLING
