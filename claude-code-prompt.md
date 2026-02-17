@@ -1,84 +1,101 @@
-You are working on the existing CoCo Campus RAG Chatbot codebase. Your task is to design and implement a complete **advertisement panel management and display system** that integrates cleanly into the current architecture.
+You are working on the existing CoCo Campus RAG Chatbot codebase. Your task is to implement a system that allows administrators to edit the chatbot’s initial welcome message through the Admin interface, and ensure the chatbot UI displays both a logo image and the administrator-defined welcome message when a new conversation begins.
 
-Your implementation must follow industry best practices, maintain architectural consistency, and avoid introducing technical debt.
+Your implementation must follow industry best practices, maintain architectural consistency, and integrate cleanly into the existing system without introducing technical debt or breaking unrelated functionality.
 
 ---
 
 # Core Objective
 
-Implement a system that allows administrators to upload and manage advertisement images, and allows the chatbot UI to display those advertisements in a slideshow panel with proper navigation and indicators.
+Currently, every new conversation in the chatbot UI displays a default initial welcome message.
 
-The advertisement panel area already exists in the chatbot UI at `http://localhost:8000`. Your task is to implement the functionality that powers this panel. You must use the existing panel and integrate behavior into it, not create a separate or duplicate panel.
+The current initial message is:
 
-This system must integrate seamlessly into the existing backend and frontend without breaking or redesigning unrelated components.
+Welcome! I can help you with information about:
+
+Library hours and services
+Dining options and meal plans
+Parking and transportation
+IT services and Wi-Fi
+Student employment
+Campus events and activities
+
+What would you like to know?
+
+(initial message end)
+
+This message is currently static. I want administrators to be able to edit and manage this welcome message through the Admin interface accessible at:
+
+```
+http://localhost:8000/admin
+```
+
+Additionally, I want the chatbot UI to display an image located at:
+
+```
+/images/coco-name.jpg
+```
+
+This image must be displayed inside the exact same conversation bubble that contains the welcome message.
+
+Specifically:
+
+* The image must appear at the top of the chatbot’s initial message bubble
+* The welcome message text must appear directly below the image
+* Both the image and the welcome message must be part of one single chatbot message bubble
+* The image and text must not be split into separate messages or separate bubbles
 
 ---
 
 # Functional Requirements
 
-## Admin Advertisement Management
+## Admin Welcome Message Management
 
-Provide a user interface within the existing Admin panel (accessible at `/admin`) that allows administrators to:
+Provide a dedicated section in the Admin interface that allows administrators to:
 
-* Upload advertisement images (JPG, JPEG, PNG)
-* View uploaded advertisements
-* Manage advertisements in a structured and reliable way
+* View the current welcome message
+* Edit the welcome message
+* Save changes to the welcome message
 
-Uploaded advertisements must be persisted locally and made available to the application.
+The editing interface must support multi-line text and preserve formatting.
 
-The system must ensure:
+Changes must persist and remain effective across page reloads and system restarts.
 
-* File validation
-* Safe file storage
-* Reliable metadata tracking
-* Proper separation between storage and business logic
+The system must use the administrator-defined message instead of a hardcoded message when initializing new conversations.
 
 ---
 
-## Advertisement Panel Display (Chatbot UI)
+## Chatbot UI Initial Message Behavior
 
-The chatbot interface already contains an advertisement panel area. Implement the functionality required so that this panel:
+When a new conversation begins, the chatbot must display a single initial chatbot message bubble that contains:
 
-* Displays advertisement images in a slideshow format
-* Shows one advertisement at a time
-* Displays indicator dots showing how many advertisements exist and which one is currently active
-* Automatically rotates advertisements at a fixed interval of **1 minute per advertisement**
-* Loops continuously through all advertisements
+1. The image located at `/images/coco-name.jpg`, displayed at the top of the message bubble
+2. The welcome message text, displayed directly below the image, within the same bubble
 
-The existing advertisement panel must dynamically load advertisements from the backend.
+The image and welcome message must be rendered together as one chatbot message.
 
----
+The welcome message must be dynamically loaded from the system configuration managed by the admin.
 
-## Advertisement Panel Navigation Behavior
+Any updates made by administrators must be reflected automatically in future new conversations.
 
-The advertisement panel itself must act as the navigation surface.
-
-Click interaction behavior:
-
-* Clicking the right half of the panel navigates to the next advertisement
-* Clicking the left half of the panel navigates to the previous advertisement
-* No visible buttons or arrows should be used
-* Navigation must feel natural and responsive
-
-Manual navigation must properly update the display state and slideshow timing.
+Existing conversations do not need to be modified.
 
 ---
 
-## System Integration Requirements
+# System Integration Requirements
 
-The advertisement system must integrate cleanly into the existing system architecture.
+The welcome message must not be hardcoded in frontend logic.
+
+It must be managed as part of the system’s configuration or content management layer and retrieved dynamically by the chatbot UI.
 
 The implementation must ensure:
 
-* Proper separation of concerns
-* Clear boundaries between backend logic, storage, and frontend presentation
-* Clean API design for advertisement retrieval and management
-* No coupling with the RAG, retrieval, or voice subsystems
-* No regression or disruption to existing functionality
+* Proper persistence of the welcome message
+* Clean separation between backend configuration and frontend rendering
+* Reliable retrieval and display of the welcome message
+* Proper rendering of the image `/images/coco-name.jpg` inside the same chatbot message bubble as the welcome message text
+* No disruption to existing chat functionality, session handling, or RAG system behavior
 
-Frontend must dynamically load advertisements from the backend, not rely on hardcoded data.
-
-The implementation must extend and power the existing advertisement panel, not replace or duplicate it.
+The image `/images/coco-name.jpg` must be served using the system’s static file serving mechanism.
 
 ---
 
@@ -88,15 +105,13 @@ Follow professional software engineering practices and industry standards.
 
 This includes:
 
-* Proper modularization of advertisement-related logic
-* Clear abstraction boundaries between layers
-* Avoiding monolithic or tightly coupled implementations
-* Writing maintainable, readable, and extensible code
-* Using appropriate data structures and persistence strategies consistent with the existing system
-* Reusing existing architectural patterns already present in the codebase where appropriate
-* Refactoring related areas if necessary to maintain architectural clarity and consistency
+* Proper modularization of welcome message management
+* Avoiding hardcoded content in frontend logic
+* Maintaining clear separation between configuration, backend logic, and frontend rendering
+* Using persistence and retrieval patterns consistent with the existing system architecture
+* Ensuring maintainability, clarity, and extensibility
 
-You may reorganize or refactor relevant parts of the system if doing so improves modularity, clarity, or maintainability, but do not redesign unrelated subsystems.
+You may refactor relevant parts of the system if necessary to support clean implementation, but do not redesign unrelated subsystems.
 
 ---
 
@@ -104,18 +119,21 @@ You may reorganize or refactor relevant parts of the system if doing so improves
 
 Administrator workflow:
 
-* Administrator opens Admin panel
-* Administrator uploads advertisement image
-* Advertisement becomes available to the system immediately
+* Administrator opens the Admin interface
+* Administrator navigates to the welcome message management section
+* Administrator views and edits the welcome message
+* Administrator saves changes
+* Changes become effective immediately for new conversations
 
 User workflow:
 
-* User opens chatbot interface at `http://localhost:8000`
-* The existing advertisement panel displays advertisements automatically
-* Each advertisement remains visible for exactly 1 minute before rotating
-* Advertisements rotate continuously in a loop
-* User can navigate advertisements via left/right click zones
-* Indicator dots accurately reflect slideshow state
+* User opens chatbot UI at `http://localhost:8000`
+* User starts a new conversation
+* Chatbot displays a single initial chatbot message bubble
+* Inside that same message bubble:
+
+  * The image `/images/coco-name.jpg` appears at the top
+  * The administrator-defined welcome message appears below the image
 
 ---
 
@@ -130,7 +148,7 @@ Your implementation must be:
 * Architecturally consistent
 * Production-quality
 
-Avoid shortcuts, hacks, or tightly coupled solutions.
+Avoid hardcoded values, shortcuts, or tightly coupled implementations.
 
 Favor clarity, extensibility, and correctness.
 
@@ -138,8 +156,8 @@ Favor clarity, extensibility, and correctness.
 
 # Implementation Approach
 
-Before implementing, analyze the current codebase structure and identify the most appropriate integration points.
+Before implementing, analyze how the initial welcome message is currently defined, stored, and rendered.
 
-Design the advertisement system so it aligns naturally with the existing architecture and patterns already used in the project.
+Refactor the system so the welcome message is dynamically managed by administrators and rendered together with the logo image inside the same chatbot message bubble.
 
-Then implement the system in a structured, modular, and maintainable way.
+Ensure the implementation integrates cleanly with the existing architecture and frontend behavior without breaking existing functionality.
