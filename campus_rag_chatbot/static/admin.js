@@ -81,6 +81,9 @@ function loadSectionData(sectionId) {
         case 'advertisements':
             loadAdvertisements();
             break;
+        case 'welcome':
+            loadWelcomeMessageAdmin();
+            break;
         case 'voice':
             loadVoiceConfig();
             break;
@@ -1713,6 +1716,129 @@ async function deleteAdvertisement(adId) {
 window.deleteAdvertisement = deleteAdvertisement;
 
 // ==============================================================================
+// PHASE 49: WELCOME MESSAGE MANAGEMENT
+// ==============================================================================
+
+/**
+ * Load welcome message for admin editing
+ */
+async function loadWelcomeMessageAdmin() {
+    const loadingIndicator = document.getElementById('welcomeLoadingIndicator');
+    const textarea = document.getElementById('welcomeMessageInput');
+    const lastUpdated = document.getElementById('welcomeLastUpdated');
+
+    if (loadingIndicator) loadingIndicator.classList.remove('hidden');
+
+    try {
+        const data = await apiCall('/admin/welcome');
+        if (textarea) {
+            textarea.value = data.message || '';
+        }
+        if (lastUpdated) {
+            lastUpdated.textContent = data.updated_at
+                ? `Last updated: ${new Date(data.updated_at).toLocaleString()}`
+                : '';
+        }
+        updateWelcomePreview();
+    } catch (error) {
+        showNotification(`Failed to load welcome message: ${error.message}`, 'error');
+    } finally {
+        if (loadingIndicator) loadingIndicator.classList.add('hidden');
+    }
+}
+
+/**
+ * Save welcome message
+ */
+async function saveWelcomeMessage() {
+    const textarea = document.getElementById('welcomeMessageInput');
+    const saveBtn = document.getElementById('saveWelcomeBtn');
+    const message = textarea ? textarea.value.trim() : '';
+
+    if (!message) {
+        showNotification('Please enter a welcome message', 'error');
+        return;
+    }
+
+    if (saveBtn) {
+        saveBtn.textContent = 'Saving...';
+        saveBtn.disabled = true;
+    }
+
+    try {
+        await apiCall('/admin/welcome', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+        showNotification('Welcome message saved successfully', 'success');
+        await loadWelcomeMessageAdmin();
+    } catch (error) {
+        showNotification(`Save failed: ${error.message}`, 'error');
+    } finally {
+        if (saveBtn) {
+            saveBtn.textContent = 'Save Changes';
+            saveBtn.disabled = false;
+        }
+    }
+}
+
+/**
+ * Update welcome message preview in real-time
+ */
+function updateWelcomePreview() {
+    const textarea = document.getElementById('welcomeMessageInput');
+    const previewText = document.getElementById('welcomePreviewText');
+
+    if (textarea && previewText) {
+        previewText.innerHTML = formatWelcomeTextAdmin(textarea.value);
+    }
+}
+
+/**
+ * Format welcome message text to HTML for preview
+ */
+function formatWelcomeTextAdmin(text) {
+    if (!text) return '<p class="preview-placeholder">Enter a welcome message above to see preview</p>';
+
+    const lines = text.split('\n');
+    let html = '';
+    let inList = false;
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+
+        if (trimmed.startsWith('- ')) {
+            if (!inList) {
+                html += '<ul class="examples-list">';
+                inList = true;
+            }
+            html += `<li>${escapeHtmlAdmin(trimmed.substring(2))}</li>`;
+        } else {
+            if (inList) {
+                html += '</ul>';
+                inList = false;
+            }
+            if (trimmed) {
+                html += `<p class="large-text">${escapeHtmlAdmin(trimmed)}</p>`;
+            }
+        }
+    }
+
+    if (inList) html += '</ul>';
+    return html;
+}
+
+/**
+ * Escape HTML characters for safe display
+ */
+function escapeHtmlAdmin(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ==============================================================================
 // PHASE 42: TEST HARNESS
 // ==============================================================================
 
@@ -2473,6 +2599,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 uploadAdvertisement(file);
             }
         });
+    }
+
+    // ==============================================================================
+    // WELCOME MESSAGE EVENT LISTENERS (Phase 49)
+    // ==============================================================================
+
+    // Save Welcome Message Button
+    const saveWelcomeBtn = document.getElementById('saveWelcomeBtn');
+    if (saveWelcomeBtn) {
+        saveWelcomeBtn.addEventListener('click', saveWelcomeMessage);
+    }
+
+    // Refresh Welcome Message Button
+    const refreshWelcomeBtn = document.getElementById('refreshWelcomeBtn');
+    if (refreshWelcomeBtn) {
+        refreshWelcomeBtn.addEventListener('click', loadWelcomeMessageAdmin);
+    }
+
+    // Welcome Message Input - Live Preview
+    const welcomeMessageInput = document.getElementById('welcomeMessageInput');
+    if (welcomeMessageInput) {
+        welcomeMessageInput.addEventListener('input', updateWelcomePreview);
     }
 
     // ==============================================================================

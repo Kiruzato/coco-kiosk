@@ -1644,3 +1644,24 @@ body {
         height: 8px;
     }
 }
+
+/* ============================================================================
+   Phase 49: Welcome Message Image
+   ============================================================================ */
+
+/* Welcome image in chatbot UI */
+.welcome-image {
+    display: block;
+    max-width: 200px;
+    height: auto;
+    margin: 0 auto 20px auto;
+    border-radius: 10px;
+}
+
+/* Responsive welcome image */
+@media (max-width: 768px) {
+    .welcome-image {
+        max-width: 150px;
+        margin-bottom: 15px;
+    }
+}

@@ -125,7 +125,9 @@
       "Bash(del \"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\campus_rag_chatbot\\\\voice\\\\engines\\\\whisper_openai.py\")",
       "Bash(del \"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\campus_rag_chatbot\\\\voice\\\\engines\\\\edge_tts.py\")",
       "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -c \"import sys; print\\(f''Python: {sys.version}''\\)\")",
-      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -c \"from app import app; print\\(''App imports successfully''\\)\")"
+      "Bash(\"C:\\\\Users\\\\chann\\\\OneDrive\\\\Desktop\\\\restartcoco\\\\vibecoding_coco\\\\venv311\\\\Scripts\\\\python.exe\" -c \"from app import app; print\\(''App imports successfully''\\)\")",
+      "Bash(C:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/venv311/Scripts/python.exe app.py)",
+      "Bash(\"C:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/venv311/Scripts/python.exe\" \"C:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/app.py\")"
     ]
   }
 }

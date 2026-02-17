@@ -48,6 +48,11 @@
                         <span class="nav-label">Advertisements</span>
                     </a>
 
+                    <a href="#welcome" class="nav-item" data-section="welcome">
+                        <span class="nav-icon">&#9993;</span>
+                        <span class="nav-label">Welcome Message</span>
+                    </a>
+
                     <a href="#voice" class="nav-item" data-section="voice">
                         <span class="nav-icon">&#9834;</span>
                         <span class="nav-label">Voice Config</span>
@@ -65,7 +70,7 @@
                 </nav>
 
                 <div class="sidebar-footer">
-                    <span class="version-tag">Phase 48</span>
+                    <span class="version-tag">Phase 49</span>
                 </div>
             </aside>
 
@@ -261,6 +266,37 @@
                     </div>
 
                     <div id="adsStats" class="table-stats"></div>
+                </section>
+
+                <!-- Section: Welcome Message (Phase 49) -->
+                <section id="section-welcome" class="admin-section">
+                    <div class="section-header">
+                        <h2>Welcome Message</h2>
+                        <button id="refreshWelcomeBtn" class="btn-secondary">&#8635; Refresh</button>
+                    </div>
+
+                    <div id="welcomeLoadingIndicator" class="loading hidden">Loading...</div>
+
+                    <div class="card">
+                        <div class="form-group">
+                            <label for="welcomeMessageInput">Welcome Message</label>
+                            <p class="form-hint">Displayed when a new conversation begins. Use "- " prefix for bullet points.</p>
+                            <textarea id="welcomeMessageInput" rows="12" placeholder="Enter welcome message..."></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button id="saveWelcomeBtn" class="btn-primary">Save Changes</button>
+                            <span id="welcomeLastUpdated" class="status-text"></span>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Preview</h3>
+                        <div id="welcomePreview" class="welcome-preview">
+                            <img src="/images/coco-name.jpg" alt="CoCo" class="welcome-preview-image">
+                            <div id="welcomePreviewText" class="welcome-preview-text"></div>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- Section: Voice Configuration (Phase 36) -->

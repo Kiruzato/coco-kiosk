@@ -1,163 +1,160 @@
-You are working on the existing CoCo Campus RAG Chatbot codebase. Your task is to implement a system that allows administrators to edit the chatbot’s initial welcome message through the Admin interface, and ensure the chatbot UI displays both a logo image and the administrator-defined welcome message when a new conversation begins.
+# Generate Architecture Documentation
 
-Your implementation must follow industry best practices, maintain architectural consistency, and integrate cleanly into the existing system without introducing technical debt or breaking unrelated functionality.
+You are working inside the CoCo project repository.
 
----
+Your task is to generate a complete architecture documentation file using the existing template:
 
-# Core Objective
-
-Currently, every new conversation in the chatbot UI displays a default initial welcome message.
-
-The current initial message is:
-
-Welcome! I can help you with information about:
-
-Library hours and services
-Dining options and meal plans
-Parking and transportation
-IT services and Wi-Fi
-Student employment
-Campus events and activities
-
-What would you like to know?
-
-(initial message end)
-
-This message is currently static. I want administrators to be able to edit and manage this welcome message through the Admin interface accessible at:
-
-```
-http://localhost:8000/admin
-```
-
-Additionally, I want the chatbot UI to display an image located at:
-
-```
-/images/coco-name.jpg
-```
-
-This image must be displayed inside the exact same conversation bubble that contains the welcome message.
-
-Specifically:
-
-* The image must appear at the top of the chatbot’s initial message bubble
-* The welcome message text must appear directly below the image
-* Both the image and the welcome message must be part of one single chatbot message bubble
-* The image and text must not be split into separate messages or separate bubbles
+* The template file is `architecture_template.md` located at the root of the repository.
+* You must use this template as the structural foundation.
+* Create a new file named `architecture.md`.
+* Do NOT modify `architecture_template.md`.
 
 ---
 
-# Functional Requirements
+# ⚠️ Critical Constraint
 
-## Admin Welcome Message Management
-
-Provide a dedicated section in the Admin interface that allows administrators to:
-
-* View the current welcome message
-* Edit the welcome message
-* Save changes to the welcome message
-
-The editing interface must support multi-line text and preserve formatting.
-
-Changes must persist and remain effective across page reloads and system restarts.
-
-The system must use the administrator-defined message instead of a hardcoded message when initializing new conversations.
+* You must NOT make any code changes.
+* Do NOT refactor, modify, move, rename, or delete any source files.
+* Do NOT change configurations, dependencies, or project structure.
+* Your task is documentation only.
 
 ---
 
-## Chatbot UI Initial Message Behavior
+# Scope Restriction — Web Application Runtime Only
 
-When a new conversation begins, the chatbot must display a single initial chatbot message bubble that contains:
+The documentation must cover only the web application runtime architecture and its directly related production components.
 
-1. The image located at `/images/coco-name.jpg`, displayed at the top of the message bubble
-2. The welcome message text, displayed directly below the image, within the same bubble
+You must EXCLUDE the following from the documentation:
 
-The image and welcome message must be rendered together as one chatbot message.
+* Testing scripts
+* Testing tools or testing infrastructure
+* Testing data
+* Test-only modules
+* Experimental or unused modules
+* Backup files or backup modules
+* Old, deprecated, or unused files
+* Old requirements files or legacy configuration files
+* Report-generation components not required for runtime operation
+* Any non-runtime utilities
 
-The welcome message must be dynamically loaded from the system configuration managed by the admin.
-
-Any updates made by administrators must be reflected automatically in future new conversations.
-
-Existing conversations do not need to be modified.
-
----
-
-# System Integration Requirements
-
-The welcome message must not be hardcoded in frontend logic.
-
-It must be managed as part of the system’s configuration or content management layer and retrieved dynamically by the chatbot UI.
-
-The implementation must ensure:
-
-* Proper persistence of the welcome message
-* Clean separation between backend configuration and frontend rendering
-* Reliable retrieval and display of the welcome message
-* Proper rendering of the image `/images/coco-name.jpg` inside the same chatbot message bubble as the welcome message text
-* No disruption to existing chat functionality, session handling, or RAG system behavior
-
-The image `/images/coco-name.jpg` must be served using the system’s static file serving mechanism.
+Focus strictly on the components required for the web application to function in production.
 
 ---
 
-# Architectural and Engineering Requirements
+# Platform Documentation Scope Clarification
 
-Follow professional software engineering practices and industry standards.
+The documentation must reflect the production deployment architecture of the system.
+
+The production deployment environment is Raspberry Pi OS, and its runtime architecture and deployment structure must be documented normally.
+
+Windows is used only as a development and testing environment and is not part of the production runtime architecture.
+
+Therefore:
+
+* Do NOT document Windows-specific setup scripts, setup instructions, or platform-specific configurations.
+* Do NOT include Windows-specific deployment steps or environment configuration.
+* Do NOT describe Windows as a deployment target.
+
+However:
+
+* Raspberry Pi OS deployment architecture, runtime structure, and system integration must be fully documented.
+* Platform-agnostic architectural components must be documented normally.
+
+Windows may be mentioned briefly as a development or testing environment if necessary for context, but must not be documented as part of the production deployment architecture.
+
+---
+
+# Additional Explicit Exclusions
+
+## Do NOT include Directory Entity Components
+
+Treat directory entity components as not part of the system architecture.
+
+Do NOT include:
+
+* directory_entities.json
+* Entity registry components
+* Entity-specific ingestion logic
+* Entity-specific retrieval logic
+* Any directory entity framework or subsystem
+
+Do not reference or document these components.
+
+---
+
+## Do NOT include Debugging or Development-only Components
+
+Exclude all debugging, development-only, or observability tools that are not part of the production runtime architecture.
 
 This includes:
 
-* Proper modularization of welcome message management
-* Avoiding hardcoded content in frontend logic
-* Maintaining clear separation between configuration, backend logic, and frontend rendering
-* Using persistence and retrieval patterns consistent with the existing system architecture
-* Ensuring maintainability, clarity, and extensibility
+* Debug panels
+* Developer panels
+* /dev endpoints
+* Debug-only RAG tools
+* Internal debugging interfaces
+* Developer-only utilities
 
-You may refactor relevant parts of the system if necessary to support clean implementation, but do not redesign unrelated subsystems.
-
----
-
-# UX and Behavior Expectations
-
-Administrator workflow:
-
-* Administrator opens the Admin interface
-* Administrator navigates to the welcome message management section
-* Administrator views and edits the welcome message
-* Administrator saves changes
-* Changes become effective immediately for new conversations
-
-User workflow:
-
-* User opens chatbot UI at `http://localhost:8000`
-* User starts a new conversation
-* Chatbot displays a single initial chatbot message bubble
-* Inside that same message bubble:
-
-  * The image `/images/coco-name.jpg` appears at the top
-  * The administrator-defined welcome message appears below the image
+Only document production runtime components.
 
 ---
 
-# Quality Expectations
+## Do NOT use "Phase" Terminology
 
-Your implementation must be:
+Do NOT use:
 
-* Clean
-* Modular
-* Robust
-* Maintainable
-* Architecturally consistent
-* Production-quality
+* "Phase 1", "Phase 2", etc.
+* Any phased implementation descriptions
+* Any roadmap-style or staged explanations
 
-Avoid hardcoded values, shortcuts, or tightly coupled implementations.
-
-Favor clarity, extensibility, and correctness.
+The documentation must describe the architecture as a complete, cohesive runtime system.
 
 ---
 
-# Implementation Approach
+# Objectives
 
-Before implementing, analyze how the initial welcome message is currently defined, stored, and rendered.
+1. Analyze the current codebase structure.
+2. Identify the actual architectural layers and system components used in the runtime web application.
+3. Map real implementation details into the template sections.
+4. Ensure the documentation reflects the real implemented runtime architecture — not an idealized or theoretical design.
+5. Keep the documentation high-level but technically precise.
+6. Focus only on production runtime web application architecture.
 
-Refactor the system so the welcome message is dynamically managed by administrators and rendered together with the logo image inside the same chatbot message bubble.
+---
 
-Ensure the implementation integrates cleanly with the existing architecture and frontend behavior without breaking existing functionality.
+# What the Documentation Must Include
+
+Include only runtime-relevant architectural components, such as:
+
+* System overview
+* Architectural principles
+* Layered architecture (UI, Application, Domain, Infrastructure, AI/RAG, etc.)
+* Actual RAG architecture type (Naive, Hybrid, Agentic, Graph, etc.) based on implementation
+* STT → LLM → TTS processing flow
+* Data ingestion pipeline used by the runtime system
+* Vector store architecture
+* Model provider abstraction layer
+* Production deployment architecture (Raspberry Pi OS)
+* Scalability considerations
+* Known limitations or technical debt (if applicable)
+
+---
+
+# Constraints
+
+* Do not invent features that are not implemented.
+* If something is unclear in the codebase, explicitly state assumptions.
+* Use Mermaid diagrams in markdown where appropriate.
+* Be concise, structured, and professional.
+* The output must be production-grade architecture documentation.
+* Focus strictly on runtime architecture relevant to the web application.
+
+---
+
+# Output Requirements
+
+* Create a new file: `architecture.md`
+* Follow the structure defined in `architecture_template.md`
+* Ensure formatting is clean and consistent
+* Use consistent terminology throughout the document
+* Focus strictly on documentation generation

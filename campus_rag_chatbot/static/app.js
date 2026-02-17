@@ -63,6 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Phase 48: Initialize advertisement slideshow
     initAdvertisementSlideshow();
+
+    // Phase 49: Load welcome message from admin config
+    loadWelcomeMessageContent();
 });
 
 // ============================================================================
@@ -254,6 +257,91 @@ function stopAdRotation() {
  */
 function resetAdRotation() {
     startAdRotation();
+}
+
+// ============================================================================
+// PHASE 49: WELCOME MESSAGE LOADING
+// ============================================================================
+
+/**
+ * Load welcome message from server and display it
+ */
+async function loadWelcomeMessageContent() {
+    const welcomeText = document.getElementById('welcomeText');
+    const welcomeImage = document.getElementById('welcomeImage');
+
+    try {
+        const response = await fetch('/api/welcome');
+        if (!response.ok) throw new Error('Failed to load welcome message');
+
+        const data = await response.json();
+
+        // Format and display message
+        if (welcomeText) {
+            welcomeText.innerHTML = formatWelcomeText(data.message);
+        }
+
+        // Update image URL if provided (already set in HTML, but API can override)
+        if (welcomeImage && data.image_url) {
+            welcomeImage.src = data.image_url;
+        }
+
+        console.log('[WELCOME] Loaded welcome message from server');
+    } catch (error) {
+        console.error('[WELCOME] Failed to load:', error);
+        // Fallback to default message
+        if (welcomeText) {
+            welcomeText.innerHTML = '<p class="large-text">Welcome! How can I help you today?</p>';
+        }
+    }
+}
+
+/**
+ * Format welcome message text to HTML
+ * Converts plain text with "- " bullet points to HTML lists
+ */
+function formatWelcomeText(text) {
+    if (!text) return '';
+
+    const lines = text.split('\n');
+    let html = '';
+    let inList = false;
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+
+        if (trimmed.startsWith('- ')) {
+            // Bullet point item
+            if (!inList) {
+                html += '<ul class="examples-list">';
+                inList = true;
+            }
+            html += `<li>${escapeHtmlWelcome(trimmed.substring(2))}</li>`;
+        } else {
+            // Regular text
+            if (inList) {
+                html += '</ul>';
+                inList = false;
+            }
+            if (trimmed) {
+                html += `<p class="large-text">${escapeHtmlWelcome(trimmed)}</p>`;
+            }
+        }
+    }
+
+    // Close any open list
+    if (inList) html += '</ul>';
+
+    return html;
+}
+
+/**
+ * Escape HTML characters for safe display
+ */
+function escapeHtmlWelcome(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // ============================================================================
@@ -731,6 +819,9 @@ async function resetConversation() {
                 msg.remove();
             }
         });
+
+        // Phase 49: Reload welcome message in case admin updated it
+        await loadWelcomeMessageContent();
 
         // Note: Auto-focus disabled to prevent virtual keyboard from obstructing view on RPi
     } catch (error) {

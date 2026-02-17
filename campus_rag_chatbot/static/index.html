@@ -31,22 +31,16 @@
             <div class="chatbot-panel">
                 <!-- Chat Container -->
                 <main class="chat-container" id="chatContainer">
-            <!-- Welcome message -->
-            <div class="message system-message">
-                <div class="message-content">
-                    <p class="large-text">Welcome! I can help you with information about:</p>
-                    <ul class="examples-list">
-                        <li>Library hours and services</li>
-                        <li>Dining options and meal plans</li>
-                        <li>Parking and transportation</li>
-                        <li>IT services and Wi-Fi</li>
-                        <li>Student employment</li>
-                        <li>Campus events and activities</li>
-                    </ul>
-                    <p class="large-text">What would you like to know?</p>
-                </div>
-            </div>
-        </main>
+                    <!-- Welcome message (loaded dynamically from admin config) -->
+                    <div class="message system-message" id="welcomeMessage">
+                        <div class="message-content">
+                            <img src="/images/coco-name.jpg" alt="CoCo" class="welcome-image" id="welcomeImage">
+                            <div id="welcomeText">
+                                <p class="large-text">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+                </main>
 
         <!-- Input Container -->
         <div class="input-container">

@@ -270,6 +270,54 @@ advertisement_manager = AdvertisementManager(data_dir=PROJECT_ROOT / "data")
 logger.info(f"[PHASE48] AdvertisementManager initialized")
 
 # ==============================================================================
+# PHASE 49: WELCOME MESSAGE CONFIGURATION
+# ==============================================================================
+
+WELCOME_CONFIG_PATH = PROJECT_ROOT / "data" / "welcome_config.json"
+
+DEFAULT_WELCOME_MESSAGE = """Welcome! I can help you with information about:
+
+- Library hours and services
+- Dining options and meal plans
+- Parking and transportation
+- IT services and Wi-Fi
+- Student employment
+- Campus events and activities
+
+What would you like to know?"""
+
+
+def load_welcome_config() -> dict:
+    """Load welcome message configuration from JSON file."""
+    if WELCOME_CONFIG_PATH.exists():
+        try:
+            with open(WELCOME_CONFIG_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"[WELCOME] Failed to load config: {e}")
+    return {
+        "version": "1.0",
+        "message": DEFAULT_WELCOME_MESSAGE,
+        "updated_at": None
+    }
+
+
+def save_welcome_config(message: str) -> dict:
+    """Save welcome message configuration to JSON file."""
+    config = {
+        "version": "1.0",
+        "message": message,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    with open(WELCOME_CONFIG_PATH, 'w', encoding='utf-8') as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
+    logger.info(f"[WELCOME] Config saved")
+    return config
+
+
+logger.info(f"[PHASE49] Welcome message config initialized")
+
+# ==============================================================================
 # FASTAPI APP
 # ==============================================================================
 
@@ -4688,6 +4736,68 @@ async def reorder_advertisements(request: ReorderRequest):
     return {
         "status": "success",
         "message": f"Reordered {len(request.ad_ids)} advertisements"
+    }
+
+
+# ==============================================================================
+# PHASE 49: WELCOME MESSAGE ENDPOINTS
+# ==============================================================================
+
+@app.get("/api/welcome")
+async def get_welcome_message():
+    """
+    Get welcome message for chatbot UI.
+
+    This is a public endpoint (no auth required) for the frontend to display
+    the welcome message when a new conversation starts.
+
+    Returns:
+        Welcome message text and image URL
+    """
+    config = load_welcome_config()
+    return {
+        "message": config["message"],
+        "image_url": "/images/coco-name.jpg"
+    }
+
+
+@app.get("/admin/welcome", dependencies=[Depends(verify_admin_session)])
+async def admin_get_welcome():
+    """
+    Get welcome message configuration for admin editing.
+
+    Returns:
+        Full welcome config including version and timestamp
+    """
+    return load_welcome_config()
+
+
+class WelcomeMessageUpdate(BaseModel):
+    """Request model for welcome message updates."""
+    message: str
+
+
+@app.post("/admin/welcome", dependencies=[Depends(verify_admin_session)])
+async def admin_update_welcome(request: WelcomeMessageUpdate):
+    """
+    Update the welcome message.
+
+    Args:
+        request: New welcome message text
+
+    Returns:
+        Success status and updated config
+    """
+    message = request.message.strip()
+
+    if not message:
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    config = save_welcome_config(message)
+    return {
+        "status": "success",
+        "message": "Welcome message updated",
+        "data": config
     }
 
 
