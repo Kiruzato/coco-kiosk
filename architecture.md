@@ -44,8 +44,7 @@ vibecoding_coco/                        # Repository root
 │   │       ├── whisper_cpp.py         # Offline STT (Whisper.cpp, ARM64 optimized)
 │   │       ├── whisper_openai.py      # Cloud STT fallback (OpenAI Whisper API)
 │   │       ├── google_cloud_stt.py    # Cloud STT (Google Cloud Speech-to-Text)
-│   │       ├── piper_tts.py           # Offline TTS (Piper neural voice)
-│   │       └── edge_tts.py            # Cloud TTS (Microsoft Edge TTS, free)
+│   │       └── piper_tts.py           # Local TTS (Piper neural voice, offline)
 │   ├── entity_extractors/             # Deterministic extractors (bypass LLM)
 │   │   ├── __init__.py                # Extractor exports
 │   │   ├── deans.py                   # Dean enumeration extraction
@@ -101,7 +100,7 @@ graph TB
 
     subgraph "Voice Modality Layer"
         STT["STT Service<br/>(Whisper.cpp / Google Cloud)"]
-        TTS["TTS Service<br/>(Piper / Edge TTS)"]
+        TTS["TTS Service<br/>(Piper, local)"]
     end
 
     subgraph "Application Layer — app.py (FastAPI)"
@@ -247,7 +246,7 @@ graph TB
 
 **Description:** A modular voice subsystem that adds speech input/output as a modality layer on top of the existing chat pipeline. Handles audio → text transcription (STT), text → audio synthesis (TTS), and a combined voice chat flow. All RAG guarantees (grounding, confidence, determinism) are preserved — voice is strictly a modality layer, not a decision layer.
 
-**Technologies:** Python asyncio, Whisper.cpp (via pywhispercpp), Piper TTS, Edge TTS, Google Cloud Speech-to-Text, pydub
+**Technologies:** Python asyncio, Whisper.cpp (via pywhispercpp), Piper TTS, Google Cloud Speech-to-Text, pydub
 
 **Deployment:** Initialized within the FastAPI server process; voice models downloaded separately
 
@@ -347,7 +346,6 @@ graph LR
 | **OpenAI Chat API** | LLM inference (`gpt-4o-mini`) for intent classification, response synthesis, and general knowledge answers | REST API via `langchain-openai` SDK |
 | **OpenAI Embeddings API** | Text embedding generation (dimension 1536) for document chunks during ingestion | REST API via `langchain-openai` SDK |
 | **Google Cloud Speech-to-Text** | Cloud-based STT with higher accuracy; 60-minute/month free tier | gRPC via `google-cloud-speech` SDK |
-| **Microsoft Edge TTS** | Free cloud TTS using Microsoft's neural voices; no API key required | HTTP via `edge-tts` package |
 
 ## 6. Deployment & Infrastructure
 
@@ -368,8 +366,7 @@ graph TB
 
         subgraph "Native Processes"
             WHISPER["Whisper.cpp<br/>(ARM64 NEON optimized)"]
-            PIPER["Piper TTS<br/>(ONNX neural voice)"]
-            ESPEAK["espeak-ng<br/>(fallback TTS)"]
+            PIPER["Piper TTS<br/>(ONNX neural voice, local)"]
         end
 
         subgraph "Local Storage"
@@ -400,7 +397,7 @@ graph TB
 - `poppler-utils` — PDF processing
 - `tesseract-ocr`, `tesseract-ocr-eng` — OCR for scanned PDFs
 - `ffmpeg` — audio format conversion
-- `espeak-ng`, `espeak-ng-data` — fallback TTS engine
+- `espeak-ng`, `espeak-ng-data` — Piper TTS phonemizer backend
 - `libffi-dev`, `libssl-dev`, `libjpeg-dev`, `zlib1g-dev` — build dependencies
 
 **Setup & Deployment:**
@@ -554,7 +551,7 @@ sequenceDiagram
         ORCH-->>API: answer + metadata
 
         API->>TTS: Synthesize answer text
-        Note over TTS: Engine priority:<br/>1. Edge TTS (cloud, free)<br/>2. Piper (offline, neural)<br/>3. espeak-ng (fast fallback)
+        Note over TTS: Piper TTS (local, neural)<br/>ONNX model on ARM64
         TTS-->>API: audio bytes
 
         API-->>FE: JSON response + audio_url
@@ -565,12 +562,12 @@ sequenceDiagram
 
 **Voice Provider Architecture:**
 
-| Service | Primary Engine | Fallback Engine | Notes |
-|---------|---------------|-----------------|-------|
-| **STT** | Google Cloud STT | Whisper.cpp (offline) | Google has 60-min/month free tier with quota tracking |
-| **TTS** | Edge TTS (cloud) | Piper (offline) | Edge TTS is free, no API key; Piper requires Python 3.11 |
+| Service | Engine | Notes |
+|---------|--------|-------|
+| **STT** | Google Cloud STT (primary), Whisper.cpp (offline fallback) | Google has 60-min/month free tier with quota tracking |
+| **TTS** | Piper (local, neural) | Runs entirely offline on the RPi; requires Python 3.11; uses espeak-ng as phonemizer |
 
-Provider selection is admin-configurable at runtime via the admin UI. Providers have selectability rules (paid/free, operational status) and explicit fallback selection.
+STT provider selection is admin-configurable at runtime via the admin UI. TTS uses Piper exclusively as a local engine with no cloud dependency.
 
 ### 8.4. Model Provider Abstraction
 
@@ -578,7 +575,7 @@ The `voice/` package implements a provider registry pattern that abstracts away 
 
 - **`ProviderRegistry`** — Maintains a catalog of available providers with metadata (pricing tier, selectability, fallback eligibility, operational status)
 - **`STTService`** — Selects the configured primary STT engine, falls back to secondary on failure
-- **`TTSService`** — Selects the configured primary TTS engine, falls back to secondary on failure
+- **`TTSService`** — Invokes Piper TTS directly for local speech synthesis
 - **`VoiceOrchestrator`** — Coordinates the STT → Chat → TTS pipeline, preserving all RAG guarantees
 
 Provider configuration is persisted in `data/voice_settings.json` and can be changed at runtime via `PUT /admin/voice/config`.
@@ -644,7 +641,7 @@ Provider configuration is persisted in `data/voice_settings.json` and can be cha
 | **Entity Registry** | Structured directory of campus locations with canonical names, aliases, and coordinates |
 | **Piper** | Open-source neural TTS engine optimized for edge devices (ARM64) |
 | **Whisper.cpp** | C++ port of OpenAI's Whisper model, optimized for CPU inference on ARM64 |
-| **Edge TTS** | Microsoft's neural TTS API accessible through the `edge-tts` Python package (free, no key required) |
+
 | **Kiosk Mode** | Full-screen, touch-friendly deployment mode for Raspberry Pi with attached display |
 | **PBKDF2** | Password-Based Key Derivation Function 2 — used for deriving encryption keys from admin password |
 | **AES-256-GCM** | Advanced Encryption Standard (256-bit) in Galois/Counter Mode — authenticated encryption for credentials |
