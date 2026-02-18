@@ -1519,6 +1519,7 @@ async function saveGoogleCredential() {
 
 /**
  * Phase 39B: Load debug settings from server
+ * Phase 50: Also loads metadata visibility settings
  */
 async function loadDebugSettings() {
     try {
@@ -1526,6 +1527,9 @@ async function loadDebugSettings() {
         const data = await apiCall('/admin/debug/status');
         console.log('[DEBUG] Debug settings loaded:', data);
         updateDebugToggleUI(data.debug_enabled);
+
+        // Phase 50: Also load metadata visibility settings
+        await loadMetadataSettings();
     } catch (error) {
         console.error('Failed to load debug settings:', error);
         updateDebugToggleUI(false);
@@ -1573,6 +1577,70 @@ async function toggleDebugMode(enabled) {
         // Revert toggle on error
         updateDebugToggleUI(!enabled);
         showNotification(`Failed to toggle debug mode: ${error.message}`, 'error');
+    }
+}
+
+// ==============================================================================
+// PHASE 50: METADATA VISIBILITY SETTINGS
+// ==============================================================================
+
+/**
+ * Phase 50: Load metadata visibility settings from server
+ */
+async function loadMetadataSettings() {
+    try {
+        console.log('[METADATA] Loading metadata settings...');
+        const data = await apiCall('/admin/metadata/status');
+        console.log('[METADATA] Settings loaded:', data);
+        updateMetadataToggleUI(data.metadata_visible);
+    } catch (error) {
+        console.error('[METADATA] Failed to load settings:', error);
+        // Default to visible on error
+        updateMetadataToggleUI(true);
+    }
+}
+
+/**
+ * Phase 50: Update metadata toggle UI state
+ */
+function updateMetadataToggleUI(enabled) {
+    const toggle = document.getElementById('metadataVisibleToggle');
+    const label = document.getElementById('metadataToggleLabel');
+
+    if (toggle) {
+        toggle.checked = enabled;
+    }
+    if (label) {
+        label.textContent = enabled ? 'Metadata Visible' : 'Metadata Hidden';
+        label.className = enabled ? 'toggle-label active' : 'toggle-label';
+    }
+}
+
+/**
+ * Phase 50: Toggle metadata visibility on/off
+ */
+async function toggleMetadataVisibility(enabled) {
+    try {
+        console.log('[METADATA] Toggling metadata visibility to:', enabled);
+        const data = await apiCall('/admin/metadata/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled: enabled })
+        });
+        console.log('[METADATA] Toggle response:', data);
+
+        if (data.success) {
+            updateMetadataToggleUI(data.metadata_visible);
+            showNotification(data.message, 'success');
+        } else {
+            // Revert toggle if failed
+            updateMetadataToggleUI(!enabled);
+            showNotification('Failed to update metadata visibility', 'error');
+        }
+    } catch (error) {
+        // Revert toggle on error
+        updateMetadataToggleUI(!enabled);
+        showNotification(`Failed to toggle metadata visibility: ${error.message}`, 'error');
     }
 }
 
@@ -2503,6 +2571,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (debugModeToggle) {
         debugModeToggle.addEventListener('change', (e) => {
             toggleDebugMode(e.target.checked);
+        });
+    }
+
+    // ==============================================================================
+    // METADATA VISIBILITY EVENT LISTENERS - Phase 50
+    // ==============================================================================
+
+    const metadataVisibleToggle = document.getElementById('metadataVisibleToggle');
+    if (metadataVisibleToggle) {
+        metadataVisibleToggle.addEventListener('change', (e) => {
+            toggleMetadataVisibility(e.target.checked);
         });
     }
 

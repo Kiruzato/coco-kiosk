@@ -70,7 +70,7 @@
                 </nav>
 
                 <div class="sidebar-footer">
-                    <span class="version-tag">Phase 49</span>
+                    <span class="version-tag">Phase 50</span>
                 </div>
             </aside>
 
@@ -462,6 +462,28 @@
                         <p class="developer-note">
                             When enabled, all users will see technical details about each response including:
                             LLM provider, retrieval mode, chunks retrieved, grounding status, and timing.
+                        </p>
+                    </div>
+
+                    <!-- Phase 50: Response Metadata Visibility Toggle -->
+                    <div class="card developer-card">
+                        <h3>Response Metadata</h3>
+                        <p class="card-description">
+                            Control visibility of confidence level, score, and sources in chatbot response bubbles.
+                            This is separate from the Debug Panel toggle.
+                        </p>
+
+                        <div class="toggle-row">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="metadataVisibleToggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-label" id="metadataToggleLabel">Metadata Visible</span>
+                        </div>
+
+                        <p class="developer-note">
+                            When enabled: Confidence badge, score, and sources are shown in responses.<br>
+                            When disabled: Only the answer content is displayed to users.
                         </p>
                     </div>
                 </section>

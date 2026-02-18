@@ -20,6 +20,9 @@ let currentAdIndex = 0;
 let adRotationTimer = null;
 const AD_ROTATION_INTERVAL = 60000; // 1 minute per ad
 
+// Phase 50: Metadata visibility setting (loaded from server)
+let metadataVisible = true; // Default: show metadata
+
 // Helper to update sessionId both in memory and sessionStorage
 function updateSessionId(newId) {
     sessionId = newId;
@@ -66,6 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Phase 49: Load welcome message from admin config
     loadWelcomeMessageContent();
+
+    // Phase 50: Load display settings (metadata visibility)
+    loadDisplaySettings();
 });
 
 // ============================================================================
@@ -260,6 +266,28 @@ function resetAdRotation() {
 }
 
 // ============================================================================
+// PHASE 50: DISPLAY SETTINGS (METADATA VISIBILITY)
+// ============================================================================
+
+/**
+ * Load display settings from server (metadata visibility)
+ */
+async function loadDisplaySettings() {
+    try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+            const data = await response.json();
+            metadataVisible = data.metadata_visible;
+            console.log('[SETTINGS] Metadata visible:', metadataVisible);
+        }
+    } catch (error) {
+        console.error('[SETTINGS] Failed to load display settings:', error);
+        // Default to visible on error
+        metadataVisible = true;
+    }
+}
+
+// ============================================================================
 // PHASE 49: WELCOME MESSAGE LOADING
 // ============================================================================
 
@@ -423,28 +451,32 @@ function addAssistantMessage(data) {
         html += `<div class="large-text">${formatAnswerText(data.answer)}</div>`;
     }
 
-    // Confidence badge
-    const confidenceClass = `confidence-${data.confidence_level.toLowerCase()}`;
-    html += `
-        <div class="confidence-badge ${confidenceClass}">
-            Confidence: ${data.confidence_level}
-        </div>
-        <div class="confidence-score">
-            Score: ${data.confidence_score}/100
-        </div>
-    `;
-
-    // Mode transparency badge (Phase 6)
-    if (data.mode === 'campus') {
-        html += `<div class="mode-badge mode-campus">📚 Based on campus documents</div>`;
-    } else if (data.mode === 'general') {
-        html += `<div class="mode-badge mode-general">🤖 Based on general AI knowledge</div>`;
-    } else if (data.mode === 'clarification') {
-        html += `<div class="mode-badge mode-clarification">❓ Needs clarification</div>`;
+    // Phase 50: Conditionally render confidence badge and score based on metadataVisible setting
+    if (metadataVisible) {
+        const confidenceClass = `confidence-${data.confidence_level.toLowerCase()}`;
+        html += `
+            <div class="confidence-badge ${confidenceClass}">
+                Confidence: ${data.confidence_level}
+            </div>
+            <div class="confidence-score">
+                Score: ${data.confidence_score}/100
+            </div>
+        `;
     }
 
-    // Sources
-    if (data.sources && data.sources.length > 0) {
+    // Phase 50B: Mode badges controlled by metadataVisible toggle
+    if (metadataVisible) {
+        if (data.mode === 'campus') {
+            html += `<div class="mode-badge mode-campus">📚 Based on campus documents</div>`;
+        } else if (data.mode === 'general') {
+            html += `<div class="mode-badge mode-general">🤖 Based on general AI knowledge</div>`;
+        } else if (data.mode === 'clarification') {
+            html += `<div class="mode-badge mode-clarification">❓ Needs clarification</div>`;
+        }
+    }
+
+    // Phase 50: Conditionally render sources based on metadataVisible setting
+    if (metadataVisible && data.sources && data.sources.length > 0) {
         html += `
             <div class="sources">
                 <div class="sources-title">Sources:</div>
@@ -669,26 +701,31 @@ function createStreamingMessageContainer() {
 
 /**
  * Phase 47: Render metadata (confidence, sources, mode) immediately
+ * Phase 50: Conditionally renders based on metadataVisible setting
  */
 function renderStreamingMetadata(container, metadata) {
     let html = '';
 
-    // Confidence badge
-    const confidenceClass = `confidence-${metadata.confidence_level.toLowerCase()}`;
-    html += `
-        <div class="confidence-badge ${confidenceClass}">
-            Confidence: ${metadata.confidence_level}
-        </div>
-        <div class="confidence-score">
-            Score: ${Math.round(metadata.confidence_score)}/100
-        </div>
-    `;
+    // Phase 50: Conditionally render confidence badge and score
+    if (metadataVisible) {
+        const confidenceClass = `confidence-${metadata.confidence_level.toLowerCase()}`;
+        html += `
+            <div class="confidence-badge ${confidenceClass}">
+                Confidence: ${metadata.confidence_level}
+            </div>
+            <div class="confidence-score">
+                Score: ${Math.round(metadata.confidence_score)}/100
+            </div>
+        `;
+    }
 
-    // Mode badge
-    if (metadata.mode === 'campus') {
-        html += `<div class="mode-badge mode-campus">📚 Based on campus documents</div>`;
-    } else if (metadata.mode === 'general') {
-        html += `<div class="mode-badge mode-general">🤖 Based on general AI knowledge</div>`;
+    // Phase 50B: Mode badges controlled by metadataVisible toggle
+    if (metadataVisible) {
+        if (metadata.mode === 'campus') {
+            html += `<div class="mode-badge mode-campus">📚 Based on campus documents</div>`;
+        } else if (metadata.mode === 'general') {
+            html += `<div class="mode-badge mode-general">🤖 Based on general AI knowledge</div>`;
+        }
     }
 
     container.innerHTML = html;
@@ -696,6 +733,7 @@ function renderStreamingMetadata(container, metadata) {
 
 /**
  * Phase 47: Finalize streaming message with complete data
+ * Phase 50: Conditionally renders sources based on metadataVisible setting
  */
 function finalizeStreamingMessage(messageDiv, metadata, completeData, fullAnswer) {
     messageDiv.classList.remove('streaming');
@@ -708,8 +746,8 @@ function finalizeStreamingMessage(messageDiv, metadata, completeData, fullAnswer
     const contentDiv = messageDiv.querySelector('.streaming-content');
     contentDiv.innerHTML = `<div class="large-text">${formatAnswerText(fullAnswer)}</div>`;
 
-    // Add sources
-    if (metadata.sources && metadata.sources.length > 0) {
+    // Phase 50: Conditionally render sources based on metadataVisible setting
+    if (metadataVisible && metadata.sources && metadata.sources.length > 0) {
         const sourcesHtml = `
             <div class="sources">
                 <div class="sources-title">Sources:</div>

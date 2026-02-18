@@ -142,42 +142,68 @@ admin_sessions: Dict[str, datetime] = {}  # {session_token: expiry_datetime}
 rag_only_mode: bool = False
 
 # Phase 39B: Debug panel mode (persisted to debug_settings.json)
+# Phase 50: Extended to include metadata_visible setting
 DEBUG_SETTINGS_PATH = PROJECT_ROOT / "data" / "debug_settings.json"
 debug_mode_enabled: bool = False
+metadata_visible: bool = True  # Phase 50: Default to showing metadata
 
 
-def load_debug_settings() -> bool:
-    """Load debug mode from settings file."""
-    global debug_mode_enabled
+def load_debug_settings() -> dict:
+    """Load debug settings from JSON file.
+
+    Phase 50: Extended to load both debug_enabled and metadata_visible.
+    """
+    global debug_mode_enabled, metadata_visible
     try:
         if DEBUG_SETTINGS_PATH.exists():
             import json
             with open(DEBUG_SETTINGS_PATH, 'r') as f:
                 data = json.load(f)
             debug_mode_enabled = data.get('debug_enabled', False)
-            return debug_mode_enabled
+            metadata_visible = data.get('metadata_visible', True)  # Phase 50
+            return data
     except Exception as e:
         logger.warning(f"[DEBUG] Failed to load debug settings: {e}")
-    return False
+    return {"debug_enabled": False, "metadata_visible": True, "updated_at": None}
 
 
-def save_debug_settings(enabled: bool) -> bool:
-    """Save debug mode to settings file."""
-    global debug_mode_enabled
+def save_debug_settings(debug_enabled: bool = None, metadata_visible_setting: bool = None) -> dict:
+    """Save debug settings to JSON file.
+
+    Phase 50: Extended to support saving metadata_visible independently.
+    Only updates the fields that are passed (not None).
+    """
+    global debug_mode_enabled, metadata_visible
     try:
         import json
         DEBUG_SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
-        data = {
-            'debug_enabled': enabled,
-            'updated_at': datetime.utcnow().isoformat() + 'Z'
-        }
+
+        # Read current file without updating globals
+        current = {"debug_enabled": debug_mode_enabled, "metadata_visible": metadata_visible}
+        if DEBUG_SETTINGS_PATH.exists():
+            try:
+                with open(DEBUG_SETTINGS_PATH, 'r') as f:
+                    current = json.load(f)
+            except Exception:
+                pass
+
+        # Update only the fields that were passed
+        if debug_enabled is not None:
+            debug_mode_enabled = debug_enabled
+            current['debug_enabled'] = debug_enabled
+        if metadata_visible_setting is not None:
+            metadata_visible = metadata_visible_setting
+            current['metadata_visible'] = metadata_visible_setting
+
+        current['updated_at'] = datetime.utcnow().isoformat() + 'Z'
+
         with open(DEBUG_SETTINGS_PATH, 'w') as f:
-            json.dump(data, f, indent=2)
-        debug_mode_enabled = enabled
-        return True
+            json.dump(current, f, indent=2)
+
+        return current
     except Exception as e:
         logger.error(f"[DEBUG] Failed to save debug settings: {e}")
-        return False
+        return {"debug_enabled": debug_mode_enabled, "metadata_visible": metadata_visible, "updated_at": None}
 
 
 # Load debug settings at startup
@@ -3752,9 +3778,9 @@ async def toggle_debug_mode(request: DebugToggleRequest):
     """
     global debug_mode_enabled
 
-    success = save_debug_settings(request.enabled)
+    result = save_debug_settings(debug_enabled=request.enabled)
 
-    if success:
+    if result:
         logger.info(f"[ADMIN] Debug mode {'enabled' if request.enabled else 'disabled'}")
         return {
             "success": True,
@@ -3765,6 +3791,66 @@ async def toggle_debug_mode(request: DebugToggleRequest):
         raise HTTPException(
             status_code=500,
             detail="Failed to save debug settings"
+        )
+
+
+# ==============================================================================
+# PHASE 50: METADATA VISIBILITY ENDPOINTS
+# ==============================================================================
+
+@app.get("/api/settings")
+async def get_display_settings():
+    """
+    Get display settings for chatbot UI (public endpoint).
+
+    Phase 50: Returns metadata visibility setting for frontend rendering.
+    """
+    return {
+        "metadata_visible": metadata_visible
+    }
+
+
+@app.get("/admin/metadata/status", dependencies=[Depends(verify_admin_session)])
+async def get_metadata_status():
+    """
+    Get metadata visibility status.
+
+    Phase 50: Returns whether response metadata (confidence, score, sources) is visible.
+    """
+    settings = load_debug_settings()
+    return {
+        "metadata_visible": settings.get("metadata_visible", True),
+        "updated_at": settings.get("updated_at")
+    }
+
+
+class MetadataToggleRequest(BaseModel):
+    """Request body for metadata visibility toggle."""
+    enabled: bool
+
+
+@app.post("/admin/metadata/toggle", dependencies=[Depends(verify_admin_session)])
+async def toggle_metadata_visibility(request: MetadataToggleRequest):
+    """
+    Toggle metadata visibility in response bubbles.
+
+    Phase 50: Enables/disables confidence, score, and sources display in chatbot responses.
+    """
+    global metadata_visible
+
+    result = save_debug_settings(metadata_visible_setting=request.enabled)
+
+    if result:
+        logger.info(f"[ADMIN] Metadata visibility {'enabled' if request.enabled else 'disabled'}")
+        return {
+            "success": True,
+            "metadata_visible": metadata_visible,
+            "message": "Response metadata visible" if request.enabled else "Response metadata hidden"
+        }
+    else:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to save metadata settings"
         )
 
 

@@ -1,162 +1,119 @@
-You are working on the existing CoCo Campus RAG Chatbot codebase. Your task is to implement a configurable system that allows administrators to control the visibility of developer/debug information in chatbot response bubbles.
+You are working on the existing CoCo Campus RAG Chatbot codebase. Your task is to improve the behavior and architecture of the Response Metadata toggle and the Debug Panel system.
 
-Your implementation must follow industry best practices, maintain architectural consistency, and integrate cleanly into the existing system without breaking or redesigning unrelated functionality.
+Your implementation must follow industry best practices, maintain architectural consistency, and avoid introducing technical debt.
 
 ---
 
-# Core Objective
+# Core Objectives
 
-Currently, chatbot response bubbles include additional diagnostic and retrieval-related information, such as:
+There are two main issues to address:
 
-* Confidence level (example: `CONFIDENCE: HIGH`, `MEDIUM`, `LOW`)
-* Score value (example: `92.69999694824219 / 100`)
-* Sources section, including document names and metadata references
+---
 
-Example:
+## 1. Response Metadata Toggle Requires Page Refresh
+
+Currently, when toggling the **Response Metadata visibility** setting in Developer Settings:
+
+* The change does not take effect immediately.
+* I must manually refresh the page to see the effect.
+
+However, the **Debug Panel toggle** applies changes immediately without requiring a page refresh.
+
+### Required Behavior
+
+The Response Metadata toggle must:
+
+* Apply changes immediately without requiring page refresh.
+* Dynamically update the UI in real time.
+* Behave consistently with how the Debug Panel toggle works.
+* Not require reloading the entire chatbot interface.
+
+The toggle must control visibility dynamically for:
+
+* Confidence
+* Score
+* Sources
+* Knowledge-origin labels
+* Any related response metadata elements
+
+This must affect both existing visible messages (if applicable) and new responses rendered after the toggle.
+
+---
+
+## 2. Debug Panel Not Triggering for Some Queries
+
+I noticed that certain questions, such as:
 
 ```
-CONFIDENCE: HIGH
-Score: 92.69999694824219 / 100
-
-Sources:
-Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf - Description: Engineering Dean office.
-Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf - General Information
-Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf - Entity ID: SP106_DEAN
-...
+where is engineering dean office?
 ```
 
-This information is useful for debugging and development, but it should not always be visible to end users.
+do not trigger the Debug Panel display, even when Debug Panel is enabled.
 
-I want administrators to be able to control whether this developer/debug information is visible or hidden.
+This indicates inconsistency in how the Debug Panel is activated or rendered.
 
-This control must be accessible from the existing Admin interface, specifically under the Developer Settings section:
+### Required Improvements
 
-```
-http://localhost:8000/admin#developer
-```
-
----
-
-# Functional Requirements
-
-## Separate Developer Visibility Toggle
-
-Provide a dedicated toggle in the Developer Settings section that controls the visibility of the following response metadata:
-
-* Confidence level
-* Score value
-* Sources section
-
-This toggle must be separate and independent from the existing Debug Panel toggle.
-
-It must NOT reuse, override, or be combined with the Debug Panel toggle. These are two distinct controls with different purposes.
-
-The Debug Panel toggle must continue to function independently as it currently does.
-
-The new toggle must specifically and only control the visibility of confidence, score, and sources in chatbot response bubbles.
+* Ensure the Debug Panel activates consistently whenever it is enabled.
+* The Debug Panel must not depend on specific query types or retrieval paths.
+* It must work reliably for all question types, including directory-related queries.
+* Investigate and fix any logic gaps causing Debug Panel not to render.
 
 ---
 
-## Developer Settings Persistence
+# Refactor and Modularization Requirement
 
-The visibility setting must:
+If necessary, perform proper refactorization and modularization of the Debug Panel and Response Metadata systems to ensure:
 
-* Persist across page reloads
-* Persist across system restarts
-* Be stored using the system’s existing settings persistence mechanism
-* Be reliably retrievable by both backend and frontend components as needed
+* Clean separation of concerns
+* Unified and centralized rendering logic
+* Consistent state management
+* No duplicated toggle handling logic
+* Clear abstraction between configuration state and UI rendering
+* Proper reactive or event-driven update behavior
 
----
+Avoid patching individual display conditions.
 
-## Chatbot Response Behavior
+If needed, restructure how developer settings are propagated to frontend rendering logic so that both:
 
-When the developer visibility toggle is enabled:
+* Debug Panel
+* Response Metadata visibility
 
-* Confidence, score, and sources must be displayed as they currently are.
-
-When the developer visibility toggle is disabled:
-
-* Confidence, score, and sources must not be shown in chatbot response bubbles.
-* Only the main assistant response content must be visible.
-
-The retrieval pipeline, scoring logic, and response generation must continue functioning normally regardless of visibility settings.
-
-This feature only controls display visibility, not internal computation.
+are handled through a clean and consistent state management mechanism.
 
 ---
 
-# System Integration Requirements
+# Important Constraints
 
-The implementation must integrate cleanly into the existing Admin Developer Settings system.
-
-It must ensure:
-
-* Proper separation between Debug Panel functionality and response metadata visibility control
-* Clear separation between backend logic and frontend rendering logic
-* Dynamic control of response metadata visibility based on administrator settings
-* No disruption to retrieval, scoring, grounding, or response generation systems
-* No regression in existing chatbot functionality
-
-Frontend rendering must respect the administrator-configured visibility setting dynamically.
+* Do not redesign the overall chatbot architecture.
+* Do not modify unrelated subsystems.
+* Do not break RAG, retrieval, or response generation.
+* Maintain existing features.
+* Preserve separation between Debug Panel toggle and Response Metadata toggle.
+* Ensure both toggles operate independently but consistently.
 
 ---
 
-# Architectural and Engineering Requirements
+# Expected Outcome
 
-Follow professional software engineering practices and industry standards.
+After implementation:
 
-This includes:
-
-* Proper modularization of developer settings logic
-* Maintaining clear separation between system configuration and UI presentation
-* Avoiding hardcoded display logic
-* Ensuring maintainability, extensibility, and clarity
-* Reusing and extending existing developer settings architecture patterns appropriately
-
-You may refactor related parts of the system if necessary to maintain architectural clarity and consistency, but do not redesign unrelated subsystems.
-
----
-
-# UX and Behavior Expectations
-
-Administrator workflow:
-
-* Administrator opens the Admin interface
-* Administrator navigates to Developer Settings
-* Administrator sees a dedicated toggle specifically for response metadata visibility
-* Administrator enables or disables this toggle
-* Changes persist and apply immediately
-
-User workflow:
-
-* User interacts with chatbot
-* Response bubbles display either full developer metadata or only user-facing response content, depending on the administrator’s configured visibility setting
-
----
-
-# Quality Expectations
-
-Your implementation must be:
-
-* Clean
-* Modular
-* Robust
-* Maintainable
-* Architecturally consistent
-* Production-quality
-
-Avoid shortcuts, tightly coupled logic, or hardcoded visibility behavior.
-
-Favor clarity, configurability, and correctness.
+* Toggling Response Metadata visibility applies immediately without page refresh.
+* Debug Panel reliably appears when enabled, regardless of query type.
+* Developer settings behave consistently and predictably.
+* Codebase is cleaner, more modular, and easier to maintain.
+* No regressions in chatbot functionality.
 
 ---
 
 # Implementation Approach
 
-Before implementing, analyze how confidence, score, and sources are currently generated, stored, and rendered.
+Before implementing, analyze:
 
-Extend the developer settings system to include a new, separate visibility control specifically for response metadata.
+* How Debug Panel toggle currently propagates state.
+* How Response Metadata visibility is currently applied.
+* Where rendering decisions are made in the frontend.
 
-Ensure that chatbot response rendering dynamically respects this setting while preserving all existing retrieval and scoring functionality.
+Refactor the system to ensure consistent, reactive behavior and centralized rendering control.
 
-Do not remove or disable the underlying metadata generation—only control its visibility in the UI.
+Favor architectural clarity over quick fixes.
