@@ -1,160 +1,162 @@
-# Generate Architecture Documentation
+You are working on the existing CoCo Campus RAG Chatbot codebase. Your task is to implement a configurable system that allows administrators to control the visibility of developer/debug information in chatbot response bubbles.
 
-You are working inside the CoCo project repository.
-
-Your task is to generate a complete architecture documentation file using the existing template:
-
-* The template file is `architecture_template.md` located at the root of the repository.
-* You must use this template as the structural foundation.
-* Create a new file named `architecture.md`.
-* Do NOT modify `architecture_template.md`.
+Your implementation must follow industry best practices, maintain architectural consistency, and integrate cleanly into the existing system without breaking or redesigning unrelated functionality.
 
 ---
 
-# ⚠️ Critical Constraint
+# Core Objective
 
-* You must NOT make any code changes.
-* Do NOT refactor, modify, move, rename, or delete any source files.
-* Do NOT change configurations, dependencies, or project structure.
-* Your task is documentation only.
+Currently, chatbot response bubbles include additional diagnostic and retrieval-related information, such as:
 
----
+* Confidence level (example: `CONFIDENCE: HIGH`, `MEDIUM`, `LOW`)
+* Score value (example: `92.69999694824219 / 100`)
+* Sources section, including document names and metadata references
 
-# Scope Restriction — Web Application Runtime Only
+Example:
 
-The documentation must cover only the web application runtime architecture and its directly related production components.
+```
+CONFIDENCE: HIGH
+Score: 92.69999694824219 / 100
 
-You must EXCLUDE the following from the documentation:
+Sources:
+Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf - Description: Engineering Dean office.
+Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf - General Information
+Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf - Entity ID: SP106_DEAN
+...
+```
 
-* Testing scripts
-* Testing tools or testing infrastructure
-* Testing data
-* Test-only modules
-* Experimental or unused modules
-* Backup files or backup modules
-* Old, deprecated, or unused files
-* Old requirements files or legacy configuration files
-* Report-generation components not required for runtime operation
-* Any non-runtime utilities
+This information is useful for debugging and development, but it should not always be visible to end users.
 
-Focus strictly on the components required for the web application to function in production.
+I want administrators to be able to control whether this developer/debug information is visible or hidden.
 
----
+This control must be accessible from the existing Admin interface, specifically under the Developer Settings section:
 
-# Platform Documentation Scope Clarification
-
-The documentation must reflect the production deployment architecture of the system.
-
-The production deployment environment is Raspberry Pi OS, and its runtime architecture and deployment structure must be documented normally.
-
-Windows is used only as a development and testing environment and is not part of the production runtime architecture.
-
-Therefore:
-
-* Do NOT document Windows-specific setup scripts, setup instructions, or platform-specific configurations.
-* Do NOT include Windows-specific deployment steps or environment configuration.
-* Do NOT describe Windows as a deployment target.
-
-However:
-
-* Raspberry Pi OS deployment architecture, runtime structure, and system integration must be fully documented.
-* Platform-agnostic architectural components must be documented normally.
-
-Windows may be mentioned briefly as a development or testing environment if necessary for context, but must not be documented as part of the production deployment architecture.
+```
+http://localhost:8000/admin#developer
+```
 
 ---
 
-# Additional Explicit Exclusions
+# Functional Requirements
 
-## Do NOT include Directory Entity Components
+## Separate Developer Visibility Toggle
 
-Treat directory entity components as not part of the system architecture.
+Provide a dedicated toggle in the Developer Settings section that controls the visibility of the following response metadata:
 
-Do NOT include:
+* Confidence level
+* Score value
+* Sources section
 
-* directory_entities.json
-* Entity registry components
-* Entity-specific ingestion logic
-* Entity-specific retrieval logic
-* Any directory entity framework or subsystem
+This toggle must be separate and independent from the existing Debug Panel toggle.
 
-Do not reference or document these components.
+It must NOT reuse, override, or be combined with the Debug Panel toggle. These are two distinct controls with different purposes.
+
+The Debug Panel toggle must continue to function independently as it currently does.
+
+The new toggle must specifically and only control the visibility of confidence, score, and sources in chatbot response bubbles.
 
 ---
 
-## Do NOT include Debugging or Development-only Components
+## Developer Settings Persistence
 
-Exclude all debugging, development-only, or observability tools that are not part of the production runtime architecture.
+The visibility setting must:
+
+* Persist across page reloads
+* Persist across system restarts
+* Be stored using the system’s existing settings persistence mechanism
+* Be reliably retrievable by both backend and frontend components as needed
+
+---
+
+## Chatbot Response Behavior
+
+When the developer visibility toggle is enabled:
+
+* Confidence, score, and sources must be displayed as they currently are.
+
+When the developer visibility toggle is disabled:
+
+* Confidence, score, and sources must not be shown in chatbot response bubbles.
+* Only the main assistant response content must be visible.
+
+The retrieval pipeline, scoring logic, and response generation must continue functioning normally regardless of visibility settings.
+
+This feature only controls display visibility, not internal computation.
+
+---
+
+# System Integration Requirements
+
+The implementation must integrate cleanly into the existing Admin Developer Settings system.
+
+It must ensure:
+
+* Proper separation between Debug Panel functionality and response metadata visibility control
+* Clear separation between backend logic and frontend rendering logic
+* Dynamic control of response metadata visibility based on administrator settings
+* No disruption to retrieval, scoring, grounding, or response generation systems
+* No regression in existing chatbot functionality
+
+Frontend rendering must respect the administrator-configured visibility setting dynamically.
+
+---
+
+# Architectural and Engineering Requirements
+
+Follow professional software engineering practices and industry standards.
 
 This includes:
 
-* Debug panels
-* Developer panels
-* /dev endpoints
-* Debug-only RAG tools
-* Internal debugging interfaces
-* Developer-only utilities
+* Proper modularization of developer settings logic
+* Maintaining clear separation between system configuration and UI presentation
+* Avoiding hardcoded display logic
+* Ensuring maintainability, extensibility, and clarity
+* Reusing and extending existing developer settings architecture patterns appropriately
 
-Only document production runtime components.
-
----
-
-## Do NOT use "Phase" Terminology
-
-Do NOT use:
-
-* "Phase 1", "Phase 2", etc.
-* Any phased implementation descriptions
-* Any roadmap-style or staged explanations
-
-The documentation must describe the architecture as a complete, cohesive runtime system.
+You may refactor related parts of the system if necessary to maintain architectural clarity and consistency, but do not redesign unrelated subsystems.
 
 ---
 
-# Objectives
+# UX and Behavior Expectations
 
-1. Analyze the current codebase structure.
-2. Identify the actual architectural layers and system components used in the runtime web application.
-3. Map real implementation details into the template sections.
-4. Ensure the documentation reflects the real implemented runtime architecture — not an idealized or theoretical design.
-5. Keep the documentation high-level but technically precise.
-6. Focus only on production runtime web application architecture.
+Administrator workflow:
 
----
+* Administrator opens the Admin interface
+* Administrator navigates to Developer Settings
+* Administrator sees a dedicated toggle specifically for response metadata visibility
+* Administrator enables or disables this toggle
+* Changes persist and apply immediately
 
-# What the Documentation Must Include
+User workflow:
 
-Include only runtime-relevant architectural components, such as:
-
-* System overview
-* Architectural principles
-* Layered architecture (UI, Application, Domain, Infrastructure, AI/RAG, etc.)
-* Actual RAG architecture type (Naive, Hybrid, Agentic, Graph, etc.) based on implementation
-* STT → LLM → TTS processing flow
-* Data ingestion pipeline used by the runtime system
-* Vector store architecture
-* Model provider abstraction layer
-* Production deployment architecture (Raspberry Pi OS)
-* Scalability considerations
-* Known limitations or technical debt (if applicable)
+* User interacts with chatbot
+* Response bubbles display either full developer metadata or only user-facing response content, depending on the administrator’s configured visibility setting
 
 ---
 
-# Constraints
+# Quality Expectations
 
-* Do not invent features that are not implemented.
-* If something is unclear in the codebase, explicitly state assumptions.
-* Use Mermaid diagrams in markdown where appropriate.
-* Be concise, structured, and professional.
-* The output must be production-grade architecture documentation.
-* Focus strictly on runtime architecture relevant to the web application.
+Your implementation must be:
+
+* Clean
+* Modular
+* Robust
+* Maintainable
+* Architecturally consistent
+* Production-quality
+
+Avoid shortcuts, tightly coupled logic, or hardcoded visibility behavior.
+
+Favor clarity, configurability, and correctness.
 
 ---
 
-# Output Requirements
+# Implementation Approach
 
-* Create a new file: `architecture.md`
-* Follow the structure defined in `architecture_template.md`
-* Ensure formatting is clean and consistent
-* Use consistent terminology throughout the document
-* Focus strictly on documentation generation
+Before implementing, analyze how confidence, score, and sources are currently generated, stored, and rendered.
+
+Extend the developer settings system to include a new, separate visibility control specifically for response metadata.
+
+Ensure that chatbot response rendering dynamically respects this setting while preserving all existing retrieval and scoring functionality.
+
+Do not remove or disable the underlying metadata generation—only control its visibility in the UI.
