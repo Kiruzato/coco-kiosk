@@ -451,8 +451,11 @@ function addAssistantMessage(data) {
         html += `<div class="large-text">${formatAnswerText(data.answer)}</div>`;
     }
 
-    // Phase 50: Conditionally render confidence badge and score based on metadataVisible setting
-    if (metadataVisible) {
+    // Phase 51: Read metadata visibility from response (server-authoritative)
+    const showMetadata = data.metadata_visible !== false;
+
+    // Phase 50/51: Conditionally render confidence badge and score based on response setting
+    if (showMetadata) {
         const confidenceClass = `confidence-${data.confidence_level.toLowerCase()}`;
         html += `
             <div class="confidence-badge ${confidenceClass}">
@@ -464,8 +467,8 @@ function addAssistantMessage(data) {
         `;
     }
 
-    // Phase 50B: Mode badges controlled by metadataVisible toggle
-    if (metadataVisible) {
+    // Phase 50B/51: Mode badges controlled by response metadata_visible
+    if (showMetadata) {
         if (data.mode === 'campus') {
             html += `<div class="mode-badge mode-campus">📚 Based on campus documents</div>`;
         } else if (data.mode === 'general') {
@@ -475,8 +478,8 @@ function addAssistantMessage(data) {
         }
     }
 
-    // Phase 50: Conditionally render sources based on metadataVisible setting
-    if (metadataVisible && data.sources && data.sources.length > 0) {
+    // Phase 50/51: Conditionally render sources based on response setting
+    if (showMetadata && data.sources && data.sources.length > 0) {
         html += `
             <div class="sources">
                 <div class="sources-title">Sources:</div>
@@ -701,13 +704,16 @@ function createStreamingMessageContainer() {
 
 /**
  * Phase 47: Render metadata (confidence, sources, mode) immediately
- * Phase 50: Conditionally renders based on metadataVisible setting
+ * Phase 50/51: Conditionally renders based on metadata.metadata_visible setting
  */
 function renderStreamingMetadata(container, metadata) {
     let html = '';
 
-    // Phase 50: Conditionally render confidence badge and score
-    if (metadataVisible) {
+    // Phase 51: Read metadata visibility from response (server-authoritative)
+    const showMetadata = metadata.metadata_visible !== false;
+
+    // Phase 50/51: Conditionally render confidence badge and score
+    if (showMetadata) {
         const confidenceClass = `confidence-${metadata.confidence_level.toLowerCase()}`;
         html += `
             <div class="confidence-badge ${confidenceClass}">
@@ -719,8 +725,8 @@ function renderStreamingMetadata(container, metadata) {
         `;
     }
 
-    // Phase 50B: Mode badges controlled by metadataVisible toggle
-    if (metadataVisible) {
+    // Phase 50B/51: Mode badges controlled by response metadata_visible
+    if (showMetadata) {
         if (metadata.mode === 'campus') {
             html += `<div class="mode-badge mode-campus">📚 Based on campus documents</div>`;
         } else if (metadata.mode === 'general') {
@@ -733,7 +739,7 @@ function renderStreamingMetadata(container, metadata) {
 
 /**
  * Phase 47: Finalize streaming message with complete data
- * Phase 50: Conditionally renders sources based on metadataVisible setting
+ * Phase 50/51: Conditionally renders sources based on metadata.metadata_visible setting
  */
 function finalizeStreamingMessage(messageDiv, metadata, completeData, fullAnswer) {
     messageDiv.classList.remove('streaming');
@@ -746,8 +752,11 @@ function finalizeStreamingMessage(messageDiv, metadata, completeData, fullAnswer
     const contentDiv = messageDiv.querySelector('.streaming-content');
     contentDiv.innerHTML = `<div class="large-text">${formatAnswerText(fullAnswer)}</div>`;
 
-    // Phase 50: Conditionally render sources based on metadataVisible setting
-    if (metadataVisible && metadata.sources && metadata.sources.length > 0) {
+    // Phase 51: Read metadata visibility from response (server-authoritative)
+    const showMetadata = metadata.metadata_visible !== false;
+
+    // Phase 50/51: Conditionally render sources based on response setting
+    if (showMetadata && metadata.sources && metadata.sources.length > 0) {
         const sourcesHtml = `
             <div class="sources">
                 <div class="sources-title">Sources:</div>

@@ -1,119 +1,166 @@
-You are working on the existing CoCo Campus RAG Chatbot codebase. Your task is to improve the behavior and architecture of the Response Metadata toggle and the Debug Panel system.
+You are working on the CoCo Campus RAG Chatbot project.
 
-Your implementation must follow industry best practices, maintain architectural consistency, and avoid introducing technical debt.
+I want to transition the system to a fully document-based RAG approach for directory information.
 
----
+The goal is:
 
-# Core Objectives
+* Create a directory document (e.g., PDF) containing all directory information.
+* Ensure the content of that PDF is written and formatted in a retrieval-optimized way (clear sections per office/person, natural language descriptions, strong semantic clarity).
+* Ingest this directory PDF through the normal RAG ingestion pipeline.
+* Remove the existing directory entity system entirely.
+* Remove directory entities in both the backend and the Admin UI.
 
-There are two main issues to address:
+Important clarification:
 
----
+The directory document will be a standard RAG-ingested document (such as a PDF). It will not be a structured database or JSON entity system. However, its content must be formatted intentionally to maximize semantic retrieval performance.
 
-## 1. Response Metadata Toggle Requires Page Refresh
+Your task is to create a comprehensive architectural and implementation plan for safely accomplishing this migration and removal.
 
-Currently, when toggling the **Response Metadata visibility** setting in Developer Settings:
-
-* The change does not take effect immediately.
-* I must manually refresh the page to see the effect.
-
-However, the **Debug Panel toggle** applies changes immediately without requiring a page refresh.
-
-### Required Behavior
-
-The Response Metadata toggle must:
-
-* Apply changes immediately without requiring page refresh.
-* Dynamically update the UI in real time.
-* Behave consistently with how the Debug Panel toggle works.
-* Not require reloading the entire chatbot interface.
-
-The toggle must control visibility dynamically for:
-
-* Confidence
-* Score
-* Sources
-* Knowledge-origin labels
-* Any related response metadata elements
-
-This must affect both existing visible messages (if applicable) and new responses rendered after the toggle.
+This is a planning task only. Do not write code.
 
 ---
 
-## 2. Debug Panel Not Triggering for Some Queries
+# Core Objective
 
-I noticed that certain questions, such as:
+Produce a detailed, structured plan for:
 
-```
-where is engineering dean office?
-```
+1. Migrating directory data into a RAG-ingested PDF document.
+2. Validating retrieval accuracy and system stability.
+3. Decommissioning and removing all directory entity-related systems.
+4. Ensuring the system remains stable, consistent, and fully functional after removal.
 
-do not trigger the Debug Panel display, even when Debug Panel is enabled.
-
-This indicates inconsistency in how the Debug Panel is activated or rendered.
-
-### Required Improvements
-
-* Ensure the Debug Panel activates consistently whenever it is enabled.
-* The Debug Panel must not depend on specific query types or retrieval paths.
-* It must work reliably for all question types, including directory-related queries.
-* Investigate and fix any logic gaps causing Debug Panel not to render.
+The end state must be a unified RAG-based knowledge system with no structured directory entity subsystem remaining.
 
 ---
 
-# Refactor and Modularization Requirement
+# Planning Requirements
 
-If necessary, perform proper refactorization and modularization of the Debug Panel and Response Metadata systems to ensure:
-
-* Clean separation of concerns
-* Unified and centralized rendering logic
-* Consistent state management
-* No duplicated toggle handling logic
-* Clear abstraction between configuration state and UI rendering
-* Proper reactive or event-driven update behavior
-
-Avoid patching individual display conditions.
-
-If needed, restructure how developer settings are propagated to frontend rendering logic so that both:
-
-* Debug Panel
-* Response Metadata visibility
-
-are handled through a clean and consistent state management mechanism.
+Your plan must include the following:
 
 ---
 
-# Important Constraints
+## 1. Architectural Impact Analysis
 
-* Do not redesign the overall chatbot architecture.
-* Do not modify unrelated subsystems.
-* Do not break RAG, retrieval, or response generation.
-* Maintain existing features.
-* Preserve separation between Debug Panel toggle and Response Metadata toggle.
-* Ensure both toggles operate independently but consistently.
+Identify and analyze:
 
----
+* Backend components that depend on directory entities
+* Retrieval or orchestration logic that references directory entities
+* Ingestion logic that handles entity-specific processing
+* Admin UI components that manage directory entities
+* API routes related to directory entities
+* Any validation, grounding, or ranking logic that assumes entity structures
 
-# Expected Outcome
-
-After implementation:
-
-* Toggling Response Metadata visibility applies immediately without page refresh.
-* Debug Panel reliably appears when enabled, regardless of query type.
-* Developer settings behave consistently and predictably.
-* Codebase is cleaner, more modular, and easier to maintain.
-* No regressions in chatbot functionality.
+Explain architectural dependencies and coupling points that must be addressed.
 
 ---
 
-# Implementation Approach
+## 2. Directory PDF Design Plan
 
-Before implementing, analyze:
+Define:
 
-* How Debug Panel toggle currently propagates state.
-* How Response Metadata visibility is currently applied.
-* Where rendering decisions are made in the frontend.
+* How the directory PDF content should be formatted for optimal retrieval
+* Section structure strategy (per office/person)
+* Chunking considerations
+* Semantic clarity considerations
+* How to ensure list-based queries (e.g., “List all deans”) remain accurate
+* How to avoid formatting patterns that reduce embedding quality
 
-Refactor the system to ensure consistent, reactive behavior and centralized rendering control.
+This must be optimized specifically for FAISS-based semantic retrieval and hybrid ranking.
 
-Favor architectural clarity over quick fixes.
+---
+
+## 3. Migration Strategy (Phased)
+
+Provide a safe, staged migration plan:
+
+* How to introduce the new directory PDF into ingestion
+* How to validate directory-related question performance
+* How to compare results before removing entity logic
+* How to avoid a big-bang deletion
+
+The plan must reduce regression risk.
+
+---
+
+## 4. Directory Entity System Decommissioning Plan
+
+Define a structured removal roadmap:
+
+* What to deprecate first
+* What to remove from backend
+* What to remove from ingestion pipeline
+* What to remove from retrieval/orchestration logic
+* What to remove from Admin UI
+* How to eliminate orphaned logic and dead routes
+* How to verify clean removal
+
+---
+
+## 5. Admin UI Cleanup Plan
+
+Specify:
+
+* How to safely remove directory entity management UI
+* How to adjust navigation and sidebar items
+* How to prevent broken routes or links
+* How to preserve admin panel stability
+
+---
+
+## 6. Retrieval Accuracy Validation Plan
+
+Define:
+
+* Test categories for directory-related queries
+* Precision expectations
+* How to validate grounding reliability
+* How to detect hallucination increases
+* How to measure ranking consistency
+* How to validate enumeration queries (e.g., “List all chairpersons”)
+
+---
+
+## 7. Risk Assessment and Mitigation
+
+Identify:
+
+* Retrieval degradation risks
+* Formatting pitfalls in PDF ingestion
+* Chunking problems
+* Performance impacts on Raspberry Pi
+* Edge cases in directory queries
+
+Provide mitigation strategies.
+
+---
+
+## 8. Post-Migration Architecture Description
+
+Describe what the simplified architecture will look like after removal.
+
+The target architecture must have:
+
+* A single unified ingestion pipeline
+* A single FAISS-based retrieval pathway
+* No structured directory entity subsystem
+* Reduced architectural complexity
+* Clear separation of concerns
+* Improved maintainability
+
+---
+
+# Constraints
+
+* Do not redesign the entire RAG system.
+* Do not introduce new databases or technologies.
+* Keep the solution aligned with the current FAISS-based architecture.
+* Focus on simplification and architectural cleanliness.
+* Preserve system stability.
+
+---
+
+# Deliverable
+
+Produce a structured, phased architectural plan with clear sequencing, risk analysis, and rationale.
+
+This is a high-level systems plan, not code.

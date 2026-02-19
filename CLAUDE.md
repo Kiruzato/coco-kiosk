@@ -6,7 +6,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 
 ## Current State
 
-**Completed through Phase 46** - Arithmetic Query Processing
+**Completed through Phase 51** - Developer Settings Consistency & Documentation Update
 
 ### Phase History
 1. **Phase 1-3**: Core RAG pipeline, document management, multi-format support
@@ -58,6 +58,11 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 47. **Phase 44**: LLM-as-Final-Synthesizer architecture (4-layer orchestration, semantic relevance scoring)
 48. **Phase 45**: Response Style Policy for kiosk/voice UX (query analyzer, style hints, LaTeX stripping)
 49. **Phase 46**: Arithmetic Query Processing (input preprocessor, deterministic math engine, STT artifact cleanup)
+50. **Phase 48**: Advertisement Panel (admin slideshow, navigation, visibility toggle)
+51. **Phase 49**: Welcome Message System (admin-configurable text and image)
+52. **Phase 50**: Response Metadata Visibility Toggle (separate from Debug Panel)
+53. **Phase 50B**: Mode badges controlled by metadata visibility toggle
+54. **Phase 51**: Developer Settings Consistency Fix (immediate toggle effect, debug panel for directory queries)
 
 ## Architecture
 
@@ -103,11 +108,15 @@ campus_rag_chatbot/
 ├── voice_routes.py           # Phase 32: Voice API endpoints
 ├── admin.py                  # CLI admin interface
 ├── static/                   # Web frontend (index.html, admin.html, etc.)
-├── data/                     # Source documents
+├── data/                     # Source documents & configuration
 │   ├── campus_directory.txt  # Directory/location information
 │   ├── campus_info.txt       # General campus info
 │   ├── academic_programs.txt # Academic programs
-│   └── events_activities.txt # Events and activities
+│   ├── events_activities.txt # Events and activities
+│   ├── debug_settings.json   # Phase 50: Debug panel & metadata visibility settings
+│   ├── welcome_config.json   # Phase 49: Welcome message configuration
+│   └── ad_settings.json      # Phase 48: Advertisement panel settings
+├── images/                   # Phase 48: Advertisement images
 └── vector_store/             # FAISS vector database
 ```
 
@@ -210,6 +219,34 @@ campus_rag_chatbot/
   - Speech auto-stops when user interacts with input controls
   - No explicit "Stop" button required
 
+### Advertisement Panel (Phase 48)
+- Admin-configurable slideshow in chatbot UI info panel
+- Upload/delete advertisement images via Admin UI
+- Configurable auto-rotation interval (default: 5 seconds)
+- Visibility toggle to show/hide entire panel
+- Left/right navigation zones for manual browsing
+- Persisted in `data/ad_settings.json`
+- Images stored in `images/` directory
+- Endpoints: `/admin/ads/list`, `/admin/ads/upload`, `/admin/ads/delete`, `/admin/ads/settings`
+
+### Welcome Message System (Phase 49)
+- Admin-editable welcome message displayed at chat start
+- Optional image display (CoCo logo)
+- Markdown-style formatting support (newlines → `<br>`, `**bold**`)
+- Persisted in `data/welcome_config.json`
+- Endpoints: `/api/welcome`, `/admin/welcome`
+
+### Developer Settings (Phase 50-51)
+- **Response Metadata Toggle**: Controls visibility of confidence, score, sources, mode badges
+  - Separate and independent from Debug Panel toggle
+  - Immediate effect without page refresh (server-authoritative)
+  - Setting included in each response (`metadata_visible` field)
+- **Debug Panel**: Shows technical details for each response
+  - LLM provider, retrieval mode, chunks retrieved, grounding status, timing
+  - Works for all query types including directory RAG fallback (Phase 51 fix)
+- Both toggles in Admin UI → Developer section (`/admin#developer`)
+- Settings persisted in `data/debug_settings.json`
+
 ## Running the Application
 
 ```bash
@@ -263,16 +300,15 @@ USAGE_TRACKING_ENABLED=true
 
 ## Current Work / Next Steps
 
-The project has completed Phase 42 (Windows Setup & UI Enhancements). Recent additions:
-- Phase 40: Silent TTS - audio plays in background, auto-stops on user input
-- Phase 41: Voice bug fixes & Python 3.11 migration
-- Phase 42: Windows setup & UI enhancements
-  - Fullscreen toggle button for kiosk UI (upper-right corner)
-  - Auto-focus disabled to prevent virtual keyboard obstruction on RPi
-  - TTS reads full responses without truncation (removed 500-char limit)
-  - Debug panel now shows actual TTS engine from response header
-  - Windows setup script (`win-setup.ps1`) and instructions
-  - Added `edge-tts` and `python-magic-bin` to requirements
+The project has completed Phase 51 (Developer Settings Consistency). Recent additions:
+- Phase 44-46: LLM-as-Final-Synthesizer architecture, response style policy, math engine
+- Phase 48: Advertisement Panel - admin-configurable slideshow in info panel
+- Phase 49: Welcome Message System - editable welcome text and image
+- Phase 50: Response Metadata Visibility Toggle - separate from Debug Panel
+- Phase 50B: Mode badges controlled by metadata visibility toggle
+- Phase 51: Developer Settings Consistency Fix
+  - Response Metadata toggle applies immediately (server-authoritative)
+  - Debug Panel works for all query types including directory RAG fallback
 - Golden test suite: 32 test cases, 87.5% pass rate (28/32)
 
 ## RAG Architecture
@@ -289,7 +325,7 @@ The project has completed Phase 42 (Windows Setup & UI Enhancements). Recent add
 | Raspberry Pi | `pi-setup.sh` | Primary deployment target |
 | Windows | `win-setup.ps1` | Development/testing |
 
-Potential future work (Phases 43+):
+Potential future work (Phase 52+):
 - Kiosk hardening (RPi5 optimization, error recovery)
 - Multilingual support (Filipino)
 - Multi-document namespace support

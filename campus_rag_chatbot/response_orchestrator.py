@@ -352,7 +352,8 @@ class ResponseOrchestrator:
         query: str,
         session_id: str,
         memory: Any = None,
-        rag_only_mode: bool = False
+        rag_only_mode: bool = False,
+        metadata_visible: bool = True  # Phase 51: Pass visibility setting
     ) -> AsyncGenerator[Dict, None]:
         """
         Process a query with streaming LLM synthesis.
@@ -367,6 +368,7 @@ class ResponseOrchestrator:
             session_id: Session identifier
             memory: Conversation memory (optional)
             rag_only_mode: If True, only allow RAG responses
+            metadata_visible: If True, client should show metadata (Phase 51)
 
         Yields:
             Dict events with 'event' and 'data' keys
@@ -461,6 +463,7 @@ class ResponseOrchestrator:
                 "response_mode": mode.value,
                 "extractor_used": extraction.extractor_name,
                 "grounding_mode": grounding_mode,
+                "metadata_visible": metadata_visible,  # Phase 51: Include visibility setting
                 "debug_info": {
                     "response_mode": mode.value,
                     "semantic_relevance": retrieval.semantic_relevance.value,

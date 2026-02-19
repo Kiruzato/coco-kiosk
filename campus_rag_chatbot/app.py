@@ -439,6 +439,7 @@ class ChatResponse(BaseModel):
     timestamp: str
     mode: str  # "campus" | "general" | "clarification"
     debug_info: Optional[DebugInfo] = None  # Phase 39B: Debug panel data
+    metadata_visible: bool = True  # Phase 51: Include visibility setting in each response
 
 
 class FeedbackRequest(BaseModel):
@@ -767,7 +768,8 @@ def handle_document_clarification(
         rejected=False,
         timestamp=datetime.now().isoformat(),
         mode="clarification",
-        debug_info=_clarification_debug_info
+        debug_info=_clarification_debug_info,
+        metadata_visible=metadata_visible
     )
 
 
@@ -1404,7 +1406,8 @@ async def handle_campus_query(
                 rejected=True,
                 timestamp=datetime.now().isoformat(),
                 mode="campus",
-                debug_info=_grounding_debug_info  # Phase 39B
+                debug_info=_grounding_debug_info,  # Phase 39B
+                metadata_visible=metadata_visible
             )
 
         # Use hybrid-ranked results for downstream processing
@@ -1765,7 +1768,8 @@ Conversation history:
         rejected=rejected,
         timestamp=datetime.now().isoformat(),
         mode="campus",
-        debug_info=_debug_info  # Phase 39B
+        debug_info=_debug_info,  # Phase 39B
+        metadata_visible=metadata_visible
     )
 
 
@@ -1882,7 +1886,8 @@ Answer:"""
         rejected=False,
         timestamp=datetime.now().isoformat(),
         mode="general",
-        debug_info=_debug_info  # Phase 39B
+        debug_info=_debug_info,  # Phase 39B
+        metadata_visible=metadata_visible
     )
 
 
@@ -1943,7 +1948,8 @@ Could you please clarify? For example:
         rejected=False,
         timestamp=datetime.now().isoformat(),
         mode="clarification",
-        debug_info=_clarification_debug_info
+        debug_info=_clarification_debug_info,
+        metadata_visible=metadata_visible
     )
 
 
@@ -2018,7 +2024,8 @@ def handle_entity_disambiguation(
         rejected=False,
         timestamp=datetime.now().isoformat(),
         mode="clarification",
-        debug_info=_clarification_debug_info
+        debug_info=_clarification_debug_info,
+        metadata_visible=metadata_visible
     )
 
 
@@ -2156,7 +2163,8 @@ def handle_disambiguation_selection(
             rejected=False,
             timestamp=datetime.now().isoformat(),
             mode="directory",
-            debug_info=_debug_info
+            debug_info=_debug_info,
+            metadata_visible=metadata_visible
         )
 
     # Phase 14.1: Log failed selection
@@ -2287,7 +2295,8 @@ async def handle_directory_query(
             rejected=False,
             timestamp=datetime.now().isoformat(),
             mode="directory",
-            debug_info=_debug_info
+            debug_info=_debug_info,
+            metadata_visible=metadata_visible
         )
 
     # ===========================================================================
@@ -2426,6 +2435,26 @@ Conversation history:
             source_type="directory"
         )
 
+    # Phase 51: Build debug_info for RAG fallback directory queries
+    _debug_info = None
+    if debug_mode_enabled:
+        _debug_timing = {
+            'retrieval_ms': round((time.perf_counter() - _debug_start) * 1000, 1),
+            'total_ms': round((time.perf_counter() - _debug_start) * 1000, 1)
+        }
+        _debug_info = DebugInfo(
+            llm_provider="openai",
+            llm_model="gpt-4o-mini",
+            retrieval_mode="directory_rag_fallback",
+            retrieval_method="similarity_search",
+            chunks_retrieved=len(retrieved_docs),
+            intent_classified="directory",
+            grounding_passed=not rejected,
+            query_terms=canonical_query.lower().split()[:5],
+            routing_path="directory_query:rag_fallback",
+            timing=_debug_timing
+        )
+
     return ChatResponse(
         session_id=session_id,
         answer=answer,
@@ -2434,7 +2463,9 @@ Conversation history:
         confidence_score=round(confidence_metrics["confidence_score"], 1),
         rejected=rejected,
         timestamp=datetime.now().isoformat(),
-        mode="directory"
+        mode="directory",
+        debug_info=_debug_info,
+        metadata_visible=metadata_visible
     )
 
 
@@ -2541,7 +2572,8 @@ async def chat(request: ChatRequest):
                 rejected=False,
                 timestamp=datetime.now().isoformat(),
                 mode="clarification",
-                debug_info=_clarification_debug_info
+                debug_info=_clarification_debug_info,
+                metadata_visible=metadata_visible
             )
 
     # === PHASE 15: CHECK FOR PENDING DOCUMENT CLARIFICATION ===
@@ -2605,7 +2637,8 @@ async def chat(request: ChatRequest):
                 rejected=False,
                 timestamp=datetime.now().isoformat(),
                 mode="clarification",
-                debug_info=_clarification_debug_info
+                debug_info=_clarification_debug_info,
+                metadata_visible=metadata_visible
             )
 
     # === PHASE 13: CHECK FOR FOLLOW-UP QUERY WITH CONTEXT ===
@@ -2662,7 +2695,8 @@ async def chat(request: ChatRequest):
                 rejected=False,
                 timestamp=datetime.now().isoformat(),
                 mode="directory",
-                debug_info=_debug_info
+                debug_info=_debug_info,
+                metadata_visible=metadata_visible
             )
 
     # === PHASE 8: CHECK FOR DIRECTORY QUERY FIRST ===
@@ -2771,7 +2805,8 @@ async def chat(request: ChatRequest):
         rejected=orchestrated.rejected,
         timestamp=datetime.now().isoformat(),
         mode=mode_str,
-        debug_info=_debug_info
+        debug_info=_debug_info,
+        metadata_visible=metadata_visible
     )
 
 
@@ -2826,7 +2861,8 @@ async def chat_stream(request: StreamChatRequest):
                 query=query,
                 session_id=session_id,
                 memory=memory,
-                rag_only_mode=rag_only_mode
+                rag_only_mode=rag_only_mode,
+                metadata_visible=metadata_visible  # Phase 51
             ):
                 yield {
                     "event": event["event"],

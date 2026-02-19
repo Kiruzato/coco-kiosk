@@ -28,6 +28,10 @@ Storage
 •	FAISS vector store: campus_rag_chatbot/vector_store/
 •	Document registry: campus_rag_chatbot/document_registry.json
 •	Directory entities: campus_rag_chatbot/data/directory_entities.json
+•	Debug settings: campus_rag_chatbot/data/debug_settings.json
+•	Welcome config: campus_rag_chatbot/data/welcome_config.json
+•	Ad settings: campus_rag_chatbot/data/ad_settings.json
+•	Advertisement images: campus_rag_chatbot/images/
 •	Logs/events: campus_rag_chatbot/logs/
 ________________________________________
 2.1 Project Directory Structure
@@ -155,10 +159,28 @@ Admin
 •	Analytics endpoints:
 o	/admin/analytics
 o	/admin/analytics/recent
+•	Advertisement Panel management (Phase 48):
+o	Upload/delete slideshow images
+o	Configure auto-rotation interval
+o	Toggle panel visibility
+o	Endpoints: /admin/ads/list, /admin/ads/upload, /admin/ads/delete, /admin/ads/settings
+•	Welcome Message configuration (Phase 49):
+o	Edit welcome text with markdown-style formatting
+o	Configure welcome image (CoCo logo)
+o	Endpoint: /admin/welcome
 Developer
 •	/dev UI
 •	RAG-only mode toggle:
 o	When enabled, system refuses instead of falling back to general AI.
+•	Response Metadata Toggle (Phase 50-51):
+o	Controls visibility of confidence, score, sources, mode badges
+o	Separate and independent from Debug Panel toggle
+o	Server-authoritative (applies immediately without page refresh)
+o	Setting included in each response (metadata_visible field)
+•	Debug Panel Toggle (Phase 39B, 51):
+o	Shows LLM model, retrieval mode, chunks retrieved, grounding status, timing
+o	Works for all query types including directory RAG fallback
+o	Admin toggle in Developer section (/admin#developer)
 ________________________________________
 9. Key Configuration Values
 Retrieval
@@ -220,6 +242,14 @@ ________________________________________
 •	Phase 40: Silent TTS with implicit interruption (background audio, auto-stop on input)
 •	Phase 41: Voice bug fixes & Python 3.11 migration
 •	Phase 42: Windows setup & UI enhancements (fullscreen, auto-focus, TTS full response)
+•	Phase 44: LLM-as-Final-Synthesizer architecture (4-layer orchestration, semantic relevance scoring)
+•	Phase 45: Response Style Policy (query analyzer, kiosk-friendly hints, LaTeX stripping)
+•	Phase 46: Arithmetic Query Processing (input preprocessor, deterministic math engine, STT artifact cleanup)
+•	Phase 48: Advertisement Panel (admin slideshow, navigation, visibility toggle)
+•	Phase 49: Welcome Message System (admin-configurable text and image)
+•	Phase 50: Response Metadata Visibility Toggle (separate from Debug Panel)
+•	Phase 50B: Mode badges controlled by metadata visibility toggle
+•	Phase 51: Developer Settings Consistency Fix (immediate toggle effect, debug panel for directory queries)
 ________________________________________
 11. Recent Phases Details
 Phase 19 — Contiguous Context Reconstruction
@@ -746,6 +776,139 @@ o	campus_rag_chatbot/static/app.js (fullscreen toggle, TTS engine from header)
 o	campus_rag_chatbot/voice/tts_service.py (removed truncation)
 o	campus_rag_chatbot/voice_routes.py (increased max_text_length to 10000)
 o	campus_rag_chatbot/requirements_py311.txt (edge-tts, python-magic-bin)
+
+Phase 44 — LLM-as-Final-Synthesizer Architecture
+•	Goal: Unify all response paths through LLM for consistent natural language output
+•	Implementation:
+o	4-layer architecture: Governance → Retrieval → Extraction → LLM Synthesis
+o	Created response_orchestrator.py with ResponseOrchestrator class
+o	Response modes: EXTRACTOR_AUTHORITATIVE, RAG_AUTHORITATIVE, RAG_SUPPLEMENTED, GENERAL_KNOWLEDGE
+o	Semantic relevance scoring (HIGH, MEDIUM, LOW) prevents lexical confusion
+o	All paths terminate in LLM for polished output
+•	Key Features:
+o	Deterministic extractors provide facts, LLM provides natural language
+o	RAG chunks passed with semantic relevance context
+o	Style hints for response formatting
+•	Files:
+o	campus_rag_chatbot/response_orchestrator.py
+
+Phase 45 — Response Style Policy
+•	Goal: Optimize responses for kiosk and voice UX
+•	Implementation:
+o	Created query_analyzer.py for query type detection
+o	Query types: MATH, GREETING, DEFINITION, CONVERSATIONAL, FACTUAL, PROCEDURAL
+o	Style hints: concise, kiosk-friendly formatting
+o	LaTeX stripping for voice compatibility
+o	Response length optimization for spoken output
+•	Key Features:
+o	Detects query intent and adjusts response style
+o	Strips mathematical notation unsuitable for TTS
+o	Provides natural conversational responses
+•	Files:
+o	campus_rag_chatbot/query_analyzer.py
+o	campus_rag_chatbot/response_orchestrator.py (style integration)
+
+Phase 46 — Arithmetic Query Processing
+•	Goal: Deterministic arithmetic evaluation bypassing LLM
+•	Implementation:
+o	Created input_preprocessor.py for STT artifact cleanup
+o	Created math_engine.py for secure AST-based evaluation
+o	Number normalization: "5,000" → "5000", "five" → "5"
+o	Supports: +, -, *, /, **, parentheses, word operators
+o	Voice-friendly output: "The answer is 42."
+•	Key Features:
+o	No eval() - secure AST parsing
+o	STT artifact handling (filler words, false starts)
+o	Integration with response orchestrator
+•	Files:
+o	campus_rag_chatbot/input_preprocessor.py
+o	campus_rag_chatbot/math_engine.py
+
+Phase 48 — Advertisement Panel
+•	Goal: Admin-configurable slideshow in chatbot UI info panel
+•	Implementation:
+o	Added image upload/delete endpoints in app.py
+o	Created ad_settings.json for configuration persistence
+o	Created images/ directory for ad storage
+o	Slideshow with configurable auto-rotation interval
+o	Left/right navigation zones for manual browsing
+o	Visibility toggle to show/hide entire panel
+•	Admin UI:
+o	Image gallery management (upload, delete, reorder)
+o	Interval configuration (default: 5 seconds)
+o	Panel visibility toggle
+•	Endpoints: /admin/ads/list, /admin/ads/upload, /admin/ads/delete, /admin/ads/settings
+•	Files:
+o	campus_rag_chatbot/app.py (endpoints)
+o	campus_rag_chatbot/data/ad_settings.json
+o	campus_rag_chatbot/images/ (storage directory)
+o	campus_rag_chatbot/static/admin.html (advertisement section)
+o	campus_rag_chatbot/static/admin.js (handlers)
+o	campus_rag_chatbot/static/app.js (slideshow rendering)
+
+Phase 49 — Welcome Message System
+•	Goal: Admin-editable welcome message displayed at chat start
+•	Implementation:
+o	Created welcome_config.json for message persistence
+o	Added /api/welcome and /admin/welcome endpoints
+o	Markdown-style formatting support (newlines → <br>, **bold**)
+o	Optional image display (CoCo logo)
+o	Frontend renders welcome message on page load
+•	Key Features:
+o	Persisted across server restarts
+o	Rich text formatting without full markdown parser
+o	Image URL configuration for branding
+•	Files:
+o	campus_rag_chatbot/data/welcome_config.json
+o	campus_rag_chatbot/app.py (endpoints)
+o	campus_rag_chatbot/static/admin.html (welcome section)
+o	campus_rag_chatbot/static/app.js (welcome rendering)
+
+Phase 50 — Response Metadata Visibility Toggle
+•	Goal: Separate control for response metadata (confidence, sources) from debug panel
+•	Problem: Users wanted to hide metadata without losing debug panel for development
+•	Implementation:
+o	Added debug_settings.json with show_metadata field
+o	Added /admin/settings/metadata endpoint
+o	Frontend reads metadata_visible from response (server-authoritative)
+o	Metadata includes: confidence badge, similarity score, sources, mode badges
+•	Key Features:
+o	Independent from Debug Panel toggle
+o	Server-authoritative setting (no page refresh needed)
+o	metadata_visible field in ChatResponse
+•	Files:
+o	campus_rag_chatbot/data/debug_settings.json
+o	campus_rag_chatbot/app.py (ChatResponse model, endpoint)
+o	campus_rag_chatbot/static/admin.html (toggle in Developer section)
+o	campus_rag_chatbot/static/app.js (conditional rendering)
+
+Phase 50B — Mode Badges Under Metadata Toggle
+•	Goal: Include mode badges in metadata visibility control
+•	Problem: Mode badges ("Based on campus documents") shown even when metadata hidden
+•	Implementation:
+o	Wrapped mode badge rendering in metadata visibility conditional
+o	Both streaming and non-streaming paths updated
+•	Files:
+o	campus_rag_chatbot/static/app.js (lines 467-474, 720-725)
+
+Phase 51 — Developer Settings Consistency Fix
+•	Goal: Fix immediate toggle effect and debug panel for directory queries
+•	Problems:
+o	Response Metadata toggle required page refresh
+o	Debug Panel not triggering for directory RAG fallback queries
+•	Implementation:
+o	Server-authoritative: metadata_visible included in each ChatResponse
+o	Frontend reads from response instead of cached variable
+o	Added debug_info building to directory RAG fallback path
+o	DebugInfo populated for all query types
+•	Key Features:
+o	Toggles apply immediately without page refresh
+o	Debug panel shows info for: directory entity, directory RAG fallback, campus RAG, general
+o	Consistent behavior across all query paths
+•	Files:
+o	campus_rag_chatbot/app.py (ChatResponse model, debug_info for RAG fallback)
+o	campus_rag_chatbot/response_orchestrator.py (metadata_visible parameter)
+o	campus_rag_chatbot/static/app.js (read from response)
 ________________________________________
 12. Phase 18 Details (Entity Consolidation)
 Phase 18.0 — Entity-Centric Chunk Consolidation
@@ -806,11 +969,11 @@ python app.py
 •	Dev tools: /dev
 ________________________________________
 13. Current Production Status
-Version: Phase 42 (Windows Setup & UI Enhancements)
+Version: Phase 51 (Developer Settings Consistency Fix)
 Python: 3.11.9 (required for Piper TTS - Python 3.13 has compatibility issues)
 Virtual Environment: venv311/
 Golden Tests: 32 test cases, 87.5% pass rate (28/32)
-RAG Architecture: Hybrid RAG (vector + BM25 via RRF)
+RAG Architecture: Hybrid RAG (vector + BM25 via RRF) with LLM-as-Final-Synthesizer (Phase 44)
 Cross-Platform: Windows (win-setup.ps1) + Raspberry Pi (pi-setup.sh)
 Voice: Full frontend UI + API layer OPERATIONAL
 •	STT: Google Cloud STT (primary), Whisper.cpp (fallback)
@@ -834,9 +997,15 @@ Voice Configuration (Phase 37-40):
 •	Phase 39: Cloud credentials configurable via Admin UI
 •	Phase 40: TTS plays silently, auto-stops on user input
 
-Debug Panel (Phase 39B):
-•	Admin toggle in Developer section enables debug visibility
-•	Shows: LLM model, retrieval mode, chunks retrieved, grounding status, timing
-•	Works for both text and voice requests
-•	STT/TTS engine info shown for voice requests
-Last Updated: 2026-02-10 (Phase 42 - Windows Setup & UI Enhancements)
+Admin Features (Phase 48-49):
+•	Advertisement Panel: Admin-configurable slideshow in chatbot UI
+•	Welcome Message: Editable welcome text and image at chat start
+•	Both features accessible via /admin UI
+
+Developer Settings (Phase 50-51):
+•	Response Metadata Toggle: Controls confidence, score, sources, mode badges
+•	Debug Panel Toggle: Shows LLM/retrieval/grounding technical details
+•	Both toggles independent, server-authoritative (immediate effect)
+•	Debug panel works for all query types including directory RAG fallback
+•	Settings persisted in data/debug_settings.json
+Last Updated: 2026-02-19 (Phase 51 - Developer Settings Consistency Fix)
