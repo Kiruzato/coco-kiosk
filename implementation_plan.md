@@ -1,417 +1,196 @@
-# Directory Entity System → RAG Document Migration Plan
+# Unify Directory Queries into Standard RAG Flow
 
-## Goal
-
-Replace the structured directory entity system with a retrieval-optimized PDF document, eliminating `EntityRegistry`, `entity_resolver`, `entity_analyzer`, all entity CRUD API routes, and the Admin UI entity management section. All directory information will be served through the unified RAG pipeline.
-
-> [!IMPORTANT]
-> **Aligned decisions:**
-> 1. `QueryIntent.DIRECTORY` and `is_directory_query()` are **retained** for RAG prompt specialization and stricter grounding logic.
-> 2. Phase B (RAG-first with entity fallback) is **skipped** — after PDF ingestion, proceed directly to entity system removal.
-> 3. The existing `Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf` is **preserved**. A new PDF named `Columban_College_Directory_RAG_Knowledge_Base.pdf` will be created.
-> 4. A `.docx` version of the directory document will be generated as the **editable master copy** for future updates.
+Remove the `handle_directory_query()` special path so directory queries follow the same orchestrator pipeline as all other queries.
 
 ---
 
-## 1. Architectural Impact Analysis
+## 1. Current Flow Analysis
 
-### Backend Module Dependencies
+### Current Directory Flow (app.py:2123–2132)
 
-The directory entity system touches **4 core Python modules**, **1 main application file**, and **1 data file**:
+```
+Query → is_directory_query() regex match
+      → handle_directory_query()
+        → canonicalize_directory_query()
+        → similarity_search(k=8, threshold=0.5)
+        → compute_confidence_score()
+        → [confidence < HIGH?] → hardcoded fallback (NO LLM)
+        → [confidence = HIGH]  → standalone LLM call with directory prompt
+```
 
-| Module | Lines | Role | Impact |
-|--------|-------|------|--------|
-| [entity_registry.py](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/entity_registry.py) | 658 | `DirectoryEntity` dataclass + `EntityRegistry` CRUD class | **DELETE entire file** |
-| [entity_resolver.py](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/entity_resolver.py) | 199 | `extract_subject()`, `resolve_entity()`, `format_entity_response()`, `canonicalize_directory_query()` | **DELETE entire file** |
-| [entity_analyzer.py](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/entity_analyzer.py) | 250 | `check_entity_agreement()`, `should_promote_confidence()` | **DELETE entire file** |
-| [entity_consolidation.py](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/entity_consolidation.py) | 322 | Already deprecated (superseded by `consolidation_engine.py`) | **DELETE entire file** |
-| [directory_entities.json](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/data/directory_entities.json) | 3529 | ~200+ entity records | **Archive, then DELETE** |
+**Problems**: Pre-LLM confidence gate blocks queries, hardcoded fallback bypasses LLM, separate retrieval path from orchestrator.
 
-### app.py Dependencies (5118 lines, ~25+ reference sites)
+### Standard Orchestrator Flow (app.py:2134+)
 
-| Section | Lines | What Uses Entities | Removal Action |
-|---------|-------|-------------------|----------------|
-| Imports | ~55-65 | `entity_registry`, `entity_resolver`, `entity_analyzer`, `is_directory_query` | Remove entity imports; keep `is_directory_query` (still useful for RAG routing) |
-| Constants | ~121 | `MIN_CONFIDENCE_DIRECTORY = ConfidenceLevel.HIGH` | Remove (RAG pipeline handles confidence uniformly) |
-| Initialization | ~290-292 | `EntityRegistry(str(ENTITY_REGISTRY_PATH))` | Remove initialization block |
-| Models | ~458-487 | `EntityCreate`, `EntityUpdate` Pydantic models | Remove both models |
-| Session context | ~503-524 | `last_entity_id`, `last_entity_name`, disambiguation state fields | Remove entity-specific context fields |
-| `update_conversation_context()` | ~575-587 | Updates `entity_id`, `entity_name` in session | Remove entity fields (keep intent/campus) |
-| Follow-up handler | ~2644-2700 | `entity_registry.get_by_id(context["last_entity_id"])` | Remove entity-based follow-up (RAG will handle) |
-| `handle_entity_disambiguation()` | ~1960-2029 | Full entity disambiguation flow | **DELETE entire function** |
-| `handle_disambiguation_selection()` | ~2053-2172 | Entity selection from disambiguation | **DELETE entire function** |
-| `handle_directory_query()` | ~2179-2450 | Entity-anchored resolution + RAG fallback | **Rewrite** → route directly to RAG pipeline |
-| Disambiguation retry logic | ~2503-2577 | Chat endpoint disambiguation handling | Remove disambiguation branch |
-| Entity CRUD API routes | ~4411-4725 | GET/POST/PUT/DELETE `/admin/entities/*`, export/import CSV | **DELETE all entity routes** (~315 lines) |
+```
+Query → response_orchestrator.process_query()
+      → Layer 1: _apply_governance() — intent + safety
+      → Layer 2: _perform_retrieval() — hybrid retrieval + grounding + semantic relevance
+      → Layer 3: _try_extractors() — deterministic extraction
+      → Mode determination — RAG_AUTHORITATIVE / RAG_SUPPLEMENTED / GENERAL_KNOWLEDGE
+      → Layer 4: _synthesize_response() — LLM ALWAYS CALLED
+```
 
-### response_orchestrator.py Dependencies
+**Key difference**: The orchestrator **always** reaches the LLM. Grounding validation determines the *prompt mode*, not whether the LLM is called at all.
 
-| Item | Lines | Impact |
-|------|-------|--------|
-| `GovernanceResult.is_directory_query` field | ~96 | Keep (still useful for RAG routing/prompt selection) |
-| `_apply_governance()` calls `is_directory_query()` | ~577-596 | Keep (query classification is independent of entities) |
+### Divergence Point
 
-### intent_classifier.py Dependencies
+[app.py:2123-2132](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/app.py#L2123-L2132) — The `if is_directory_query(query):` check intercepts the query **before** it reaches the orchestrator (line 2134).
 
-| Item | Lines | Impact |
-|------|-------|--------|
-| `QueryIntent.DIRECTORY` enum value | ~enum definition | **Keep** — retained for RAG prompt specialization and stricter grounding logic on directory queries |
-| `is_directory_query()` function | ~68-100 | **Keep** — regex-based detection feeds into RAG retrieval, governance, and potential directory-specific prompt tuning |
+### What the Orchestrator Already Does for Directory Queries
 
-### Entity Extractors Package
+The orchestrator already has built-in directory awareness:
 
-> [!NOTE]
-> The `entity_extractors/` package (deans, awards, dates, contacts) is **NOT part of the directory entity system**. These are deterministic extractors that work on RAG-retrieved text. They are completely independent of `EntityRegistry` and should be **preserved unchanged**.
-
-### consolidation_engine.py
-
-> [!NOTE]
-> `consolidation_engine.py` handles deans/prayer chunk consolidation during ingestion. It is **independent** of directory entities and should be **preserved unchanged**.
+| Capability | Location | Status |
+|-----------|----------|--------|
+| `is_directory_query()` check | [_apply_governance:580](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/response_orchestrator.py#L580) | ✅ Already implemented |
+| `GovernanceResult.is_directory_query` flag | [line 96](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/response_orchestrator.py#L96) | ✅ Already implemented |
+| Intent set to `"directory"` | [_apply_governance:589-590](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/response_orchestrator.py#L589-L590) | ✅ Already implemented |
+| Strict RAG prompt: "say you don't have verified information" | [SYNTHESIS_PROMPTS\[RAG_AUTHORITATIVE\]:164](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/response_orchestrator.py#L164) | ✅ Already implemented |
 
 ---
 
-## 2. Directory PDF Design Plan
+## 2. Target Unified Architecture
 
-### Current State
-
-An existing PDF exists at:
-`documents_to_ingest/Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf` (176KB)
-
-> [!NOTE]
-> The existing PDF is **preserved unchanged**. A new document will be created at:
-> `documents_to_ingest/Columban_College_Directory_RAG_Knowledge_Base.pdf`
-
-The current `directory_entities.json` contains ~200+ entities with structured fields: `entity_id`, `canonical_name`, `aliases`, `building`, `floor`, `room`, `campus`, `department`, `landmarks`, `description`.
-
-### Deliverables
-
-Two files will be generated from the entity data:
-
-| File | Purpose |
-|------|---------|
-| `Columban_College_Directory_RAG_Knowledge_Base.pdf` | Retrieval-optimized PDF for RAG ingestion |
-| `Columban_College_Directory_RAG_Knowledge_Base.docx` | Editable master copy for human review and future updates |
-
-Both files contain identical content. The `.docx` serves as the source-of-truth for editing; when updates are needed, edit the `.docx`, export to PDF, and re-ingest.
-
-### Retrieval-Optimized PDF Structure
-
-The PDF should be reformatted to maximize RAG retrieval quality. Each entry should be a self-contained **natural language paragraph** that embeds all searchable terms inline.
-
-#### Recommended Format Per Entry
+### Post-Change Control Flow
 
 ```
-## Canteen / Cafeteria
-
-The Canteen (also known as the Cafeteria or dining hall) is located on the
-Ground Floor of the St. Columban Building at the Barretto Campus. It is part
-of the Student Services area. The canteen is near the main lobby and the
-student lounge. It serves as the primary dining facility for students and staff.
+Query → [doc clarification check — unchanged]
+      → response_orchestrator.process_query()
+        → Governance: is_directory_query flag set (no control flow change)
+        → Hybrid retrieval: normalized query, vector search, grounding, semantic relevance
+        → Deterministic extractors: attempted (will not match directory queries)
+        → Mode determination: RAG_AUTHORITATIVE if grounded, GENERAL_KNOWLEDGE if not
+        → LLM synthesis: ALWAYS called with appropriate prompt
+        → LLM decides if context is sufficient, responds naturally
 ```
 
-**Key design principles:**
+### What Changes
 
-1. **Aliases embedded in text** — "also known as" phrasing ensures all aliases are in the same chunk
-2. **Natural language** — full sentences maximize semantic embedding quality vs. tabular data
-3. **Self-contained paragraphs** — each entry should be independently understandable after chunking
-4. **Section headers** — H2 headers with primary name for structural chunking
-5. **Consistent field ordering** — Name → Location → Building → Floor → Room → Department → Landmarks → Description
-6. **Grouped by building** — entries organized by building for contextual proximity
+| Aspect | Before | After |
+|--------|--------|-------|
+| Entry point | `is_directory_query()` early exit | Falls through to orchestrator |
+| Confidence gate | HIGH required pre-LLM | No pre-LLM gate |
+| LLM invocation | Conditional (HIGH only) | Always |
+| Fallback message | Hardcoded string | LLM decides |
+| Retrieval | Direct `similarity_search` | Hybrid retrieval + grounding |
+| Prompt | Custom directory prompt | Shared `RAG_AUTHORITATIVE` prompt |
+| Query normalization | `canonicalize_directory_query()` | Orchestrator's `normalize_text()` |
 
-#### Section Structure
+### What Stays The Same
 
-```
-# Columban College Barretto Campus Directory
-
-## How to Use This Directory
-[Brief intro explaining what information is available]
-
-## St. Augustine Building
-### Basic Education Conference Room
-[paragraph with all details and aliases]
-
-### Registrar's Office
-[paragraph with all details and aliases]
-
-## St. Columban Building
-### Canteen / Cafeteria
-[paragraph with all details and aliases]
-
-...
-```
-
-#### Chunking Considerations
-
-- Target chunk size: 300-500 tokens per entry
-- Each entry should fit within a single chunk (no splitting mid-entry)
-- Building grouping provides natural section boundaries
-- Use clear H2/H3 headers for the layout-aware PDF parser (`unstructured`)
+- `QueryIntent.DIRECTORY` classification — retained in `_apply_governance()`
+- `GovernanceResult.is_directory_query` flag — retained for future prompt specialization
+- `is_directory_query()` function — retained in `intent_classifier.py`
+- All event tracking and logging
+- Session context and memory management
 
 ---
 
-## 3. Migration Strategy (Phased)
+## 3. Refactor Strategy
 
-### Phase A: Document Creation & Ingestion
-1. Generate `Columban_College_Directory_RAG_Knowledge_Base.pdf` and `.docx` from `directory_entities.json` data
-2. Ingest the new PDF into the vector store alongside existing documents
-3. Test retrieval quality for directory queries against the RAG pipeline
-4. **No code changes yet** — entity system still active
+### Stage 1: Remove the Early Exit (app.py)
 
-### Phase B: Entity System Removal
-1. Remove entity-based resolution from `handle_directory_query()`
-2. Remove entity disambiguation flow
-3. Remove entity follow-up context handling
-4. Remove admin entity API routes and UI section
-5. Delete entity module files
-6. Archive `directory_entities.json`
-
-### Phase C: Cleanup & Verification
-1. Remove orphaned imports and constants
-2. Run full test suite
-3. Validate all directory query types against golden test set
-4. Update architecture documentation
-
----
-
-## 4. Directory Entity System Decommissioning Plan
-
-### Files to DELETE
-
-| File | Reason |
-|------|--------|
-| `entity_registry.py` | Entire module is entity CRUD |
-| `entity_resolver.py` | Entity resolution logic |
-| `entity_analyzer.py` | Entity agreement analysis |
-| `entity_consolidation.py` | Already deprecated |
-| `data/directory_entities.json` | Structured entity data (archive first) |
-
-### Functions to DELETE from app.py
-
-| Function | Lines |
-|----------|-------|
-| `handle_entity_disambiguation()` | ~1960-2029 |
-| `handle_disambiguation_selection()` | ~2053-2172 |
-| `normalize_stt_selection()` | ~2032-2050 |
-
-### Functions to REWRITE in app.py
-
-| Function | Change |
-|----------|--------|
-| `handle_directory_query()` | Remove entity-anchored resolution block (~2214-2300), keep RAG fallback as primary path |
-| `create_session()` | Remove `last_entity_id`, `last_entity_name` from context; keep `last_intent`, `last_campus` |
-| `update_conversation_context()` | Remove `entity_id`, `entity_name` parameters |
-| Chat endpoint disambiguation section | Remove entire `awaiting_disambiguation` branch (~2503-2577) |
-| Follow-up query handler | Remove entity-based follow-up (~2644-2700) |
-
-### API Routes to DELETE from app.py
-
-| Route | Method | Lines |
-|-------|--------|-------|
-| `/admin/entities` | GET | ~4415-4437 |
-| `/admin/entities/export` | GET | ~4445-4497 |
-| `/admin/entities/import` | POST | ~4500-4558 |
-| `/admin/entities/{entity_id}` | GET | ~4561-4583 |
-| `/admin/entities` | POST | ~4586-4625 |
-| `/admin/entities/{entity_id}` | PUT | ~4628-4689 |
-| `/admin/entities/{entity_id}` | DELETE | ~4692-4725 |
-
-### Imports to REMOVE from app.py
+**Remove** the directory query interception block at [app.py:2123-2132](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/app.py#L2123-L2132):
 
 ```diff
--from entity_registry import EntityRegistry
--from entity_resolver import resolve_entity, extract_subject, format_entity_response, canonicalize_directory_query
--from entity_analyzer import check_entity_agreement, should_promote_confidence
+-    # === CHECK FOR DIRECTORY QUERY ===
+-    # Directory queries get stricter handling (HIGH confidence required)
+-    if is_directory_query(query):
+-        intent_metadata = {
+-            "intent": "directory",
+-            "reasoning": "Location/directory question detected via pattern matching",
+-            "raw_classification": "DIRECTORY",
+-            "query_length": len(query)
+-        }
+-        return await handle_directory_query(query, session_id, memory, intent_metadata, session)
 ```
 
-### Constants to REMOVE from app.py
+Directory queries now fall through to `response_orchestrator.process_query()` at line 2134.
 
-```diff
--MIN_CONFIDENCE_DIRECTORY = ConfidenceLevel.HIGH
--ENTITY_REGISTRY_PATH = PROJECT_ROOT / "data" / "directory_entities.json"
-```
+### Stage 2: Delete `handle_directory_query()` (app.py)
 
----
+**Delete** the entire function at [app.py:1862-2021](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/app.py#L1862-L2021) (~160 lines).
 
-## 5. Admin UI Cleanup Plan
+### Stage 3: Clean Up Imports (app.py)
 
-### admin.html Changes
+- Remove `canonicalize_directory_query` from the import at [line 57](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/app.py#L57) (if no other callers exist)
+- Remove `is_directory_query` from the import at [line 55](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/app.py#L55) (if no other callers exist in `app.py`)
 
-| Section | Action |
-|---------|--------|
-| Entities tab in navigation | Remove tab button |
-| Entities content section (table, empty state, loading) | Remove entire section |
-| Entity add/edit modal | Remove modal HTML |
-| References to "directory entities" in text | Remove |
+> [!NOTE]
+> `is_directory_query` is still imported by `response_orchestrator.py` at [line 577](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/response_orchestrator.py#L577). The function itself stays in `intent_classifier.py`. Only the `app.py` import becomes unused.
 
-### admin.js Changes
+### Stage 4: Verify Streaming Endpoint
 
-| Function/Section | Action |
-|-----------------|--------|
-| `loadEntities()` | DELETE |
-| `showEntityModal()` | DELETE |
-| `saveEntity()` | DELETE |
-| `deleteEntity()` | DELETE |
-| `exportEntities()` | DELETE |
-| Entity table rendering logic | DELETE |
-| Tab switching logic for entities | Simplify (remove entity tab case) |
+The streaming endpoint at [app.py:2244](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/app.py#L2244) uses `process_query_streaming()` which already goes through the same orchestrator layers. **No changes needed.**
 
 ---
 
-## 6. Retrieval Accuracy Validation Plan
-
-### Test Categories
-
-| Category | Example Queries | Expected Behavior |
-|----------|----------------|-------------------|
-| **Exact name** | "Where is the canteen?" | High confidence, correct location |
-| **Alias** | "Where is the cafeteria?" | High confidence via embedded alias |
-| **Building-scoped** | "What's on the ground floor of St. Augustine?" | Returns multiple entries from that building/floor |
-| **Department** | "Where is the Basic Education Department?" | Correct building and floor |
-| **Landmark-based** | "What's near the main lobby?" | Returns entries with lobby landmarks |
-| **Ambiguous** | "Where is the office?" | Returns best-matching entry or provides context from multiple |
-| **Nonexistent** | "Where is the swimming pool?" | Low confidence rejection |
-| **Follow-up** | "What floor?" (after asking about canteen) | RAG retrieval with conversation memory |
-
-### Validation Method
-
-1. Create a golden test set of 30-50 directory queries with expected answers
-2. Run queries against the old entity system (capture baseline responses)
-3. Run same queries against RAG-only pipeline (capture new responses)
-4. Compare: confidence levels, answer accuracy, response latency
-5. Accept migration only if RAG matches or exceeds entity answers on ≥90% of test cases
-
-> [!IMPORTANT]
-> The golden test set should be created BEFORE any code removal begins, using the existing entity system as the baseline for comparison.
-
-### Automated Testing
-
-Existing test files that may need updates:
-- `test_cqe_golden.py` — references `is_directory_query` (backward compatibility test); will need update
-- `test_campus_query_engine.py` — general query engine tests
-
-### Manual Verification
-
-After migration, the user should:
-1. Start the server with `python -m uvicorn app:app --reload`
-2. Open the chat UI and test 10+ directory queries covering the categories above
-3. Verify the Admin UI no longer shows the Entities tab
-4. Confirm no console errors or broken API calls
-
----
-
-## 7. Risk Assessment and Mitigation
+## 4. Risk Assessment
 
 | Risk | Severity | Mitigation |
 |------|----------|------------|
-| **Retrieval degradation for aliases** | High | Embed all aliases inline in PDF paragraphs using "also known as" phrasing |
-| **Chunking splits an entry** | Medium | Use ~300-500 token entries with clear section headers; validate chunk boundaries post-ingestion |
-| **Loss of disambiguation UX** | Medium | RAG naturally handles ambiguity by returning top-ranked result; LLM can surface multiple options if retrieval returns close scores |
-| **Follow-up query regression** | Medium | Conversation memory in the orchestrator preserves context; RAG re-retrieval handles follow-ups |
-| **Admin loses entity editing** | Low | Directory updates now done by editing and re-ingesting the PDF. Document the new admin workflow. |
-| **Performance impact** | Low | Entity lookups were O(1) hash-based; RAG retrieval is vector search (~100ms). Acceptable for kiosk use case. |
-| **Ingestion quality** | Medium | Use layout-aware PDF parsing (`unstructured`) for better structure preservation; validate metadata post-ingestion |
-| **Rollback difficulty** | Low | Archive `directory_entities.json` before deletion; entity modules can be restored from git history |
+| **LLM hallucination on unfound locations** | Medium | The `RAG_AUTHORITATIVE` prompt already instructs: *"If the documents don't contain the answer, say 'I don't have verified information about that.'"* The LLM is explicitly told not to invent locations. |
+| **Grounding may reject valid directory chunks** | Low | The orchestrator uses `validate_grounding()` with `allow_semantic_override=True`, which is actually more forgiving than the old HIGH confidence gate. |
+| **Loss of query canonicalization** | Low | The orchestrator uses `normalize_text()` which handles basic normalization. The `canonicalize_directory_query()` conversion (e.g., "where is the library" → "library location") is removed, but the LLM can handle natural-language queries equally well. |
+| **Mode string in ChatResponse changes** | Very Low | Old: `mode="directory"`. New: `mode="campus"` or `mode="general"`. This is cosmetic — the UI treats both identically. No functional impact. |
+| **Event tracking differences** | Very Low | Old: explicit `QUERY_RECEIVED`/`ANSWER_REFUSED`/`ANSWER_RETURNED` tracking. New: existing orchestrator event tracking at [app.py:2147-2165](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/app.py#L2147-L2165) covers all modes. |
 
 ---
 
-## 8. Post-Migration Architecture
+## 5. Validation Plan
 
-### Before (Current)
+### Automated Checks
 
-```mermaid
-graph TD
-    Q[User Query] --> IC[Intent Classifier]
-    IC -->|DIRECTORY| DQH[handle_directory_query]
-    IC -->|CAMPUS| RO[Response Orchestrator]
-    DQH --> ER["Entity Registry (JSON)"]
-    ER -->|"High confidence"| DR[Deterministic Response]
-    ER -->|"Low confidence"| RAG[RAG Pipeline]
-    DQH --> DIS[Disambiguation Flow]
-    DIS --> ER
-    RO --> RAG
-    RAG --> VS[Vector Store]
-    RAG --> LLM[GPT-4o-mini]
-```
+Run the following test queries via `/chat` and verify:
 
-### After (Post-Migration)
+| Test Query | Expected Behavior |
+|------------|-------------------|
+| "Where is the library?" | LLM called, RAG context passed, natural answer |
+| "Where is the CESO office?" | LLM called, answer based on retrieved context |
+| "Where is room SP303?" | LLM called, answer or "I don't have verified information" |
+| "Where is simulation room" | LLM called, no hardcoded fallback |
+| "What are the library hours?" | Normal campus flow — unaffected |
+| "What is 5 + 5?" | Math engine fast path — unaffected |
+| "Hello" | General greeting — unaffected |
 
-```mermaid
-graph TD
-    Q[User Query] --> IC[Intent Classifier]
-    IC -->|DIRECTORY| RO[Response Orchestrator]
-    IC -->|CAMPUS| RO
-    RO --> RAG[RAG Pipeline]
-    RAG --> VS["Vector Store (includes Directory PDF)"]
-    RAG --> GV[Grounding Validation]
-    GV --> LLM[GPT-4o-mini]
-```
+### Verification Checklist
 
-**Key simplifications:**
-- **Single retrieval path** — all queries go through the same RAG pipeline
-- **No entity registry** — directory data lives in the vector store as document chunks
-- **No disambiguation flow** — the RAG + LLM combination handles ambiguity naturally
-- **DIRECTORY intent preserved** — `is_directory_query()` still classifies directory queries for potential prompt specialization and stricter grounding
-- **Fewer modules** — 4 entity-related Python files eliminated (~1,429 lines removed)
-- **Simpler Admin UI** — no entity management section; directory updates via DOCX editing → PDF export → re-ingestion
+- [ ] No `handle_directory_query` function exists in `app.py`
+- [ ] No `if is_directory_query(query)` early exit in chat endpoint
+- [ ] Directory queries produce LLM-generated answers
+- [ ] No hardcoded fallback string appears in responses
+- [ ] `GovernanceResult.is_directory_query` still set correctly in orchestrator
+- [ ] Non-directory queries behave identically to before
+- [ ] Streaming endpoint (`/chat/stream`) unaffected
+- [ ] Debug info shows `routing_path: orchestrator:*` for directory queries
+- [ ] No unused imports remain
 
 ---
 
-## Proposed Changes Summary
+## 6. Architectural Integrity Check
 
-### [DELETE] Backend Entity Modules
+| Criterion | ✅ Confirmed |
+|-----------|-------------|
+| Preserves unified RAG-only architecture | Single retrieval path for all queries |
+| Does not reintroduce entity logic | No entity code touched or added |
+| Maintains clean separation of concerns | Orchestrator handles retrieval+synthesis; app.py handles routing |
+| Improves architectural consistency | Removes last special-case branching in chat endpoint |
+| Reduces special-case branching | Eliminates 170+ lines of directory-specific code |
+| `DIRECTORY` intent classification retained | `_apply_governance()` still sets the flag for future use |
 
-#### [DELETE] [entity_registry.py](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/entity_registry.py)
-#### [DELETE] [entity_resolver.py](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/entity_resolver.py)
-#### [DELETE] [entity_analyzer.py](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/entity_analyzer.py)
-#### [DELETE] [entity_consolidation.py](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/entity_consolidation.py)
+### Files Changed
 
----
+| File | Change | Lines |
+|------|--------|-------|
+| [app.py](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/app.py) | Delete `handle_directory_query()` function + early exit block + unused imports | ~170 lines removed |
 
-### [ARCHIVE + DELETE] Entity Data
+### Files Unchanged
 
-#### [DELETE] [directory_entities.json](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/data/directory_entities.json)
-
----
-
-### [MODIFY] Core Application
-
-#### [MODIFY] [app.py](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/app.py)
-- Remove entity imports, initialization, models, functions, API routes, disambiguation logic, follow-up handling
-- Rewrite `handle_directory_query()` to use RAG-only path
-
----
-
-### [MODIFY] Admin UI
-
-#### [MODIFY] [admin.html](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/static/admin.html)
-- Remove entities tab, table, modal
-
-#### [MODIFY] [admin.js](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/static/admin.js)
-- Remove all entity management functions
-
----
-
-### [NEW] Directory Documents
-
-#### [NEW] [Columban_College_Directory_RAG_Knowledge_Base.pdf](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/documents_to_ingest/Columban_College_Directory_RAG_Knowledge_Base.pdf)
-- Retrieval-optimized PDF generated from `directory_entities.json` data
-- Ingested through the standard RAG pipeline
-
-#### [NEW] [Columban_College_Directory_RAG_Knowledge_Base.docx](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/documents_to_ingest/Columban_College_Directory_RAG_Knowledge_Base.docx)
-- Editable master copy with identical content
-- Serves as the source-of-truth for future directory updates
-
----
-
-## Verification Plan
-
-### Automated Tests
-- **Command**: `cd c:\Users\chann\OneDrive\Desktop\restartcoco\vibecoding_coco\campus_rag_chatbot && python test_cqe_golden.py`
-  - Verify `is_directory_query()` backward compatibility still passes (function is preserved)
-  - Update any tests that reference `EntityRegistry` or entity resolution
-
-### Manual Verification
-1. **Server startup**: Run `cd c:\Users\chann\OneDrive\Desktop\restartcoco\vibecoding_coco\campus_rag_chatbot && python -m uvicorn app:app --reload` and confirm no import errors
-2. **Directory queries**: Test "Where is the canteen?", "Where is the registrar?", "Where is the library?" in the chat UI
-3. **Admin UI**: Navigate to admin panel and confirm no Entities tab is visible, no console errors
-4. **Non-directory queries**: Test "Who are the deans?", "What are the library hours?" to confirm non-entity features still work
+| File | Reason |
+|------|--------|
+| `response_orchestrator.py` | Already has full directory awareness |
+| `intent_classifier.py` | `is_directory_query()` and `QueryIntent.DIRECTORY` retained |
+| `text_normalizer.py` | `canonicalize_directory_query()` can remain for potential future use |
+| `confidence_scorer.py` | No changes needed |
+| Admin UI | No changes needed |

@@ -1,165 +1,76 @@
 You are working on the CoCo Campus RAG Chatbot project.
 
-Claude Code agent Opus 4.5 has completed execution of the migration plan defined in `implementation_plan.md`.
+You will now execute the architectural unification plan defined in:
 
-Your task is to perform a comprehensive architectural and implementation audit.
+```
+implementation_plan.md
+```
 
-This is a review task only.
-Do not modify code.
-Do not implement fixes.
-Do not refactor.
+located in the root directory.
 
-Your role is to evaluate whether the implementation faithfully executed the approved migration plan and whether it aligns with the original architectural intent.
+This plan removes the special-case directory query path and unifies directory queries under the standard RAG orchestrator flow.
+
+Execution is now authorized.
 
 ---
 
 # Core Objective
 
-Determine:
+Implement the plan exactly as specified.
 
-1. Whether the implementation fully executed the migration plan.
-2. Whether the directory entity system has been completely removed.
-3. Whether the new directory RAG document integration is correct.
-4. Whether the system architecture is now clean, unified, and consistent.
-5. Whether any regressions, mistakes, incomplete removals, or architectural inconsistencies remain.
+The goal is to ensure:
 
----
-
-# What You Must Audit
-
-## 1. Plan Compliance Verification
-
-Cross-check the actual codebase against `implementation_plan.md`.
-
-Verify:
-
-* All planned removals were executed.
-* No planned steps were skipped.
-* No partial removals occurred.
-* The staged migration decisions were respected (e.g., skipping Phase B).
-* `DIRECTORY` intent classification was preserved.
-* Entity fallback logic was not retained accidentally.
-
-Explicitly identify any deviations from the approved plan.
+* Directory-related queries follow the same standard RAG flow as all other queries.
+* The early `is_directory_query()` interception in `app.py` is removed.
+* The `handle_directory_query()` function is deleted.
+* No pre-LLM HIGH-confidence gate remains for directory queries.
+* No directory-specific hardcoded fallback message remains.
+* Directory queries always reach the orchestrator and the LLM.
+* `QueryIntent.DIRECTORY` classification remains intact.
+* No entity logic is reintroduced.
 
 ---
 
-## 2. Directory Entity System Removal
+# Execution Requirements
 
-Verify complete removal of:
+Follow the plan in `implementation_plan.md` step-by-step.
 
-* Entity JSON files
-* Entity-specific modules
-* Entity CRUD routes
-* Entity ingestion logic
-* Entity resolution logic
-* Entity disambiguation logic
-* Entity-based session context
-* Entity-related admin UI components
-* Sidebar navigation items
-* Entity-specific validation code
+During implementation:
 
-Check for:
+* Apply proper refactorization where necessary.
+* Maintain clean modular boundaries.
+* Remove unused imports.
+* Remove dead code completely.
+* Avoid duplication.
+* Preserve system behavior for non-directory queries.
+* Ensure streaming endpoint remains unaffected.
 
-* Orphaned imports
-* Dead routes
-* Unused functions
-* Unreferenced models
-* Residual entity assumptions in retrieval pipeline
+Do not redesign unrelated subsystems.
 
 ---
 
-## 3. RAG Integration Verification
+# Post-Implementation Validation
 
-Verify that:
+After implementation:
 
-* The new `Columban_College_Directory_RAG_Knowledge_Base.pdf` is properly integrated
-* Ingestion pipeline handles it correctly
-* No special-case entity logic remains
-* Retrieval path is fully unified under FAISS
-* Hybrid ranking still functions correctly
-* No logic assumes structured entities
+Verify and confirm:
 
----
+* `handle_directory_query()` no longer exists.
+* No early directory exit in `app.py`.
+* Directory queries reach the LLM.
+* Retrieved RAG context is passed to the LLM.
+* No hardcoded directory fallback message exists.
+* Non-directory queries behave identically to before.
+* No unused imports remain.
+* Application runs without errors.
 
-## 4. Admin UI Stability
+Provide a structured summary including:
 
-Verify:
-
-* Directory entity management UI has been cleanly removed
-* No broken routes exist
-* Sidebar navigation is clean
-* No references to entity endpoints remain
-* No frontend errors occur due to missing entity data
-
----
-
-## 5. Architectural Cleanliness
-
-Evaluate:
-
-* Separation of concerns
-* Modular boundaries
-* Whether refactorization was applied properly
-* Whether unnecessary complexity was introduced
-* Whether code readability improved or degraded
-* Whether technical debt increased or decreased
-
-Identify any anti-patterns introduced during removal.
+* Files modified
+* Lines removed
+* Any refactors performed
+* Validation checklist results
 
 ---
 
-## 6. Regression & Risk Assessment
-
-Check for:
-
-* Potential retrieval accuracy degradation
-* Broken directory query behavior
-* Latency issues
-* Grounding logic inconsistencies
-* Confidence score misalignment
-* Loss of determinism in location queries
-
----
-
-## 7. Completion Assessment
-
-Provide a structured conclusion:
-
-* Implementation Status:
-
-  * Fully successful
-  * Partially successful
-  * Incomplete
-  * Incorrect
-
-* List of issues (if any)
-
-* Severity classification (Critical / Moderate / Minor)
-
-* Recommended corrections (planning only, no code)
-
----
-
-# Constraints
-
-* Do not modify code.
-* Do not rewrite the system.
-* Do not propose unrelated redesigns.
-* Focus strictly on validating the executed migration plan.
-
----
-
-# Deliverable
-
-Produce a structured audit report containing:
-
-1. Plan compliance summary
-2. Directory system removal validation
-3. RAG integration validation
-4. UI stability validation
-5. Architectural quality assessment
-6. Risk and regression findings
-7. Final verdict
-
-This must be a technical, structured, professional evaluation.
+Proceed with execution.

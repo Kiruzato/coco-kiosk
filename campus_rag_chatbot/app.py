@@ -51,10 +51,9 @@ from intent_classifier import (
     classify_intent,
     QueryIntent,
     safety_check_general_mode,
-    CAMPUS_KEYWORDS,
-    is_directory_query  # Phase 8
+    CAMPUS_KEYWORDS
 )
-from text_normalizer import normalize_text, canonicalize_directory_query  # Text normalization for consistent retrieval
+from text_normalizer import normalize_text  # Text normalization for consistent retrieval
 from advertisement_manager import AdvertisementManager  # Phase 48: Advertisement panel
 from event_tracker import EventTracker, EventType  # Phase 16: Observability
 from retrieval_validator import (  # Phase 17A: Hybrid retrieval & grounding
@@ -1860,168 +1859,6 @@ Could you please clarify? For example:
 
 
 # ==============================================================================
-# DIRECTORY QUERY HANDLER
-# ==============================================================================
-
-async def handle_directory_query(
-    query: str,
-    session_id: str,
-    memory: ConversationBufferWindowMemory,
-    intent_metadata: Dict,
-    session: Dict = None
-) -> ChatResponse:
-    """
-    Handle directory/location queries using RAG pipeline (Phase 52 migration).
-
-    This function handles wayfinding questions like "Where is the library?"
-    using RAG retrieval from the directory PDF document.
-
-    Args:
-        query: User's location query
-        session_id: Session identifier
-        memory: Conversation memory
-        intent_metadata: Intent classification metadata
-        session: Session dict for context
-
-    Returns:
-        ChatResponse with location info or rejection message
-    """
-    # Debug timing
-    _debug_start = time.perf_counter()
-
-    # Normalize query for consistent retrieval
-    normalized_query = normalize_text(query)
-    canonical_query = canonicalize_directory_query(normalized_query)
-
-    # Retrieve with similarity scores
-    retrieval_results = doc_manager.vector_store.similarity_search_with_relevance_scores(
-        canonical_query,
-        k=RETRIEVAL_TOP_K,
-        score_threshold=RELEVANCE_SCORE_THRESHOLD
-    )
-
-    retrieved_docs = [doc for doc, score in retrieval_results]
-    similarity_scores = [score for doc, score in retrieval_results]
-
-    # Compute confidence
-    confidence_level, confidence_metrics = compute_confidence_score(
-        similarity_scores=similarity_scores,
-        min_chunks_retrieved=1
-    )
-
-    # Directory queries require HIGH confidence for precise location answers
-    if not should_answer_confidently(confidence_level, ConfidenceLevel.HIGH):
-        answer = "I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance."
-        rejected = True
-        sources = []
-    else:
-        # Build context from retrieved chunks
-        context = _build_annotated_context(retrieved_docs)
-        chat_history = memory.load_memory_variables({}).get("chat_history", "")
-
-        # Directory-focused system prompt
-        system_content = f"""You are a campus directory assistant for Columban College, Inc. helping visitors find locations on campus.
-
-CRITICAL RULES FOR LOCATION QUESTIONS:
-1. ONLY provide location information that is EXPLICITLY stated in the context below
-2. You may ONLY mention: building names, floor numbers, room numbers, and landmarks that appear in the context
-3. If the exact location is not clearly stated in the context, respond: "I don't have precise location information for that yet."
-4. NEVER guess or invent building names, floor numbers, room numbers, or directions
-5. Keep responses concise and easy to follow
-
-Context from campus directory:
-{context}
-
-Conversation history:
-{chat_history}"""
-
-        # LLM call with validated chunks
-        logger.info(f"[DIRECTORY] RAG retrieval: Passing {len(retrieved_docs)} chunks to LLM")
-        response = llm.invoke([
-            SystemMessage(content=system_content),
-            HumanMessage(content=query)
-        ])
-        answer = response.content
-        rejected = False
-
-        # Update conversation memory
-        memory.save_context({"question": query}, {"answer": answer})
-
-        # Extract sources
-        sources = []
-        seen = set()
-        for doc in retrieved_docs:
-            doc_name = doc.metadata.get('document_name', 'Unknown')
-            section = doc.metadata.get('section', 'Unknown')
-            chunk_id = doc.metadata.get('chunk_id', 0)
-            key = f"{doc_name}:{section}:{chunk_id}"
-            if key not in seen:
-                sources.append(Source(
-                    document_name=doc_name,
-                    section=section,
-                    chunk_id=chunk_id
-                ))
-                seen.add(key)
-
-    # Update conversation context
-    if session:
-        update_conversation_context(session, intent="directory")
-
-    # Log interaction
-    query_logger.log_full_interaction(
-        query=query,
-        retrieved_chunks=retrieved_docs,
-        similarity_scores=similarity_scores,
-        answer=answer,
-        confidence_level=confidence_level.value,
-        confidence_metrics=confidence_metrics,
-        session_id=session_id,
-        intent=intent_metadata["intent"],
-        mode_used="directory"
-    )
-
-    # Track events
-    event_tracker.track(EventType.QUERY_RECEIVED, session_id, query_type="directory")
-    if rejected:
-        event_tracker.track(EventType.ANSWER_REFUSED, session_id=session_id, reason="low_confidence")
-    else:
-        event_tracker.track(EventType.ANSWER_RETURNED, session_id=session_id, confidence_level=confidence_level.value.lower(), source_type="directory")
-
-    # Build debug info
-    _debug_info = None
-    if debug_mode_enabled:
-        _debug_timing = {
-            'retrieval_ms': round((time.perf_counter() - _debug_start) * 1000, 1),
-            'total_ms': round((time.perf_counter() - _debug_start) * 1000, 1)
-        }
-        _debug_info = DebugInfo(
-            llm_provider="openai",
-            llm_model="gpt-4o-mini",
-            retrieval_mode="directory_rag",
-            retrieval_method="similarity_search",
-            chunks_retrieved=len(retrieved_docs),
-            intent_classified="directory",
-            grounding_passed=not rejected,
-            query_terms=canonical_query.lower().split()[:5],
-            routing_path="directory_query:rag",
-            timing=_debug_timing
-        )
-
-    return ChatResponse(
-        session_id=session_id,
-        answer=answer,
-        sources=sources,
-        confidence_level=confidence_level.value,
-        confidence_score=round(confidence_metrics["confidence_score"], 1),
-        rejected=rejected,
-        timestamp=datetime.now().isoformat(),
-        mode="directory",
-        debug_info=_debug_info,
-        metadata_visible=metadata_visible
-    )
-
-
-# ==============================================================================
 # API ENDPOINTS
 # ==============================================================================
 
@@ -2119,17 +1956,6 @@ async def chat(request: ChatRequest):
                 debug_info=_clarification_debug_info,
                 metadata_visible=metadata_visible
             )
-
-    # === CHECK FOR DIRECTORY QUERY ===
-    # Directory queries get stricter handling (HIGH confidence required)
-    if is_directory_query(query):
-        intent_metadata = {
-            "intent": "directory",
-            "reasoning": "Location/directory question detected via pattern matching",
-            "raw_classification": "DIRECTORY",
-            "query_length": len(query)
-        }
-        return await handle_directory_query(query, session_id, memory, intent_metadata, session)
 
     # === PHASE 44: LLM-AS-FINAL-SYNTHESIZER ARCHITECTURE ===
     # All response paths now go through the orchestrator which terminates in LLM synthesis
