@@ -5,7 +5,7 @@ Advertisement Manager
 Phase 48: Advertisement Panel Management System
 
 Handles CRUD operations for advertisement images displayed in the kiosk UI.
-Follows existing patterns from entity_registry.py and document_manager.py.
+Follows existing patterns from document_manager.py.
 """
 
 import json

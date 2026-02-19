@@ -4,6 +4,13 @@
 
 Replace the structured directory entity system with a retrieval-optimized PDF document, eliminating `EntityRegistry`, `entity_resolver`, `entity_analyzer`, all entity CRUD API routes, and the Admin UI entity management section. All directory information will be served through the unified RAG pipeline.
 
+> [!IMPORTANT]
+> **Aligned decisions:**
+> 1. `QueryIntent.DIRECTORY` and `is_directory_query()` are **retained** for RAG prompt specialization and stricter grounding logic.
+> 2. Phase B (RAG-first with entity fallback) is **skipped** — after PDF ingestion, proceed directly to entity system removal.
+> 3. The existing `Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf` is **preserved**. A new PDF named `Columban_College_Directory_RAG_Knowledge_Base.pdf` will be created.
+> 4. A `.docx` version of the directory document will be generated as the **editable master copy** for future updates.
+
 ---
 
 ## 1. Architectural Impact Analysis
@@ -48,8 +55,8 @@ The directory entity system touches **4 core Python modules**, **1 main applicat
 
 | Item | Lines | Impact |
 |------|-------|--------|
-| `QueryIntent.DIRECTORY` enum value | ~enum definition | **Keep** — directory intent classification remains useful for RAG prompt specialization |
-| `is_directory_query()` function | ~68-100 | **Keep** — regex-based detection feeds into RAG retrieval and governance |
+| `QueryIntent.DIRECTORY` enum value | ~enum definition | **Keep** — retained for RAG prompt specialization and stricter grounding logic on directory queries |
+| `is_directory_query()` function | ~68-100 | **Keep** — regex-based detection feeds into RAG retrieval, governance, and potential directory-specific prompt tuning |
 
 ### Entity Extractors Package
 
@@ -70,7 +77,22 @@ The directory entity system touches **4 core Python modules**, **1 main applicat
 An existing PDF exists at:
 `documents_to_ingest/Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf` (176KB)
 
+> [!NOTE]
+> The existing PDF is **preserved unchanged**. A new document will be created at:
+> `documents_to_ingest/Columban_College_Directory_RAG_Knowledge_Base.pdf`
+
 The current `directory_entities.json` contains ~200+ entities with structured fields: `entity_id`, `canonical_name`, `aliases`, `building`, `floor`, `room`, `campus`, `department`, `landmarks`, `description`.
+
+### Deliverables
+
+Two files will be generated from the entity data:
+
+| File | Purpose |
+|------|---------|
+| `Columban_College_Directory_RAG_Knowledge_Base.pdf` | Retrieval-optimized PDF for RAG ingestion |
+| `Columban_College_Directory_RAG_Knowledge_Base.docx` | Editable master copy for human review and future updates |
+
+Both files contain identical content. The `.docx` serves as the source-of-truth for editing; when updates are needed, edit the `.docx`, export to PDF, and re-ingest.
 
 ### Retrieval-Optimized PDF Structure
 
@@ -129,19 +151,13 @@ student lounge. It serves as the primary dining facility for students and staff.
 
 ## 3. Migration Strategy (Phased)
 
-### Phase A: PDF Creation & Parallel Ingestion
-1. Generate the directory PDF from `directory_entities.json` data
-2. Ingest the PDF into the vector store alongside existing documents
+### Phase A: Document Creation & Ingestion
+1. Generate `Columban_College_Directory_RAG_Knowledge_Base.pdf` and `.docx` from `directory_entities.json` data
+2. Ingest the new PDF into the vector store alongside existing documents
 3. Test retrieval quality for directory queries against the RAG pipeline
-4. **No code changes yet** — entity system still active as fallback
+4. **No code changes yet** — entity system still active
 
-### Phase B: RAG-First with Entity Fallback
-1. Modify `handle_directory_query()` to try RAG retrieval **first**
-2. Only fall back to entity registry if RAG returns low confidence
-3. Log comparison metrics (which path answered, confidence scores)
-4. Validate that RAG answers match or exceed entity-based answers
-
-### Phase C: Entity System Removal
+### Phase B: Entity System Removal
 1. Remove entity-based resolution from `handle_directory_query()`
 2. Remove entity disambiguation flow
 3. Remove entity follow-up context handling
@@ -149,7 +165,7 @@ student lounge. It serves as the primary dining facility for students and staff.
 5. Delete entity module files
 6. Archive `directory_entities.json`
 
-### Phase D: Cleanup & Verification
+### Phase C: Cleanup & Verification
 1. Remove orphaned imports and constants
 2. Run full test suite
 3. Validate all directory query types against golden test set
@@ -334,9 +350,9 @@ graph TD
 - **Single retrieval path** — all queries go through the same RAG pipeline
 - **No entity registry** — directory data lives in the vector store as document chunks
 - **No disambiguation flow** — the RAG + LLM combination handles ambiguity naturally
-- **No special confidence rules** — unified confidence scoring for all query types
+- **DIRECTORY intent preserved** — `is_directory_query()` still classifies directory queries for potential prompt specialization and stricter grounding
 - **Fewer modules** — 4 entity-related Python files eliminated (~1,429 lines removed)
-- **Simpler Admin UI** — no entity management section; directory updates via PDF re-ingestion
+- **Simpler Admin UI** — no entity management section; directory updates via DOCX editing → PDF export → re-ingestion
 
 ---
 
@@ -375,11 +391,15 @@ graph TD
 
 ---
 
-### [NEW] Directory PDF
+### [NEW] Directory Documents
 
-#### [NEW] Updated directory PDF in `documents_to_ingest/`
-- Generated from `directory_entities.json` data
-- Formatted for retrieval optimization
+#### [NEW] [Columban_College_Directory_RAG_Knowledge_Base.pdf](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/documents_to_ingest/Columban_College_Directory_RAG_Knowledge_Base.pdf)
+- Retrieval-optimized PDF generated from `directory_entities.json` data
+- Ingested through the standard RAG pipeline
+
+#### [NEW] [Columban_College_Directory_RAG_Knowledge_Base.docx](file:///c:/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/campus_rag_chatbot/documents_to_ingest/Columban_College_Directory_RAG_Knowledge_Base.docx)
+- Editable master copy with identical content
+- Serves as the source-of-truth for future directory updates
 
 ---
 

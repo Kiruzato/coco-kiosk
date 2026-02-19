@@ -55,9 +55,6 @@ from intent_classifier import (
     is_directory_query  # Phase 8
 )
 from text_normalizer import normalize_text, canonicalize_directory_query  # Text normalization for consistent retrieval
-from entity_analyzer import check_entity_agreement, should_promote_confidence  # Entity-aware confidence promotion
-from entity_registry import EntityRegistry  # Phase 9: Structured directory entities
-from entity_resolver import extract_subject, resolve_entity, format_entity_response  # Phase 9: Entity resolution
 from advertisement_manager import AdvertisementManager  # Phase 48: Advertisement panel
 from event_tracker import EventTracker, EventType  # Phase 16: Observability
 from retrieval_validator import (  # Phase 17A: Hybrid retrieval & grounding
@@ -118,7 +115,6 @@ RETRIEVAL_TOP_K = 8  # Phase 17C: Increased from 4 for complete enumeration
 RELEVANCE_SCORE_THRESHOLD = 0.5
 MEMORY_WINDOW_SIZE = 5
 MIN_CONFIDENCE_TO_ANSWER = ConfidenceLevel.MEDIUM
-MIN_CONFIDENCE_DIRECTORY = ConfidenceLevel.HIGH  # Phase 8: Stricter for location queries
 
 # Phase 17A: Hybrid retrieval settings
 HYBRID_VECTOR_WEIGHT = 0.7       # Weight for vector similarity score (linear method)
@@ -287,10 +283,6 @@ query_logger = QueryLogger(log_dir=LOG_DIR)
 # Initialize event tracker for observability (Phase 16)
 event_tracker = EventTracker(log_dir=LOG_DIR)
 
-# Initialize entity registry for directory queries (Phase 9)
-ENTITY_REGISTRY_PATH = PROJECT_ROOT / "data" / "directory_entities.json"
-entity_registry = EntityRegistry(str(ENTITY_REGISTRY_PATH))
-
 # Initialize advertisement manager for kiosk display (Phase 48)
 advertisement_manager = AdvertisementManager(data_dir=PROJECT_ROOT / "data")
 logger.info(f"[PHASE48] AdvertisementManager initialized")
@@ -456,38 +448,6 @@ class ResetRequest(BaseModel):
 
 
 # ==============================================================================
-# ENTITY MANAGEMENT MODELS - Phase 10
-# ==============================================================================
-
-class EntityCreate(BaseModel):
-    """Request model for creating a new directory entity."""
-    entity_id: str
-    canonical_name: str
-    aliases: List[str]
-    building: str
-    floor: str
-    room: Optional[str] = None
-    campus: str = "Main Campus"
-    department: Optional[str] = None
-    landmarks: Optional[str] = None
-    description: Optional[str] = None
-
-
-class EntityUpdate(BaseModel):
-    """Request model for updating an existing directory entity."""
-    canonical_name: Optional[str] = None
-    aliases: Optional[List[str]] = None
-    building: Optional[str] = None
-    floor: Optional[str] = None
-    room: Optional[str] = None
-    campus: Optional[str] = None
-    department: Optional[str] = None
-    landmarks: Optional[str] = None
-    description: Optional[str] = None
-    status: Optional[str] = None
-
-
-# ==============================================================================
 # SESSION MANAGEMENT
 # ==============================================================================
 
@@ -507,15 +467,7 @@ def create_session() -> Dict:
         "query_count": 0,
         "conversation_context": {
             "last_intent": None,
-            "last_entity_id": None,
-            "last_entity_name": None,
             "last_campus": None,
-            # Phase 14: Disambiguation state (directory)
-            "awaiting_disambiguation": False,
-            "disambiguation_candidates": [],
-            "disambiguation_query": None,
-            # Phase 14.1: Failure handling
-            "disambiguation_attempt_count": 0,
             # Phase 15: Document clarification state
             "doc_clarification_active": False,
             "doc_clarification_sources": [],
@@ -572,17 +524,10 @@ def cleanup_expired_sessions():
 # CONVERSATION CONTEXT MANAGEMENT (Phase 13)
 # ==============================================================================
 
-def update_conversation_context(session: Dict, intent: str, entity_id: str = None,
-                                 entity_name: str = None, campus: str = None):
-    """Update session conversation context after a successful high-confidence answer.
-
-    Phase 14.1: Uses field-level updates to preserve disambiguation state fields
-    instead of replacing the entire context dict.
-    """
+def update_conversation_context(session: Dict, intent: str, campus: str = None):
+    """Update session conversation context after a successful high-confidence answer."""
     context = session.get("conversation_context", {})
     context["last_intent"] = intent
-    context["last_entity_id"] = entity_id
-    context["last_entity_name"] = entity_name
     context["last_campus"] = campus
     session["conversation_context"] = context
 
@@ -602,45 +547,6 @@ def is_followup_query(query: str) -> bool:
     ]
     query_lower = query.lower()
     return any(pattern in query_lower for pattern in followup_patterns)
-
-
-def is_topic_change(query: str, context: Dict) -> bool:
-    """
-    Detect if user is changing topics (abandoning current disambiguation).
-
-    Phase 14.1: Returns True if user appears to be asking about something else
-    while disambiguation is pending.
-
-    Args:
-        query: The user's current query
-        context: The conversation context dict
-
-    Returns:
-        True if this looks like a topic change, False otherwise
-    """
-    # Only relevant if disambiguation is pending
-    if not context.get("awaiting_disambiguation"):
-        return False
-
-    query_lower = query.lower().strip()
-
-    # Explicit reset/cancel phrases
-    reset_phrases = [
-        "never mind", "nevermind", "forget it", "different question",
-        "something else", "cancel", "start over", "new question"
-    ]
-    if any(phrase in query_lower for phrase in reset_phrases):
-        return True
-
-    # If query contains a new directory question, it's a topic change
-    directory_keywords = [
-        "where is", "where's", "find the", "location of",
-        "how to get to", "how do i get to", "where can i find"
-    ]
-    if any(kw in query_lower for kw in directory_keywords):
-        return True
-
-    return False
 
 
 # ==============================================================================
@@ -1954,226 +1860,7 @@ Could you please clarify? For example:
 
 
 # ==============================================================================
-# ENTITY DISAMBIGUATION - Phase 14
-# ==============================================================================
-
-def handle_entity_disambiguation(
-    query: str,
-    candidates: List,
-    session_id: str,
-    session: Dict
-) -> ChatResponse:
-    """
-    Handle ambiguous entity queries by presenting options to user (Phase 14).
-
-    When multiple entities match a query, present numbered options
-    and wait for user selection.
-    """
-    # Phase 42: Debug timing
-    _debug_start = time.perf_counter()
-
-    # Phase 14.1: Log clarification trigger
-    logger.info(f"[CLARIFICATION] Multiple matches for '{query}': {[e.canonical_name for e in candidates[:4]]}")
-
-    # Phase 16: Track clarification event
-    event_tracker.track(
-        EventType.CLARIFICATION_TRIGGERED,
-        session_id=session_id,
-        clarification_type="directory",
-        reason="ambiguity",
-        num_candidates=len(candidates[:4])
-    )
-
-    # Build clarification message with numbered options
-    options = []
-    for i, entity in enumerate(candidates[:4], 1):  # Max 4 options
-        options.append(f"{i}. {entity.canonical_name} ({entity.building})")
-
-    options_text = "\n".join(options)
-    answer = f"I found multiple locations that might match. Which one do you mean?\n\n{options_text}\n\nPlease reply with the number or name."
-
-    # Store disambiguation state (don't update last_entity yet)
-    session["conversation_context"]["awaiting_disambiguation"] = True
-    session["conversation_context"]["disambiguation_candidates"] = [e.entity_id for e in candidates[:4]]
-    session["conversation_context"]["disambiguation_query"] = query
-
-    # Build clarification debug info
-    _clarification_debug_info = None
-    if debug_mode_enabled:
-        _debug_timing = {
-            'resolution_ms': round((time.perf_counter() - _debug_start) * 1000, 1),
-            'total_ms': round((time.perf_counter() - _debug_start) * 1000, 1)
-        }
-        _clarification_debug_info = DebugInfo(
-            llm_provider="deterministic",
-            llm_model="entity-registry",
-            retrieval_mode="entity_registry",
-            retrieval_method="fuzzy_match",
-            chunks_retrieved=len(candidates[:4]),
-            intent_classified="directory",
-            routing_path="entity_disambiguation",
-            timing=_debug_timing
-        )
-
-    return ChatResponse(
-        session_id=session_id,
-        answer=answer,
-        sources=[],
-        confidence_level="Medium",
-        confidence_score=50.0,
-        rejected=False,
-        timestamp=datetime.now().isoformat(),
-        mode="clarification",
-        debug_info=_clarification_debug_info,
-        metadata_visible=metadata_visible
-    )
-
-
-def normalize_stt_selection(selection: str) -> str:
-    """
-    Normalize STT selection input for clarification responses.
-
-    Handles common STT artifacts:
-    - Trailing punctuation: "1." -> "1", "one." -> "one"
-    - Extra whitespace
-    - Case normalization
-
-    Returns normalized selection string.
-    """
-    import re
-    # Strip whitespace and convert to lowercase
-    normalized = selection.lower().strip()
-    # Remove trailing punctuation (period, comma, question mark, etc.)
-    normalized = re.sub(r'[.,!?;:]+$', '', normalized)
-    # Remove leading punctuation too
-    normalized = re.sub(r'^[.,!?;:]+', '', normalized)
-    return normalized.strip()
-
-
-def handle_disambiguation_selection(
-    selection: str,
-    session: Dict,
-    session_id: str
-) -> Optional[ChatResponse]:
-    """
-    Handle user's selection from disambiguation options (Phase 14).
-
-    Returns ChatResponse if selection is valid, None otherwise.
-    """
-    # Phase 42: Debug timing
-    _debug_start = time.perf_counter()
-
-    context = session["conversation_context"]
-    candidates = context.get("disambiguation_candidates", [])
-
-    if not candidates:
-        return None
-
-    # Phase 14.1: Log selection attempt
-    logger.info(f"[CLARIFICATION] Selection attempt: '{selection}' from candidates: {candidates}")
-
-    selected_entity = None
-    # Phase 35: Normalize STT selection to handle "1.", "one.", etc.
-    selection_lower = normalize_stt_selection(selection)
-    logger.info(f"[CLARIFICATION] Normalized selection: '{selection_lower}'")
-
-    # Try to match by number (1, 2, 3, 4) or ordinal words
-    # Phase 14.1: Support phrases like "the first one", "number 2", etc.
-    num_map = {
-        "1": 0, "2": 1, "3": 2, "4": 3,
-        "first": 0, "second": 1, "third": 2, "fourth": 3,
-        "one": 0, "two": 1, "three": 2, "four": 3
-    }
-
-    # Check exact match first, then check if key is contained in selection
-    if selection_lower in num_map:
-        idx = num_map[selection_lower]
-        if 0 <= idx < len(candidates):
-            selected_entity = entity_registry.get_by_id(candidates[idx])
-    else:
-        # Check if any number word/digit is contained in the phrase
-        # Phase 35: Also normalize words before matching
-        selection_words = [normalize_stt_selection(w) for w in selection_lower.split()]
-        for key, idx in num_map.items():
-            if key in selection_words:  # Match whole words only
-                if 0 <= idx < len(candidates):
-                    selected_entity = entity_registry.get_by_id(candidates[idx])
-                    break
-
-    # Try to match by name if number didn't work
-    if not selected_entity:
-        for entity_id in candidates:
-            entity = entity_registry.get_by_id(entity_id)
-            if entity and selection_lower in entity.canonical_name.lower():
-                selected_entity = entity
-                break
-
-    if selected_entity and selected_entity.status == "active":
-        # Phase 14.1: Log successful resolution
-        logger.info(f"[CLARIFICATION] Resolved to: {selected_entity.canonical_name}")
-
-        # Phase 16: Track successful clarification resolution
-        event_tracker.track(
-            EventType.CLARIFICATION_RESOLVED,
-            session_id=session_id,
-            success=True,
-            clarification_type="directory"
-        )
-
-        # Clear disambiguation state
-        context["awaiting_disambiguation"] = False
-        context["disambiguation_candidates"] = []
-        context["disambiguation_query"] = None
-
-        # Update context with confirmed entity
-        update_conversation_context(
-            session,
-            intent="directory",
-            entity_id=selected_entity.entity_id,
-            entity_name=selected_entity.canonical_name,
-            campus=selected_entity.campus
-        )
-
-        answer = format_entity_response(selected_entity)
-
-        # Phase 42: Add debug_info for disambiguation resolution
-        _debug_info = None
-        if debug_mode_enabled:
-            _debug_timing = {
-                'resolution_ms': round((time.perf_counter() - _debug_start) * 1000, 1),
-                'total_ms': round((time.perf_counter() - _debug_start) * 1000, 1)
-            }
-            _debug_info = DebugInfo(
-                llm_provider="deterministic",
-                llm_model="entity-registry",
-                retrieval_mode="entity_registry",
-                retrieval_method="selection_match",
-                chunks_retrieved=1,
-                intent_classified="directory",
-                routing_path="disambiguation_resolved",
-                timing=_debug_timing
-            )
-
-        return ChatResponse(
-            session_id=session_id,
-            answer=answer,
-            sources=[],
-            confidence_level="High",
-            confidence_score=98.0,
-            rejected=False,
-            timestamp=datetime.now().isoformat(),
-            mode="directory",
-            debug_info=_debug_info,
-            metadata_visible=metadata_visible
-        )
-
-    # Phase 14.1: Log failed selection
-    logger.info(f"[CLARIFICATION] Selection failed, no match found for '{selection}'")
-    return None
-
-
-# ==============================================================================
-# DIRECTORY QUERY HANDLER - Phase 8
+# DIRECTORY QUERY HANDLER
 # ==============================================================================
 
 async def handle_directory_query(
@@ -2184,126 +1871,29 @@ async def handle_directory_query(
     session: Dict = None
 ) -> ChatResponse:
     """
-    Handle directory/location queries with strict grounding (Phase 8).
+    Handle directory/location queries using RAG pipeline (Phase 52 migration).
 
     This function handles wayfinding questions like "Where is the library?"
-    with stricter requirements than general campus queries:
-    - Requires HIGH confidence (not MEDIUM)
-    - Uses specialized prompt that prevents location invention
-    - Provides clear rejection message if location not found
+    using RAG retrieval from the directory PDF document.
 
     Args:
         query: User's location query
         session_id: Session identifier
         memory: Conversation memory
         intent_metadata: Intent classification metadata
+        session: Session dict for context
 
     Returns:
         ChatResponse with location info or rejection message
     """
-    # Phase 42: Debug timing
+    # Debug timing
     _debug_start = time.perf_counter()
 
-    # Normalize query for consistent retrieval (case-insensitive matching)
+    # Normalize query for consistent retrieval
     normalized_query = normalize_text(query)
-
-    # Canonicalize directory query for better semantic alignment
-    # e.g., "where is canteen" -> "canteen location"
     canonical_query = canonicalize_directory_query(normalized_query)
 
-    # ===========================================================================
-    # PHASE 9: Entity-Anchored Resolution (try before RAG fallback)
-    # ===========================================================================
-    subject = extract_subject(canonical_query)
-
-    # ===========================================================================
-    # PHASE 14: Check for multiple entity matches (disambiguation)
-    # ===========================================================================
-    if session:
-        matching_entities = entity_registry.find_matching_entities(subject)
-        if len(matching_entities) > 1:
-            # Multiple matches - trigger disambiguation
-            return handle_entity_disambiguation(query, matching_entities, session_id, session)
-
-    resolved_entity, resolution_confidence, resolution_method = resolve_entity(
-        subject, entity_registry
-    )
-
-    if resolved_entity and resolution_confidence >= 0.95:
-        # Entity resolved with high confidence - return deterministic answer
-        answer = format_entity_response(resolved_entity)
-
-        # Log the successful entity resolution
-        query_logger.log_query(
-            query=query,
-            session_id=session_id,
-            metadata={
-                "intent": "directory",
-                "confidence_level": "High",
-                "confidence_score": 98.0,
-                "rejected": False,
-                "resolution_method": resolution_method,
-                "entity_id": resolved_entity.entity_id,
-                "canonical_name": resolved_entity.canonical_name,
-                "phase": "entity_resolution"
-            }
-        )
-
-        # Update conversation context for follow-up queries (Phase 13)
-        if session:
-            update_conversation_context(
-                session,
-                intent="directory",
-                entity_id=resolved_entity.entity_id,
-                entity_name=resolved_entity.canonical_name,
-                campus=resolved_entity.campus
-            )
-
-        # Phase 16: Track query and answer
-        event_tracker.track(EventType.QUERY_RECEIVED, session_id, query_type="directory")
-        event_tracker.track(
-            EventType.ANSWER_RETURNED,
-            session_id=session_id,
-            confidence_level="high",
-            source_type="directory"
-        )
-
-        # Phase 42: Add debug_info for entity-resolved directory queries
-        _debug_info = None
-        if debug_mode_enabled:
-            _debug_timing = {
-                'resolution_ms': round((time.perf_counter() - _debug_start) * 1000, 1),
-                'total_ms': round((time.perf_counter() - _debug_start) * 1000, 1)
-            }
-            _debug_info = DebugInfo(
-                llm_provider="deterministic",
-                llm_model="entity-registry",
-                retrieval_mode="entity_registry",
-                retrieval_method="entity_resolution",
-                chunks_retrieved=1,
-                intent_classified="directory",
-                routing_path="entity_resolved",
-                timing=_debug_timing
-            )
-
-        return ChatResponse(
-            session_id=session_id,
-            answer=answer,
-            sources=[],  # No RAG sources - entity-based answer
-            confidence_level="High",
-            confidence_score=98.0,
-            rejected=False,
-            timestamp=datetime.now().isoformat(),
-            mode="directory",
-            debug_info=_debug_info,
-            metadata_visible=metadata_visible
-        )
-
-    # ===========================================================================
-    # RAG Fallback: Entity not resolved, use similarity-based retrieval
-    # ===========================================================================
-
-    # Retrieve with similarity scores using canonical query
+    # Retrieve with similarity scores
     retrieval_results = doc_manager.vector_store.similarity_search_with_relevance_scores(
         canonical_query,
         k=RETRIEVAL_TOP_K,
@@ -2319,57 +1909,25 @@ async def handle_directory_query(
         min_chunks_retrieved=1
     )
 
-    # Entity-aware confidence promotion for directory queries
-    # If MEDIUM confidence but high-scoring chunks agree on the same entity, consider promotion
-    promoted = False
-    if confidence_level == ConfidenceLevel.MEDIUM and retrieved_docs:
-        has_agreement, common_entity, entities = check_entity_agreement(
-            retrieved_docs,
-            scores=[float(s) for s in similarity_scores]  # Pass scores for threshold filtering
-        )
-
-        should_promote, promotion_reason = should_promote_confidence(
-            avg_similarity=confidence_metrics["avg_similarity"],
-            max_similarity=confidence_metrics["max_similarity"],
-            num_chunks=confidence_metrics["num_chunks"],
-            variance=confidence_metrics["score_variance"],
-            has_entity_agreement=has_agreement
-        )
-
-        if should_promote:
-            confidence_level = ConfidenceLevel.HIGH
-            confidence_metrics["promoted"] = True
-            confidence_metrics["promotion_reason"] = promotion_reason
-            confidence_metrics["confirmed_entity"] = common_entity
-            promoted = True
-
-    # Phase 8: Stricter confidence check for directory queries (require HIGH)
-    if not should_answer_confidently(confidence_level, MIN_CONFIDENCE_DIRECTORY):
+    # Directory queries require HIGH confidence for precise location answers
+    if not should_answer_confidently(confidence_level, ConfidenceLevel.HIGH):
         answer = "I don't have precise location information for that yet. Please check with the campus information desk or security office for assistance."
         rejected = True
         sources = []
     else:
-        # Phase 17C: Single retrieval pipeline for directory queries
-        # Merge consecutive chunks from the same document
+        # Build context from retrieved chunks
         context = _build_annotated_context(retrieved_docs)
-
-        # Get conversation history from memory
         chat_history = memory.load_memory_variables({}).get("chat_history", "")
 
-        # Build system prompt with directory-focused rules
+        # Directory-focused system prompt
         system_content = f"""You are a campus directory assistant for Columban College, Inc. helping visitors find locations on campus.
 
 CRITICAL RULES FOR LOCATION QUESTIONS:
 1. ONLY provide location information that is EXPLICITLY stated in the context below
 2. You may ONLY mention: building names, floor numbers, room numbers, and landmarks that appear in the context
 3. If the exact location is not clearly stated in the context, respond: "I don't have precise location information for that yet."
-4. NEVER guess or invent:
-   - Building names
-   - Floor numbers
-   - Room numbers
-   - Directions or navigation steps
-5. Always mention the source (e.g., "According to the Campus Directory...")
-6. Keep responses concise and easy to follow
+4. NEVER guess or invent building names, floor numbers, room numbers, or directions
+5. Keep responses concise and easy to follow
 
 Context from campus directory:
 {context}
@@ -2377,8 +1935,8 @@ Context from campus directory:
 Conversation history:
 {chat_history}"""
 
-        # Direct LLM call with validated chunks (no second retrieval)
-        logger.info(f"[PHASE17C] Directory fallback: Passing {len(retrieved_docs)} validated chunks to LLM")
+        # LLM call with validated chunks
+        logger.info(f"[DIRECTORY] RAG retrieval: Passing {len(retrieved_docs)} chunks to LLM")
         response = llm.invoke([
             SystemMessage(content=system_content),
             HumanMessage(content=query)
@@ -2389,14 +1947,13 @@ Conversation history:
         # Update conversation memory
         memory.save_context({"question": query}, {"answer": answer})
 
-        # Extract sources from already-retrieved docs (single retrieval)
+        # Extract sources
         sources = []
         seen = set()
         for doc in retrieved_docs:
             doc_name = doc.metadata.get('document_name', 'Unknown')
             section = doc.metadata.get('section', 'Unknown')
             chunk_id = doc.metadata.get('chunk_id', 0)
-
             key = f"{doc_name}:{section}:{chunk_id}"
             if key not in seen:
                 sources.append(Source(
@@ -2406,8 +1963,12 @@ Conversation history:
                 ))
                 seen.add(key)
 
-    # Log the interaction
-    query_id = query_logger.log_full_interaction(
+    # Update conversation context
+    if session:
+        update_conversation_context(session, intent="directory")
+
+    # Log interaction
+    query_logger.log_full_interaction(
         query=query,
         retrieved_chunks=retrieved_docs,
         similarity_scores=similarity_scores,
@@ -2419,23 +1980,14 @@ Conversation history:
         mode_used="directory"
     )
 
-    # Phase 16: Track query and answer/refusal
+    # Track events
     event_tracker.track(EventType.QUERY_RECEIVED, session_id, query_type="directory")
     if rejected:
-        event_tracker.track(
-            EventType.ANSWER_REFUSED,
-            session_id=session_id,
-            reason="low_confidence"
-        )
+        event_tracker.track(EventType.ANSWER_REFUSED, session_id=session_id, reason="low_confidence")
     else:
-        event_tracker.track(
-            EventType.ANSWER_RETURNED,
-            session_id=session_id,
-            confidence_level=confidence_level.value.lower(),
-            source_type="directory"
-        )
+        event_tracker.track(EventType.ANSWER_RETURNED, session_id=session_id, confidence_level=confidence_level.value.lower(), source_type="directory")
 
-    # Phase 51: Build debug_info for RAG fallback directory queries
+    # Build debug info
     _debug_info = None
     if debug_mode_enabled:
         _debug_timing = {
@@ -2445,13 +1997,13 @@ Conversation history:
         _debug_info = DebugInfo(
             llm_provider="openai",
             llm_model="gpt-4o-mini",
-            retrieval_mode="directory_rag_fallback",
+            retrieval_mode="directory_rag",
             retrieval_method="similarity_search",
             chunks_retrieved=len(retrieved_docs),
             intent_classified="directory",
             grounding_passed=not rejected,
             query_terms=canonical_query.lower().split()[:5],
-            routing_path="directory_query:rag_fallback",
+            routing_path="directory_query:rag",
             timing=_debug_timing
         )
 
@@ -2500,81 +2052,8 @@ async def chat(request: ChatRequest):
     if not query:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
-    # === PHASE 14/14.1: CHECK FOR PENDING DISAMBIGUATION ===
+    # Get conversation context for document clarification
     context = get_conversation_context(session)
-
-    # Phase 14.1: Check for topic change first (user abandoning disambiguation)
-    if is_topic_change(query, context):
-        logger.info(f"[CLARIFICATION] Topic change detected, clearing disambiguation state")
-        context["awaiting_disambiguation"] = False
-        context["disambiguation_candidates"] = []
-        context["disambiguation_query"] = None
-        context["disambiguation_attempt_count"] = 0
-        # Continue to normal flow with the new query
-
-    elif context.get("awaiting_disambiguation"):
-        # User is responding to a disambiguation question
-        logger.info(f"[CLARIFICATION] Processing disambiguation response: '{query}'")
-        response = handle_disambiguation_selection(query, session, session_id)
-        if response:
-            # Success - reset attempt counter
-            context["disambiguation_attempt_count"] = 0
-            return response
-
-        # Selection failed - Phase 14.1: Implement two-strike rule
-        context["disambiguation_attempt_count"] = context.get("disambiguation_attempt_count", 0) + 1
-        logger.info(f"[CLARIFICATION] Selection failed, attempt {context['disambiguation_attempt_count']}")
-
-        if context["disambiguation_attempt_count"] >= 2:
-            # Two strikes - gracefully reset and continue to normal flow
-            logger.info(f"[CLARIFICATION] Failed after 2 attempts, resetting state")
-            context["awaiting_disambiguation"] = False
-            context["disambiguation_candidates"] = []
-            context["disambiguation_query"] = None
-            context["disambiguation_attempt_count"] = 0
-            # Fall through to normal processing
-        else:
-            # First failure - ask again with clearer instructions
-            # Phase 42: Debug timing for retry
-            _retry_start = time.perf_counter()
-
-            candidates = context.get("disambiguation_candidates", [])
-            options = []
-            for i, eid in enumerate(candidates[:4], 1):
-                entity = entity_registry.get_by_id(eid)
-                if entity:
-                    options.append(f"{i}. {entity.canonical_name}")
-
-            # Build clarification debug info
-            _clarification_debug_info = None
-            if debug_mode_enabled:
-                _debug_timing = {
-                    'resolution_ms': round((time.perf_counter() - _retry_start) * 1000, 1),
-                    'total_ms': round((time.perf_counter() - _retry_start) * 1000, 1)
-                }
-                _clarification_debug_info = DebugInfo(
-                    llm_provider="deterministic",
-                    llm_model="pattern-match",
-                    retrieval_mode="entity_registry",
-                    retrieval_method="selection_retry",
-                    chunks_retrieved=len(candidates[:4]),
-                    intent_classified="disambiguation_retry",
-                    routing_path="disambiguation_retry",
-                    timing=_debug_timing
-                )
-
-            return ChatResponse(
-                session_id=session_id,
-                answer=f"I didn't quite catch that. Please reply with just a number:\n\n" + "\n".join(options),
-                sources=[],
-                confidence_level="Medium",
-                confidence_score=50.0,
-                rejected=False,
-                timestamp=datetime.now().isoformat(),
-                mode="clarification",
-                debug_info=_clarification_debug_info,
-                metadata_visible=metadata_visible
-            )
 
     # === PHASE 15: CHECK FOR PENDING DOCUMENT CLARIFICATION ===
     if is_doc_topic_change(query, context):
@@ -2641,65 +2120,7 @@ async def chat(request: ChatRequest):
                 metadata_visible=metadata_visible
             )
 
-    # === PHASE 13: CHECK FOR FOLLOW-UP QUERY WITH CONTEXT ===
-    if context.get("last_entity_id") and is_followup_query(query):
-        # Phase 42: Debug timing for follow-up queries
-        _followup_start = time.perf_counter()
-
-        # This is a follow-up query - use context to resolve directly
-        # Re-resolve the entity from context and return formatted response
-        resolved_entity = entity_registry.get_by_id(context["last_entity_id"])
-        if resolved_entity and resolved_entity.status == "active":
-            answer = format_entity_response(resolved_entity)
-
-            # Log the follow-up resolution
-            query_logger.log_query(
-                query=query,
-                session_id=session_id,
-                metadata={
-                    "intent": "directory",
-                    "confidence_level": "High",
-                    "confidence_score": 98.0,
-                    "rejected": False,
-                    "resolution_method": "context_followup",
-                    "entity_id": resolved_entity.entity_id,
-                    "canonical_name": resolved_entity.canonical_name,
-                    "phase": "conversation_context"
-                }
-            )
-
-            # Phase 42: Add debug_info for follow-up queries
-            _debug_info = None
-            if debug_mode_enabled:
-                _debug_timing = {
-                    'resolution_ms': round((time.perf_counter() - _followup_start) * 1000, 1),
-                    'total_ms': round((time.perf_counter() - _followup_start) * 1000, 1)
-                }
-                _debug_info = DebugInfo(
-                    llm_provider="deterministic",
-                    llm_model="session-context",
-                    retrieval_mode="conversation_context",
-                    retrieval_method="context_followup",
-                    chunks_retrieved=1,
-                    intent_classified="directory",
-                    routing_path="context_followup",
-                    timing=_debug_timing
-                )
-
-            return ChatResponse(
-                session_id=session_id,
-                answer=answer,
-                sources=[],
-                confidence_level="High",
-                confidence_score=98.0,
-                rejected=False,
-                timestamp=datetime.now().isoformat(),
-                mode="directory",
-                debug_info=_debug_info,
-                metadata_visible=metadata_visible
-            )
-
-    # === PHASE 8: CHECK FOR DIRECTORY QUERY FIRST ===
+    # === CHECK FOR DIRECTORY QUERY ===
     # Directory queries get stricter handling (HIGH confidence required)
     if is_directory_query(query):
         intent_metadata = {
@@ -4406,323 +3827,6 @@ async def download_test_harness_results():
             "Content-Disposition": f"attachment; filename=test_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
         }
     )
-
-
-# ==============================================================================
-# ADMIN ENTITY ENDPOINTS - Phase 10
-# ==============================================================================
-
-@app.get("/admin/entities", dependencies=[Depends(verify_admin_session)])
-async def list_entities():
-    """
-    List all directory entities.
-
-    Returns:
-        List of entities with metadata including status
-    """
-    from dataclasses import asdict
-
-    entities = []
-    for entity in entity_registry.get_all_entities():
-        entity_dict = asdict(entity)
-        entities.append(entity_dict)
-
-    # Sort by entity_id for consistent ordering
-    entities.sort(key=lambda x: x['entity_id'])
-
-    return {
-        "entities": entities,
-        "total": len(entities),
-        "active": len([e for e in entities if e.get('status', 'active') == 'active'])
-    }
-
-
-# ==============================================================================
-# ENTITY CSV IMPORT/EXPORT - Phase 10 Extension
-# Note: These routes MUST be defined before the {entity_id} route
-# ==============================================================================
-
-@app.get("/admin/entities/export", dependencies=[Depends(verify_admin_session)])
-async def export_entities():
-    """
-    Export all directory entities to CSV format.
-
-    Returns:
-        CSV file download with all entities
-    """
-    import csv
-    import io
-    from fastapi.responses import StreamingResponse
-
-    # Create CSV in memory
-    output = io.StringIO()
-    writer = csv.writer(output)
-
-    # Write header
-    headers = [
-        'entity_id', 'canonical_name', 'aliases', 'building', 'floor',
-        'room', 'campus', 'department', 'landmarks', 'description', 'status', 'last_updated'
-    ]
-    writer.writerow(headers)
-
-    # Write entity rows
-    for entity in sorted(entity_registry.get_all_entities(), key=lambda e: e.entity_id):
-        # Join aliases with semicolon
-        aliases_str = ';'.join(entity.aliases) if entity.aliases else ''
-
-        row = [
-            entity.entity_id,
-            entity.canonical_name,
-            aliases_str,
-            entity.building,
-            entity.floor,
-            entity.room or '',
-            entity.campus,
-            entity.department or '',
-            entity.landmarks or '',
-            entity.description or '',
-            entity.status,
-            entity.last_updated or ''
-        ]
-        writer.writerow(row)
-
-    # Prepare response
-    output.seek(0)
-    filename = f"directory_entities_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-
-    return StreamingResponse(
-        iter([output.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
-    )
-
-
-@app.post("/admin/entities/import", dependencies=[Depends(verify_admin_session)])
-async def import_entities(file: UploadFile = File(...)):
-    """
-    Import directory entities from CSV file.
-
-    CSV must have columns: entity_id, canonical_name, aliases, building, floor,
-    room, landmarks, description, status
-
-    Import rules:
-    - If entity_id exists → update entity
-    - If entity_id is new → create entity
-    - If status is 'inactive' → soft delete
-    - Changes applied atomically (all-or-nothing)
-
-    Args:
-        file: CSV file upload
-
-    Returns:
-        Import result with stats
-    """
-    import csv
-    import io
-
-    # Validate file type
-    if not file.filename.endswith('.csv'):
-        raise HTTPException(status_code=400, detail="File must be a CSV")
-
-    try:
-        # Read file content
-        content = await file.read()
-        text = content.decode('utf-8-sig')  # Handle BOM from Excel
-
-        # Parse CSV
-        reader = csv.DictReader(io.StringIO(text))
-        entities_data = list(reader)
-
-        if not entities_data:
-            raise HTTPException(status_code=400, detail="CSV file is empty")
-
-        # Perform bulk import
-        success, message, stats = entity_registry.bulk_import(entities_data)
-
-        if not success:
-            return {
-                "status": "error",
-                "message": message,
-                "stats": stats
-            }
-
-        return {
-            "status": "success",
-            "message": message,
-            "stats": stats
-        }
-
-    except UnicodeDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid file encoding. Please use UTF-8.")
-    except csv.Error as e:
-        raise HTTPException(status_code=400, detail=f"CSV parsing error: {str(e)}")
-
-
-@app.get("/admin/entities/{entity_id}", dependencies=[Depends(verify_admin_session)])
-async def get_entity(entity_id: str):
-    """
-    Get a single directory entity by ID.
-
-    Args:
-        entity_id: Entity identifier
-
-    Returns:
-        Entity data
-
-    Raises:
-        404: Entity not found
-    """
-    from dataclasses import asdict
-
-    entity = entity_registry.get_by_id(entity_id.upper())
-    if not entity:
-        raise HTTPException(status_code=404, detail=f"Entity '{entity_id}' not found")
-
-    return {
-        "entity": asdict(entity)
-    }
-
-
-@app.post("/admin/entities", dependencies=[Depends(verify_admin_session)])
-async def create_entity(entity_data: EntityCreate):
-    """
-    Create a new directory entity.
-
-    Args:
-        entity_data: Entity creation data
-
-    Returns:
-        Success message with created entity
-
-    Raises:
-        400: Validation error or duplicate ID
-    """
-    from dataclasses import asdict
-
-    success, message = entity_registry.add_entity(
-        entity_id=entity_data.entity_id,
-        canonical_name=entity_data.canonical_name,
-        aliases=entity_data.aliases,
-        building=entity_data.building,
-        floor=entity_data.floor,
-        room=entity_data.room,
-        campus=entity_data.campus,
-        department=entity_data.department,
-        landmarks=entity_data.landmarks,
-        description=entity_data.description
-    )
-
-    if not success:
-        raise HTTPException(status_code=400, detail=message)
-
-    # Get the created entity to return
-    created_entity = entity_registry.get_by_id(entity_data.entity_id.upper())
-
-    return {
-        "status": "success",
-        "message": message,
-        "entity": asdict(created_entity) if created_entity else None
-    }
-
-
-@app.put("/admin/entities/{entity_id}", dependencies=[Depends(verify_admin_session)])
-async def update_entity(entity_id: str, entity_data: EntityUpdate):
-    """
-    Update an existing directory entity.
-
-    Args:
-        entity_id: Entity identifier
-        entity_data: Fields to update (only non-None values)
-
-    Returns:
-        Success message with updated entity
-
-    Raises:
-        400: Validation error
-        404: Entity not found
-    """
-    from dataclasses import asdict
-
-    # Check if entity exists
-    existing = entity_registry.get_by_id(entity_id.upper())
-    if not existing:
-        raise HTTPException(status_code=404, detail=f"Entity '{entity_id}' not found")
-
-    # Build update kwargs from non-None fields
-    update_kwargs = {}
-    if entity_data.canonical_name is not None:
-        update_kwargs['canonical_name'] = entity_data.canonical_name
-    if entity_data.aliases is not None:
-        update_kwargs['aliases'] = entity_data.aliases
-    if entity_data.building is not None:
-        update_kwargs['building'] = entity_data.building
-    if entity_data.floor is not None:
-        update_kwargs['floor'] = entity_data.floor
-    if entity_data.room is not None:
-        update_kwargs['room'] = entity_data.room
-    if entity_data.campus is not None:
-        update_kwargs['campus'] = entity_data.campus
-    if entity_data.department is not None:
-        update_kwargs['department'] = entity_data.department
-    if entity_data.landmarks is not None:
-        update_kwargs['landmarks'] = entity_data.landmarks
-    if entity_data.description is not None:
-        update_kwargs['description'] = entity_data.description
-    if entity_data.status is not None:
-        update_kwargs['status'] = entity_data.status
-
-    if not update_kwargs:
-        raise HTTPException(status_code=400, detail="No fields to update")
-
-    success, message = entity_registry.update_entity(entity_id, **update_kwargs)
-
-    if not success:
-        raise HTTPException(status_code=400, detail=message)
-
-    # Get the updated entity to return
-    updated_entity = entity_registry.get_by_id(entity_id.upper())
-
-    return {
-        "status": "success",
-        "message": message,
-        "entity": asdict(updated_entity) if updated_entity else None
-    }
-
-
-@app.delete("/admin/entities/{entity_id}", dependencies=[Depends(verify_admin_session)])
-async def delete_entity(entity_id: str, hard: bool = False):
-    """
-    Delete a directory entity (soft or hard delete).
-
-    Soft delete (default): Sets status to 'inactive', entity remains in storage.
-    Hard delete: Permanently removes entity from storage (use with caution).
-
-    Args:
-        entity_id: Entity identifier
-        hard: If True, permanently remove entity
-
-    Returns:
-        Success message
-
-    Raises:
-        404: Entity not found
-    """
-    # Check if entity exists
-    existing = entity_registry.get_by_id(entity_id.upper())
-    if not existing:
-        raise HTTPException(status_code=404, detail=f"Entity '{entity_id}' not found")
-
-    success, message = entity_registry.delete_entity(entity_id, hard=hard)
-
-    if not success:
-        raise HTTPException(status_code=400, detail=message)
-
-    return {
-        "status": "success",
-        "message": message,
-        "entity_id": entity_id.upper(),
-        "delete_type": "hard" if hard else "soft"
-    }
 
 
 # ==============================================================================

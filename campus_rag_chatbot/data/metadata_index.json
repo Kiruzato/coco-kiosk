@@ -1,8 +1,8 @@
 {
   "version": "1.0",
-  "last_updated": "2026-02-15T17:34:52.732284",
+  "last_updated": "2026-02-19T14:39:08.662303",
   "document_id": null,
-  "total_chunks": 852,
+  "total_chunks": 966,
   "indexes": {
     "by_chunk_id": {
       "-2": {
@@ -37,1597 +37,1626 @@
         "entity_type": "deans"
       },
       "0": {
-        "docstore_id": "927ecb5c-473f-403a-8689-37aaf2086f2a",
-        "faiss_idx": 598,
-        "section": "Columban College Directory Entities",
-        "section_title": "Columban College Directory Entities",
+        "docstore_id": "a9afbc87-44fd-41fe-b048-610e55a0a1b0",
+        "faiss_idx": 852,
+        "section": "A Building",
+        "section_title": "Vps",
         "pages": [
-          1
+          1,
+          2,
+          3,
+          6
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "1": {
-        "docstore_id": "a36596b3-bfb7-4e11-8e91-1f5e546a4ef8",
-        "faiss_idx": 599,
+        "docstore_id": "a8526e82-f8dd-44fe-b39f-133c2e1a8a7e",
+        "faiss_idx": 853,
         "section": "General Information",
-        "section_title": "Barretto Campus  Structured Location Knowledge Base",
+        "section_title": "Vps",
         "pages": [
-          1
+          3,
+          7
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "2": {
-        "docstore_id": "e7b04632-782b-467b-8944-cc75d9b57f41",
-        "faiss_idx": 600,
-        "section": "ST. PATRICK BUILDING",
-        "section_title": "ST. PATRICK BUILDING",
+        "docstore_id": "6c34b443-58e1-4531-bdcf-6283a2d68675",
+        "faiss_idx": 854,
+        "section": "General Information",
+        "section_title": "Vps",
         "pages": [
-          1
+          8
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "3": {
-        "docstore_id": "bf1ba557-a749-448e-8fe7-9b43be52e4c6",
-        "faiss_idx": 601,
-        "section": "Entity ID: SP101_CLASS",
-        "section_title": "Entity ID: SP101_CLASS",
+        "docstore_id": "a3253764-15f7-43bb-90d1-863c5191964d",
+        "faiss_idx": 855,
+        "section": "General Information",
+        "section_title": "Vps",
         "pages": [
           1
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "4": {
-        "docstore_id": "6f8bde4c-80c0-4c29-81a4-57dde15eb34b",
-        "faiss_idx": 602,
+        "docstore_id": "ce12dff3-28a5-414f-a8d5-aa0ae79645bd",
+        "faiss_idx": 856,
         "section": "General Information",
-        "section_title": "Room Number: SP101 Building: St. Patrick Building Floor: Ground Floor Type: Classroom",
+        "section_title": "Vps",
         "pages": [
           1
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "5": {
-        "docstore_id": "676855a7-92a7-42b6-bf33-317490600f63",
-        "faiss_idx": 603,
+        "docstore_id": "d67d7127-e707-4006-b58e-aefd262872d3",
+        "faiss_idx": 857,
         "section": "General Information",
-        "section_title": "Location details: Ground floor academic section.",
+        "section_title": "Vps",
         "pages": [
-          1
+          1,
+          2
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "6": {
-        "docstore_id": "4652f9f0-078f-4633-98b9-9b89568180c3",
-        "faiss_idx": 604,
-        "section": "Description: Engineering lecture classroom.",
-        "section_title": "Description: Engineering lecture classroom.",
+        "docstore_id": "d304b1b9-3fe2-4e8a-a009-692322dd1331",
+        "faiss_idx": 858,
+        "section": "General Information",
+        "section_title": "Vps",
         "pages": [
-          1
+          2
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "7": {
-        "docstore_id": "9c08860a-e097-4b4a-91cb-5681223643cf",
-        "faiss_idx": 605,
-        "section": "Entity ID: SP102_CLASS",
-        "section_title": "Entity ID: SP102_CLASS",
+        "docstore_id": "fa53627e-c41c-4bcd-a8e6-496b84395a22",
+        "faiss_idx": 859,
+        "section": "General Information",
+        "section_title": "Vps",
         "pages": [
-          1
+          2
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "8": {
-        "docstore_id": "dbd1017b-255a-4775-a3b6-2193ce237a5a",
-        "faiss_idx": 606,
+        "docstore_id": "80ca5296-ebdc-41f4-abb7-4517a3d4d238",
+        "faiss_idx": 860,
         "section": "General Information",
-        "section_title": "Room Number: SP102 Building: St. Patrick Building Floor: Ground Floor Type: Classroom",
+        "section_title": "Vps",
         "pages": [
-          1
+          2,
+          3
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "9": {
-        "docstore_id": "7c9e4238-b10a-490d-8824-26576f5ff2a3",
-        "faiss_idx": 607,
+        "docstore_id": "f9d1bac4-ba76-43ea-a8a5-51ac95b36fb2",
+        "faiss_idx": 861,
         "section": "General Information",
-        "section_title": "Location details: Ground floor academic section.",
+        "section_title": "Vps",
         "pages": [
-          1
+          3
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "10": {
-        "docstore_id": "6b85733c-12ac-4ff4-ae4a-2a1a8546f6c8",
-        "faiss_idx": 608,
+        "docstore_id": "a6f2227f-aed8-4368-8d9a-fab8458294db",
+        "faiss_idx": 862,
         "section": "General Information",
-        "section_title": "Description: Engineering classroom for regular sessions.",
+        "section_title": "Vps",
         "pages": [
-          1
+          6
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "11": {
-        "docstore_id": "c69daf69-978e-4630-a51b-1835cbd0dcb5",
-        "faiss_idx": 609,
-        "section": "Entity ID: SP103_CHAIR",
-        "section_title": "Entity ID: SP103_CHAIR",
+        "docstore_id": "8c05ae70-252f-4a0e-b1e2-810797096f17",
+        "faiss_idx": 863,
+        "section": "General Information",
+        "section_title": "Vps",
         "pages": [
-          2
+          6
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "12": {
-        "docstore_id": "f0e8dcdc-6bc2-46a6-b88b-2f1f805f4f3b",
-        "faiss_idx": 610,
+        "docstore_id": "d31c2002-82b8-405c-bf46-26dc48278551",
+        "faiss_idx": 864,
         "section": "General Information",
-        "section_title": "Location details: Ground floor near faculty offices.",
+        "section_title": "Vps",
         "pages": [
-          2
+          7
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "13": {
-        "docstore_id": "c8c3d225-6be5-4e8f-8c6a-77eb2666a5a1",
-        "faiss_idx": 611,
-        "section": "Description: Engineering Chairperson office.",
-        "section_title": "Description: Engineering Chairperson office.",
+        "docstore_id": "93ec61d0-8520-464b-9f4c-557a70176071",
+        "faiss_idx": 865,
+        "section": "General Information",
+        "section_title": "Vps",
         "pages": [
-          2
+          7
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "14": {
-        "docstore_id": "b684648a-5895-4428-84d2-5a9fea2f3ddc",
-        "faiss_idx": 612,
-        "section": "Entity ID: SP104_FACULTY",
-        "section_title": "Entity ID: SP104_FACULTY",
+        "docstore_id": "2db97c8c-e23f-4cb4-bd2f-8d26509b2c75",
+        "faiss_idx": 866,
+        "section": "General Information",
+        "section_title": "Vps",
         "pages": [
-          2
+          7
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "15": {
-        "docstore_id": "93089fd1-4623-4e6d-95b9-416ab986a1bb",
-        "faiss_idx": 613,
+        "docstore_id": "7a6edfb0-ba92-47c4-ada9-073a8911f331",
+        "faiss_idx": 867,
         "section": "General Information",
-        "section_title": "Location details: Ground floor beside classrooms.",
+        "section_title": "Vps",
         "pages": [
-          2
+          8
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "16": {
-        "docstore_id": "d4ef86db-94e7-4b55-a41f-c0d299bced9d",
-        "faiss_idx": 614,
-        "section": "Description: Engineering faculty workspace.",
-        "section_title": "Description: Engineering faculty workspace.",
+        "docstore_id": "57c800eb-e5fa-4092-9513-004824717d34",
+        "faiss_idx": 868,
+        "section": "General Information",
+        "section_title": "Vps",
         "pages": [
-          2
+          8
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "17": {
-        "docstore_id": "667e9144-c925-41e3-9707-2dcb5d5292f7",
-        "faiss_idx": 615,
-        "section": "Entity ID: SP105_CONSULT",
-        "section_title": "Entity ID: SP105_CONSULT",
+        "docstore_id": "ec7fef8d-313b-4f40-9359-c5a295deeec8",
+        "faiss_idx": 869,
+        "section": "Columban College Campus Directory",
+        "section_title": "Columban College Campus Directory",
         "pages": [
-          2
+          1
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "18": {
-        "docstore_id": "1873328a-eae0-40fd-8bea-ccf43636ff7c",
-        "faiss_idx": 616,
-        "section": "General Information",
-        "section_title": "Room Number: SP105 Building: St. Patrick Building",
+        "docstore_id": "73b0483f-e70b-4a1e-9bf3-01aa862d5fda",
+        "faiss_idx": 870,
+        "section": "How to Use This Directory",
+        "section_title": "How to Use This Directory",
         "pages": [
-          2
+          1
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "19": {
-        "docstore_id": "8cec85c4-1f82-4672-acb1-8b2b5fd85bcb",
-        "faiss_idx": 617,
-        "section": "General Information",
-        "section_title": "Floor: Ground Floor Type: Consultation Room",
+        "docstore_id": "29f17852-42e9-45bd-a62e-f59e1f054927",
+        "faiss_idx": 871,
+        "section": "B Building",
+        "section_title": "Deans",
         "pages": [
-          3
+          3,
+          4
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "20": {
-        "docstore_id": "d0a55728-16be-4096-8832-010fa5c16a2b",
-        "faiss_idx": 618,
+        "docstore_id": "3eaad6ff-d9c3-451d-aa43-99acf8e25ce3",
+        "faiss_idx": 872,
         "section": "General Information",
-        "section_title": "Location details: Ground floor near faculty offices.",
+        "section_title": "Deans",
         "pages": [
-          3
+          3,
+          4
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "21": {
-        "docstore_id": "c32dfd2f-1bfc-43ad-b06c-47cc624a6162",
-        "faiss_idx": 619,
-        "section": "Entity ID: SP106_DEAN",
-        "section_title": "Entity ID: SP106_DEAN",
+        "docstore_id": "dab8c54a-1c7a-4c8c-9a58-15b2aa02fb27",
+        "faiss_idx": 873,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          3
+          4
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "22": {
-        "docstore_id": "ed89c262-aa56-4b47-b449-774b20ba5f54",
-        "faiss_idx": 620,
+        "docstore_id": "877ee38b-fe05-411a-b5f6-8db9f014f3f0",
+        "faiss_idx": 874,
         "section": "General Information",
-        "section_title": "Location details: Ground floor administrative area.",
+        "section_title": "Deans",
         "pages": [
-          3
+          4
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "23": {
-        "docstore_id": "c7eb383f-c0a4-4f65-b4d0-0ce64e0950aa",
-        "faiss_idx": 621,
-        "section": "Description: Engineering Dean office.",
-        "section_title": "Description: Engineering Dean office.",
+        "docstore_id": "6a49f5bd-f96c-4c7e-bcc6-c46e5840e086",
+        "faiss_idx": 875,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          3
+          4,
+          5
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "24": {
-        "docstore_id": "c3638b8a-98a1-4d8f-a06a-630696b22ff3",
-        "faiss_idx": 622,
-        "section": "Entity ID: SP107_ELECTRIC",
-        "section_title": "Entity ID: SP107_ELECTRIC",
+        "docstore_id": "22c27eee-adb7-4bc2-b559-413cb2d3d444",
+        "faiss_idx": 876,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          3
+          5
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "25": {
-        "docstore_id": "6e1be40d-20be-40c4-a30e-d39c0d4f39f2",
-        "faiss_idx": 623,
+        "docstore_id": "a006ef78-8cd6-453c-9159-f4d6197c1aee",
+        "faiss_idx": 877,
         "section": "General Information",
-        "section_title": "Location details: Ground floor utility section.",
+        "section_title": "Deans",
         "pages": [
-          3
+          5
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "26": {
-        "docstore_id": "056a09cb-8cc6-4259-8587-4cd6eb1a706f",
-        "faiss_idx": 624,
+        "docstore_id": "a222334a-a5d4-4462-99c7-fb22efc7e014",
+        "faiss_idx": 878,
         "section": "General Information",
-        "section_title": "Description: Electrical control and power distribution room.",
+        "section_title": "Deans",
         "pages": [
-          3
+          5,
+          6
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "27": {
-        "docstore_id": "9dc3f006-4c86-4352-a618-d3b5fedf62f9",
-        "faiss_idx": 625,
-        "section": "Entity ID: SP108_CR_F",
-        "section_title": "Entity ID: SP108_CR_F",
+        "docstore_id": "f9886eb1-8b2a-46d4-81b1-d888c432f359",
+        "faiss_idx": 879,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          4
+          6
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "28": {
-        "docstore_id": "a844b265-f539-4a4e-b29e-d0138f693c39",
-        "faiss_idx": 626,
-        "section": "General Information",
-        "section_title": "Location details: Ground floor near classrooms.",
+        "docstore_id": "f3293545-4c50-4518-b1c6-fac5539c729b",
+        "faiss_idx": 880,
+        "section": "E Building",
+        "section_title": "E Building",
         "pages": [
-          4
+          8,
+          9
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "29": {
-        "docstore_id": "d9536f2c-f5cc-4817-a940-7c54b1cbee09",
-        "faiss_idx": 627,
-        "section": "Description: Female comfort room.",
-        "section_title": "Description: Female comfort room.",
+        "docstore_id": "e303fd6b-98ea-4166-8f2b-01216f830813",
+        "faiss_idx": 881,
+        "section": "General Information",
+        "section_title": "E Building",
         "pages": [
-          4
+          9
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "30": {
-        "docstore_id": "fa83afe2-6bb5-40d1-a306-4c21c3c7c764",
-        "faiss_idx": 628,
-        "section": "Entity ID: SP109_CR_M",
-        "section_title": "Entity ID: SP109_CR_M",
+        "docstore_id": "8ea133bc-5946-4218-9ca3-7f406b8e0373",
+        "faiss_idx": 882,
+        "section": "General Information",
+        "section_title": "E Building",
         "pages": [
-          4
+          9
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "31": {
-        "docstore_id": "ce5ef9ac-1096-449a-a3f3-4ada8ee7bee0",
-        "faiss_idx": 629,
+        "docstore_id": "2bb21193-f363-4469-8afb-a25764d39f0c",
+        "faiss_idx": 883,
         "section": "General Information",
-        "section_title": "Location details: Ground floor near classrooms.",
+        "section_title": "E Building",
         "pages": [
-          4
+          9
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "32": {
-        "docstore_id": "9e930718-2df0-4981-989a-89232f108093",
-        "faiss_idx": 630,
-        "section": "Description: Male comfort room.",
-        "section_title": "Description: Male comfort room.",
+        "docstore_id": "a7bad2cf-e680-4bd0-a880-939ac4bb0613",
+        "faiss_idx": 884,
+        "section": "General Information",
+        "section_title": "E Building",
         "pages": [
-          4
+          10
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "33": {
-        "docstore_id": "17546b97-92af-4725-a8be-f9d455d914e8",
-        "faiss_idx": 631,
-        "section": "Entity ID: SP110_CR_PWD",
-        "section_title": "Entity ID: SP110_CR_PWD",
+        "docstore_id": "168f745a-1b41-4b13-9df9-9e7b2538bf5b",
+        "faiss_idx": 885,
+        "section": "General Information",
+        "section_title": "E Building",
         "pages": [
-          4
+          10
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "34": {
-        "docstore_id": "735b1e91-9fb0-4b9d-a67e-80c7b31156ef",
-        "faiss_idx": 632,
+        "docstore_id": "ee724bdf-7719-482d-a5a7-87db5258f662",
+        "faiss_idx": 886,
         "section": "General Information",
-        "section_title": "Room Number: SP110 Building: St. Patrick Building",
+        "section_title": "E Building",
         "pages": [
-          4
+          10
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "35": {
-        "docstore_id": "fb49cf77-0c47-47f4-abc4-ba23a5369e18",
-        "faiss_idx": 633,
+        "docstore_id": "b2195dbc-5cf3-4fec-807c-c944ad55747f",
+        "faiss_idx": 887,
         "section": "General Information",
-        "section_title": "Floor: Ground Floor Type: Comfort Room (PWD)",
+        "section_title": "E Building",
         "pages": [
-          5
+          10,
+          11
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "36": {
-        "docstore_id": "763ad260-7e06-4bbc-aac7-bb54f19d8104",
-        "faiss_idx": 634,
+        "docstore_id": "5fc45e73-80a9-46a1-92bc-8a4b26e245ef",
+        "faiss_idx": 888,
         "section": "General Information",
-        "section_title": "Location details: Ground floor beside other restrooms.",
+        "section_title": "E Building",
         "pages": [
-          5
+          11
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "37": {
-        "docstore_id": "5554d958-fea2-4b88-8e26-190b10d6bef3",
-        "faiss_idx": 635,
-        "section": "Description: Accessible PWD comfort room.",
-        "section_title": "Description: Accessible PWD comfort room.",
+        "docstore_id": "c0e7e9ad-4199-4aed-a8b2-6b8d1235d47a",
+        "faiss_idx": 889,
+        "section": "General Information",
+        "section_title": "E Building",
         "pages": [
-          5
+          11
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "38": {
-        "docstore_id": "f4948826-73a2-4a69-a7ec-f89cba981c31",
-        "faiss_idx": 636,
-        "section": "Entity ID: SP201_SURVEY",
-        "section_title": "Entity ID: SP201_SURVEY",
+        "docstore_id": "fbab1f60-7efd-40e8-bf71-86ec2c94308d",
+        "faiss_idx": 890,
+        "section": "General Information",
+        "section_title": "E Building",
         "pages": [
-          5
+          11
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "39": {
-        "docstore_id": "36ed7894-dd1b-4810-8e70-e1d45045cc96",
-        "faiss_idx": 637,
+        "docstore_id": "e9f8e674-e28f-4f5d-a912-4430742259ea",
+        "faiss_idx": 891,
         "section": "General Information",
-        "section_title": "Location details: Second floor academic wing.",
+        "section_title": "E Building",
         "pages": [
-          5
+          12
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "40": {
-        "docstore_id": "4defdaf1-1646-4b0c-8343-a3afd2ea8aa4",
-        "faiss_idx": 638,
-        "section": "General Information",
-        "section_title": "Description: Surveying laboratory for field measurements.",
+        "docstore_id": "7891bcdf-028c-4179-9d22-8e3c40171e04",
+        "faiss_idx": 892,
+        "section": "H Building",
+        "section_title": "Deans",
         "pages": [
-          5
+          12,
+          13,
+          14
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "41": {
-        "docstore_id": "7fdcd7ef-5ec3-4297-9df2-437040068abf",
-        "faiss_idx": 639,
-        "section": "Entity ID: SP202_ELECTRIC",
-        "section_title": "Entity ID: SP202_ELECTRIC",
+        "docstore_id": "3fb049aa-4638-4e5e-af5c-cdefbda97fe5",
+        "faiss_idx": 893,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          5
+          12
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "42": {
-        "docstore_id": "e35e4bb2-dd13-4e3d-a2b9-6e4040189b9e",
-        "faiss_idx": 640,
+        "docstore_id": "e0fcf37a-3135-41e5-8d80-f5243ce5d70b",
+        "faiss_idx": 894,
         "section": "General Information",
-        "section_title": "Location details: Second floor utility section.",
+        "section_title": "Deans",
         "pages": [
-          5
+          12
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "43": {
-        "docstore_id": "89ab1ec4-a21f-460a-a762-125798d20c8d",
-        "faiss_idx": 641,
-        "section": "Description: Electrical distribution room.",
-        "section_title": "Description: Electrical distribution room.",
+        "docstore_id": "aeaf4711-feeb-4770-8a2d-bf69a52ffe60",
+        "faiss_idx": 895,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          5
+          12,
+          13
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "44": {
-        "docstore_id": "32673c7c-cefa-4c5b-8ab3-7d9f7b2c8c8b",
-        "faiss_idx": 642,
-        "section": "Entity ID: SP203_ELEC_STOCK",
-        "section_title": "Entity ID: SP203_ELEC_STOCK",
+        "docstore_id": "cd5ed5c1-e1fe-4eae-8621-5e06452f5960",
+        "faiss_idx": 896,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          6
+          13
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "45": {
-        "docstore_id": "a5625f91-b7cb-408c-b31a-b10da1b013a0",
-        "faiss_idx": 643,
+        "docstore_id": "76ff4cbf-fc11-474a-a5e2-8aa211816b7b",
+        "faiss_idx": 897,
         "section": "General Information",
-        "section_title": "Location details: Second floor beside electrical room.",
+        "section_title": "Deans",
         "pages": [
-          6
+          13
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "46": {
-        "docstore_id": "7c25f443-e6f7-48e8-9b12-cfccb548338c",
-        "faiss_idx": 644,
-        "section": "Description: Electrical equipment storage.",
-        "section_title": "Description: Electrical equipment storage.",
+        "docstore_id": "7517b0f0-3327-416d-8f93-d729e8a5bf52",
+        "faiss_idx": 898,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          6
+          13
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "47": {
-        "docstore_id": "43046e11-93c4-4801-b8b4-f739b5a21ed3",
-        "faiss_idx": 645,
-        "section": "Entity ID: SP204_ELEX_STOCK",
-        "section_title": "Entity ID: SP204_ELEX_STOCK",
+        "docstore_id": "dd46589b-0849-4b2d-9a2c-6047b5559486",
+        "faiss_idx": 899,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          6
+          14
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "48": {
-        "docstore_id": "3f9eb6b5-5d10-4839-8537-35cfc91b40ef",
-        "faiss_idx": 646,
+        "docstore_id": "794c51e7-f1c9-4349-8a21-905bbaabbf49",
+        "faiss_idx": 900,
         "section": "General Information",
-        "section_title": "Location details: Second floor beside electronics laboratory.",
+        "section_title": "Deans",
         "pages": [
-          6
+          14
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "49": {
-        "docstore_id": "817dfdcf-17c1-4231-afa3-5c86e92fa250",
-        "faiss_idx": 647,
-        "section": "General Information",
-        "section_title": "Description: Electronics tools and components storage.",
+        "docstore_id": "be7fb841-d594-46b6-a175-da38c6f1076b",
+        "faiss_idx": 901,
+        "section": "IP Building",
+        "section_title": "IP Building",
         "pages": [
-          6
+          14
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "50": {
-        "docstore_id": "37e11562-af5f-46fd-b454-4072fe88517c",
-        "faiss_idx": 648,
-        "section": "Entity ID: SP205_ELEX_ROOM",
-        "section_title": "Entity ID: SP205_ELEX_ROOM",
+        "docstore_id": "66a4335e-72e9-48cd-b7b5-8dafdb471140",
+        "faiss_idx": 902,
+        "section": "General Information",
+        "section_title": "IP Building",
         "pages": [
-          6
+          14,
+          15
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "51": {
-        "docstore_id": "dc2c42f4-764c-4284-9068-c64309f85b57",
-        "faiss_idx": 649,
+        "docstore_id": "49792334-57dd-401b-bc5d-fa06127ded53",
+        "faiss_idx": 903,
         "section": "General Information",
-        "section_title": "Room Number: SP205 Building: St. Patrick Building",
+        "section_title": "IP Building",
         "pages": [
-          6
+          15
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "52": {
-        "docstore_id": "614397d8-721d-457b-a674-6c5b872f8a34",
-        "faiss_idx": 650,
+        "docstore_id": "ec62d077-4533-4051-8293-171a297776c8",
+        "faiss_idx": 904,
         "section": "General Information",
-        "section_title": "Floor: Second Floor Type: Electronics Room",
+        "section_title": "IP Building",
         "pages": [
-          7
+          15
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "53": {
-        "docstore_id": "ed7867fd-f36c-4d35-84c3-45f83eb7a8d5",
-        "faiss_idx": 651,
+        "docstore_id": "ff26e5a7-4ddc-4224-9346-7de001948d6f",
+        "faiss_idx": 905,
         "section": "General Information",
-        "section_title": "Location details: Second floor laboratory area.",
+        "section_title": "IP Building",
         "pages": [
-          7
+          15
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "54": {
-        "docstore_id": "050d46f7-169d-4425-bc81-fe64dfb6082c",
-        "faiss_idx": 652,
-        "section": "Description: Electronics and circuits laboratory.",
-        "section_title": "Description: Electronics and circuits laboratory.",
+        "docstore_id": "dd7846dd-4526-435e-8026-118d34969e2f",
+        "faiss_idx": 906,
+        "section": "General Information",
+        "section_title": "IP Building",
         "pages": [
-          7
+          16
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "55": {
-        "docstore_id": "2fa19f01-13c7-4ebe-a739-d19a34f0a6f5",
-        "faiss_idx": 653,
-        "section": "Entity ID: SP206_UTILITY",
-        "section_title": "Entity ID: SP206_UTILITY",
+        "docstore_id": "ede75496-ff2a-4f3f-b0db-75c8f68d4520",
+        "faiss_idx": 907,
+        "section": "General Information",
+        "section_title": "IP Building",
         "pages": [
-          7
+          16
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "56": {
-        "docstore_id": "fa9d4e57-ab49-4cf9-aa89-b2b7a9b6d281",
-        "faiss_idx": 654,
+        "docstore_id": "cad18646-e32a-4625-b695-3ed67d81e0d9",
+        "faiss_idx": 908,
         "section": "General Information",
-        "section_title": "Location details: Second floor service area.",
+        "section_title": "IP Building",
         "pages": [
-          7
+          16
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "57": {
-        "docstore_id": "c40ac512-d62c-4e7e-b597-4c82c5fdac10",
-        "faiss_idx": 655,
-        "section": "Description: Maintenance and utility room.",
-        "section_title": "Description: Maintenance and utility room.",
+        "docstore_id": "85125bc8-f9d6-496a-821b-2548926c8396",
+        "faiss_idx": 909,
+        "section": "General Information",
+        "section_title": "IP Building",
         "pages": [
-          7
+          16,
+          17
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "58": {
-        "docstore_id": "93485f93-8084-493a-a34f-14b793cec82a",
-        "faiss_idx": 656,
-        "section": "Entity ID: SP207_ELECTRIC",
-        "section_title": "Entity ID: SP207_ELECTRIC",
+        "docstore_id": "bd4e13d7-330d-4709-88cf-f28134c69be0",
+        "faiss_idx": 910,
+        "section": "General Information",
+        "section_title": "IP Building",
         "pages": [
-          7
+          17
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "59": {
-        "docstore_id": "d0d4fc59-cf73-4970-9056-b51162a4746d",
-        "faiss_idx": 657,
+        "docstore_id": "e1c58036-ad15-467b-a739-f06fbff06b7e",
+        "faiss_idx": 911,
         "section": "General Information",
-        "section_title": "Location details: Second floor utility section.",
+        "section_title": "IP Building",
         "pages": [
-          7
+          17
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "60": {
-        "docstore_id": "645d8a16-b89f-455d-921e-510e8b0bc6b6",
-        "faiss_idx": 658,
-        "section": "Description: Secondary electrical control room.",
-        "section_title": "Description: Secondary electrical control room.",
+        "docstore_id": "70882a2e-6db0-4982-ae86-3e76f0efe628",
+        "faiss_idx": 912,
+        "section": "General Information",
+        "section_title": "IP Building",
         "pages": [
-          7
+          17
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "61": {
-        "docstore_id": "8ed4a378-c6af-4e93-9e4c-17845ad89ddc",
-        "faiss_idx": 659,
-        "section": "Entity ID: SP208_CR_F",
-        "section_title": "Entity ID: SP208_CR_F",
+        "docstore_id": "f682047c-1eaf-47da-ba17-54103321a2ff",
+        "faiss_idx": 913,
+        "section": "General Information",
+        "section_title": "IP Building",
         "pages": [
-          8
+          18
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "62": {
-        "docstore_id": "9ba82d42-c29e-4772-aa9d-a2d84d41dd1f",
-        "faiss_idx": 660,
+        "docstore_id": "8ec10c19-c2a2-46d8-9751-3008c2fd1f65",
+        "faiss_idx": 914,
         "section": "General Information",
-        "section_title": "Location details: Second floor near classrooms.",
+        "section_title": "IP Building",
         "pages": [
-          8
+          18
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "63": {
-        "docstore_id": "5561bffb-26ff-4c59-961f-e8c1d8b4cce0",
-        "faiss_idx": 661,
-        "section": "Description: Female comfort room.",
-        "section_title": "Description: Female comfort room.",
+        "docstore_id": "5c5e5762-0eb1-4329-95a8-4accf00328d2",
+        "faiss_idx": 915,
+        "section": "General Information",
+        "section_title": "IP Building",
         "pages": [
-          8
+          18
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "64": {
-        "docstore_id": "fe9b639f-ea2c-4d1e-b1a4-07eca0fcb73f",
-        "faiss_idx": 662,
-        "section": "Entity ID: SP209_CR_M",
-        "section_title": "Entity ID: SP209_CR_M",
+        "docstore_id": "55f3ea8a-6bcc-4b1a-a090-df514bc2d7a1",
+        "faiss_idx": 916,
+        "section": "P Building",
+        "section_title": "P Building",
         "pages": [
-          8
+          18,
+          19
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "65": {
-        "docstore_id": "7ce9948b-8dce-421a-bbc3-926691f82a3e",
-        "faiss_idx": 663,
+        "docstore_id": "ece4e369-d809-42f4-be06-2fefd74d9c90",
+        "faiss_idx": 917,
         "section": "General Information",
-        "section_title": "Location details: Second floor near classrooms.",
+        "section_title": "P Building",
         "pages": [
-          8
+          19
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "66": {
-        "docstore_id": "c2eab445-3699-472f-aafd-de43b9319ef3",
-        "faiss_idx": 664,
-        "section": "Description: Male comfort room.",
-        "section_title": "Description: Male comfort room.",
+        "docstore_id": "5ce62180-7dcb-4c26-9961-531c32b9c353",
+        "faiss_idx": 918,
+        "section": "General Information",
+        "section_title": "P Building",
         "pages": [
-          8
+          19
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "67": {
-        "docstore_id": "85b048c8-4436-44b0-b806-718571a57bf6",
-        "faiss_idx": 665,
-        "section": "Entity ID: SP210_CR_PWD",
-        "section_title": "Entity ID: SP210_CR_PWD",
+        "docstore_id": "0b4c8aa7-04d3-4617-bc34-cbcf24e5083b",
+        "faiss_idx": 919,
+        "section": "General Information",
+        "section_title": "P Building",
         "pages": [
-          8
+          19
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "68": {
-        "docstore_id": "51328051-3bf1-475a-b772-dad2211b440e",
-        "faiss_idx": 666,
+        "docstore_id": "be8b6b39-2f12-4760-a7ab-230190cc05ff",
+        "faiss_idx": 920,
         "section": "General Information",
-        "section_title": "Room Number: SP210 Building: St. Patrick Building",
+        "section_title": "P Building",
         "pages": [
-          8
+          20
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "69": {
-        "docstore_id": "fd70e9d0-309e-40db-a1d3-8533b7152491",
-        "faiss_idx": 667,
+        "docstore_id": "33ca6a4c-b30a-4794-93d4-ea64042c34f4",
+        "faiss_idx": 921,
         "section": "General Information",
-        "section_title": "Floor: Second Floor Type: Comfort Room (PWD)",
+        "section_title": "P Building",
         "pages": [
-          9
+          20
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "70": {
-        "docstore_id": "d4a4222f-ad95-41b7-bab4-6d5a4bc04b92",
-        "faiss_idx": 668,
+        "docstore_id": "b1b1cc9e-1f98-4cd1-80a4-6b38d8eda1ea",
+        "faiss_idx": 922,
         "section": "General Information",
-        "section_title": "Location details: Second floor beside other restrooms.",
+        "section_title": "P Building",
         "pages": [
-          9
+          20
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "71": {
-        "docstore_id": "c83ae64d-529f-4bbf-9874-b58e6f3a1fb0",
-        "faiss_idx": 669,
-        "section": "Description: Accessible PWD comfort room.",
-        "section_title": "Description: Accessible PWD comfort room.",
+        "docstore_id": "b9b1e36e-55da-4726-ad7c-0a0eab42a905",
+        "faiss_idx": 923,
+        "section": "P Building Extension",
+        "section_title": "P Building Extension",
         "pages": [
-          9
+          20
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "72": {
-        "docstore_id": "fed51e61-ba81-4969-a582-6dac8e99aa8d",
-        "faiss_idx": 670,
-        "section": "Entity ID: SP301_DRAWING",
-        "section_title": "Entity ID: SP301_DRAWING",
+        "docstore_id": "53e3e2fd-4f2c-4735-8e65-4d73f052ea9d",
+        "faiss_idx": 924,
+        "section": "General Information",
+        "section_title": "P Building Extension",
         "pages": [
-          9
+          21
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "73": {
-        "docstore_id": "52c828b9-5263-4886-8891-97456261249b",
-        "faiss_idx": 671,
-        "section": "Description: Drawing and drafting laboratory.",
-        "section_title": "Location details: Third floor academic corridor.",
+        "docstore_id": "2b6e00e9-78b1-4d51-96a2-600931626cdb",
+        "faiss_idx": 925,
+        "section": "General Information",
+        "section_title": "P Building Extension",
         "pages": [
-          9
+          21
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "74": {
-        "docstore_id": "d94df9c3-929d-436c-aa99-3da2abf1d498",
-        "faiss_idx": 672,
-        "section": "Entity ID: SP302_COMLAB1",
-        "section_title": "Entity ID: SP302_COMLAB1",
+        "docstore_id": "08532058-8050-4a19-a49f-19f48413a7ee",
+        "faiss_idx": 926,
+        "section": "St. Agatha's Building",
+        "section_title": "Deans",
         "pages": [
-          9
+          21,
+          22,
+          25
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "75": {
-        "docstore_id": "5315f4c4-6845-4541-b21a-d1a2007c1818",
-        "faiss_idx": 673,
+        "docstore_id": "ee65410f-222a-4356-acd8-a564ce0cfdbe",
+        "faiss_idx": 927,
         "section": "General Information",
-        "section_title": "Location details: Third floor ICT section.",
+        "section_title": "Deans",
         "pages": [
-          9
+          25
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "76": {
-        "docstore_id": "e98bb9c0-f33a-4628-b3ba-dc212b544f6d",
-        "faiss_idx": 674,
+        "docstore_id": "df4bb06b-bfb3-489f-9194-c29b40ea9a1d",
+        "faiss_idx": 928,
         "section": "General Information",
-        "section_title": "Description: Computer laboratory for engineering applications.",
+        "section_title": "Deans",
         "pages": [
-          9
+          26
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "77": {
-        "docstore_id": "740f17c3-04f7-4ca7-abce-2d405f068ff0",
-        "faiss_idx": 675,
-        "section": "Entity ID: SP303_COMLAB2",
-        "section_title": "Entity ID: SP303_COMLAB2",
+        "docstore_id": "628d3894-0a5e-49a6-bb49-f2f8180c23d9",
+        "faiss_idx": 929,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          10
+          26
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "78": {
-        "docstore_id": "934fdcc7-986f-416c-9cab-81d4287b5594",
-        "faiss_idx": 676,
+        "docstore_id": "5486c32c-67cd-407c-bcbf-c8ee9ea3a57d",
+        "faiss_idx": 930,
         "section": "General Information",
-        "section_title": "Location details: Third floor beside main ICT lab.",
+        "section_title": "Deans",
         "pages": [
-          10
+          27
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "79": {
-        "docstore_id": "efb6fd5e-9daf-414e-98b9-3e115620752d",
-        "faiss_idx": 677,
-        "section": "Description: Secondary computer laboratory.",
-        "section_title": "Description: Secondary computer laboratory.",
+        "docstore_id": "79d9496f-5528-4123-bf9d-5ee46d5e1a2f",
+        "faiss_idx": 931,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          10
+          28
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "80": {
-        "docstore_id": "4c5f811c-c556-4862-a5ca-e031f821270c",
-        "faiss_idx": 678,
-        "section": "Entity ID: SP304_UTILITY",
-        "section_title": "Entity ID: SP304_UTILITY",
+        "docstore_id": "a1ff7d4a-9e64-4e09-9ece-5b006953807d",
+        "faiss_idx": 932,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          10
+          28,
+          29
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "81": {
-        "docstore_id": "c973de18-d790-4265-806b-510d84d6057b",
-        "faiss_idx": 679,
+        "docstore_id": "b5f9a5e2-1901-459a-b984-e4a116db5798",
+        "faiss_idx": 933,
         "section": "General Information",
-        "section_title": "Location details: Third floor service area.",
+        "section_title": "Deans",
         "pages": [
-          10
+          29,
+          30
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "82": {
-        "docstore_id": "0cf24859-994e-4824-8359-e7d38bfb3806",
-        "faiss_idx": 680,
-        "section": "Description: Building maintenance room.",
-        "section_title": "Description: Building maintenance room.",
+        "docstore_id": "d87038b1-cee7-4ec5-b39f-41ee2f4aad6d",
+        "faiss_idx": 934,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          10
+          21
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "83": {
-        "docstore_id": "1edd66c9-d812-4c4a-9fc4-396edeada2c4",
-        "faiss_idx": 681,
-        "section": "Entity ID: SP305_ELECTRIC",
-        "section_title": "Entity ID: SP305_ELECTRIC",
+        "docstore_id": "76871a9b-d36f-4af9-a125-ea8b6a627041",
+        "faiss_idx": 935,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          10
+          21,
+          22
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "84": {
-        "docstore_id": "ae5de181-0246-48f6-8cc7-893b63c6fe85",
-        "faiss_idx": 682,
+        "docstore_id": "9928ffac-66fc-4de9-a583-70a71bcd16fd",
+        "faiss_idx": 936,
         "section": "General Information",
-        "section_title": "Room Number: SP305 Building: St. Patrick Building",
+        "section_title": "Deans",
         "pages": [
-          10
+          22
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "85": {
-        "docstore_id": "7867da8c-fb8a-4198-92de-936f9e5df59f",
-        "faiss_idx": 683,
+        "docstore_id": "d7cbf914-fcea-43c3-84ba-763547615dff",
+        "faiss_idx": 937,
         "section": "General Information",
-        "section_title": "Floor: Third Floor Type: Electrical Room",
+        "section_title": "Deans",
         "pages": [
-          11
+          25
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "86": {
-        "docstore_id": "58104a30-77fa-4091-9860-36a563d94cbb",
-        "faiss_idx": 684,
+        "docstore_id": "7b781609-ebd4-4e3f-9f89-ab18afcf107d",
+        "faiss_idx": 938,
         "section": "General Information",
-        "section_title": "Location details: Third floor utility section.",
+        "section_title": "Deans",
         "pages": [
-          11
+          26
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "87": {
-        "docstore_id": "0985ebae-9b29-49cd-8e52-3ec71a085d34",
-        "faiss_idx": 685,
-        "section": "Description: Electrical systems room.",
-        "section_title": "Description: Electrical systems room.",
+        "docstore_id": "72e74e72-00c4-4d42-b7f5-ab0fabf66966",
+        "faiss_idx": 939,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          11
+          26,
+          27
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "88": {
-        "docstore_id": "f196d806-0c25-4c0f-8321-f61a2ba2bc04",
-        "faiss_idx": 686,
-        "section": "Entity ID: SP306_CR_F",
-        "section_title": "Entity ID: SP306_CR_F",
+        "docstore_id": "013df83c-ce13-417f-860a-8bec9b094819",
+        "faiss_idx": 940,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          11
+          27
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "89": {
-        "docstore_id": "eb9d7ea7-e666-49e7-b476-492313af403d",
-        "faiss_idx": 687,
+        "docstore_id": "761a756d-84d6-4476-80b1-6b086d6c46cc",
+        "faiss_idx": 941,
         "section": "General Information",
-        "section_title": "Location details: Third floor near classrooms.",
+        "section_title": "Deans",
         "pages": [
-          11
+          27
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "90": {
-        "docstore_id": "6e2ced63-7b41-4633-9f83-6bc2c209edc4",
-        "faiss_idx": 688,
-        "section": "Description: Female comfort room.",
-        "section_title": "Description: Female comfort room.",
+        "docstore_id": "61bec7d4-4650-4e75-a09c-300fc64ed9ed",
+        "faiss_idx": 942,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          11
+          28
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "91": {
-        "docstore_id": "8780c1d2-db27-4918-b34a-d3ff80bdc462",
-        "faiss_idx": 689,
-        "section": "Entity ID: SP307_CR_M",
-        "section_title": "Entity ID: SP307_CR_M",
+        "docstore_id": "d3410d1d-879b-4351-8d75-cfcba90595ad",
+        "faiss_idx": 943,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          11
+          28
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "92": {
-        "docstore_id": "24f49c97-d8fd-4235-99ae-9d32b3cc3106",
-        "faiss_idx": 690,
+        "docstore_id": "8aef23c8-3975-4fa4-a11b-a3e35d63aa42",
+        "faiss_idx": 944,
         "section": "General Information",
-        "section_title": "Location details: Third floor near classrooms.",
+        "section_title": "Deans",
         "pages": [
-          11
+          29
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "93": {
-        "docstore_id": "b213f90b-d991-420e-9234-d31bead55566",
-        "faiss_idx": 691,
-        "section": "Description: Male comfort room.",
-        "section_title": "Description: Male comfort room.",
+        "docstore_id": "a82632f2-f9e0-436f-b5c5-e2f00220d807",
+        "faiss_idx": 945,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          11
+          29
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "94": {
-        "docstore_id": "d0df3c49-3c19-4b75-916a-5502d0ad4403",
-        "faiss_idx": 692,
-        "section": "Entity ID: SP308_CR_PWD",
-        "section_title": "Entity ID: SP308_CR_PWD",
+        "docstore_id": "262e3894-0529-4f5b-ac28-5c958ea0d125",
+        "faiss_idx": 946,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          12
+          29,
+          30
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "95": {
-        "docstore_id": "5fbee1d3-cafe-4222-b0da-d861a8936899",
-        "faiss_idx": 693,
+        "docstore_id": "62d5a5b4-1843-45ad-8bed-7dba28f47bfc",
+        "faiss_idx": 947,
         "section": "General Information",
-        "section_title": "Location details: Third floor beside other restrooms.",
+        "section_title": "Deans",
         "pages": [
-          12
+          30
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "96": {
-        "docstore_id": "61b99fba-8c6c-47f7-a370-31344264e1bc",
-        "faiss_idx": 694,
-        "section": "Description: Accessible PWD comfort room.",
-        "section_title": "Description: Accessible PWD comfort room.",
+        "docstore_id": "d0900460-9b61-475c-8b67-d0013dcd8069",
+        "faiss_idx": 948,
+        "section": "General Information",
+        "section_title": "Deans",
         "pages": [
-          12
+          30
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "97": {
-        "docstore_id": "a1c3d201-914f-4470-8aed-26ba4c3bc33e",
-        "faiss_idx": 695,
-        "section": "Entity ID: SP401_PHYSICS",
-        "section_title": "Entity ID: SP401_PHYSICS",
+        "docstore_id": "f6e05d67-3c58-46f9-a2e8-2da312d5fcf5",
+        "faiss_idx": 949,
+        "section": "St. Augustine Building",
+        "section_title": "St. Augustine Building",
         "pages": [
-          12
+          22
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "98": {
-        "docstore_id": "e715ae35-38f7-48c4-a2c0-aa00900725c5",
-        "faiss_idx": 696,
+        "docstore_id": "4b7e4168-4842-46ce-b183-98e755062a64",
+        "faiss_idx": 950,
         "section": "General Information",
-        "section_title": "Location details: Fourth floor science wing.",
+        "section_title": "St. Augustine Building",
         "pages": [
-          12
+          22,
+          23
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "99": {
-        "docstore_id": "e7a7566c-72aa-4dd8-9452-3a4861a0d672",
-        "faiss_idx": 697,
+        "docstore_id": "cf335780-2639-42c1-b1b5-8bc46a7c8f95",
+        "faiss_idx": 951,
         "section": "General Information",
-        "section_title": "Description: Physics laboratory for experiments and demonstrations.",
+        "section_title": "St. Augustine Building",
         "pages": [
-          12
+          23
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "100": {
-        "docstore_id": "85baf495-df3f-49b7-aed4-dffbc15cf66b",
-        "faiss_idx": 698,
-        "section": "Entity ID: SP402_PHYS_STOCK",
-        "section_title": "Entity ID: SP402_PHYS_STOCK",
+        "docstore_id": "f2b89417-cf86-4819-941d-ce2621784964",
+        "faiss_idx": 952,
+        "section": "General Information",
+        "section_title": "St. Augustine Building",
         "pages": [
-          12
+          23
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "101": {
-        "docstore_id": "2ab5afa8-5950-4cf9-8f87-341ff7d2ee19",
-        "faiss_idx": 699,
+        "docstore_id": "671079c3-9b34-4d97-955a-9ea6dc569bdb",
+        "faiss_idx": 953,
         "section": "General Information",
-        "section_title": "Room Number: SP402 Building: St. Patrick Building",
+        "section_title": "St. Augustine Building",
         "pages": [
-          12
+          23,
+          24
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "102": {
-        "docstore_id": "ada7e92e-4615-4ee4-90d1-3d141db3ab60",
-        "faiss_idx": 700,
+        "docstore_id": "8234f4cb-590e-4dca-ba43-f6535f528112",
+        "faiss_idx": 954,
         "section": "General Information",
-        "section_title": "Floor: Fourth Floor Type: Physics Stock Room",
+        "section_title": "St. Augustine Building",
         "pages": [
-          13
+          24
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "103": {
-        "docstore_id": "f315f56e-9feb-4dd0-8367-e0c9623d3f41",
-        "faiss_idx": 701,
+        "docstore_id": "b95b2d1d-aa17-47eb-aab9-6eaa6e6ffa30",
+        "faiss_idx": 955,
         "section": "General Information",
-        "section_title": "Location details: Fourth floor beside physics lab.",
+        "section_title": "St. Augustine Building",
         "pages": [
-          13
+          24
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "104": {
-        "docstore_id": "ab7f7a23-2924-476d-9fcd-73033ef24681",
-        "faiss_idx": 702,
-        "section": "Description: Physics equipment storage.",
-        "section_title": "Description: Physics equipment storage.",
+        "docstore_id": "237289b7-4be4-48e4-b75d-fa6c2c50559f",
+        "faiss_idx": 956,
+        "section": "General Information",
+        "section_title": "St. Augustine Building",
         "pages": [
-          13
+          24
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "105": {
-        "docstore_id": "1b9dbbbd-d035-4eec-bac4-2a228c38e32d",
-        "faiss_idx": 703,
-        "section": "Entity ID: SP403_CHEM_STOCK",
-        "section_title": "Entity ID: SP403_CHEM_STOCK",
+        "docstore_id": "8a819d23-9d60-4ac2-82ae-b78d83947410",
+        "faiss_idx": 957,
+        "section": "General Information",
+        "section_title": "St. Augustine Building",
         "pages": [
-          13
+          24,
+          25
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "106": {
-        "docstore_id": "fa4a8134-867e-45fd-932b-60ce8eff2c71",
-        "faiss_idx": 704,
+        "docstore_id": "19ba1594-1a7c-4818-ba79-fca13bacb300",
+        "faiss_idx": 958,
         "section": "General Information",
-        "section_title": "Location details: Fourth floor beside chemistry lab.",
+        "section_title": "St. Augustine Building",
         "pages": [
-          13
+          25
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "107": {
-        "docstore_id": "b99e0176-73ae-4118-9886-5d597a8d3240",
-        "faiss_idx": 705,
-        "section": "Description: Chemistry materials storage.",
-        "section_title": "Description: Chemistry materials storage.",
+        "docstore_id": "0682eb2a-6413-42cf-a193-37846a58eaf1",
+        "faiss_idx": 959,
+        "section": "V Building",
+        "section_title": "V Building",
         "pages": [
-          13
+          30
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "108": {
-        "docstore_id": "c0219de0-cae2-46f9-8fe4-47825f90324e",
-        "faiss_idx": 706,
-        "section": "Entity ID: SP404_CHEM_ROOM",
-        "section_title": "Entity ID: SP404_CHEM_ROOM",
+        "docstore_id": "c01c44b1-0e75-40ad-a580-481eafc1a1b7",
+        "faiss_idx": 960,
+        "section": "General Information",
+        "section_title": "V Building",
         "pages": [
-          13
+          31
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "109": {
-        "docstore_id": "52dab40e-b7e9-4a59-89ab-5b6a013873c6",
-        "faiss_idx": 707,
+        "docstore_id": "8d8b5808-31ac-45fc-80cb-c7f668a38951",
+        "faiss_idx": 961,
         "section": "General Information",
-        "section_title": "Location details: Fourth floor science wing.",
+        "section_title": "V Building",
         "pages": [
-          13
+          31
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "110": {
-        "docstore_id": "4e22be06-e1cb-4c56-8c14-bee84ccc6232",
-        "faiss_idx": 708,
+        "docstore_id": "3ab85367-a3a0-4e9a-afc5-4ff814c98d0b",
+        "faiss_idx": 962,
         "section": "General Information",
-        "section_title": "Description: Chemistry laboratory for practical experiments.",
+        "section_title": "V Building",
         "pages": [
-          13
+          31
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "111": {
-        "docstore_id": "900340c5-a170-4ead-bdf7-5a342229d13d",
-        "faiss_idx": 709,
-        "section": "Entity ID: SP405_UTILITY",
-        "section_title": "Entity ID: SP405_UTILITY",
+        "docstore_id": "933ceeae-7088-4c97-a8df-59f683ccc3d7",
+        "faiss_idx": 963,
+        "section": "General Information",
+        "section_title": "V Building",
         "pages": [
-          14
+          31,
+          32
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "112": {
-        "docstore_id": "829314ef-1e29-4ee3-aee1-fd541dea6312",
-        "faiss_idx": 710,
+        "docstore_id": "c52d2079-d134-498b-a37a-64069764187a",
+        "faiss_idx": 964,
         "section": "General Information",
-        "section_title": "Location details: Fourth floor service area.",
+        "section_title": "V Building",
         "pages": [
-          14
+          32
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
       },
       "113": {
-        "docstore_id": "aa29a68f-89c5-47c9-b441-ab8cf9ea39a4",
-        "faiss_idx": 711,
-        "section": "Description: Maintenance support room.",
-        "section_title": "Description: Maintenance support room.",
+        "docstore_id": "f89cd515-7bb2-4deb-930e-8d9f210335e2",
+        "faiss_idx": 965,
+        "section": "General Information",
+        "section_title": "Document generated: 2026-02-19 Total locations: 220 Source: Columban College Directory Entity System",
         "pages": [
-          14
+          32
         ],
-        "document_id": "ef31eafb11d56b2081dd9d974836b94e",
-        "document_name": "Columban_College_Barretto_Campus_Directory_RAG_Knowledge_Base.pdf",
+        "document_id": "a435baed024068944d5c819d362bd51e",
+        "document_name": "Columban_College_Directory_RAG_Knowledge_Base.pdf",
         "is_synthetic": false,
         "is_appendix": false,
         "entity_type": null
@@ -7147,27 +7176,43 @@
         1,
         1,
         1,
+        1,
         2,
+        2,
+        3,
         3,
         4,
         4,
         4,
+        4,
         5,
         5,
+        5,
+        6,
         6,
         6,
         7,
+        7,
+        8,
         8,
         8,
         9,
         9,
+        9,
         10,
         10,
+        10,
+        11,
         11,
         11,
         12,
+        12,
         13,
+        13,
+        14,
         15,
+        15,
+        16,
         16,
         16,
         17,
@@ -7176,70 +7221,117 @@
         19,
         20,
         20,
+        20,
+        21,
         21,
         22,
+        22,
+        23,
         23,
         24,
+        24,
+        25,
         25,
         26,
+        26,
+        27,
         27,
         28,
         28,
         29,
+        29,
+        30,
         30,
         31,
+        31,
         32,
+        32,
+        33,
+        34,
         34,
         34,
         35,
         35,
+        35,
+        36,
         36,
         36,
         37,
+        37,
+        38,
+        39,
         39,
         39,
         40,
+        41,
+        42,
         42,
         43,
+        43,
+        44,
         44,
         45,
+        45,
+        46,
+        47,
         47,
         48,
         48,
+        48,
         49,
         49,
+        50,
         51,
         51,
+        51,
+        52,
         52,
         53,
         53,
         53,
+        53,
         54,
+        54,
+        55,
+        56,
         56,
         56,
         57,
         57,
+        57,
+        58,
         58,
         58,
         59,
+        59,
         60,
+        60,
+        61,
         61,
         62,
         62,
+        62,
+        63,
         63,
         63,
         64,
         65,
         65,
+        65,
         66,
         66,
+        66,
+        67,
         67,
         68,
         68,
         68,
+        68,
         69,
         69,
         69,
+        69,
+        70,
         70,
         70,
         70,
@@ -7247,6 +7339,8 @@
         71,
         72,
         72,
+        72,
+        73,
         73,
         73,
         74,
@@ -7254,45 +7348,82 @@
         75,
         75,
         75,
+        75,
         76,
         76,
+        76,
+        77,
+        78,
         78,
         78,
         79,
+        79,
+        80,
         80,
         81,
         81,
+        81,
         82,
+        82,
+        83,
         83,
         84,
         84,
+        84,
+        85,
         85,
         86,
+        86,
+        87,
+        88,
         88,
         89,
         89,
+        89,
+        90,
         90,
         91,
+        91,
         92,
+        92,
+        93,
+        94,
         95,
+        95,
+        96,
         98,
         98,
+        98,
+        99,
         99,
         99,
         100,
+        100,
+        101,
         101,
         101,
         102,
         102,
+        102,
         103,
         103,
+        103,
+        104,
+        105,
+        106,
         106,
         107,
+        108,
+        109,
         109,
         109,
         110,
         110,
+        110,
+        111,
         112,
+        112,
+        113,
         115,
         115,
         117,
@@ -8692,6 +8823,42 @@
       ],
       "Entity ID: NB106_CLASSROOM": [
         251
+      ],
+      "A Building": [
+        0
+      ],
+      "Columban College Campus Directory": [
+        17
+      ],
+      "How to Use This Directory": [
+        18
+      ],
+      "B Building": [
+        19
+      ],
+      "E Building": [
+        28
+      ],
+      "H Building": [
+        40
+      ],
+      "IP Building": [
+        49
+      ],
+      "P Building": [
+        64
+      ],
+      "P Building Extension": [
+        71
+      ],
+      "St. Agatha's Building": [
+        74
+      ],
+      "St. Augustine Building": [
+        97
+      ],
+      "V Building": [
+        107
       ]
     },
     "by_section_title": {
@@ -8701,15 +8868,33 @@
       ],
       "Deans": [
         -1,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
         39,
         40,
+        40,
+        41,
         41,
         42,
+        42,
+        43,
         43,
         44,
+        44,
+        45,
         45,
         46,
+        46,
         47,
+        47,
+        48,
         48,
         49,
         50,
@@ -8727,6 +8912,29 @@
         70,
         71,
         72,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
         116,
         117,
         181,
@@ -9657,6 +9865,23 @@
         428
       ],
       "Vps": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
         431,
         496
       ],
@@ -10780,6 +11005,80 @@
       ],
       "Location details: Nursing building hallway end.": [
         252
+      ],
+      "Columban College Campus Directory": [
+        17
+      ],
+      "How to Use This Directory": [
+        18
+      ],
+      "E Building": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "IP Building": [
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63
+      ],
+      "P Building": [
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70
+      ],
+      "P Building Extension": [
+        71,
+        72,
+        73
+      ],
+      "St. Augustine Building": [
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106
+      ],
+      "V Building": [
+        107,
+        108,
+        109,
+        110,
+        111,
+        112
+      ],
+      "Document generated: 2026-02-19 Total locations: 220 Source: Columban College Directory Entity System": [
+        113
       ]
     },
     "by_page": {
@@ -10831,6 +11130,7 @@
         0,
         0,
         0,
+        0,
         1,
         1,
         1,
@@ -10841,9 +11141,12 @@
         3,
         3,
         3,
+        3,
         4,
         4,
         4,
+        4,
+        5,
         5,
         5,
         5,
@@ -10858,17 +11161,24 @@
         9,
         10,
         12,
-        13
+        13,
+        17,
+        18
       ],
       "2": [
+        0,
         0,
         2,
         3,
         4,
         4,
         5,
+        5,
+        6,
         6,
         7,
+        7,
+        8,
         8,
         8,
         9,
@@ -10883,12 +11193,16 @@
         18
       ],
       "3": [
+        0,
+        1,
         1,
         2,
         3,
         4,
         7,
         8,
+        8,
+        9,
         9,
         10,
         11,
@@ -10902,6 +11216,8 @@
         18,
         19,
         19,
+        19,
+        20,
         20,
         20,
         21,
@@ -10913,8 +11229,13 @@
       ],
       "4": [
         11,
+        19,
+        20,
+        21,
         21,
         22,
+        22,
+        23,
         23,
         24,
         25,
@@ -10950,6 +11271,10 @@
         15,
         16,
         17,
+        23,
+        24,
+        25,
+        26,
         35,
         36,
         37,
@@ -10966,10 +11291,15 @@
         48
       ],
       "6": [
+        0,
+        10,
+        11,
         18,
         19,
         20,
         21,
+        26,
+        27,
         44,
         45,
         46,
@@ -10984,6 +11314,10 @@
         51
       ],
       "7": [
+        1,
+        12,
+        13,
+        14,
         22,
         23,
         24,
@@ -11003,10 +11337,14 @@
         60
       ],
       "8": [
+        2,
+        15,
+        16,
         24,
         25,
         26,
         27,
+        28,
         28,
         56,
         57,
@@ -11021,8 +11359,12 @@
         68
       ],
       "9": [
+        28,
+        29,
         29,
         30,
+        30,
+        31,
         31,
         32,
         59,
@@ -11038,8 +11380,12 @@
         76
       ],
       "10": [
+        32,
+        33,
         33,
         34,
+        34,
+        35,
         62,
         63,
         64,
@@ -11054,8 +11400,12 @@
       ],
       "11": [
         35,
+        35,
+        36,
         36,
         37,
+        37,
+        38,
         38,
         64,
         65,
@@ -11072,6 +11422,11 @@
       ],
       "12": [
         39,
+        39,
+        40,
+        41,
+        42,
+        43,
         66,
         67,
         94,
@@ -11086,8 +11441,13 @@
       "13": [
         39,
         40,
+        40,
         41,
         42,
+        43,
+        44,
+        45,
+        46,
         68,
         69,
         70,
@@ -11107,6 +11467,10 @@
         56,
         57,
         58,
+        64,
+        65,
+        66,
+        67,
         154,
         155,
         156,
@@ -11117,9 +11481,14 @@
         161
       ],
       "14": [
+        40,
         42,
         43,
         44,
+        47,
+        48,
+        49,
+        50,
         71,
         72,
         73,
@@ -11138,6 +11507,10 @@
         45,
         46,
         47,
+        50,
+        51,
+        52,
+        53,
         74,
         75,
         76,
@@ -11156,6 +11529,10 @@
         48,
         49,
         50,
+        54,
+        55,
+        56,
+        57,
         128,
         129,
         130,
@@ -11172,6 +11549,10 @@
         51,
         52,
         53,
+        57,
+        58,
+        59,
+        60,
         137,
         138,
         139,
@@ -11188,6 +11569,10 @@
         54,
         55,
         56,
+        61,
+        62,
+        63,
+        64,
         147,
         148,
         149,
@@ -11205,6 +11590,10 @@
         63,
         64,
         65,
+        68,
+        69,
+        70,
+        71,
         162,
         163,
         164,
@@ -11222,6 +11611,11 @@
         67,
         68,
         69,
+        72,
+        73,
+        74,
+        82,
+        83,
         171,
         172,
         173,
@@ -11238,6 +11632,11 @@
         72,
         73,
         74,
+        74,
+        83,
+        84,
+        97,
+        98,
         179,
         180,
         181,
@@ -11256,6 +11655,10 @@
         78,
         79,
         80,
+        98,
+        99,
+        100,
+        101,
         187,
         188,
         189,
@@ -11271,6 +11674,11 @@
         82,
         83,
         84,
+        101,
+        102,
+        103,
+        104,
+        105,
         196,
         197,
         198,
@@ -11283,10 +11691,15 @@
         205
       ],
       "25": [
+        74,
+        75,
+        85,
         85,
         86,
         87,
         88,
+        105,
+        106,
         205,
         206,
         207,
@@ -11297,6 +11710,10 @@
         212
       ],
       "26": [
+        76,
+        77,
+        86,
+        87,
         89,
         90,
         213,
@@ -11311,6 +11728,10 @@
         222
       ],
       "27": [
+        78,
+        87,
+        88,
+        89,
         91,
         92,
         93,
@@ -11325,6 +11746,10 @@
         228
       ],
       "28": [
+        79,
+        80,
+        90,
+        91,
         96,
         97,
         98,
@@ -11343,6 +11768,11 @@
         237
       ],
       "29": [
+        80,
+        81,
+        92,
+        93,
+        94,
         102,
         103,
         238,
@@ -11354,9 +11784,14 @@
         244
       ],
       "30": [
+        81,
+        94,
+        95,
+        96,
         104,
         105,
         106,
+        107,
         107,
         108,
         109,
@@ -11371,12 +11806,19 @@
         253
       ],
       "31": [
+        108,
         109,
-        110
+        109,
+        110,
+        110,
+        111
       ],
       "32": [
         111,
+        111,
         112,
+        112,
+        113,
         113
       ],
       "33": [
@@ -12813,6 +13255,122 @@
         251,
         252,
         253
+      ],
+      "a435baed024068944d5c819d362bd51e": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113
       ]
     },
     "synthetic_chunks": [
@@ -12830,10 +13388,10 @@
     ]
   },
   "stats": {
-    "sections": 354,
-    "section_titles": 617,
+    "sections": 366,
+    "section_titles": 626,
     "pages": 120,
-    "documents": 5,
+    "documents": 6,
     "synthetic": 2,
     "appendix": 7
   }

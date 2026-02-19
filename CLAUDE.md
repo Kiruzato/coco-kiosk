@@ -6,7 +6,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 
 ## Current State
 
-**Completed through Phase 51** - Developer Settings Consistency & Documentation Update
+**Completed through Phase 52** - Directory Entity → RAG Migration
 
 ### Phase History
 1. **Phase 1-3**: Core RAG pipeline, document management, multi-format support
@@ -63,6 +63,7 @@ CoCo (Columban College Information Kiosk) is a RAG-based campus information chat
 52. **Phase 50**: Response Metadata Visibility Toggle (separate from Debug Panel)
 53. **Phase 50B**: Mode badges controlled by metadata visibility toggle
 54. **Phase 51**: Developer Settings Consistency Fix (immediate toggle effect, debug panel for directory queries)
+55. **Phase 52**: Directory Entity → RAG Migration (removed 1,400+ lines of entity code, directory data now in PDF)
 
 ## Architecture
 
@@ -74,13 +75,9 @@ campus_rag_chatbot/
 ├── intent_classifier.py      # Query intent classification
 ├── confidence_scorer.py      # Confidence scoring system
 ├── text_normalizer.py        # Text normalization for directory queries
-├── entity_registry.py        # Directory entity definitions
-├── entity_resolver.py        # Entity resolution pipeline
-├── entity_analyzer.py        # Entity analysis utilities
 ├── query_logger.py           # Query logging
 ├── event_tracker.py          # Phase 16: Observability & analytics
 ├── retrieval_validator.py    # Phase 17A: Hybrid retrieval & grounding
-├── entity_consolidation.py   # DEPRECATED: Use consolidation_engine.py
 ├── consolidation_engine.py   # Phase 24: Config-driven consolidation
 ├── metadata_index.py         # Phase 25: Fast chunk lookups by metadata
 ├── response_orchestrator.py  # Phase 44: LLM-as-Final-Synthesizer architecture
@@ -124,34 +121,21 @@ campus_rag_chatbot/
 
 ### Intent Classification
 - Classifies queries as: `directory`, `academic`, `event`, `general`, `greeting`, `out_of_scope`
-- Directory queries get special handling with entity resolution
+- Directory queries use RAG-based retrieval from ingested directory documents
 
-### Entity Resolution (Phase 9-14)
-- Directory locations are first-class entities with:
-  - `entity_id`, `canonical_name`, `aliases`
-  - `building`, `floor`, `room`
-  - `status` (active/inactive), `last_updated`
-  - `campus`, `department` (Phase 12)
-- Entity resolution replaces pure similarity-based confidence
-- Safety guardrails prevent LLM from inventing location details
-- Admin can create, update, and deactivate entities via web UI
-- CSV import/export for bulk entity management (Phase 11)
+### Directory Queries (RAG-based, Phase 52)
+- All 220 campus locations stored in RAG-optimized PDF document
+- Self-contained paragraphs with aliases embedded ("also known as")
+- Grouped by building for optimal retrieval
+- No structured entity database - fully document-driven
 
 ### Conversation Memory (Phase 13)
-- Session-scoped memory tracks last entity discussed
-- Follow-up queries ("What floor is it on?") use context
-- Context switches when user asks about different entity
-
-### Disambiguation (Phase 14)
-- Detects when multiple entities match a query (e.g., "court")
-- Presents numbered options for user to select
-- Supports selection by number (1-4), word (first, second), or partial name
-- Only updates context after user confirms selection
+- Session-scoped memory tracks conversation context
+- Follow-up queries use prior context for coherent responses
 
 ### Confidence Scoring
 - HIGH/MEDIUM/LOW confidence levels
-- Entity-resolved answers get HIGH confidence automatically
-- Similarity-based scoring as fallback
+- Similarity-based scoring from RAG retrieval results
 
 ### Observability (Phase 16)
 - EventTracker logs structured events (privacy-safe, metadata only)
