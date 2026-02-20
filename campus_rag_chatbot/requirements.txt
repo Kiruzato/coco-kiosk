@@ -1,4 +1,5 @@
-# Campus RAG Chatbot Dependencies - Updated for Python 3.13
+# Campus RAG Chatbot Dependencies
+# Compatible with Python 3.11+ (Python 3.11 recommended for Piper TTS)
 
 # LangChain core and community packages for RAG
 langchain>=0.3.0
@@ -21,38 +22,41 @@ tiktoken>=0.7.0
 rank_bm25>=0.2.2           # BM25 keyword matching for hybrid retrieval
 
 # Document format support (Phase 3 + Phase 18)
-pypdf>=5.0.0            # PDF document loading (fallback for Phase 18)
-python-docx>=1.1.0       # DOCX document loading
-tabulate>=0.9.0          # Pretty table formatting for admin CLI
+pypdf>=5.0.0               # PDF document loading (fallback for Phase 18)
+python-docx>=1.1.0         # DOCX document loading
+tabulate>=0.9.0            # Pretty table formatting for admin CLI
 
 # Layout-aware PDF parsing (Phase 18)
 # Note: Requires system dependencies on deployment:
-#   - libmagic-dev (file type detection)
+#   - libmagic-dev (file type detection) - Linux/RPi only
 #   - poppler-utils (PDF processing)
 #   Optional: tesseract-ocr (for OCR on scanned PDFs)
 unstructured[pdf]>=0.12.0  # Layout-aware PDF element extraction
+python-magic-bin>=0.4.14; sys_platform == "win32"  # Windows libmagic binary
 
 # Web API and server (Phase 5)
-fastapi>=0.115.0         # Web framework for API
+fastapi>=0.115.0           # Web framework for API
 uvicorn[standard]>=0.30.0  # ASGI server
-pydantic>=2.9.0          # Data validation
-python-multipart>=0.0.9  # Form data / file uploads
-aiofiles>=23.0.0         # Async file operations
-websockets>=12.0         # WebSocket support
+pydantic>=2.9.0            # Data validation
+python-multipart>=0.0.9    # Form data / file uploads
+aiofiles>=23.0.0           # Async file operations
+websockets>=12.0           # WebSocket support
+sse-starlette>=1.6.5       # Server-Sent Events for streaming
+httpx>=0.24.0              # Async HTTP client for internal API calls
 
 # Security (Phase 39)
-cryptography>=42.0.0     # Encrypted credential storage (AES-256-GCM)
+cryptography>=42.0.0       # Encrypted credential storage (AES-256-GCM)
 
 # Voice integration (Phase 32-38)
 # Note: Requires system dependencies:
 #   - ffmpeg (for audio format conversion via pydub)
-#   - espeak-ng (optional fallback TTS)
-audioop-lts>=0.2.0       # Python 3.13+ compatibility for pydub
-pydub>=0.25.0            # Audio format conversion
-pywhispercpp>=1.4.0      # Offline STT (Whisper.cpp Python bindings)
-piper-tts>=1.2.0         # Offline TTS (Piper neural voice)
-numpy>=1.26.0            # Audio array processing
-google-cloud-speech>=2.21.0  # Google Cloud STT (Phase 38)
+#   - espeak-ng (for Piper TTS phonemization) - Linux/RPi only
+audioop-lts>=0.2.0; python_version >= "3.13"  # Python 3.13 removed audioop from stdlib
+pydub>=0.25.0              # Audio format conversion
+pywhispercpp>=1.4.0        # Offline STT (Whisper.cpp Python bindings)
+piper-tts>=1.2.0           # Offline TTS (Piper neural voice)
+numpy>=1.26.0              # Audio array processing
+google-cloud-speech>=2.21.0  # Google Cloud STT (optional - requires service account)
 
 # Voice models (download separately):
 #   STT: https://huggingface.co/ggerganov/whisper.cpp/tree/main

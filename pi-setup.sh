@@ -65,7 +65,7 @@ if apt-cache show python3.11 &> /dev/null; then
 else
     echo -e "${YELLOW}Python 3.11 not available in repositories.${NC}"
     echo "Will use system Python instead."
-    echo -e "${YELLOW}Note: Piper TTS may not work. Voice will use edge-tts (cloud) as fallback.${NC}"
+    echo -e "${YELLOW}Note: Piper TTS requires Python 3.11. Voice features may be limited.${NC}"
 fi
 
 echo -e "${GREEN}System packages installed${NC}"
@@ -123,9 +123,6 @@ pip install --upgrade pip wheel setuptools
 if [ -f "$APP_DIR/requirements_rpi.txt" ]; then
     echo "Installing from requirements_rpi.txt (ARM64 optimized)..."
     pip install -r "$APP_DIR/requirements_rpi.txt"
-elif [ -f "$APP_DIR/requirements_py311.txt" ]; then
-    echo "Installing from requirements_py311.txt (Python 3.11)..."
-    pip install -r "$APP_DIR/requirements_py311.txt"
 else
     echo "Installing from requirements.txt..."
     pip install -r "$APP_DIR/requirements.txt"
@@ -190,7 +187,7 @@ if [ -f "$VOICE_SCRIPT" ]; then
         "$VOICE_SCRIPT"
     else
         echo "Skipping voice model download"
-        echo -e "${YELLOW}Note: Voice will use cloud fallback (edge-tts) if models not present${NC}"
+        echo -e "${YELLOW}Note: Offline voice features require downloaded models${NC}"
     fi
 else
     echo -e "${YELLOW}Voice model download script not found. Skipping...${NC}"

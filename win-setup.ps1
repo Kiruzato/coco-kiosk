@@ -159,19 +159,9 @@ Write-Host "Upgrading pip..."
 & $VenvPython -m pip install --upgrade pip
 
 # Install requirements
-$RequirementsFile = Join-Path $AppDir "requirements_py311.txt"
-if (Test-Path $RequirementsFile) {
-    Write-Host "Installing from requirements_py311.txt..."
-    & $VenvPip install -r $RequirementsFile
-} else {
-    $RequirementsFile = Join-Path $AppDir "requirements.txt"
-    Write-Host "Installing from requirements.txt..."
-    & $VenvPip install -r $RequirementsFile
-}
-
-# Install Windows-specific package for libmagic
-Write-Host "Installing python-magic-bin for Windows..."
-& $VenvPip install python-magic-bin
+$RequirementsFile = Join-Path $AppDir "requirements.txt"
+Write-Host "Installing from requirements.txt..."
+& $VenvPip install -r $RequirementsFile
 
 # Install edge-tts for cloud TTS fallback
 Write-Host "Installing edge-tts for cloud TTS..."

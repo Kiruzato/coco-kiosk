@@ -1,76 +1,78 @@
-You are working on the CoCo Campus RAG Chatbot project.
+You will now execute the RPI5 deployment preparation plan defined in `implementation_plan.md`.
 
-You will now execute the architectural unification plan defined in:
-
-```
-implementation_plan.md
-```
-
-located in the root directory.
-
-This plan removes the special-case directory query path and unifies directory queries under the standard RAG orchestrator flow.
-
-Execution is now authorized.
+Execution is authorized.
 
 ---
 
-# Core Objective
+## Scope of Work (Deployment Only)
 
-Implement the plan exactly as specified.
+Implement the deployment refactors described in the plan.
 
-The goal is to ensure:
+Specifically:
 
-* Directory-related queries follow the same standard RAG flow as all other queries.
-* The early `is_directory_query()` interception in `app.py` is removed.
-* The `handle_directory_query()` function is deleted.
-* No pre-LLM HIGH-confidence gate remains for directory queries.
-* No directory-specific hardcoded fallback message remains.
-* Directory queries always reach the orchestrator and the LLM.
-* `QueryIntent.DIRECTORY` classification remains intact.
-* No entity logic is reintroduced.
+* **Audit the existing `.gitignore`**
+
+  * Ensure it properly excludes:
+
+    * `venv/`
+    * `__pycache__/`
+    * `.env`
+    * `*.pyc`
+    * voice model directories
+  * Update it only if incomplete.
+
+* **Audit the existing `.env.example`**
+
+  * Ensure it contains all required environment variables.
+  * Ensure it aligns with what `pi-setup.sh` expects.
+  * Fix inconsistencies if necessary.
+  * Do not overwrite valid content without reason.
+
+* Consolidate requirements files (reduce to two).
+
+* Remove dead dependencies (e.g., `edge-tts`).
+
+* Add missing dependencies (`sse-starlette`, `httpx`).
+
+* Add proper Python version guards where required.
+
+* Sync `requirements_rpi.txt` with base requirements.
+
+* Fix stale references in `pi-setup.sh`.
+
+* Fix branch mismatch in deployment instructions.
+
+* Clean inconsistencies identified in the plan.
 
 ---
 
-# Execution Requirements
+## Strict Constraints
 
-Follow the plan in `implementation_plan.md` step-by-step.
+You must NOT:
 
-During implementation:
+* Modify RAG logic
+* Modify orchestrator logic
+* Modify chatbot runtime behavior
+* Modify vector store handling
+* Introduce new technologies
 
-* Apply proper refactorization where necessary.
-* Maintain clean modular boundaries.
-* Remove unused imports.
-* Remove dead code completely.
-* Avoid duplication.
-* Preserve system behavior for non-directory queries.
-* Ensure streaming endpoint remains unaffected.
-
-Do not redesign unrelated subsystems.
+This is deployment-layer refactoring only.
 
 ---
 
-# Post-Implementation Validation
+## Post-Execution Report
 
-After implementation:
-
-Verify and confirm:
-
-* `handle_directory_query()` no longer exists.
-* No early directory exit in `app.py`.
-* Directory queries reach the LLM.
-* Retrieved RAG context is passed to the LLM.
-* No hardcoded directory fallback message exists.
-* Non-directory queries behave identically to before.
-* No unused imports remain.
-* Application runs without errors.
-
-Provide a structured summary including:
+Provide:
 
 * Files modified
-* Lines removed
-* Any refactors performed
-* Validation checklist results
+* Files deleted
+* Dependencies added/removed
+* Confirmation that:
+
+  * Requirements install cleanly
+  * Setup script is consistent
+  * No application logic was modified
 
 ---
 
-Proceed with execution.
+Proceed.
