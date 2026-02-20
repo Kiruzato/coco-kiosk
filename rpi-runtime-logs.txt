@@ -1,0 +1,202 @@
+pi@coco-kiosk:~/coco $ source /home/pi/coco/venv/bin/activate && \
+cd /home/pi/coco/campus_rag_chatbot && \
+python app.py
+2026-02-20 10:07:49,649 - INFO - Loading vector store from /home/pi/coco/campus_rag_chatbot/vector_store
+2026-02-20 10:07:49,650 - INFO - Loading faiss.
+2026-02-20 10:07:49,684 - INFO - Successfully loaded faiss.
+2026-02-20 10:07:49,711 - INFO - [PHASE25] Loaded metadata index: 966 chunks, 366 sections
+2026-02-20 10:07:49,736 - INFO - [PHASE44] ResponseOrchestrator initialized (singleton)
+2026-02-20 10:07:49,736 - INFO - [PHASE47] Streaming ResponseOrchestrator initialized
+2026-02-20 10:07:49,736 - INFO - QueryLogger initialized. Logs will be saved to: /home/pi/coco/campus_rag_chatbot/logs
+2026-02-20 10:07:49,736 - INFO - EventTracker initialized. Log file: /home/pi/coco/campus_rag_chatbot/logs/events.jsonl
+2026-02-20 10:07:49,737 - INFO - [ADS] Loaded 5 advertisements
+2026-02-20 10:07:49,737 - INFO - [PHASE48] AdvertisementManager initialized
+2026-02-20 10:07:49,737 - INFO - [PHASE49] Welcome message config initialized
+/home/pi/coco/campus_rag_chatbot/app.py:3945: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+/home/pi/coco/campus_rag_chatbot/app.py:4039: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("shutdown")
+INFO:     Started server process [2132]
+INFO:     Waiting for application startup.
+================================================================================
+Campus Information Kiosk API - Phase 32 (Voice Integration)
+================================================================================
+Documents loaded: 6
+2026-02-20 10:07:49,833 - INFO - [VOICE-REGISTRY] Loaded settings: STT=google-cloud-stt, TTS=piper
+2026-02-20 10:07:49,833 - INFO - [VOICE] Applied saved STT provider: google-cloud-stt
+2026-02-20 10:07:49,833 - INFO - [VOICE] Applied saved TTS provider: piper
+2026-02-20 10:07:51,574 - WARNING - [GOOGLE-STT] Not available: credentials file not found: C:\Users\chann\OneDrive\Desktop\restartcoco\vibecoding_coco\sa_stt.json
+2026-02-20 10:07:51,574 - WARNING - [STT] Google Cloud STT not available (check credentials)
+2026-02-20 10:07:51.610816795 [W:onnxruntime:Default, device_discovery.cc:211 DiscoverDevicesForPlatform] GPU device discovery failed: device_discovery.cc:91 ReadFileContents Failed to open file: "/sys/class/drm/card1/device/vendor"
+2026-02-20 10:07:51,625 - INFO - [PIPER] Initialized with voice: en_US-amy-medium
+2026-02-20 10:07:51,625 - INFO - [TTS] Primary engine initialized: piper (en_US-amy-medium)
+2026-02-20 10:07:51,738 - INFO - [ESPEAK] Initialized with voice: en-us
+2026-02-20 10:07:51,739 - INFO - [TTS] Fallback engine initialized: espeak-ng (en-us)
+2026-02-20 10:07:51,739 - INFO - [VOICE-ROUTES] Voice services initialized
+2026-02-20 10:07:51,739 - INFO - [VOICE] Configuration Summary:
+2026-02-20 10:07:51,739 - INFO -   - Voice enabled: True
+2026-02-20 10:07:51,739 - INFO -   - STT engine: google-cloud-stt
+2026-02-20 10:07:51,739 - INFO -   - STT model exists: True
+2026-02-20 10:07:51,739 - INFO -   - TTS engine: piper
+2026-02-20 10:07:51,739 - INFO -   - TTS model exists: True
+2026-02-20 10:07:51,739 - INFO -   - Cloud fallback (STT): False
+2026-02-20 10:07:51,739 - INFO -   - Cloud fallback (TTS): True
+Voice services: ENABLED (STT: False, TTS: True)
+API ready at: http://localhost:8000
+Kiosk interface at: http://localhost:8000/
+Voice status at: http://localhost:8000/voice/status
+================================================================================
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     192.168.18.204:58529 - "GET /admin HTTP/1.1" 200 OK
+INFO:     192.168.18.204:58529 - "GET /static/admin.css HTTP/1.1" 200 OK
+INFO:     192.168.18.204:50096 - "GET /images/coco-name.jpg HTTP/1.1" 200 OK
+INFO:     192.168.18.204:65489 - "GET /static/admin.js HTTP/1.1" 200 OK
+INFO:     192.168.18.204:65489 - "GET /admin/documents HTTP/1.1" 401 Unauthorized
+INFO:     192.168.18.204:65489 - "GET /admin/login HTTP/1.1" 200 OK
+INFO:     192.168.18.204:65489 - "GET /static/login.css HTTP/1.1" 200 OK
+INFO:     192.168.18.204:65489 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     192.168.18.204:65489 - "GET /admin/login HTTP/1.1" 200 OK
+INFO:     192.168.18.204:65489 - "GET /static/login.css HTTP/1.1" 200 OK
+INFO:     192.168.18.204:65489 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     192.168.18.204:65489 - "POST /admin/login HTTP/1.1" 200 OK
+INFO:     192.168.18.204:65489 - "GET /images/coco-name.jpg HTTP/1.1" 206 Partial Content
+INFO:     192.168.18.204:65489 - "GET /admin/documents HTTP/1.1" 200 OK
+INFO:     192.168.18.204:50677 - "GET /images/coco-name.jpg HTTP/1.1" 206 Partial Content
+INFO:     192.168.18.204:65489 - "GET /admin/analytics HTTP/1.1" 200 OK
+INFO:     192.168.18.204:50677 - "GET /admin HTTP/1.1" 200 OK
+INFO:     192.168.18.204:50677 - "GET /static/admin.css HTTP/1.1" 200 OK
+INFO:     192.168.18.204:65489 - "GET /images/coco-name.jpg HTTP/1.1" 200 OK
+INFO:     192.168.18.204:52766 - "GET /static/admin.js HTTP/1.1" 200 OK
+INFO:     192.168.18.204:52766 - "GET /admin/documents HTTP/1.1" 200 OK
+INFO:     192.168.18.204:52766 - "GET /admin/analytics HTTP/1.1" 200 OK
+INFO:     192.168.18.204:65489 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     192.168.18.204:58680 - "GET /admin/documents HTTP/1.1" 200 OK
+INFO:     192.168.18.204:58680 - "GET /admin/advertisements HTTP/1.1" 200 OK
+INFO:     192.168.18.204:58680 - "GET /advertisements/ad_017a14a6a341.jpg HTTP/1.1" 200 OK
+INFO:     192.168.18.204:53162 - "GET /advertisements/ad_83ea98128acd.jpg HTTP/1.1" 200 OK
+INFO:     192.168.18.204:55618 - "GET /advertisements/ad_d20e6343565b.jpg HTTP/1.1" 200 OK
+INFO:     192.168.18.204:52724 - "GET /advertisements/ad_b09c3df0fc6a.jpg HTTP/1.1" 200 OK
+INFO:     192.168.18.204:59984 - "GET /advertisements/ad_d9160184c8da.jpg HTTP/1.1" 200 OK
+INFO:     192.168.18.204:60892 - "GET /admin/welcome HTTP/1.1" 200 OK
+2026-02-20 10:08:54,780 - INFO - [VOICE-REGISTRY] Loaded settings: STT=google-cloud-stt, TTS=piper
+INFO:     192.168.18.204:60892 - "GET /admin/voice/providers HTTP/1.1" 200 OK
+2026-02-20 10:08:54,923 - INFO - [USAGE] Loaded usage data: 273s used in 2026-02
+2026-02-20 10:08:54,923 - INFO - [USAGE] Initialized STT usage tracker. Current: 273s / 3600s
+INFO:     192.168.18.204:60892 - "GET /admin/voice/usage HTTP/1.1" 200 OK
+INFO:     192.168.18.204:60805 - "GET /admin/voice/credentials/status HTTP/1.1" 200 OK
+2026-02-20 10:09:07,799 - INFO - [CREDENTIALS] Saved 1 credentials to encrypted storage
+2026-02-20 10:09:07,800 - INFO - [ADMIN] Google Cloud credentials saved to encrypted storage
+2026-02-20 10:09:07,800 - INFO - [VOICE-ROUTES] Reloading voice services...
+2026-02-20 10:09:07,800 - INFO - [VOICE-ROUTES] STT provider set to: google-cloud-stt
+2026-02-20 10:09:07,800 - INFO - [VOICE-ROUTES] TTS provider set to: piper
+2026-02-20 10:09:07,800 - INFO - [GOOGLE-STT] Initialized with model: default, language: en-US
+2026-02-20 10:09:07,800 - INFO - [STT] Primary engine initialized: google-cloud-stt
+2026-02-20 10:09:07,800 - INFO - [PIPER] Initialized with voice: en_US-amy-medium
+2026-02-20 10:09:07,800 - INFO - [TTS] Primary engine initialized: piper (en_US-amy-medium)
+2026-02-20 10:09:07,807 - INFO - [ESPEAK] Initialized with voice: en-us
+2026-02-20 10:09:07,808 - INFO - [TTS] Fallback engine initialized: espeak-ng (en-us)
+2026-02-20 10:09:07,808 - INFO - [VOICE-ROUTES] Reloaded - STT available: True, TTS available: True
+2026-02-20 10:09:07,808 - INFO - [ADMIN] Google Cloud credentials updated: lofty-mark-486411-s9
+INFO:     192.168.18.204:58437 - "POST /admin/voice/credentials HTTP/1.1" 200 OK
+INFO:     192.168.18.204:58437 - "GET /admin/voice/credentials/status HTTP/1.1" 200 OK
+INFO:     192.168.18.204:58437 - "GET /admin/voice/providers HTTP/1.1" 200 OK
+INFO:     192.168.18.204:58437 - "GET /admin/voice/usage HTTP/1.1" 200 OK
+INFO:     192.168.18.204:53925 - "GET /admin/voice/credentials/status HTTP/1.1" 200 OK
+2026-02-20 10:09:16,800 - INFO - [VOICE-REGISTRY] Saved settings: STT=google-cloud-stt, TTS=piper
+2026-02-20 10:09:16,800 - INFO - [VOICE-ROUTES] Reloading voice services...
+2026-02-20 10:09:16,800 - INFO - [VOICE-ROUTES] STT provider set to: google-cloud-stt
+2026-02-20 10:09:16,800 - INFO - [VOICE-ROUTES] TTS provider set to: piper
+2026-02-20 10:09:16,800 - INFO - [GOOGLE-STT] Initialized with model: default, language: en-US
+2026-02-20 10:09:16,800 - INFO - [STT] Primary engine initialized: google-cloud-stt
+2026-02-20 10:09:16,800 - INFO - [PIPER] Initialized with voice: en_US-amy-medium
+2026-02-20 10:09:16,800 - INFO - [TTS] Primary engine initialized: piper (en_US-amy-medium)
+2026-02-20 10:09:16,807 - INFO - [ESPEAK] Initialized with voice: en-us
+2026-02-20 10:09:16,809 - INFO - [TTS] Fallback engine initialized: espeak-ng (en-us)
+2026-02-20 10:09:16,810 - INFO - [VOICE-ROUTES] Reloaded - STT available: True, TTS available: True
+2026-02-20 10:09:16,810 - INFO - [ADMIN] Voice services reloaded: {'success': True, 'stt_available': True, 'tts_available': True, 'stt_engine': None, 'tts_engine': None}
+INFO:     192.168.18.204:53925 - "POST /admin/voice/config HTTP/1.1" 200 OK
+INFO:     192.168.18.204:53925 - "GET /admin/voice/providers HTTP/1.1" 200 OK
+INFO:     192.168.18.204:53925 - "GET /admin/voice/usage HTTP/1.1" 200 OK
+INFO:     192.168.18.204:58437 - "GET /admin/voice/credentials/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49724 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49724 - "GET /images/coco-name.jpg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49734 - "GET /static/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49744 - "GET /images/coco-logo-pixel.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49744 - "GET /static/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49744 - "GET /api/advertisements HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49724 - "GET /api/welcome HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49734 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49756 - "GET /voice/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49756 - "GET /advertisements/ad_017a14a6a341.jpg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49734 - "GET /advertisements/ad_83ea98128acd.jpg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49764 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49724 - "GET /advertisements/ad_d20e6343565b.jpg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49744 - "GET /advertisements/ad_b09c3df0fc6a.jpg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49770 - "GET /advertisements/ad_d9160184c8da.jpg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43476 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49602 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49602 - "GET /static/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49608 - "GET /images/coco-name.jpg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49604 - "GET /images/coco-logo-pixel.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49604 - "GET /static/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49604 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49604 - "GET /api/advertisements HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49608 - "GET /api/welcome HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49602 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49604 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49616 - "GET /voice/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48920 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48920 - "GET /api/advertisements HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48922 - "GET /api/welcome HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48934 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48948 - "GET /voice/status HTTP/1.1" 200 OK
+/home/pi/coco/campus_rag_chatbot/app.py:455: LangChainDeprecationWarning: Please see the migration guide at: https://python.langchain.com/docs/versions/migrating_memory/
+  memory = ConversationBufferWindowMemory(
+2026-02-20 10:12:31,701 - INFO - [ORCHESTRATOR] Processing query: where is enginering dean ofice...
+2026-02-20 10:12:31,705 - INFO - [ORCHESTRATOR] Governance: intent=directory, safe=True
+2026-02-20 10:12:41,715 - ERROR - [ORCHESTRATOR] Retrieval error: HTTPSConnectionPool(host='openaipublic.blob.core.windows.net', port=443): Max retries exceeded with url: /encodings/cl100k_base.tiktoken (Caused by NameResolutionError("HTTPSConnection(host='openaipublic.blob.core.windows.net', port=443): Failed to resolve 'openaipublic.blob.core.windows.net' ([Errno -3] Temporary failure in name resolution)"))
+2026-02-20 10:12:41,715 - INFO - [ORCHESTRATOR] Retrieval: 0 docs, grounded=False, semantic=low
+2026-02-20 10:12:41,715 - INFO - [ORCHESTRATOR] Extraction: matched=False, extractor=None
+2026-02-20 10:12:41,715 - INFO - [ORCHESTRATOR] Response mode: general
+2026-02-20 10:12:51,741 - INFO - Retrying request to /chat/completions in 0.475241 seconds
+2026-02-20 10:13:02,227 - INFO - Retrying request to /chat/completions in 0.769494 seconds
+2026-02-20 10:13:13,007 - ERROR - [ORCHESTRATOR] LLM error: Connection error.
+2026-02-20 10:13:13,007 - INFO - Logged query: 20260220_101313_007641
+INFO:     127.0.0.1:40222 - "POST /chat HTTP/1.1" 200 OK
+2026-02-20 10:13:15,616 - INFO - [PIPER] Voice loaded: voice/models/piper/en_US-amy-medium.onnx
+2026-02-20 10:13:16,342 - INFO - [TTS] Synthesized 83 chars in 3325ms (5.5s audio)
+INFO:     127.0.0.1:40222 - "POST /voice/synthesize HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40222 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+2026-02-20 10:13:43,687 - INFO - [ORCHESTRATOR] Processing query: who are you...
+2026-02-20 10:13:43,688 - INFO - [ORCHESTRATOR] Governance: intent=campus, safe=True
+2026-02-20 10:14:41,417 - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-02-20 10:14:41,426 - INFO - [ORCHESTRATOR] Retrieval: 8 docs, grounded=True, semantic=low
+2026-02-20 10:14:41,427 - INFO - [ORCHESTRATOR] Extraction: matched=False, extractor=None
+2026-02-20 10:14:41,427 - INFO - [ORCHESTRATOR] Response mode: rag_supplemented
+2026-02-20 10:14:43,499 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-20 10:14:43,518 - INFO - Logged query: 20260220_101443_518108
+INFO:     127.0.0.1:56472 - "POST /chat HTTP/1.1" 200 OK
+2026-02-20 10:14:44,995 - INFO - [TTS] Synthesized 181 chars in 1471ms (11.7s audio)
+INFO:     127.0.0.1:56472 - "POST /voice/synthesize HTTP/1.1" 200 OK
+2026-02-20 10:15:12,489 - INFO - [ORCHESTRATOR] Processing query: where is engineering dean ofice...
+2026-02-20 10:15:12,489 - INFO - [ORCHESTRATOR] Governance: intent=directory, safe=True
+2026-02-20 10:15:20,977 - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-02-20 10:15:21,899 - INFO - [ORCHESTRATOR] Retrieval: 8 docs, grounded=True, semantic=high
+2026-02-20 10:15:21,899 - INFO - [ORCHESTRATOR] Extraction: matched=False, extractor=None
+2026-02-20 10:15:21,899 - INFO - [ORCHESTRATOR] Response mode: rag_authoritative
+2026-02-20 10:15:34,914 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-20 10:15:34,917 - INFO - Logged query: 20260220_101534_917125
+INFO:     127.0.0.1:42918 - "POST /chat HTTP/1.1" 200 OK
+2026-02-20 10:15:36,362 - INFO - [TTS] Synthesized 129 chars in 1440ms (8.7s audio)
+INFO:     127.0.0.1:42918 - "POST /voice/synthesize HTTP/1.1" 200 OK

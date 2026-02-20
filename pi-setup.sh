@@ -119,9 +119,16 @@ source "$VENV_DIR/bin/activate"
 # Upgrade pip first
 pip install --upgrade pip wheel setuptools
 
-# Install requirements (use RPi-specific version)
-if [ -f "$APP_DIR/requirements_rpi.txt" ]; then
-    echo "Installing from requirements_rpi.txt (ARM64 optimized)..."
+# Install requirements - use runtime-only version for faster install
+# Runtime mode: Excludes document ingestion packages (unstructured, pypdf, etc.)
+# The RPi loads a pre-built FAISS index; it does NOT perform document ingestion.
+if [ -f "$APP_DIR/requirements_rpi_runtime.txt" ]; then
+    echo "Installing from requirements_rpi_runtime.txt (runtime-only, optimized)..."
+    echo -e "${YELLOW}Note: This excludes document ingestion packages.${NC}"
+    echo "Document ingestion must be done on the development machine."
+    pip install -r "$APP_DIR/requirements_rpi_runtime.txt"
+elif [ -f "$APP_DIR/requirements_rpi.txt" ]; then
+    echo "Installing from requirements_rpi.txt (full ARM64)..."
     pip install -r "$APP_DIR/requirements_rpi.txt"
 else
     echo "Installing from requirements.txt..."

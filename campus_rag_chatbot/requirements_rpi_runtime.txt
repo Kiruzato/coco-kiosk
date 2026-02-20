@@ -1,0 +1,76 @@
+# Campus RAG Chatbot Dependencies - Raspberry Pi RUNTIME ONLY
+# ============================================================
+# This file is optimized for RPi runtime deployment.
+# It excludes document ingestion packages (unstructured, pypdf, python-docx).
+#
+# Document ingestion is done on the development machine.
+# The RPi loads a pre-built FAISS index from the git repository.
+#
+# For full development/ingestion setup, use requirements.txt instead.
+#
+# Tested on: Raspberry Pi OS (Bookworm) with Python 3.11
+# Architecture: ARM64 (aarch64)
+
+# LangChain core and community packages for RAG
+langchain>=0.3.0
+langchain-community>=0.3.0
+langchain-openai>=0.2.0
+
+# OpenAI API client
+openai>=1.50.0
+
+# Vector store - FAISS for local embedding storage
+# Note: May require --no-cache-dir on ARM64
+faiss-cpu>=1.9.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# Text processing
+tiktoken>=0.7.0
+
+# Hybrid retrieval (Phase 17A)
+rank_bm25>=0.2.2
+
+# ============================================================
+# INGESTION PACKAGES - EXCLUDED FOR RUNTIME
+# ============================================================
+# The following are NOT included (only needed for document ingestion):
+#   - unstructured[pdf] (layout-aware PDF parsing)
+#   - pypdf (PDF loading)
+#   - python-docx (DOCX loading)
+#   - tabulate (admin CLI formatting)
+#
+# If you need to ingest documents, use the full requirements.txt
+# ============================================================
+
+# Web API and server
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.9.0
+python-multipart>=0.0.9
+aiofiles>=23.0.0
+websockets>=12.0
+sse-starlette>=1.6.5
+httpx>=0.24.0
+
+# Security
+cryptography>=42.0.0
+
+# Voice integration
+# System dependencies required:
+#   sudo apt install ffmpeg espeak-ng espeak-ng-data
+audioop-lts>=0.2.0; python_version >= "3.13"  # Python 3.13 removed audioop from stdlib
+pydub>=0.25.0
+numpy>=1.26.0
+
+# Offline STT - Whisper.cpp
+# Model download: See download-voice-models.sh
+pywhispercpp>=1.4.0
+
+# Offline TTS - Piper (requires Python 3.11)
+# May need: pip install piper-tts --no-build-isolation
+piper-tts>=1.2.0
+
+# Google Cloud STT (optional - requires service account)
+google-cloud-speech>=2.21.0

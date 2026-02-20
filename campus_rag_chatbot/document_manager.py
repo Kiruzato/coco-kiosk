@@ -25,13 +25,20 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Configure logging early (before imports that may log warnings)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 # Document loaders
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.documents import Document
 
-# PDF loaders
+# PDF loaders (optional - only needed for ingestion)
 try:
     from pypdf import PdfReader
     PDF_LOADER = "pypdf"
@@ -41,32 +48,26 @@ except ImportError:
         PDF_LOADER = "PyPDF2"
     except ImportError:
         PDF_LOADER = None
+        logger.info("PDF loader not available (pypdf/PyPDF2 not installed). PDF ingestion disabled.")
 
-# Phase 18: Layout-aware PDF parsing
+# Phase 18: Layout-aware PDF parsing (optional - only needed for ingestion)
 try:
     from unstructured.partition.pdf import partition_pdf
     LAYOUT_AWARE_PARSER = True
 except ImportError:
     LAYOUT_AWARE_PARSER = False
-    logger.warning("unstructured library not available. Layout-aware PDF parsing disabled.")
+    logger.info("unstructured library not available. Layout-aware PDF parsing disabled.")
 
-# DOCX loader
+# DOCX loader (optional - only needed for ingestion)
 try:
     from docx import Document as DocxDocument
     DOCX_LOADER = True
 except ImportError:
     DOCX_LOADER = False
+    logger.info("python-docx not available. DOCX ingestion disabled.")
 
 # Text normalization for consistent retrieval
 from text_normalizer import normalize_text
-
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 
 # ==============================================================================
