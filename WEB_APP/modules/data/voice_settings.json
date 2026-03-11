@@ -1,0 +1,9 @@
+{
+  "stt_provider": "google-cloud-stt",
+  "tts_provider": "piper",
+  "stt_fallback_enabled": true,
+  "tts_fallback_enabled": true,
+  "stt_fallback_provider": "whisper.cpp",
+  "tts_fallback_provider": null,
+  "updated_at": "2026-02-09T01:43:06.876547Z"
+}

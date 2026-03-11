@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoCo Admin - Columban College</title>
+    <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-brand">
+                <h1>CoCo Admin</h1>
+                <span class="header-subtitle">Columban College, Inc.</span>
+            </div>
+            <button id="logoutBtn" class="btn-logout">Logout</button>
+        </header>
+
+        <div class="admin-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="admin-sidebar">
+                <nav class="admin-nav">
+                    <a href="#analytics" class="nav-item active" data-section="analytics">
+                        <span class="nav-icon">&#9632;</span>
+                        <span class="nav-label">System Analytics</span>
+                    </a>
+
+                    <div class="nav-group">
+                        <span class="nav-group-label">Documents</span>
+                        <a href="#rag-package" class="nav-item" data-section="rag-package">
+                            <span class="nav-icon">&#128230;</span>
+                            <span class="nav-label">RAG Package</span>
+                        </a>
+                        <a href="#documents" class="nav-item" data-section="documents">
+                            <span class="nav-icon">&#9783;</span>
+                            <span class="nav-label">Manage</span>
+                        </a>
+                    </div>
+
+                    <a href="#advertisements" class="nav-item" data-section="advertisements">
+                        <span class="nav-icon">&#128247;</span>
+                        <span class="nav-label">Advertisements</span>
+                    </a>
+
+                    <a href="#welcome" class="nav-item" data-section="welcome">
+                        <span class="nav-icon">&#9993;</span>
+                        <span class="nav-label">Welcome Message</span>
+                    </a>
+
+                    <a href="#faqs" class="nav-item" data-section="faqs">
+                        <span class="nav-icon">&#10068;</span>
+                        <span class="nav-label">FAQs</span>
+                    </a>
+
+                    <a href="#voice" class="nav-item" data-section="voice">
+                        <span class="nav-icon">&#9834;</span>
+                        <span class="nav-label">Voice Config</span>
+                    </a>
+
+                    <a href="#developer" class="nav-item" data-section="developer">
+                        <span class="nav-icon">&#9881;</span>
+                        <span class="nav-label">Developer</span>
+                    </a>
+
+                    <a href="#test-harness" class="nav-item" data-section="test-harness">
+                        <span class="nav-icon">&#9874;</span>
+                        <span class="nav-label">Test Harness</span>
+                    </a>
+                </nav>
+
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="admin-main">
+                <!-- Notification Area -->
+                <div id="notification" class="notification hidden"></div>
+
+                <!-- Section: System Analytics (Default) -->
+                <section id="section-analytics" class="admin-section active">
+                    <div class="section-header">
+                        <h2>System Analytics</h2>
+                        <button id="refreshAnalyticsBtn" class="btn-secondary">&#8635; Refresh</button>
+                    </div>
+
+                    <div id="analyticsLoadingIndicator" class="loading hidden">Loading analytics...</div>
+
+                    <div class="stats-grid" id="analyticsGrid">
+                        <div class="stat-card">
+                            <h3>Total Conversations</h3>
+                            <span id="stat-total-conversations" class="stat-value">-</span>
+                        </div>
+                    </div>
+
+                    <div class="analytics-breakdown">
+                        <div class="breakdown-section">
+                            <h4>Response Feedback</h4>
+                            <div id="feedback-breakdown" class="breakdown-grid"></div>
+                        </div>
+                    </div>
+
+                    <!-- Conversation Log Viewer (inside Analytics) -->
+                    <div class="conv-viewer-section">
+                        <div class="section-header">
+                            <h3>Conversation Log</h3>
+                            <button id="refreshConversationsBtn" class="btn-secondary">&#8635; Refresh</button>
+                        </div>
+
+                        <!-- Filters -->
+                        <div class="conv-filters card">
+                            <div class="conv-filter-row">
+                                <div class="conv-filter-group">
+                                    <label for="convMonthFilter">Month</label>
+                                    <input type="month" id="convMonthFilter" class="conv-input">
+                                </div>
+                                <div class="conv-filter-group">
+                                    <label for="convFeedbackFilter">Feedback</label>
+                                    <select id="convFeedbackFilter" class="conv-input conv-select">
+                                        <option value="">All</option>
+                                        <option value="liked">Liked</option>
+                                        <option value="disliked">Disliked</option>
+                                        <option value="unrated">Unrated</option>
+                                    </select>
+                                </div>
+                                <div class="conv-filter-group conv-search-group">
+                                    <label for="convSearchInput">Search</label>
+                                    <input type="text" id="convSearchInput" class="conv-input"
+                                        placeholder="Filter by keyword…" autocomplete="off">
+                                </div>
+                                <button id="convClearFiltersBtn" class="btn-secondary">Clear</button>
+                            </div>
+                        </div>
+
+                        <!-- Results meta -->
+                        <div class="conv-meta" id="convMeta"></div>
+
+                        <!-- Loading -->
+                        <div id="convLoadingIndicator" class="loading hidden">Loading conversations…</div>
+
+                        <!-- Table -->
+                        <div class="conv-table-wrapper">
+                            <table class="conv-table" id="convTable">
+                                <thead>
+                                    <tr>
+                                        <th class="col-time">Timestamp</th>
+                                        <th class="col-query">Query</th>
+                                        <th class="col-answer">Response</th>
+                                        <th class="col-feedback">Feedback</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="convTableBody"></tbody>
+                            </table>
+                            <div id="convEmptyState" class="conv-empty hidden">No conversations found.</div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="conv-pagination" id="convPagination">
+                            <button id="convPrevBtn" class="btn-secondary" disabled>&#8592; Prev</button>
+                            <span id="convPageInfo" class="conv-page-info"></span>
+                            <button id="convNextBtn" class="btn-secondary" disabled>Next &#8594;</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section: RAG Package Upload -->
+                <section id="section-rag-package" class="admin-section">
+                    <div class="section-header">
+                        <h2>RAG Package Upload</h2>
+                        <p class="section-subtitle">Upload a pre-built vector store package</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="rag-upload-area" id="ragUploadArea">
+                            <input
+                                type="file"
+                                id="ragFileInput"
+                                accept=".zip"
+                                class="file-input"
+                            >
+                            <label for="ragFileInput" class="file-label rag-label">
+                                <span class="file-icon">&#128230;</span>
+                                <span id="ragFileName">Choose a .zip file or drag & drop</span>
+                                <span class="file-types">Vector store package (.zip)</span>
+                            </label>
+                            <button type="button" id="ragUploadBtn" class="btn-primary" disabled>
+                                Upload RAG Package
+                            </button>
+                        </div>
+
+                        <div id="ragUploadStatus" class="upload-status"></div>
+
+                        <div class="info-box">
+                            <h4>How to Create a RAG Package</h4>
+                            <ol>
+                                <li>On your development machine, run:
+                                    <code>python -m coco_ingestion.ingest &lt;documents_folder&gt;</code>
+                                </li>
+                                <li>Find the generated package at:
+                                    <code>Desktop/CoCo_RAG_Packages/</code>
+                                </li>
+                                <li>Upload the <code>.zip</code> file here</li>
+                            </ol>
+                            <h4>Package Requirements</h4>
+                            <ul>
+                                <li>Must be a <code>.zip</code> file</li>
+                                <li>Must contain: <code>index.faiss</code>, <code>index.pkl</code></li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section: Manage Documents -->
+                <section id="section-documents" class="admin-section">
+                    <div class="section-header">
+                        <h2>Manage Documents</h2>
+                        <button id="refreshBtn" class="btn-secondary">&#8635; Refresh</button>
+                    </div>
+
+                    <div id="loadingIndicator" class="loading hidden">Loading documents...</div>
+
+                    <div class="card">
+                        <div class="table-container">
+                            <table id="documentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Filename</th>
+                                        <th>Type</th>
+                                        <th>Chunks</th>
+                                        <th>Ingested Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="documentsBody">
+                                    <tr>
+                                        <td colspan="5" class="empty-state">No documents loaded. Upload a document to get started.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section: Advertisement Management (Phase 48 + Phase 54) -->
+                <section id="section-advertisements" class="admin-section">
+                    <div class="section-header">
+                        <h2>Advertisement Management</h2>
+                        <button id="refreshAdsBtn" class="btn-secondary">&#8635; Refresh</button>
+                    </div>
+
+                    <div id="adsLoadingIndicator" class="loading hidden">Loading advertisements...</div>
+
+                    <!-- Tab Navigation for Ad Types -->
+                    <div class="ad-tabs">
+                        <button class="ad-tab active" data-tab="image">
+                            <span class="tab-icon">&#128247;</span> Image Ad
+                        </button>
+                        <button class="ad-tab" data-tab="text">
+                            <span class="tab-icon">&#128221;</span> Text Ad
+                        </button>
+                        <button class="ad-tab" data-tab="trivia">
+                            <span class="tab-icon">&#128161;</span> Trivia & Quotes
+                        </button>
+                    </div>
+
+                    <!-- Image Upload Area -->
+                    <div class="ad-upload-area ad-tab-content active" id="imageAdTab">
+                        <input type="file" id="adFileInput" accept=".jpg,.jpeg,.png" hidden>
+                        <label for="adFileInput" class="ad-upload-label">
+                            <span class="upload-icon">&#128247;</span>
+                            <span class="upload-text">Click or drag image to upload</span>
+                            <span class="file-types">JPG, JPEG, PNG (max 5MB)</span>
+                        </label>
+                        <div id="adUploadStatus" class="upload-status"></div>
+                    </div>
+
+                    <!-- Text Ad Creation Area -->
+                    <div class="ad-text-area ad-tab-content" id="textAdTab">
+                        <div class="text-ad-form">
+                            <label for="textAdInput">Advertisement Text</label>
+                            <textarea id="textAdInput" placeholder="Enter your advertisement text here..." maxlength="2000" rows="4"></textarea>
+                            <div class="text-ad-counter">
+                                <span id="textAdCharCount">0</span>/2000 characters
+                            </div>
+                            <div class="text-ad-actions">
+                                <button type="button" id="enhanceTextBtn" class="btn-secondary">
+                                    <span class="btn-icon">&#9733;</span> Enhance with AI
+                                </button>
+                                <button type="button" id="publishTextAdBtn" class="btn-primary">
+                                    Publish
+                                </button>
+                            </div>
+                        </div>
+                        <div id="textAdStatus" class="upload-status"></div>
+
+                        <!-- AI Enhancement Preview -->
+                        <div id="enhancementPreview" class="enhancement-preview hidden">
+                            <h4>AI Enhanced Version</h4>
+                            <div class="enhancement-content">
+                                <p id="enhancedText"></p>
+                            </div>
+                            <div class="enhancement-actions">
+                                <button type="button" id="useEnhancedBtn" class="btn-secondary">
+                                    Edit
+                                </button>
+                                <button type="button" id="publishEnhancedBtn" class="btn-primary">
+                                    Publish Enhanced
+                                </button>
+                                <button type="button" id="cancelEnhancementBtn" class="btn-ghost">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trivia & Quotes Viewer (Phase 56) -->
+                    <div class="trivia-viewer ad-tab-content" id="triviaTab">
+                        <div class="trivia-status-card" id="triviaStatusCard">
+                            <div class="trivia-status-header">
+                                <h4>Content Status</h4>
+                                <button type="button" id="regenerateTriviaBtn" class="btn-secondary btn-small">
+                                    &#8635; Regenerate
+                                </button>
+                            </div>
+                            <div class="trivia-status-info" id="triviaStatusInfo">
+                                <div class="status-item">
+                                    <span class="status-label">Status:</span>
+                                    <span class="status-value" id="triviaGenStatus">Loading...</span>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-label">Month:</span>
+                                    <span class="status-value" id="triviaMonth">--</span>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-label">Generated:</span>
+                                    <span class="status-value" id="triviaGenDate">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Trivia List -->
+                        <div class="trivia-content-section">
+                            <h4>Daily Trivia <span class="content-count" id="triviaCount">(0)</span></h4>
+                            <div class="trivia-list" id="triviaList">
+                                <div class="trivia-empty">No trivia generated yet</div>
+                            </div>
+                        </div>
+
+                        <!-- Study Tips List -->
+                        <div class="trivia-content-section">
+                            <h4>Daily Study Tips <span class="content-count" id="tipsCount">(0)</span></h4>
+                            <div class="trivia-list" id="tipsList">
+                                <div class="trivia-empty">No study tips generated yet</div>
+                            </div>
+                        </div>
+
+                        <!-- Quotes List -->
+                        <div class="trivia-content-section">
+                            <h4>Motivational Quotes <span class="content-count" id="quotesCount">(0)</span></h4>
+                            <div class="trivia-list trivia-quotes-list" id="quotesList">
+                                <div class="trivia-empty">No quotes generated yet</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advertisement Grid -->
+                    <div class="ad-grid" id="adGrid">
+                        <div class="ad-empty-state">No advertisements uploaded yet</div>
+                    </div>
+
+                    <div id="adsStats" class="table-stats"></div>
+                </section>
+
+                <!-- Section: Welcome Message (Phase 49) -->
+                <section id="section-welcome" class="admin-section">
+                    <div class="section-header">
+                        <h2>Welcome Message</h2>
+                        <button id="refreshWelcomeBtn" class="btn-secondary">&#8635; Refresh</button>
+                    </div>
+
+                    <div id="welcomeLoadingIndicator" class="loading hidden">Loading...</div>
+
+                    <div class="card">
+                        <div class="form-group">
+                            <label for="welcomeMessageInput">Welcome Message</label>
+                            <p class="form-hint">Displayed when a new conversation begins. Use "- " prefix for bullet points.</p>
+                            <textarea id="welcomeMessageInput" rows="12" placeholder="Enter welcome message..."></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button id="saveWelcomeBtn" class="btn-primary">Save Changes</button>
+                            <span id="welcomeLastUpdated" class="status-text"></span>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Preview</h3>
+                        <div id="welcomePreview" class="welcome-preview">
+                            <img src="/images/coco-name.jpg" alt="CoCo" class="welcome-preview-image">
+                            <div id="welcomePreviewText" class="welcome-preview-text"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section: FAQ Management -->
+                <section id="section-faqs" class="admin-section">
+                    <div class="section-header">
+                        <h2>Frequently Asked Questions</h2>
+                        <div class="section-header-actions">
+                            <span id="faqCount" class="count-badge">0 / 20</span>
+                            <button id="addFaqBtn" class="btn-primary">+ Add FAQ</button>
+                        </div>
+                    </div>
+
+                    <div id="faqLoadingIndicator" class="loading hidden">Loading FAQs...</div>
+
+                    <div class="card">
+                        <p class="card-description">Manage frequently asked questions displayed on the kiosk. Drag to reorder. Maximum 20 questions.</p>
+
+                        <div id="faqList" class="faq-admin-list">
+                            <!-- FAQ items loaded dynamically -->
+                        </div>
+
+                        <div id="faqEmptyState" class="empty-state hidden">
+                            <p>No FAQs added yet. Click "Add FAQ" to create your first question.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- FAQ Add/Edit Modal -->
+                <div id="faqModal" class="modal hidden">
+                    <div class="modal-backdrop"></div>
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="faqModalTitle">Add FAQ</h3>
+                            <button class="modal-close" onclick="closeFaqModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" id="faqEditId">
+
+                            <div class="form-group">
+                                <label for="faqQuestionInput">Question</label>
+                                <input type="text" id="faqQuestionInput" placeholder="Enter the question...">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="faqAnswerInput">Answer</label>
+                                <textarea id="faqAnswerInput" rows="6" placeholder="Enter the answer..."></textarea>
+                            </div>
+
+                            <!-- Ask CoCo Section -->
+                            <div class="ask-coco-section">
+                                <button type="button" id="askCocoBtn" class="btn-secondary ask-coco-btn" onclick="askCocoForAnswer()">
+                                    <span class="ask-coco-icon">&#10024;</span> Ask CoCo
+                                </button>
+                                <span id="askCocoStatus" class="status-text"></span>
+                            </div>
+
+                            <!-- Generated Answer Preview -->
+                            <div id="generatedAnswerPreview" class="generated-preview hidden">
+                                <div class="preview-header">
+                                    <span class="preview-label">Generated Answer:</span>
+                                    <span id="generatedConfidence" class="confidence-badge"></span>
+                                </div>
+                                <div id="generatedAnswerText" class="preview-content"></div>
+                                <div class="preview-actions">
+                                    <button type="button" class="btn-secondary" onclick="useGeneratedAnswer()">Use This Answer</button>
+                                    <button type="button" class="btn-text" onclick="hideGeneratedPreview()">Dismiss</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-secondary" onclick="closeFaqModal()">Cancel</button>
+                            <button type="button" id="saveFaqBtn" class="btn-primary" onclick="saveFaq()">Save FAQ</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Voice Configuration (Phase 36) -->
+                <section id="section-voice" class="admin-section">
+                    <div class="section-header">
+                        <h2>Voice Configuration</h2>
+                        <button id="refreshVoiceBtn" class="btn-secondary">&#8635; Refresh</button>
+                    </div>
+
+                    <div id="voiceLoadingIndicator" class="loading hidden">Loading voice configuration...</div>
+
+                    <div class="voice-config-grid">
+                        <!-- STT Providers -->
+                        <div class="card voice-provider-card">
+                            <h3>Speech-to-Text (STT)</h3>
+                            <p class="card-description">Select the engine for converting speech to text</p>
+                            <div id="sttProviders" class="provider-list">
+                                <div class="provider-loading">Loading providers...</div>
+                            </div>
+                            <!-- Phase 37: Fallback Selection -->
+                            <div class="fallback-section">
+                                <h4>Fallback Engine</h4>
+                                <p class="fallback-description">Used when primary engine fails or has low confidence</p>
+                                <select id="sttFallbackSelect" class="fallback-select">
+                                    <option value="">Auto-select</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- TTS Providers -->
+                        <div class="card voice-provider-card">
+                            <h3>Text-to-Speech (TTS)</h3>
+                            <p class="card-description">Select the engine for converting text to speech</p>
+                            <div id="ttsProviders" class="provider-list">
+                                <div class="provider-loading">Loading providers...</div>
+                            </div>
+                            <!-- Phase 37: Fallback Selection -->
+                            <div class="fallback-section">
+                                <h4>Fallback Engine</h4>
+                                <p class="fallback-description">Used when primary engine fails</p>
+                                <select id="ttsFallbackSelect" class="fallback-select">
+                                    <option value="">Auto-select</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phase 38: Usage Monitoring -->
+                    <div class="card usage-card">
+                        <h3>Google STT Monthly Usage</h3>
+                        <p class="card-description">Track usage against the 60-minute free tier quota</p>
+                        <div id="usageDisplay" class="usage-display">
+                            <div class="usage-bar-container">
+                                <div id="usageBar" class="usage-bar" style="width: 0%"></div>
+                            </div>
+                            <div class="usage-stats">
+                                <span class="usage-time">
+                                    <span id="usageUsed">0:00</span> / <span id="usageQuota">60:00</span>
+                                </span>
+                                <span id="usagePercent" class="usage-percent">0%</span>
+                            </div>
+                            <p class="usage-note">Resets automatically on the 1st of each month</p>
+                        </div>
+                    </div>
+
+                    <!-- Phase 39A: Cloud Credentials with Input Forms -->
+                    <div class="card credentials-card">
+                        <h3>Cloud Credentials</h3>
+                        <p class="card-description">Configure API credentials for cloud services</p>
+
+                        <!-- OpenAI API Key -->
+                        <div class="credential-form">
+                            <div class="credential-header">
+                                <span class="credential-name">OpenAI API Key</span>
+                                <span id="openaiCredentialStatus" class="status-badge">--</span>
+                            </div>
+                            <div class="credential-current" id="openaiCurrentStatus">
+                                <span id="openaiCredentialKey" class="credential-value">Not configured</span>
+                                <span id="openaiUpdatedAt" class="credential-meta"></span>
+                            </div>
+                            <div class="credential-input-row">
+                                <input type="password"
+                                       id="openaiApiKeyInput"
+                                       placeholder="sk-..."
+                                       class="credential-input"
+                                       autocomplete="off">
+                                <button type="button"
+                                        id="toggleOpenaiKeyBtn"
+                                        class="btn-icon"
+                                        title="Show/Hide">
+                                    <span class="eye-icon">&#128065;</span>
+                                </button>
+                            </div>
+                            <div class="credential-actions">
+                                <button type="button" id="saveOpenaiKeyBtn" class="btn-primary btn-small">Save</button>
+                                <button type="button" id="verifyOpenaiKeyBtn" class="btn-secondary btn-small">Verify</button>
+                            </div>
+                        </div>
+
+                        <!-- Google Cloud Service Account -->
+                        <div class="credential-form">
+                            <div class="credential-header">
+                                <span class="credential-name">Google Cloud Service Account</span>
+                                <span id="googleCredentialStatus" class="status-badge">--</span>
+                            </div>
+                            <div class="credential-current" id="googleCurrentStatus">
+                                <span id="googleCredentialPath" class="credential-value">Not configured</span>
+                                <span id="googleProjectId" class="credential-meta"></span>
+                                <span id="googleUpdatedAt" class="credential-meta"></span>
+                            </div>
+                            <div class="credential-upload-row">
+                                <input type="file"
+                                       id="googleCredentialFileInput"
+                                       accept=".json"
+                                       class="hidden">
+                                <button type="button"
+                                        id="uploadGoogleCredBtn"
+                                        class="btn-secondary">
+                                    Upload JSON File
+                                </button>
+                                <span id="googleCredentialFilename" class="filename-display">
+                                    No file selected
+                                </span>
+                            </div>
+                            <div class="credential-actions">
+                                <button type="button" id="saveGoogleCredBtn" class="btn-primary btn-small" disabled>Save</button>
+                                <button type="button" id="verifyGoogleCredBtn" class="btn-secondary btn-small" disabled>Verify</button>
+                            </div>
+                        </div>
+
+                        <p class="credentials-note">
+                            <strong>Secure Storage:</strong> Credentials are encrypted at rest and persist across restarts.
+                        </p>
+                    </div>
+
+                    <div class="voice-actions">
+                        <button id="saveVoiceConfigBtn" class="btn-primary" disabled>Save Configuration</button>
+                        <span id="voiceConfigStatus" class="config-status"></span>
+                    </div>
+                </section>
+
+                <!-- Section: Developer Settings (Phase 39B) -->
+                <section id="section-developer" class="admin-section">
+                    <div class="section-header">
+                        <h2>Developer Settings</h2>
+                    </div>
+
+                    <div class="card developer-card">
+                        <h3>Debug Panel</h3>
+                        <p class="card-description">
+                            Show real-time debug information in the chatbot UI for all users.
+                            Useful for demonstrations and troubleshooting.
+                        </p>
+
+                        <div class="toggle-row">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="debugModeToggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-label" id="debugModeLabel">Debug Panel Hidden</span>
+                        </div>
+
+                        <p class="developer-note">
+                            When enabled, all users will see technical details about each response including:
+                            LLM provider, retrieval mode, chunks retrieved, grounding status, and timing.
+                        </p>
+                    </div>
+
+                    <!-- Phase 50: Response Metadata Visibility Toggle -->
+                    <div class="card developer-card">
+                        <h3>Response Metadata</h3>
+                        <p class="card-description">
+                            Control visibility of confidence level, score, and sources in chatbot response bubbles.
+                            This is separate from the Debug Panel toggle.
+                        </p>
+
+                        <div class="toggle-row">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="metadataVisibleToggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-label" id="metadataToggleLabel">Metadata Visible</span>
+                        </div>
+
+                        <p class="developer-note">
+                            When enabled: Confidence badge, score, and sources are shown in responses.<br>
+                            When disabled: Only the answer content is displayed to users.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Section: Test Harness (Phase 42) -->
+                <section id="section-test-harness" class="admin-section">
+                    <div class="section-header">
+                        <h2>Test Harness</h2>
+                        <div class="header-actions">
+                            <button id="runTestsBtn" class="btn-primary">&#9658; Run Tests</button>
+                            <button id="downloadResultsBtn" class="btn-secondary" disabled>&#8595; Download Results</button>
+                        </div>
+                    </div>
+
+                    <div class="test-harness-layout">
+                        <!-- Left: Results Viewer (60%) -->
+                        <div class="results-panel">
+                            <div class="panel-header">
+                                <h3>Results</h3>
+                                <span id="testProgressBadge" class="progress-badge hidden">0/0</span>
+                            </div>
+                            <div id="testResultsContainer" class="results-list">
+                                <div class="empty-state">Run tests to see results</div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column (40%) -->
+                        <div class="test-harness-right">
+                            <!-- Upper: Question List -->
+                            <div class="questions-panel">
+                                <div class="panel-header">
+                                    <h3>Test Questions</h3>
+                                    <div class="panel-actions">
+                                    </div>
+                                </div>
+                                <div class="add-question-form">
+                                    <input type="text" id="newQuestionInput" placeholder="Enter a test question..." class="question-input">
+                                    <button id="addQuestionBtn" class="btn-primary btn-small">+ Add</button>
+                                </div>
+                                <div id="testQuestionsList" class="questions-list">
+                                    <div class="empty-state">No questions added</div>
+                                </div>
+                            </div>
+
+                            <!-- Lower: Summary Panel -->
+                            <div class="summary-panel">
+                                <h3>Test Summary</h3>
+                                <div class="summary-grid">
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Total</span>
+                                        <span id="testTotalCount" class="stat-value">0</span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Passed</span>
+                                        <span id="testPassedCount" class="stat-value passed">0</span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Failed</span>
+                                        <span id="testFailedCount" class="stat-value failed">0</span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Pass Rate</span>
+                                        <span id="testPassRate" class="stat-value">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="/static/admin.js"></script>
+</body>
+</html>

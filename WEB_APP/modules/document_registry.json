@@ -1,0 +1,42 @@
+{
+  "6a2af78fcd91ccd5148d711dc100b615": {
+    "document_name": "2022_student_manual_latest-OLD.pdf",
+    "file_type": ".pdf",
+    "file_hash": "fb4a77f554d1e3944d27f4f270e62c76213f0219e3422817e276c3a674b4e45f",
+    "file_path": "C:\\Users\\chann\\OneDrive\\Desktop\\INGEST\\2022_student_manual_latest-OLD.pdf",
+    "ingestion_timestamp": "2026-03-09T18:13:43.617448",
+    "num_chunks": 507,
+    "chunk_size": 500,
+    "chunk_overlap": 50
+  },
+  "ad9e03c6c6136914615f2e258a882580": {
+    "document_name": "2026_Columban_College_Directory_Entities-03-07.pdf",
+    "file_type": ".pdf",
+    "file_hash": "0e45c71ed203743879ed2b34c2c3ec3c54afbb8eb87eea074e46d51068425998",
+    "file_path": "C:\\Users\\chann\\OneDrive\\Desktop\\INGEST\\2026_Columban_College_Directory_Entities-03-07.pdf",
+    "ingestion_timestamp": "2026-03-09T18:13:57.400255",
+    "num_chunks": 323,
+    "chunk_size": 500,
+    "chunk_overlap": 50
+  },
+  "f63b97e36a49fa7ade4592e882c2a7e2": {
+    "document_name": "CoCo_AI-Integrated_Information_Assistant_Thesis.pdf",
+    "file_type": ".pdf",
+    "file_hash": "a550d04bf048b4c3f1310b813fcfaeabc199a44163fa2b0182e1b9bb5db92df3",
+    "file_path": "C:\\Users\\chann\\OneDrive\\Desktop\\INGEST\\CoCo_AI-Integrated_Information_Assistant_Thesis.pdf",
+    "ingestion_timestamp": "2026-03-09T18:14:02.745535",
+    "num_chunks": 5,
+    "chunk_size": 500,
+    "chunk_overlap": 50
+  },
+  "e2b0e8adb72911bae81ef3af8c295f15": {
+    "document_name": "CoCo_Official_Identity_and_System_Information.pdf",
+    "file_type": ".pdf",
+    "file_hash": "c71c122d311225fa8db74078d060145624da400a80667161ba3ce666d5672c30",
+    "file_path": "C:\\Users\\chann\\OneDrive\\Desktop\\INGEST\\CoCo_Official_Identity_and_System_Information.pdf",
+    "ingestion_timestamp": "2026-03-09T18:14:03.085119",
+    "num_chunks": 9,
+    "chunk_size": 500,
+    "chunk_overlap": 50
+  }
+}

@@ -1,0 +1,26 @@
+# CoCo Campus Kiosk - systemd Service (Template)
+# ================================================
+# NOTE: install_kiosk.sh generates the actual service file at
+# /etc/systemd/system/coco-kiosk.service with correct paths.
+# This file is a reference template only.
+#
+# Logs: journalctl -u coco-kiosk -f
+
+[Unit]
+Description=CoCo Campus Information Kiosk Backend
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/coco
+ExecStart=/home/pi/coco/venv/bin/python -m WEB_APP
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+# NOTE: No EnvironmentFile here. The app loads .env via python-dotenv.
+# systemd EnvironmentFile cannot parse dotenv format (quotes, exports, comments).
+
+[Install]
+WantedBy=multi-user.target

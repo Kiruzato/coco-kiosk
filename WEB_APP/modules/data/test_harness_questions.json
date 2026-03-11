@@ -1,0 +1,64 @@
+{
+  "questions": [
+    {
+      "id": "ee63f13d-14c6-49f8-9693-116ff2c07e46",
+      "question": "What are institutional thrusts?",
+      "category": "test",
+      "created_at": "2026-02-08T14:25:44.228844"
+    },
+    {
+      "id": "7c5b1e05-b5ad-4959-abaf-3100ccdd7919",
+      "question": "List all institutional thrusts",
+      "category": "test",
+      "created_at": "2026-02-08T14:25:44.228844"
+    },
+    {
+      "id": "f4f8ed9f-e297-4971-bfb5-0121709f2f9b",
+      "question": "What happens if I get 5.0 grade?",
+      "category": "test",
+      "created_at": "2026-02-08T14:25:44.228844"
+    },
+    {
+      "id": "45735fb2-971a-49cb-9ab4-02d578176dc0",
+      "question": "Summa Cum Laude grade",
+      "category": "test",
+      "created_at": "2026-02-08T14:25:44.228844"
+    },
+    {
+      "id": "3338a917-4be5-41ac-a1fa-a1a442246f74",
+      "question": "What are graduation honors and grades?",
+      "category": "test",
+      "created_at": "2026-02-08T14:25:44.228844"
+    },
+    {
+      "id": "b320b615-7f94-42f1-be3e-ebbb1979e587",
+      "question": "What is honorable mention?",
+      "category": "test",
+      "created_at": "2026-02-08T14:25:44.229747"
+    },
+    {
+      "id": "054f8b9e-0db6-4b22-9927-0d4bc96f2bf1",
+      "question": "What is non degree program?",
+      "category": "test",
+      "created_at": "2026-02-08T14:25:44.229747"
+    },
+    {
+      "id": "480d7534-71b5-4195-b765-d539671d029c",
+      "question": "What is the classification of students?",
+      "category": "test",
+      "created_at": "2026-02-08T14:25:44.229747"
+    },
+    {
+      "id": "6b2436d1-48bd-4c0b-bee0-319b1008502d",
+      "question": "What are the 5 year curriculum program?",
+      "category": "test",
+      "created_at": "2026-02-08T14:25:44.229747"
+    },
+    {
+      "id": "163ad2be-bd30-445f-bd5e-710700f17b85",
+      "question": "What are sports facilities?",
+      "category": "test",
+      "created_at": "2026-02-08T14:25:44.229747"
+    }
+  ]
+}

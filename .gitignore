@@ -1,0 +1,74 @@
+# ============================================
+# CoCo Campus Kiosk - .gitignore
+# ============================================
+# Updated for restructured codebase:
+#   WEB_APP/       - Runtime application
+#   INGESTION_MODULE/ - Document ingestion
+#   ARCHIVE/       - Non-essential files
+# ============================================
+
+# === Windows artifacts ===
+nul
+Thumbs.db
+
+# === macOS ===
+.DS_Store
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# === Virtual environments ===
+venv/
+venv311/
+ENV/
+.venv/
+INGESTION_MODULE
+INGESTION_MODULE/venv/
+
+# === Environment files (keep .env.example) ===
+.env
+*.env.local
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === Logs ===
+*.log
+
+# === Test audio artifacts ===
+*.wav
+
+# === Credentials (never commit) ===
+WEB_APP/modules/data/credentials.enc
+WEB_APP/modules/data/.google_sa_temp.json
+WEB_APP/sa_stt.json
+
+# === Pytest ===
+.pytest_cache/
+
+# === Voice models (download separately) ===
+WEB_APP/modules/voice/models/whisper/*.bin
+WEB_APP/modules/voice/models/piper/*.onnx
+WEB_APP/modules/voice/models/piper/*.onnx.json
+
+# === Whisper.cpp source ===
+whisper.cpp/
+
+# === Backup directories ===
+backups/
+
+# === Development documentation (keep at root) ===
+# PROJECT_CONTEXT.md, architecture.md, etc. are tracked
+
+
+ARCHIVE/misc/sa_stt.json
+WEB_APP/data/.google_sa_temp.json
+RPI-logs.txt
+

@@ -1,0 +1,2411 @@
+/* ============================================================================
+   Campus Information Kiosk - Phase 5
+   Kiosk-optimized styling: Large text, high contrast, touch-friendly
+   ============================================================================ */
+
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Kiosk Container */
+.kiosk-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 1200px;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Header: Two-Panel Split Layout */
+.kiosk-header {
+    background: #1e3c72;
+    color: white;
+    display: flex;
+    min-height: 80px;
+}
+
+/* Left Header: Conversation Section (45%) */
+.header-left {
+    flex: 0 0 45%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px 10px 30px;
+    gap: 15px;
+}
+
+.header-left .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+    min-width: 0; /* Allow shrinking */
+}
+
+.header-left .header-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.header-left .header-titles {
+    text-align: left;
+    min-width: 0;
+}
+
+.header-left .header-titles h1 {
+    font-size: 32px;
+    font-weight: 800;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.header-left .header-titles h2 {
+    font-size: 13px;
+    font-weight: normal;
+    opacity: 0.9;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Reset Button (New Conversation) */
+.reset-btn {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.reset-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: white;
+    transform: scale(1.02);
+}
+
+.reset-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Cooldown state visual feedback */
+.reset-btn.cooldown {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Right Header: Advertisement Section (55%) */
+.header-right {
+    flex: 0 0 55%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 10px 20px;
+    gap: 15px;
+    background: rgba(0, 0, 0, 0.1);
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================================================
+   Phase 56C: Trivia/Study Tips/Quotes Panel (Final Layout)
+   - Inline icon layout: [ICON] Content text...
+   - Uniform panel background (no title strip)
+   - Vertical flip animation (bottom-up)
+   - Adaptive text scaling
+   - Structural alignment with control buttons
+   ============================================================================ */
+
+/* Right Header layout: align trivia panel with control buttons */
+.header-right {
+    flex: 0 0 55%;
+    display: flex;
+    align-items: stretch; /* All children same height */
+    justify-content: flex-end;
+    padding: 10px; /* Uniform spacing on all sides */
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.1);
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.trivia-panel {
+    flex: 1;
+    display: flex;
+    align-items: stretch; /* Button and card same height */
+    gap: 10px;
+    min-width: 0;
+}
+
+/* Card container with 3D perspective */
+.trivia-card {
+    flex: 1;
+    perspective: 1000px;
+    min-width: 0;
+}
+
+/* Inner card that flips */
+.trivia-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.5s ease-in-out;
+    transform-style: preserve-3d;
+}
+
+/* Flip state - X-axis rotation (vertical flip, bottom-up) */
+.trivia-card.flipped .trivia-card-inner {
+    transform: rotateX(-180deg);
+}
+
+/* Front and back faces - light tinted backgrounds by content type */
+.trivia-card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch; /* Children span full height */
+    padding: 8px 12px;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: background 0.3s ease;
+}
+
+/* Panel background tints by content type (light, professional tones) */
+.trivia-card-face[data-type="trivia"] {
+    background: rgba(220, 220, 230, 0.18); /* Very light neutral gray */
+}
+
+.trivia-card-face[data-type="study_tip"] {
+    background: rgba(200, 225, 255, 0.22); /* Very light cool blue */
+}
+
+.trivia-card-face[data-type="quote"] {
+    background: rgba(255, 235, 205, 0.22); /* Very light warm beige */
+}
+
+.trivia-card-back {
+    transform: rotateX(180deg);
+}
+
+/* Icon container - spans full panel height, centers icon vertically */
+.trivia-icon-container {
+    width: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 8px;
+    /* Subtle complementary background for icon area */
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Icon - doubled size (36px from 18px) */
+.trivia-icon {
+    width: 36px;
+    height: 36px;
+    color: white;
+    opacity: 0.95;
+}
+
+/* Content area - vertically centered, text wraps under itself */
+.trivia-content-area {
+    flex: 1;
+    display: flex;
+    align-items: center; /* Vertical center */
+    min-width: 0;
+    overflow: hidden;
+}
+
+.trivia-content {
+    font-size: 14px; /* Base size, overridden by adaptive scaling */
+    font-weight: 500;
+    color: white;
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    /* No line-clamp - let adaptive scaling handle fit */
+}
+
+/* Draw Quote button - stretches to match panel height */
+.draw-quote-btn {
+    background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(255, 165, 0, 0.3);
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    align-self: stretch; /* Fill panel height */
+    min-width: 80px;
+    position: relative;
+    overflow: hidden;
+}
+
+.draw-quote-btn:hover:not(:disabled) {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.5);
+}
+
+.draw-quote-btn:disabled,
+.draw-quote-btn.cooldown {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Label container - positions labels for animation */
+.draw-quote-label-container {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Individual label - 2-line stacked layout */
+.draw-quote-label {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.15;
+    width: 100%;
+    height: 100%;
+    /* Initial state: hidden below */
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+/* Active label - visible and centered */
+.draw-quote-label.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Exiting label - slides up and fades out */
+.draw-quote-label.exiting {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+/* Label line styling */
+.draw-quote-label .label-line {
+    display: block;
+    white-space: nowrap;
+}
+
+/* Control buttons container (stacked vertically) */
+.header-right-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+/* Header Icon Buttons (Fullscreen, Refresh) */
+.header-icon-btn {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.header-icon-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.05);
+}
+
+.header-icon-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Cooldown state for refresh button */
+.header-icon-btn.cooldown {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.header-icon-btn .fullscreen-icon,
+.header-icon-btn .refresh-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+/* Legacy fullscreen button compatibility (remove if not needed) */
+.fullscreen-btn {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
+}
+
+.fullscreen-btn .fullscreen-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+/* Fullscreen mode styles */
+.kiosk-container.fullscreen-mode {
+    border-radius: 0;
+    max-width: 100%;
+    height: 100vh;
+}
+
+body.fullscreen-active {
+    padding: 0;
+}
+
+/* Chat Container */
+.chat-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 25px 20px; /* Reduced horizontal padding for wider bubbles */
+    background: #f5f7fa;
+
+    /* Touch-scroll optimizations for kiosk */
+    -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling on iOS */
+    overscroll-behavior: contain; /* Prevent scroll chaining to parent */
+    scroll-behavior: smooth; /* Smooth programmatic scrolling */
+    touch-action: pan-y; /* Allow vertical touch gestures */
+}
+
+/* Drag-to-scroll styles (DISABLED - interferes with text selection)
+.chat-container {
+    cursor: grab;
+}
+.chat-container.dragging {
+    cursor: grabbing;
+    user-select: none;
+}
+*/
+
+.chat-container::-webkit-scrollbar {
+    width: 12px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+    background: #e0e0e0;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 6px;
+}
+
+.chat-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Messages */
+.message {
+    margin-bottom: 30px;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message-content {
+    padding: 20px 25px;
+    border-radius: 15px;
+    line-height: 1.6;
+}
+
+/* User messages: right-aligned, max 75% width (original behavior) */
+.user-message .message-content {
+    max-width: 75%;
+    margin-left: auto; /* Right-align */
+    background: #1e3c72;
+    color: white;
+    font-size: 22px;
+}
+
+/* Assistant/System messages: full width, left-aligned
+   Extends across entire container width for maximum content space */
+.assistant-message .message-content,
+.system-message .message-content {
+    width: 100%;
+    max-width: none; /* No artificial cap */
+    background: white;
+    color: #333;
+    border: 2px solid #e0e0e0;
+    font-size: 20px;
+}
+
+.large-text {
+    font-size: 22px;
+    margin-bottom: 15px;
+}
+
+/* Examples List */
+.examples-list {
+    margin: 20px 0;
+    padding-left: 30px;
+}
+
+.examples-list li {
+    font-size: 20px;
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+/* Confidence Badge */
+.confidence-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 15px;
+    text-transform: uppercase;
+}
+
+.confidence-high {
+    background: #4caf50;
+    color: white;
+}
+
+.confidence-medium {
+    background: #ff9800;
+    color: white;
+}
+
+.confidence-low {
+    background: #f44336;
+    color: white;
+}
+
+.confidence-score {
+    font-size: 16px;
+    color: #666;
+    margin-top: 8px;
+}
+
+/* Sources */
+.sources {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 2px solid #e0e0e0;
+}
+
+.sources-title {
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.source-item {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 8px;
+    padding-left: 15px;
+    position: relative;
+}
+
+.source-item:before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #1e3c72;
+    font-weight: bold;
+}
+
+/* Feedback Icons - Modern Thumbs Up/Down */
+.feedback-container {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.feedback-icons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-start;
+}
+
+.feedback-icon-btn {
+    width: 52px;
+    height: 52px;
+    border: none;
+    border-radius: 50%;
+    background: #f5f5f5;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #757575;
+}
+
+.feedback-icon-btn:hover {
+    transform: scale(1.1);
+}
+
+.feedback-icon-btn:active {
+    transform: scale(0.95);
+}
+
+.feedback-icon-btn.thumbs-up:hover {
+    background: #e8f5e9;
+    color: #4caf50;
+}
+
+.feedback-icon-btn.thumbs-up:active {
+    background: #c8e6c9;
+    color: #388e3c;
+}
+
+.feedback-icon-btn.thumbs-down:hover {
+    background: #ffebee;
+    color: #f44336;
+}
+
+.feedback-icon-btn.thumbs-down:active {
+    background: #ffcdd2;
+    color: #d32f2f;
+}
+
+.feedback-icon-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.feedback-icon-btn.selected {
+    transform: scale(1.1);
+}
+
+.feedback-icon-btn.thumbs-up.selected {
+    background: #4caf50;
+    color: white;
+}
+
+.feedback-icon-btn.thumbs-down.selected {
+    background: #f44336;
+    color: white;
+}
+
+.feedback-thanks {
+    font-size: 14px;
+    color: #4caf50;
+    font-weight: 500;
+    margin-top: 8px;
+}
+
+/* Warning/Error Messages */
+.warning-message {
+    background: #fff3cd;
+    border-left: 5px solid #ff9800;
+    padding: 20px;
+    margin-top: 15px;
+    border-radius: 5px;
+    font-size: 18px;
+    color: #856404;
+}
+
+/* Input Container */
+.input-container {
+    padding: 25px 40px;
+    background: white;
+    border-top: 3px solid #e0e0e0;
+}
+
+#chatForm {
+    display: flex;
+    gap: 15px;
+}
+
+#userInput {
+    flex: 1;
+    padding: 20px 25px;
+    font-size: 20px;
+    border: 3px solid #ddd;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+#userInput:focus {
+    border-color: #1e3c72;
+}
+
+#sendBtn {
+    padding: 20px 40px;
+    font-size: 20px;
+    font-weight: bold;
+    background: #1e3c72;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 120px;
+}
+
+#sendBtn:hover {
+    background: #2a5298;
+    transform: scale(1.05);
+}
+
+#sendBtn:active {
+    transform: scale(0.98);
+}
+
+#sendBtn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Loading Indicator */
+.loading-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.loading-indicator p {
+    color: white;
+    font-size: 24px;
+    margin-top: 20px;
+}
+
+.spinner {
+    border: 8px solid rgba(255, 255, 255, 0.3);
+    border-top: 8px solid white;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    .kiosk-header {
+        flex-direction: column;
+    }
+
+    .header-left {
+        flex: 1;
+        width: 100%;
+        padding: 10px 15px;
+    }
+
+    .header-left .header-titles h1 {
+        font-size: 28px;
+    }
+
+    .header-left .header-titles h2 {
+        font-size: 11px;
+    }
+
+    .header-left .header-logo {
+        width: 50px;
+        height: 50px;
+    }
+
+    .reset-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    .header-right {
+        flex: 0 0 auto;
+        width: 100%;
+        padding: 8px 15px;
+        justify-content: flex-end;
+    }
+
+    .header-right-controls {
+        flex-direction: row;
+        gap: 8px;
+    }
+
+    .header-icon-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+
+    /* Responsive message widths */
+    .user-message .message-content {
+        max-width: 80%;
+        font-size: 18px;
+    }
+
+    .assistant-message .message-content,
+    .system-message .message-content {
+        width: 100%;
+        font-size: 18px;
+    }
+
+    .large-text {
+        font-size: 20px;
+    }
+}
+
+/* Phase 6: Mode transparency badges */
+.mode-badge {
+    display: inline-block;
+    margin: 12px 0;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.mode-campus {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border: 2px solid #1976d2;
+}
+
+.mode-general {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+    border: 2px solid #7b1fa2;
+}
+
+.mode-clarification {
+    background-color: #fff3e0;
+    color: #f57c00;
+    border: 2px solid #f57c00;
+}
+
+.fusion-label {
+    display: inline-block;
+    font-size: 11px;
+    color: #6c757d;
+    padding: 2px 8px;
+    margin-top: 4px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* ============================================================================
+   Phase 17B.1: Structured Answer Sections
+   ============================================================================ */
+
+.answer-section {
+    margin-bottom: 20px;
+}
+
+.section-heading {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1e3c72;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 5px;
+}
+
+.direct-answer {
+    font-size: 20px;
+    line-height: 1.6;
+    color: #333;
+}
+
+.key-details-list {
+    list-style-type: disc;
+    padding-left: 25px;
+    font-size: 18px;
+    margin: 0;
+}
+
+.key-details-list li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+    color: #444;
+}
+
+.notes-section {
+    background-color: #fff8e1;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+}
+
+.notes-section .section-heading {
+    color: #f57c00;
+    border-bottom-color: #ffc107;
+}
+
+.notes-section p {
+    font-size: 16px;
+    color: #5d4037;
+}
+
+.disclaimer {
+    font-size: 14px;
+    color: #666;
+    font-style: italic;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* Full Answer Display - Phase 17B.2 Kiosk-First */
+.full-answer {
+    font-size: 20px;
+    line-height: 1.7;
+    color: #333;
+}
+
+/* Phase 35: Answer list formatting */
+.full-answer p {
+    margin: 0 0 1em 0;
+}
+
+.full-answer p:last-child {
+    margin-bottom: 0;
+}
+
+.answer-list {
+    margin: 0.5em 0 1em 0;
+    padding-left: 1.5em;
+}
+
+.answer-list li {
+    margin: 0.4em 0;
+    line-height: 1.6;
+}
+
+.full-answer ol.answer-list {
+    list-style-type: decimal;
+}
+
+.full-answer ul.answer-list {
+    list-style-type: disc;
+}
+
+.full-answer strong {
+    font-weight: 600;
+    color: #1e3c72;
+}
+
+/* ============================================================================
+   Phase 34: Voice UI Components
+   ============================================================================ */
+
+/* Voice Button */
+.voice-btn {
+    position: relative;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 3px solid #1e3c72;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.voice-btn:hover {
+    background: #f0f4f8;
+    transform: scale(1.05);
+}
+
+.voice-btn:active {
+    transform: scale(0.95);
+}
+
+.voice-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.voice-btn .mic-icon {
+    fill: #1e3c72;
+    transition: fill 0.3s;
+}
+
+/* Voice Button States */
+.voice-btn.listening {
+    background: #4caf50;
+    border-color: #4caf50;
+    animation: pulse-green 1.5s ease-in-out infinite;
+}
+
+.voice-btn.listening .mic-icon {
+    fill: white;
+}
+
+.voice-btn.processing {
+    background: #ff9800;
+    border-color: #ff9800;
+}
+
+.voice-btn.processing .mic-icon {
+    fill: white;
+}
+
+.voice-btn.error {
+    background: #f44336;
+    border-color: #f44336;
+}
+
+.voice-btn.error .mic-icon {
+    fill: white;
+}
+
+.voice-btn.speaking {
+    background: #2196f3;
+    border-color: #2196f3;
+}
+
+.voice-btn.speaking .mic-icon {
+    fill: white;
+}
+
+/* Pulse Animation for Listening State */
+.voice-pulse {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(76, 175, 80, 0.3);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.voice-btn.listening .voice-pulse {
+    animation: pulse-ring 1.5s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+    0% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+@keyframes pulse-green {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 15px rgba(76, 175, 80, 0);
+    }
+}
+
+/* Voice Status Display */
+.voice-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 12px 20px;
+    background: #e8f5e9;
+    border-radius: 8px;
+    font-size: 18px;
+    color: #2e7d32;
+}
+
+.voice-status.processing {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.voice-status.error {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.voice-status.speaking {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.voice-status-icon::before {
+    content: "\25CF";  /* Filled circle - widely supported */
+}
+
+.voice-status.processing .voice-status-icon::before {
+    content: "\2026";  /* Ellipsis ... */
+}
+
+.voice-status.error .voice-status-icon::before {
+    content: "\2716";  /* Heavy X mark */
+}
+
+.voice-status.speaking .voice-status-icon::before {
+    content: "\266A";  /* Music note */
+}
+
+/* Transcription Preview */
+.transcription-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 15px 20px;
+    background: #f5f5f5;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+}
+
+.transcription-preview .preview-text {
+    flex: 1;
+    font-size: 18px;
+    color: #333;
+    font-style: italic;
+}
+
+.transcription-preview button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.transcription-preview .preview-edit {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.transcription-preview .preview-send {
+    background: #4caf50;
+    color: white;
+}
+
+.transcription-preview .preview-cancel {
+    background: #f44336;
+    color: white;
+}
+
+.transcription-preview button:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+
+/* Phase 40: Voice indicator and stop button removed
+   TTS now plays silently in background without visual overlay
+   Styles removed: .voice-indicator, .voice-waveform, .stop-speaking-btn, @keyframes waveform
+*/
+
+/* Voice Unavailable Notice */
+.voice-unavailable {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    background: #fff3e0;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #f57c00;
+    margin-top: 10px;
+}
+
+/* Audio Visualizer */
+.audio-visualizer-container {
+    margin-top: 15px;
+    padding: 15px;
+    background: #1a1a2e;
+    border-radius: 12px;
+    border: 2px solid #4caf50;
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+}
+
+.audio-visualizer {
+    width: 100%;
+    height: 80px;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
+}
+
+.visualizer-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 16px;
+    color: #4caf50;
+    font-weight: 600;
+}
+
+.recording-dot {
+    width: 12px;
+    height: 12px;
+    background: #f44336;
+    border-radius: 50%;
+    animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* Volume meter bars style (alternative) */
+.volume-meter {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 4px;
+    height: 60px;
+    padding: 10px;
+}
+
+.volume-bar {
+    width: 8px;
+    background: linear-gradient(180deg, #4caf50 0%, #8bc34a 50%, #cddc39 100%);
+    border-radius: 4px;
+    transition: height 0.05s ease;
+    min-height: 4px;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+    .voice-btn {
+        width: 60px;
+        height: 60px;
+    }
+
+    .voice-status {
+        font-size: 16px;
+    }
+
+    .transcription-preview {
+        flex-wrap: wrap;
+    }
+
+    .transcription-preview .preview-text {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .audio-visualizer {
+        height: 60px;
+    }
+
+    .audio-visualizer-container {
+        padding: 10px;
+    }
+}
+
+/* ============================================================================
+   PHASE 39B: DEBUG PANEL STYLES
+   ============================================================================ */
+
+.debug-panel {
+    margin-top: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #f9fafb;
+    overflow: hidden;
+    font-size: 13px;
+}
+
+.debug-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #f3f4f6;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.debug-header:hover {
+    background: #e5e7eb;
+}
+
+.debug-icon {
+    font-size: 14px;
+}
+
+.debug-title {
+    font-weight: 600;
+    color: #374151;
+    flex: 1;
+}
+
+.debug-expand {
+    color: #6b7280;
+    font-size: 10px;
+    transition: transform 0.2s ease;
+}
+
+.debug-panel.collapsed .debug-content {
+    display: none;
+}
+
+.debug-content {
+    padding: 14px;
+}
+
+.debug-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.debug-column {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+
+.debug-column-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.debug-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+    font-size: 12px;
+    color: #374151;
+}
+
+.debug-label {
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.debug-label.grounding-passed {
+    color: #059669;
+}
+
+.debug-label.grounding-failed {
+    color: #dc2626;
+}
+
+.debug-terms {
+    padding-top: 10px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.debug-terms-label {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 11px;
+    margin-right: 8px;
+}
+
+.debug-term {
+    display: inline-block;
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin: 2px 4px 2px 0;
+    font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+.debug-term.none {
+    background: #f3f4f6;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+/* Mobile Responsive for Debug Panel */
+@media (max-width: 768px) {
+    .debug-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .debug-panel {
+        font-size: 12px;
+    }
+
+    .debug-row {
+        font-size: 11px;
+    }
+}
+
+/* ============================================================================
+   Phase 43: Two-Panel Kiosk Layout for 24-inch Monitor
+   ============================================================================ */
+
+/* Main Content Area: Two-Panel Container */
+.main-content-area {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Left Panel: Chatbot (45%) */
+.chatbot-panel {
+    flex: 0 0 45%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0; /* Prevent flex overflow issues */
+}
+
+/* Right Panel: Advertisement (55%) */
+.info-panel {
+    flex: 0 0 55%;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-left: 3px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+.info-panel-content {
+    padding: 40px;
+    text-align: center;
+    width: 100%;
+}
+
+.info-panel-placeholder {
+    color: #6c757d;
+}
+
+.info-panel-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+.info-panel-subtitle {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e3c72;
+    margin-bottom: 20px;
+}
+
+.info-panel-description {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #6c757d;
+    max-width: 280px;
+    margin: 0 auto;
+}
+
+/* ============================================================================
+   Phase 43: Enhanced Header Branding (Updated for Phase 55 Split Layout)
+   ============================================================================ */
+
+/* Base header-brand styles - overridden by .header-left .header-brand */
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.header-titles {
+    text-align: left;
+}
+
+.header-titles h1 {
+    margin: 0;
+}
+
+.header-titles h2 {
+    text-align: left;
+    margin: 0;
+}
+
+/* ============================================================================
+   Phase 43: Enlarged Buttons for Kiosk Interaction
+   ============================================================================ */
+
+/* Override voice button size for kiosk - touch-friendly */
+.voice-btn {
+    width: 80px;
+    height: 80px;
+}
+
+.voice-btn .mic-icon {
+    width: 32px;
+    height: 32px;
+}
+
+/* Override send button size for kiosk - touch-friendly */
+#sendBtn {
+    padding: 20px 45px;
+    font-size: 22px;
+    min-width: 140px;
+}
+
+/* Compact text input */
+#userInput {
+    padding: 18px 22px;
+    font-size: 20px;
+}
+
+/* ============================================================================
+   Phase 43: Touch-Friendly Scrollbar for Kiosk
+   ============================================================================ */
+
+.chat-container::-webkit-scrollbar {
+    width: 28px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+    background: #e8e8e8;
+    border-radius: 14px;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #6b7280 0%, #4b5563 100%);
+    border-radius: 14px;
+    border: 4px solid #e8e8e8;
+    background-clip: padding-box;
+    min-height: 60px; /* Minimum grab area for touch */
+}
+
+.chat-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #4b5563 0%, #374151 100%);
+}
+
+.chat-container::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, #374151 0%, #1f2937 100%);
+}
+
+/* ============================================================================
+   Phase 43: Fullscreen Kiosk Optimizations
+   ============================================================================ */
+
+/* Remove max-width for true fullscreen kiosk */
+.kiosk-container {
+    max-width: 100%;
+    height: 100vh;
+    border-radius: 0;
+}
+
+/* Phase 55: Header styles now defined in split layout section above */
+/* No padding overrides needed - handled by header-left and header-right */
+
+/* Compact input panel */
+.input-container {
+    padding: 15px 30px;
+}
+
+/* Remove body padding for fullscreen */
+body {
+    padding: 0;
+}
+
+/* ============================================================================
+   Phase 43/55: Two-Panel Responsive Adjustments (Updated for Split Header)
+   ============================================================================ */
+
+@media (max-width: 1200px) {
+    .chatbot-panel {
+        flex: 0 0 50%;
+    }
+
+    .info-panel {
+        flex: 0 0 50%;
+    }
+
+    /* Adjust header proportions */
+    .header-left {
+        flex: 0 0 50%;
+    }
+
+    .header-right {
+        flex: 0 0 50%;
+    }
+
+    .header-left .header-titles h1 {
+        font-size: 28px;
+    }
+
+    .header-left .header-titles h2 {
+        font-size: 12px;
+    }
+
+    .header-left .header-logo {
+        width: 55px;
+        height: 55px;
+    }
+}
+
+@media (max-width: 992px) {
+    /* Stack panels vertically on tablets */
+    .main-content-area {
+        flex-direction: column;
+    }
+
+    .chatbot-panel {
+        flex: 1;
+    }
+
+    .info-panel {
+        flex: 0 0 auto;
+        height: 150px;
+        border-left: none;
+        border-top: 3px solid #e0e0e0;
+    }
+
+    .info-panel-title {
+        font-size: 22px;
+    }
+
+    .info-panel-subtitle {
+        font-size: 16px;
+    }
+
+    .info-panel-description {
+        display: none;
+    }
+
+    /* Header adjusts to stacked layout */
+    .header-left .header-titles h1 {
+        font-size: 26px;
+    }
+
+    .header-left .header-titles h2 {
+        font-size: 11px;
+    }
+
+    .reset-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Hide info panel and right header on mobile */
+    .info-panel {
+        display: none;
+    }
+
+    .header-right {
+        display: none;
+    }
+
+    .header-left {
+        flex: 1;
+        width: 100%;
+    }
+
+    .chatbot-panel {
+        flex: 1 1 100%;
+    }
+
+    .header-left .header-brand {
+        flex-direction: row;
+        gap: 10px;
+    }
+
+    .header-left .header-titles {
+        text-align: left;
+    }
+
+    .header-left .header-titles h1 {
+        font-size: 24px;
+    }
+
+    .header-left .header-titles h2 {
+        font-size: 10px;
+    }
+
+    .header-left .header-logo {
+        width: 45px;
+        height: 45px;
+    }
+
+    .voice-btn {
+        width: 70px;
+        height: 70px;
+    }
+
+    #sendBtn {
+        padding: 18px 30px;
+        font-size: 18px;
+        min-width: 100px;
+    }
+}
+
+/* ============================================================================
+   Phase 47: Streaming Response Support
+   ============================================================================ */
+
+/* Streaming message container */
+.message.streaming {
+    position: relative;
+}
+
+/* Streaming content area */
+.streaming-content {
+    min-height: 2em;
+}
+
+/* Streaming metadata shown immediately */
+.streaming-metadata {
+    margin-bottom: 10px;
+}
+
+/* Blinking cursor animation */
+.streaming-cursor {
+    display: inline;
+    animation: blink 1s step-end infinite;
+    color: #1e3c72;
+    font-weight: bold;
+}
+
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0;
+    }
+}
+
+/* Streaming message transitions */
+.message.streaming .message-content {
+    transition: all 0.2s ease;
+}
+
+/* Remove cursor animation when streaming completes */
+.message:not(.streaming) .streaming-cursor {
+    display: none;
+}
+
+/* Error text in streaming */
+.error-text {
+    color: #f44336;
+    font-weight: 500;
+}
+
+/* ============================================================================
+   Phase 48: Advertisement Slideshow
+   ============================================================================ */
+
+/* Advertisement Slideshow Container */
+.ad-slideshow {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    background: #1e3c72;
+}
+
+/* Advertisement Image Container */
+.ad-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Individual Advertisement Image */
+.ad-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #1e3c72;
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out;
+    pointer-events: none;
+}
+
+.ad-image.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Phase 54: Base class for all ad items (image and text) */
+.ad-item {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out;
+    pointer-events: none;
+}
+
+.ad-item.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Phase 54: Text Advertisement Styles */
+/* Font size is dynamically controlled by AdaptiveTextScaler (content-measurement-based) */
+.ad-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    padding: 2rem;
+    box-sizing: border-box;
+    overflow: hidden; /* Prevent any overflow during scaling */
+}
+
+.ad-text .ad-text-content {
+    color: #1a1a1a;
+    font-size: 24px; /* Fallback if JS fails; overridden by AdaptiveTextScaler */
+    font-weight: 500;
+    text-align: left;
+    line-height: 1.5; /* Matches AdaptiveTextScaler.CONFIG.LINE_HEIGHT_RATIO */
+    max-width: 90%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Navigation Zones (invisible click areas) */
+.ad-nav-zone {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    cursor: pointer;
+    z-index: 100;
+    background: transparent;
+}
+
+.ad-nav-zone:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.ad-nav-zone:active {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.ad-nav-left {
+    left: 0;
+}
+
+.ad-nav-right {
+    right: 0;
+}
+
+/* Navigation zone hover arrows */
+.ad-nav-left::after,
+.ad-nav-right::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.6);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.ad-nav-zone:hover::after {
+    opacity: 1;
+}
+
+.ad-nav-left::after {
+    left: 20px;
+    border-right: none;
+    border-top: none;
+    transform: translateY(-50%) rotate(45deg);
+}
+
+.ad-nav-right::after {
+    right: 20px;
+    border-left: none;
+    border-bottom: none;
+    transform: translateY(-50%) rotate(45deg);
+}
+
+/* Indicator Dots Container */
+.ad-indicators {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 20;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 20px;
+}
+
+/* Individual Indicator Dot */
+.ad-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.ad-indicator:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: scale(1.1);
+}
+
+.ad-indicator.active {
+    background: #ffffff;
+    transform: scale(1.2);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Hide slideshow when no ads, show placeholder */
+.ad-slideshow.hidden {
+    display: none;
+}
+
+/* Placeholder styling when no advertisements */
+.info-panel-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-align: center;
+}
+
+.info-panel-placeholder.hidden {
+    display: none;
+}
+
+/* Single ad - hide navigation and indicators */
+.ad-slideshow.single-ad .ad-nav-zone,
+.ad-slideshow.single-ad .ad-indicators {
+    display: none;
+}
+
+/* Responsive adjustments for advertisement panel */
+@media (max-width: 1200px) {
+    .ad-indicators {
+        bottom: 15px;
+        gap: 8px;
+        padding: 6px 12px;
+    }
+
+    .ad-indicator {
+        width: 10px;
+        height: 10px;
+    }
+
+    .ad-nav-left::after,
+    .ad-nav-right::after {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+@media (max-width: 992px) {
+    /* Stacked layout - slideshow becomes banner */
+    .info-panel {
+        position: relative;
+    }
+
+    .ad-slideshow {
+        position: relative;
+        max-height: 150px;
+        height: 150px;
+    }
+
+    .ad-image {
+        object-fit: cover;
+    }
+
+    /* Phase 54: Responsive text ads */
+    /* Note: Font size is dynamically controlled by AdaptiveTextScaler */
+    .ad-text {
+        padding: 1rem;
+    }
+
+    .ad-text .ad-text-content {
+        /* Font size controlled by AdaptiveTextScaler - no override needed */
+        line-height: 1.5; /* Match AdaptiveTextScaler.CONFIG.LINE_HEIGHT_RATIO */
+    }
+
+    .ad-indicators {
+        bottom: 10px;
+    }
+
+    .ad-indicator {
+        width: 8px;
+        height: 8px;
+    }
+}
+
+/* ============================================================================
+   Phase 49: Welcome Message Image
+   ============================================================================ */
+
+/* Welcome image in chatbot UI */
+.welcome-image {
+    display: block;
+    max-width: 200px;
+    height: auto;
+    margin: 0 auto 20px auto;
+    border-radius: 10px;
+}
+
+/* Responsive welcome image */
+@media (max-width: 768px) {
+    .welcome-image {
+        max-width: 150px;
+        margin-bottom: 15px;
+    }
+}
+
+/* ============================================================================
+   FAQ ACCORDION SECTION
+   ============================================================================ */
+
+.faq-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    margin: 15px 0;
+    padding: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(30, 60, 114, 0.1);
+    overflow: hidden;
+}
+
+.faq-header {
+    background: #ffffff;
+    color: #1a1a1a;
+    padding: 14px 20px;
+    font-weight: 600;
+    font-size: 18px;
+    border-bottom: 1px solid rgba(30, 60, 114, 0.1);
+}
+
+.faq-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.faq-list {
+    padding: 0;
+}
+
+/* FAQ Item */
+.faq-item {
+    border-bottom: 1px solid rgba(30, 60, 114, 0.08);
+}
+
+.faq-item:last-child {
+    border-bottom: none;
+}
+
+/* Overflow container for Show More/Less animation */
+.faq-overflow-container {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faq-overflow-container.collapsed {
+    grid-template-rows: 0fr;
+}
+
+.faq-overflow-content {
+    overflow: hidden;
+    min-height: 0;
+    /* Visibility transition: show immediately, hide after height animation */
+    visibility: visible;
+    transition: visibility 0s linear 0s;
+}
+
+/* When collapsed: hide content after height transition completes */
+.faq-overflow-container.collapsed .faq-overflow-content {
+    visibility: hidden;
+    transition: visibility 0s linear 0.35s; /* Delay matches grid-template-rows transition */
+}
+
+/* Items inside overflow content */
+.faq-overflow-content .faq-item:last-child {
+    border-bottom: none;
+}
+
+.faq-question {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 500;
+    color: #1e3c72;
+    background: transparent;
+    transition: background 0.2s ease;
+    gap: 12px;
+}
+
+.faq-question:hover {
+    background: rgba(30, 60, 114, 0.04);
+}
+
+.faq-question-text {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.faq-chevron {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    color: #1e3c72;
+    opacity: 0.6;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faq-item.expanded .faq-chevron {
+    transform: rotate(180deg);
+}
+
+/* FAQ Answer - Smooth Animation using CSS Grid */
+.faq-answer {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(30, 60, 114, 0.02);
+}
+
+.faq-answer-content {
+    overflow: hidden;
+    min-height: 0; /* Required for grid collapse to work */
+}
+
+.faq-item.expanded .faq-answer {
+    grid-template-rows: 1fr;
+}
+
+/* Inner wrapper for padding (so padding doesn't affect collapsed state) */
+.faq-answer-inner {
+    padding: 12px 20px 18px 20px;
+    font-size: 18px;
+    line-height: 1.6;
+    color: #333;
+}
+
+.faq-answer-inner p {
+    margin: 0 0 0.6em 0;
+}
+
+.faq-answer-inner p:last-child {
+    margin-bottom: 0;
+}
+
+.faq-answer-inner .answer-list {
+    margin: 0.4em 0 0.8em 0;
+    padding-left: 1.5em;
+}
+
+.faq-answer-inner .answer-list li {
+    margin: 0.3em 0;
+    line-height: 1.6;
+}
+
+.faq-answer-inner ol.answer-list {
+    list-style-type: decimal;
+}
+
+.faq-answer-inner ul.answer-list {
+    list-style-type: disc;
+}
+
+.faq-answer-inner strong {
+    font-weight: 600;
+    color: #1e3c72;
+}
+
+/* Show More / Show Less Button */
+.faq-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    font-size: 16px;
+    padding: 12px 16px;
+    background: rgba(30, 60, 114, 0.03);
+    border: none;
+    border-top: 1px solid rgba(30, 60, 114, 0.08);
+    color: #1e3c72;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.faq-toggle-btn:hover {
+    background: rgba(30, 60, 114, 0.08);
+}
+
+.faq-toggle-icon {
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faq-toggle-btn.expanded .faq-toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Responsive FAQ */
+@media (max-width: 768px) {
+    .faq-section {
+        margin: 10px 0;
+    }
+
+    .faq-header {
+        padding: 12px 16px;
+        font-size: 16px;
+    }
+
+    .faq-question {
+        padding: 14px 16px;
+        font-size: 16px;
+    }
+
+    .faq-answer-inner {
+        padding: 10px 16px 16px 16px;
+        font-size: 16px;
+    }
+
+    .faq-toggle-btn {
+        font-size: 14px;
+    }
+}
+
+/* ============================================================================
+   Kiosk Admin Overlay (hidden admin panel triggered by long press)
+   ============================================================================ */
+
+.kiosk-admin-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.kiosk-admin-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.kiosk-admin-panel {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 32px;
+    width: 340px;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.kiosk-admin-panel h3 {
+    color: #f1f5f9;
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.kiosk-admin-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    background: #0f172a;
+    color: #f1f5f9;
+    font-size: 16px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.kiosk-admin-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.kiosk-admin-error {
+    color: #f87171;
+    font-size: 14px;
+    min-height: 20px;
+    margin: 10px 0;
+}
+
+.kiosk-admin-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.kiosk-admin-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.kiosk-btn-primary {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.kiosk-btn-primary:hover {
+    background: #2563eb;
+}
+
+.kiosk-btn-warning {
+    background: #475569;
+    color: #e2e8f0;
+}
+
+.kiosk-btn-warning:hover {
+    background: #64748b;
+}
+
+.kiosk-btn-cancel {
+    background: transparent;
+    color: #94a3b8;
+    border: 1px solid #475569;
+    width: 100%;
+}
+
+.kiosk-btn-cancel:hover {
+    background: #334155;
+}

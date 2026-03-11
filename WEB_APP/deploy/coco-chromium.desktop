@@ -1,0 +1,17 @@
+# CoCo Campus Kiosk - Chromium Autostart (Template)
+# ===================================================
+# NOTE: install_kiosk.sh generates the actual autostart file at
+# ~/.config/autostart/coco-chromium.desktop with the correct Chromium binary.
+# This file is a reference template only.
+#
+# Uses --start-fullscreen (NOT --kiosk) so the app can exit fullscreen
+# programmatically for admin maintenance.
+
+[Desktop Entry]
+Type=Application
+Name=CoCo Kiosk Browser
+Comment=Launch CoCo campus kiosk in fullscreen Chromium
+Exec=bash -c 'sleep 8 && chromium-browser --start-fullscreen --noerrdialogs --disable-infobars --disable-session-crashed-bubble --disable-translate --no-first-run http://localhost:8000'
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true

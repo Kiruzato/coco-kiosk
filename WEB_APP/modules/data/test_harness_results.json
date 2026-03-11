@@ -1,0 +1,254 @@
+{
+  "timestamp": "2026-02-12T08:14:19.238060",
+  "summary": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0,
+    "pass_rate": 100.0
+  },
+  "by_category": {
+    "test": {
+      "passed": 10,
+      "failed": 0,
+      "rate": 100.0
+    }
+  },
+  "results": [
+    {
+      "id": "ee63f13d-14c6-49f8-9693-116ff2c07e46",
+      "query": "What are institutional thrusts?",
+      "category": "test",
+      "passed": true,
+      "failures": [],
+      "response": {
+        "mode": "campus",
+        "confidence": "Medium",
+        "confidence_score": 67.91581726074219,
+        "grounding_mode": "semantic",
+        "rejected": false,
+        "answer": "The institutional thrusts of Columban College are the objectives that are attained through collaborative and co-responsible efforts of administrators. These administrators are conscious that Christ operates through them to teach, administer, and sanctify the academic community. They coordinate and facilitate the total development of the educand and implement the policies and decisions of the school's board of trustees.",
+        "response_mode": "rag_authoritative",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "institutional",
+          "thrusts"
+        ],
+        "grounding_passed": true
+      }
+    },
+    {
+      "id": "7c5b1e05-b5ad-4959-abaf-3100ccdd7919",
+      "query": "List all institutional thrusts",
+      "category": "test",
+      "passed": true,
+      "failures": [],
+      "response": {
+        "mode": "campus",
+        "confidence": "Medium",
+        "confidence_score": 67.66827392578125,
+        "grounding_mode": "semantic",
+        "rejected": false,
+        "answer": "The institutional thrusts of Columban College are as follows:\n\n1. Administrators who are fully conscious that Christ operates through them to teach, administer, and sanctify his flock, the academic community.\n2. Administrators who coordinate and facilitate the total development of the educand.\n3. Administrators who implement the policies and decisions of the school's board of trustees.",
+        "response_mode": "rag_authoritative",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "institutional",
+          "thrusts"
+        ],
+        "grounding_passed": true
+      }
+    },
+    {
+      "id": "f4f8ed9f-e297-4971-bfb5-0121709f2f9b",
+      "query": "What happens if I get 5.0 grade?",
+      "category": "test",
+      "passed": true,
+      "failures": [],
+      "response": {
+        "mode": "general",
+        "confidence": "Medium",
+        "confidence_score": 74.10292053222656,
+        "grounding_mode": "keyword",
+        "rejected": false,
+        "answer": "According to the campus information provided, a student receives a grade of 5.0 (failed) under specific circumstances, which include:\n\n1. If the student withdraws unofficially from a class at any time during the school term.\n2. If the student withdraws from a class after failing the midterm examination, even if they have not officially dropped the class.\n\nIn general, receiving a 5.0 grade typically indicates that the student has not met the necessary requirements for passing the course, which may affect their overall academic standing and could have implications for their progression in their program. \n\nIf you have further questions about the implications of a 5.0 grade or how to address it, it may be beneficial to consult with an academic advisor at your institution.",
+        "response_mode": "rag_supplemented",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "happens",
+          "grade"
+        ],
+        "grounding_passed": true
+      }
+    },
+    {
+      "id": "45735fb2-971a-49cb-9ab4-02d578176dc0",
+      "query": "Summa Cum Laude grade",
+      "category": "test",
+      "passed": true,
+      "failures": [],
+      "response": {
+        "mode": "campus",
+        "confidence": "Medium",
+        "confidence_score": 70.80882263183594,
+        "grounding_mode": "semantic",
+        "rejected": false,
+        "answer": "To graduate with the honor of summa cum laude, a candidate must have a general weighted average of at least 95% with no grade lower than 93% or 1.3.",
+        "response_mode": "rag_authoritative",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "summa",
+          "cum",
+          "laude",
+          "grade"
+        ],
+        "grounding_passed": true
+      }
+    },
+    {
+      "id": "3338a917-4be5-41ac-a1fa-a1a442246f74",
+      "query": "What are graduation honors and grades?",
+      "category": "test",
+      "passed": true,
+      "failures": [],
+      "response": {
+        "mode": "campus",
+        "confidence": "Medium",
+        "confidence_score": 75.0,
+        "grounding_mode": "semantic",
+        "rejected": false,
+        "answer": "At Columban College, graduation honors are a way to recognize outstanding academic achievement. The honors you can earn include:\n\n1. Dean's Lister\n2. First Honors\n3. Second Honors\n4. Third Honors\n\nThese distinctions highlight your hard work and dedication during your studies. If you have any more questions about the honors or how they are awarded, feel free to ask!",
+        "response_mode": "extractor",
+        "semantic_relevance": "unknown",
+        "extractor_used": "awards",
+        "query_terms": [
+          "graduation",
+          "honors",
+          "grades"
+        ],
+        "grounding_passed": true
+      }
+    },
+    {
+      "id": "b320b615-7f94-42f1-be3e-ebbb1979e587",
+      "query": "What is honorable mention?",
+      "category": "test",
+      "passed": true,
+      "failures": [],
+      "response": {
+        "mode": "campus",
+        "confidence": "Medium",
+        "confidence_score": 68.1103286743164,
+        "grounding_mode": "keyword",
+        "rejected": false,
+        "answer": "Honorable mention is awarded to a candidate who has a general weighted average of at least 88% with no grade lower than 85 or 2.0. Additionally, a candidate for honorable mention must not have obtained a mark of dropped or failed in any course required by the program, whether such mark was obtained in the college or other institutions.",
+        "response_mode": "rag_authoritative",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "honorable",
+          "mention"
+        ],
+        "grounding_passed": true
+      }
+    },
+    {
+      "id": "054f8b9e-0db6-4b22-9927-0d4bc96f2bf1",
+      "query": "What is non degree program?",
+      "category": "test",
+      "passed": true,
+      "failures": [],
+      "response": {
+        "mode": "campus",
+        "confidence": "Medium",
+        "confidence_score": 71.79212188720703,
+        "grounding_mode": "semantic",
+        "rejected": false,
+        "answer": "A non-degree program is a program for students who are not pursuing a full degree but may still be recognized for their academic achievements. According to the documents, students in non-degree programs can be awarded honors based on their general weighted average (GWA) and specific grade requirements. For example, a student with a GWA of not less than 1.3 can be awarded first honors, provided no mark is lower than 90% or 1.5. Similarly, there are criteria for second and third honors based on different GWA thresholds and grade requirements.",
+        "response_mode": "rag_authoritative",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "non",
+          "degree",
+          "program"
+        ],
+        "grounding_passed": true
+      }
+    },
+    {
+      "id": "480d7534-71b5-4195-b765-d539671d029c",
+      "query": "What is the classification of students?",
+      "category": "test",
+      "passed": true,
+      "failures": [],
+      "response": {
+        "mode": "campus",
+        "confidence": "High",
+        "confidence_score": 93.42144775390625,
+        "grounding_mode": "semantic",
+        "rejected": false,
+        "answer": "Students enrolled in the college are classified according to academic load and year level. \n\na. According to academic load:\n- A regular student is officially enrolled and carries the prescribed full load by his/her required curriculum per semester. They must not have any deficiency/back or advanced subject/s in a given semester.\n- An irregular student is officially enrolled but has deficiency/back or advanced subject/s in a given semester in his/her curriculum program.\n\nb. According to year level, students are classified based on their enrollment in five-year curriculum programs.",
+        "response_mode": "rag_authoritative",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "classification",
+          "students",
+          "student"
+        ],
+        "grounding_passed": true
+      }
+    },
+    {
+      "id": "6b2436d1-48bd-4c0b-bee0-319b1008502d",
+      "query": "What are the 5 year curriculum program?",
+      "category": "test",
+      "passed": true,
+      "failures": [],
+      "response": {
+        "mode": "general",
+        "confidence": "High",
+        "confidence_score": 93.59933471679688,
+        "grounding_mode": "semantic",
+        "rejected": false,
+        "answer": "A five-year curriculum program typically refers to an academic program that is designed to be completed in five years, often seen in fields that require extensive coursework, such as engineering, architecture, or certain health professions. \n\n**Verified Campus Information:**\nAccording to the campus information provided, a \"fifth year\" student is defined as one who has completed the prescribed subjects and units of the first, second, third, and fourth-year levels of their curriculum program or has finished not less than the total number of units required in those years.\n\n**General Knowledge:**\nIn a five-year curriculum program, students usually take a combination of general education courses, major-specific courses, and possibly internships or practical experiences. The structure allows for a deeper exploration of the subject matter and often includes capstone projects or thesis work in the final year. This extended duration is beneficial for students to gain comprehensive knowledge and skills in their chosen field.",
+        "response_mode": "rag_supplemented",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "year",
+          "curriculum",
+          "program"
+        ],
+        "grounding_passed": true
+      }
+    },
+    {
+      "id": "163ad2be-bd30-445f-bd5e-710700f17b85",
+      "query": "What are sports facilities?",
+      "category": "test",
+      "passed": true,
+      "failures": [],
+      "response": {
+        "mode": "campus",
+        "confidence": "Medium",
+        "confidence_score": 74.43645477294922,
+        "grounding_mode": "keyword",
+        "rejected": false,
+        "answer": "Sports facilities at Columban College include a gymnasium and playing fields. These facilities are available for student use at designated times, and anyone using them is required to be in appropriate sports attire.",
+        "response_mode": "rag_authoritative",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [
+          "sports",
+          "facilities"
+        ],
+        "grounding_passed": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoCo — Columban College, Inc. Campus Information Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="kiosk-container">
+        <!-- Header: Split into Left (45%) and Right (55%) -->
+        <header class="kiosk-header">
+            <!-- Left Header: Conversation Section (45%) -->
+            <div class="header-left">
+                <div class="header-brand">
+                    <img src="/images/coco-logo-pixel.png" alt="CoCo Logo" class="header-logo">
+                    <div class="header-titles">
+                        <h1>CoCo</h1>
+                        <h2>Columban College, Inc. Campus Information Assistant</h2>
+                    </div>
+                </div>
+                <button id="resetBtn" class="reset-btn" title="Start New Conversation">New Conversation</button>
+            </div>
+            <!-- Right Header: Advertisement Section (55%) -->
+            <div class="header-right">
+                <!-- Phase 56C: Trivia/Study Tips/Quotes Display (Final Layout) -->
+                <div class="trivia-panel" id="triviaPanel">
+                    <div class="trivia-card" id="triviaCard">
+                        <div class="trivia-card-inner" id="triviaCardInner">
+                            <!-- Front: Inline icon + content layout -->
+                            <div class="trivia-card-face trivia-card-front" id="triviaFront" data-type="trivia">
+                                <div class="trivia-icon-container" id="triviaIconContainer" data-type="trivia">
+                                    <!-- Lightbulb icon for Trivia -->
+                                    <svg class="trivia-icon" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6A4.997 4.997 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
+                                    </svg>
+                                </div>
+                                <div class="trivia-content-area">
+                                    <span class="trivia-content" id="triviaContent">Loading...</span>
+                                </div>
+                            </div>
+                            <!-- Back: For flip transitions -->
+                            <div class="trivia-card-face trivia-card-back" id="triviaBack" data-type="quote">
+                                <div class="trivia-icon-container" id="triviaIconContainerBack" data-type="quote">
+                                    <!-- Quote icon -->
+                                    <svg class="trivia-icon" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/>
+                                    </svg>
+                                </div>
+                                <div class="trivia-content-area">
+                                    <span class="trivia-content" id="triviaContentBack"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="drawQuoteBtn" class="draw-quote-btn" title="Draw a random quote">
+                        <div class="draw-quote-label-container">
+                            <div class="draw-quote-label active" data-label="quotes">
+                                <span class="label-line">Draw</span>
+                                <span class="label-line">Quotes</span>
+                            </div>
+                            <div class="draw-quote-label" data-label="click">
+                                <span class="label-line">Click</span>
+                                <span class="label-line">Me</span>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+                <!-- Control buttons: Fullscreen (top) + Refresh Ad (bottom) -->
+                <div class="header-right-controls">
+                    <button id="fullscreenBtn" class="header-icon-btn" title="Toggle fullscreen">
+                        <span class="fullscreen-icon">&#x26F6;</span>
+                    </button>
+                    <button id="refreshAdBtn" class="header-icon-btn" title="Refresh advertisements">
+                        <span class="refresh-icon">&#x21BB;</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area: Two-Panel Layout -->
+        <div class="main-content-area">
+            <!-- Left Panel: Chatbot (45%) -->
+            <div class="chatbot-panel">
+                <!-- Chat Container -->
+                <main class="chat-container" id="chatContainer">
+                    <!-- Welcome message (loaded dynamically from admin config) -->
+                    <div class="message system-message" id="welcomeMessage">
+                        <div class="message-content">
+                            <img src="/images/coco-name.jpg" alt="CoCo" class="welcome-image" id="welcomeImage">
+                            <div id="welcomeText">
+                                <p class="large-text">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Section (accordion) -->
+                    <div class="faq-section" id="faqSection" style="display: none;">
+                        <div class="faq-header">
+                            <span class="faq-title">Frequently Asked Questions</span>
+                        </div>
+                        <div class="faq-list" id="faqList">
+                            <!-- FAQ items loaded dynamically -->
+                        </div>
+                        <button type="button" class="faq-toggle-btn" id="faqToggleBtn" style="display: none;">
+                            <span class="faq-toggle-text">Show More</span>
+                            <svg class="faq-toggle-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </main>
+
+        <!-- Input Container -->
+        <div class="input-container">
+            <form id="chatForm">
+                <button type="button" id="voiceBtn" class="voice-btn" title="Click to speak">
+                    <svg class="mic-icon" viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                    <div class="voice-pulse"></div>
+                </button>
+                <input
+                    type="text"
+                    id="userInput"
+                    placeholder="Type your question here..."
+                    autocomplete="off"
+                >
+                <button type="submit" id="sendBtn">Send</button>
+            </form>
+            <!-- Audio Visualizer -->
+            <div id="audioVisualizerContainer" class="audio-visualizer-container" style="display: none;">
+                <canvas id="audioVisualizer" class="audio-visualizer"></canvas>
+                <div class="visualizer-label">
+                    <span class="recording-dot"></span>
+                    <span>Recording...</span>
+                </div>
+            </div>
+            <!-- Voice Status Display -->
+            <div id="voiceStatus" class="voice-status" style="display: none;">
+                <span class="voice-status-icon"></span>
+                <span class="voice-status-text">Listening...</span>
+            </div>
+            <!-- Transcription Preview -->
+            <div id="transcriptionPreview" class="transcription-preview" style="display: none;">
+                <span class="preview-text"></span>
+                <button type="button" class="preview-edit" title="Edit">Edit</button>
+                <button type="button" class="preview-send" title="Send">Send</button>
+                <button type="button" class="preview-cancel" title="Cancel">Cancel</button>
+            </div>
+        </div>
+            </div>
+            <!-- End Chatbot Panel -->
+
+            <!-- Right Panel: Advertisement Slideshow (55%) -->
+            <div class="info-panel">
+                <!-- Advertisement Slideshow -->
+                <div class="ad-slideshow" id="adSlideshow">
+                    <div class="ad-container" id="adContainer">
+                        <!-- Images inserted dynamically by JavaScript -->
+                    </div>
+                    <div class="ad-indicators" id="adIndicators">
+                        <!-- Indicator dots inserted dynamically -->
+                    </div>
+                    <!-- Click navigation zones (invisible) -->
+                    <div class="ad-nav-zone ad-nav-left" id="adNavLeft"></div>
+                    <div class="ad-nav-zone ad-nav-right" id="adNavRight"></div>
+                </div>
+
+                <!-- Fallback when no advertisements -->
+                <div class="info-panel-placeholder" id="adPlaceholder">
+                    <p class="info-panel-title">Information Panel</p>
+                    <p class="info-panel-subtitle">Coming Soon</p>
+                    <p class="info-panel-description">This space will feature campus announcements, events, and helpful information.</p>
+                </div>
+            </div>
+        </div>
+        <!-- End Main Content Area -->
+    </div>
+
+    <!-- Loading indicator (hidden by default) -->
+    <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+        <div class="spinner"></div>
+        <p id="loadingText">Searching campus information...</p>
+    </div>
+
+    <!-- Phase 40: Voice indicator removed - TTS plays silently in background -->
+    <!-- Hidden audio element for TTS playback -->
+    <audio id="ttsAudio" style="display: none;"></audio>
+
+    <!-- Kiosk Admin Overlay (hidden, triggered by 5-second long press on fullscreen button) -->
+    <div id="kioskAdminOverlay" class="kiosk-admin-overlay">
+        <div class="kiosk-admin-panel">
+            <h3>Kiosk Admin</h3>
+            <input type="password" id="kioskAdminPassword" class="kiosk-admin-input" placeholder="Enter admin password" autocomplete="off">
+            <p id="kioskAdminError" class="kiosk-admin-error"></p>
+            <div class="kiosk-admin-actions">
+                <button class="kiosk-admin-btn kiosk-btn-primary" onclick="kioskAdminAction('exit_fullscreen')">Exit Fullscreen</button>
+                <button class="kiosk-admin-btn kiosk-btn-warning" onclick="kioskAdminAction('shutdown')">Shutdown RPi</button>
+                <button class="kiosk-admin-btn kiosk-btn-warning" onclick="kioskAdminAction('restart')">Restart Backend</button>
+            </div>
+            <button class="kiosk-admin-btn kiosk-btn-cancel" onclick="hideKioskAdminOverlay()">Cancel</button>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

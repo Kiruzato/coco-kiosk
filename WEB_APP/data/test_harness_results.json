@@ -1,0 +1,58 @@
+{
+  "timestamp": "2026-03-08T23:33:26.456358",
+  "summary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "pass_rate": 100.0
+  },
+  "by_category": {
+    "general": {
+      "passed": 2,
+      "failed": 0,
+      "rate": 100.0
+    }
+  },
+  "results": [
+    {
+      "id": "1f56d1c5-984d-4219-afe1-fdd993e18cc2",
+      "query": "What are the mission vission and goals",
+      "category": "general",
+      "passed": true,
+      "failures": [],
+      "response": {
+        "mode": "general",
+        "confidence": "Medium",
+        "confidence_score": 74.32655334472656,
+        "grounding_mode": "semantic",
+        "rejected": false,
+        "answer": "The mission, vision, and goals of an institution typically outline its purpose, aspirations, and objectives. \n\nFor Columban College, the vision is to be an innovative institution of learning, guided by Catholic faith and a culture of excellence by 2025. Its mission focuses on transforming lives through holistic education, Christian formation, and service. The strategic goals include sustaining its Catholic identity, enhancing administrative operations, innovating curriculum and instruction, and providing sustainable extension services to partner communities.\n\nFor DIEFI, the vision is to be a Christ-centered community of happy educators by 2024. Its mission is to develop mindful, self-directed, and dynamic learners who are inspired to serve God and their country.\n\nThese elements reflect the commitment of both institutions to education, community service, and personal development.",
+        "response_mode": "general",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [],
+        "grounding_passed": false
+      }
+    },
+    {
+      "id": "a668714b-5dba-4588-ae80-018af83b822a",
+      "query": "What does please try again mean?",
+      "category": "general",
+      "passed": true,
+      "failures": [],
+      "response": {
+        "mode": "general",
+        "confidence": "Low",
+        "confidence_score": 18.269390106201172,
+        "grounding_mode": "keyword",
+        "rejected": false,
+        "answer": "\"Please try again\" means that something didn't work out the first time, so you're being asked to make another attempt. It's a friendly way of encouraging you to give it another shot.",
+        "response_mode": "general",
+        "semantic_relevance": "unknown",
+        "extractor_used": null,
+        "query_terms": [],
+        "grounding_passed": false
+      }
+    }
+  ]
+}
