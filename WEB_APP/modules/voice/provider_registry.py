@@ -332,7 +332,7 @@ class ProviderRegistry:
         return True
 
     def _get_model_path(self, provider_def: Dict) -> Optional[str]:
-        """Get model path for a provider."""
+        """Get model path for a provider, resolving relative paths against base_path."""
         if not provider_def.get("requires_model"):
             return None
 
@@ -341,7 +341,11 @@ class ProviderRegistry:
         if env_var:
             env_path = os.getenv(env_var)
             if env_path:
-                return env_path
+                path = Path(env_path)
+                if not path.is_absolute():
+                    # Resolve relative path against base_path (matches config.py behavior)
+                    path = self.base_path / env_path
+                return str(path)
 
         # Fall back to default path
         default_path = provider_def.get("default_model")

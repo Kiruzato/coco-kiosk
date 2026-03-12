@@ -1,132 +1,86 @@
-You are working on the **CoCo Campus RAG Chatbot** project.
+You are working on the **CoCo Campus RAG Chatbot** project running on **Raspberry Pi**.
 
-This issue occurs **after deployment on Raspberry Pi** using the setup script:
-
-```
-WEB_APP/deploy/install_kiosk.sh
-```
-
----
-
-# Problem
-
-After deploying the web app on **Raspberry Pi OS**, the Text-to-Speech system is **not using Piper**, even though Piper is supposed to be the **primary TTS engine**.
-
-Observed behavior:
-
-* In the Kiosk UI (`http://localhost:8000/`), the voice being used sounds like a **male robotic voice**, which indicates that **the fallback engine is being used instead of Piper**.
-* The intended voice should be **Piper**, which sounds more **natural and female-like**.
-* In the Admin Voice Settings panel:
+This issue concerns the **Voice System Status panel** in the Admin UI:
 
 ```
 http://192.168.18.178:8000/admin#voice
 ```
 
-Piper is currently shown as **Offline**.
+---
 
-This indicates that the **Piper TTS engine is not being detected or initialized correctly in the Raspberry Pi runtime environment**.
+# Current Situation
+
+In the Raspberry Pi runtime environment:
+
+* The **Piper TTS voice model is now successfully working**.
+* The system is **actually generating speech using Piper**.
+
+However, the **Admin Voice panel still shows Piper as "Offline"**, which is incorrect.
+
+This means the **status detection logic is wrong or incomplete**, because Piper is functioning but the UI reports it as unavailable.
 
 ---
 
 # Objective
 
-Diagnose and fix the problem so that **Piper becomes the active TTS engine during Raspberry Pi runtime**.
+Fix the system so that the **Piper status indicator accurately reflects the real runtime state**.
 
-The system should:
+The Admin Voice panel should show:
 
-* correctly detect Piper
-* initialize the Piper engine
-* generate speech using Piper instead of the fallback engine.
+* **Online** when Piper is correctly installed, available, and usable by the system.
+* **Offline** only when Piper is truly unavailable or failing.
 
 ---
 
 # Investigation
 
-Investigate the entire Piper runtime pipeline:
+Identify how the system currently determines Piper’s status.
 
-### 1. Installation
+Investigate the full pipeline:
 
-Verify that Piper is correctly installed by the deployment script:
+Admin UI
+→ API endpoint for voice status
+→ backend status detection logic
+→ Piper engine initialization / availability check
 
-```
-WEB_APP/deploy/install_kiosk.sh
-```
+Determine why the system reports **Offline even when Piper is functioning**.
 
-Check:
+Possible causes may include:
 
-* whether Piper binaries are installed
-* whether required Piper dependencies are installed
-* whether the Piper voice model is downloaded
-
----
-
-### 2. Voice Model Availability
-
-Verify that the expected Piper voice model exists.
-
-Check:
-
-* the model file path
-* the ONNX model file
-* the configuration JSON
-* file permissions
-
-Ensure the correct model is present (for example something similar to):
-
-```
-en_US-amy-medium.onnx
-```
-
----
-
-### 3. Runtime Detection
-
-Investigate why Piper is reported as **Offline** in the admin voice panel.
-
-Check:
-
-* the TTS engine detection logic
-* environment paths
-* runtime configuration loading
-* subprocess execution of Piper
-* whether the system fails silently and falls back to another engine.
-
----
-
-### 4. Fallback Behavior
-
-Identify which engine is currently producing the **robotic male voice**.
-
-Likely candidates include:
-
-* espeak-ng
-* other fallback TTS engines
-
-Determine why the system is **falling back instead of using Piper**.
+* incorrect runtime detection logic
+* checking only installation instead of runtime availability
+* incorrect path detection
+* outdated status caching
+* mismatched engine initialization state
+* checking wrong model paths
+* relying on a failed subprocess check even though the engine is usable.
 
 ---
 
 # Required Fix
 
-Ensure that:
+Refactor the status detection logic so that Piper status is determined based on **real engine usability**.
 
-* Piper is correctly installed during deployment
-* Piper voice model is available
-* Piper engine detection works
-* Piper is successfully initialized during runtime
-* the system uses Piper as the **primary TTS engine**
+A proper check should verify things such as:
 
-If fallback engines are used, they should only activate **when Piper truly fails**.
+* Piper binary availability
+* voice model availability
+* ability to initialize the Piper engine
+* ability to synthesize audio (or at least initialize the model successfully)
+
+The system should **not rely on superficial checks** like static configuration flags.
 
 ---
 
-# Additional Checks
+# Additional Requirements
 
-Also verify that:
+Ensure that:
 
-* the admin voice status panel correctly reflects Piper's state
-* Piper detection logic matches the actual runtime status
-* the voice system behaves consistently after reboot.
+* the admin status panel reflects the **true runtime state**
+* the voice status endpoint returns accurate information
+* Piper detection logic is **consistent with how the system actually uses Piper during TTS generation**
+
+Avoid duplicating logic between the **status checker and the actual TTS engine initialization**.
 
 ---
 
@@ -136,21 +90,25 @@ While implementing the fix:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* avoid hardcoded paths when possible
-* ensure the deployment script remains reliable for Raspberry Pi environments.
+* centralize TTS engine detection logic where possible
+* remove redundant or outdated status checks
+* ensure maintainability and clarity.
 
 ---
 
 # Validation
 
-After fixing the issue, confirm that:
+After the fix:
 
-* Piper is shown as **Online** in `admin#voice`
-* Piper is the **active TTS engine**
-* the voice produced in the kiosk UI matches the Piper voice model
-* fallback engines are not used unless Piper actually fails
-* the system works correctly after **Raspberry Pi reboot**.
+Verify that:
+
+* Piper shows **Online** in `admin#voice` when it is functioning.
+* Piper shows **Offline** only when it is truly unavailable.
+* The status remains correct after **server restart**.
+* The status check does not introduce performance overhead.
 
 ---
 
-The goal is to ensure that **Piper is correctly installed, detected, and used as the primary TTS engine in the Raspberry Pi deployment environment**.
+# Goal
+
+Ensure the **Admin Voice status panel accurately reflects the real operational state of the Piper TTS engine** in the Raspberry Pi runtime environment.
