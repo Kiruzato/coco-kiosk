@@ -394,26 +394,20 @@ configure_chromium_autostart() {
     local DESKTOP_FILE="$AUTOSTART_DIR/coco-chromium.desktop"
 
     if [ -f "$DESKTOP_FILE" ]; then
-        # Config exists — check if it already has the latest flags
-        if grep -qF "enable-features=VirtualKeyboard" "$DESKTOP_FILE" 2>/dev/null; then
-            log "Chromium autostart already configured with Virtual Keyboard support"
+        # Config exists — always ask user whether to reconfigure
+        echo ""
+        echo -e "  ${YELLOW}Chromium autostart configuration already exists.${NC}"
+        echo ""
+        read -p "  Do you want to reconfigure Chromium autostart? (Y/N): " RECONFIGURE
+        echo ""
+        if [[ "${RECONFIGURE^^}" == "Y" ]]; then
+            _write_chromium_desktop "$CHROMIUM_BIN" "$AUTOSTART_DIR"
+            log "Chromium autostart reconfigured"
         else
-            # Existing config is outdated — prompt to update
-            echo ""
-            echo -e "  ${YELLOW}Chromium autostart configuration already exists.${NC}"
-            echo -e "  A new Virtual Keyboard configuration is available."
-            echo ""
-            read -p "  Do you want to reconfigure Chromium autostart? (Y/N): " RECONFIGURE
-            echo ""
-            if [[ "${RECONFIGURE^^}" == "Y" ]]; then
-                _write_chromium_desktop "$CHROMIUM_BIN" "$AUTOSTART_DIR"
-                log "Chromium autostart reconfigured with Virtual Keyboard support"
-            else
-                log "Skipped Chromium autostart reconfiguration"
-            fi
+            log "Skipped Chromium autostart reconfiguration"
         fi
     else
-        # Fresh install — write config
+        # Fresh install — write config automatically
         _write_chromium_desktop "$CHROMIUM_BIN" "$AUTOSTART_DIR"
         log "Chromium autostart configured (binary: $CHROMIUM_BIN, delay: 8s)"
     fi

@@ -1,6 +1,6 @@
 You are working on the **CoCo Campus RAG Chatbot** project.
 
-This task concerns the **deployment script**:
+This task concerns the deployment script:
 
 ```
 WEB_APP/deploy/install_kiosk.sh
@@ -8,107 +8,124 @@ WEB_APP/deploy/install_kiosk.sh
 
 ---
 
-# Current Situation
+# Context (Reference from Previous Task)
 
-After fetching the latest commits, I ran the deployment script again:
+Previously, the script was modified to allow **reconfiguration of the Virtual Keyboard fullscreen solution**.
+
+However, the current implementation **still detects existing configuration and silently skips the setup**, which means the reconfiguration logic **never actually asks the user for input**.
+
+Because of this, **new configuration changes are not applied**.
+
+---
+
+# Problem
+
+The script currently behaves like this:
 
 ```
-WEB_APP/deploy/install_kiosk.sh
+configuration detected → skip setup automatically
 ```
 
-However, the script **detected that everything was already installed and configured**, so it skipped most steps.
+But what I actually want is:
 
-Because of this behavior, **the new Virtual Keyboard solution for fullscreen mode was not applied**.
+```
+configuration detected → ASK USER if they want to reconfigure
+```
 
-The script currently assumes the system is already fully configured and **does not reapply configuration changes introduced in newer commits**.
+The script must **not silently ignore the step just because it detects existing configuration**.
 
 ---
 
 # Objective
 
-Modify the installation script so that **changes related to the Virtual Keyboard fullscreen solution can still be applied even when the system is already installed**.
+Modify the **Virtual Keyboard setup section** of the script so that it **always asks the user whether to reconfigure**, even if the system detects that the configuration already exists.
 
-Specifically:
+The script must explicitly prompt the user.
 
-When the script reaches the **Virtual Keyboard configuration section**, it should ask the user:
+Example:
 
 ```
 Virtual Keyboard configuration already exists.
-Do you want to reinstall / reconfigure it? (Y/N)
+Do you want to reinstall / reconfigure it? (Y/N):
 ```
 
 Behavior:
 
-* If the user selects **Y**:
+* **Y**
 
-  * Reapply the Virtual Keyboard setup and configuration.
-  * Update any related system settings required for fullscreen keyboard functionality.
+  * Force re-run of the Virtual Keyboard configuration steps
+  * Apply the latest configuration changes
 
-* If the user selects **N**:
+* **N**
 
-  * Skip that section and continue the installation script normally.
-
----
-
-# Requirements
-
-The script should:
-
-* remain **safe to run multiple times** (idempotent installation).
-* only reconfigure the **Virtual Keyboard-related setup when explicitly requested**.
-* not reinstall unrelated dependencies unnecessarily.
-
-Avoid forcing full reinstallations.
+  * Skip the configuration and continue the script
 
 ---
 
-# Implementation Guidelines
+# Important Requirement
 
-Update the script so that:
+The prompt must appear **even when the script detects the system is already configured**.
 
-* the Virtual Keyboard configuration section is **isolated into its own function or section**.
-* the script **detects existing configuration**.
-* the user is prompted whether to **reapply the setup**.
+Do **not bypass the prompt automatically**.
 
-The logic should follow this structure:
+The user must always be able to **manually trigger reconfiguration**.
+
+---
+
+# Implementation Guidance
+
+Refactor the script logic so that:
+
+1. Detection logic determines whether configuration exists.
+2. If configuration exists:
+
+   * prompt the user **Y/N**
+   * run the configuration only if the user chooses **Y**
+3. If configuration does not exist:
+
+   * run the configuration automatically.
+
+Example logic flow:
 
 ```
-if keyboard_config_exists:
+if configuration_exists:
     ask user Y/N
-    if yes → reconfigure
-    if no → skip
+    if Y → reconfigure
+    if N → skip
 else:
-    install and configure normally
+    run configuration
 ```
+
+Ensure that **the prompt is always reached when configuration exists**.
 
 ---
 
 # Code Quality Requirements
 
-While modifying the script:
+While implementing the fix:
 
 * follow **industry-standard shell scripting practices**
-* keep the script **clean and modular**
-* avoid duplicated logic
-* maintain **readability and maintainability**
-* ensure the script remains **safe for repeated execution**
-
-If necessary, refactor the relevant portion of the script into **clearly separated functions**.
+* keep the script **modular and readable**
+* avoid duplicated configuration logic
+* isolate Virtual Keyboard setup into a **clear function or section**
+* maintain **idempotent installation behavior**.
 
 ---
 
 # Validation
 
-After implementing the changes, verify that:
+After implementing the fix:
 
-* running `install_kiosk.sh` again **offers the reconfiguration option**.
-* selecting **Y** correctly reapplies the Virtual Keyboard setup.
-* selecting **N** skips the step.
-* the script still behaves correctly for **first-time installations**.
-* no unrelated components are reinstalled unnecessarily.
+Verify that:
+
+* the script **always prompts the user when configuration exists**
+* choosing **Y** re-runs the Virtual Keyboard configuration
+* choosing **N** skips the configuration
+* first-time installations still run automatically
+* no unrelated installation steps are affected.
 
 ---
 
 # Goal
 
-Ensure that **new deployment changes (such as the Virtual Keyboard fullscreen solution)** can be **applied on already-installed systems without requiring a full reinstall**, while keeping the installation script **safe, modular, and maintainable**.
+Ensure that **new configuration changes (such as the fullscreen Virtual Keyboard solution)** can always be applied on an already-installed system by **allowing the user to manually trigger reconfiguration through a Y/N prompt**.
