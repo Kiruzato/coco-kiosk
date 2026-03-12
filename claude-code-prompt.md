@@ -1,4 +1,4 @@
-You are working on the **CoCo Campus RAG Chatbot** project running on **Raspberry Pi OS in kiosk mode**.
+You are working on the **CoCo Campus RAG Chatbot kiosk system** running on **Raspberry Pi OS**.
 
 The web application runs at:
 
@@ -8,97 +8,75 @@ http://localhost:8000/
 
 Holding the **Fullscreen button for 5 seconds** opens the **Kiosk Admin Panel**.
 
-A **WiFi configuration feature** was recently implemented in this panel so administrators can connect the Raspberry Pi to a WiFi network.
+Claude previously implemented:
+
+* a **lightweight built-in keyboard**
+* a **WiFi configuration function** inside the Kiosk Admin Panel.
+
+Inside the WiFi configuration screen, there is a **Back button** that returns the admin to the **main Kiosk Admin Panel**.
 
 ---
 
 # Problem
 
-When attempting to connect to a WiFi network through the Kiosk Admin Panel, the following error appears:
+When the admin changes the WiFi connection and then presses the **Back button** to return to the Kiosk Admin Panel, the **Connected WiFi label** in the Admin panel **does not refresh**.
 
-```
-Error: Failed to add 'WiFi_name' connection: Insufficient privileges
-```
-
-This indicates that the backend process attempting to run the WiFi connection command **does not have the required system permissions**.
-
-Because of this, the WiFi connection cannot be created.
+This means the displayed WiFi network may be outdated even though the connection has already changed.
 
 ---
 
 # Objective
 
-Fix the system so that the WiFi configuration feature can successfully connect the Raspberry Pi to a selected network **without encountering the "Insufficient privileges" error**.
-
-The solution must be implemented **properly and securely**, not by applying unsafe workarounds.
+Modify the system so that **when the Back button is clicked in the WiFi configuration screen**, the **Connected WiFi label in the Kiosk Admin Panel refreshes automatically** to reflect the **current active WiFi connection**.
 
 ---
 
-# Investigation Requirements
+# Expected Behavior
 
-First identify how the WiFi connection is currently being executed.
+After returning from the WiFi configuration screen:
 
-Investigate:
+* the Admin Kiosk Panel should **re-query the current WiFi connection**
+* the **Connected WiFi label should update immediately**
+* the displayed network must reflect the **actual current connection state**.
 
-* what command is being used (`nmcli`, `wpa_cli`, etc.)
-* which user account the backend server is running under
-* whether the backend process has permission to manage network connections.
-
-Determine why the backend process does not have sufficient privileges.
+The refresh should occur **every time the admin navigates back from WiFi configuration**, not only after a successful connection.
 
 ---
 
-# Required Fix
+# Implementation Guidelines
 
-Implement a correct solution that allows the backend to perform WiFi connection operations safely.
+When implementing the solution:
 
-Possible approaches may include:
+* ensure the WiFi status is retrieved from the **actual system network state** (e.g., via backend endpoint or existing WiFi status logic)
+* avoid duplicating logic that already exists for checking WiFi status
+* reuse existing API endpoints if possible.
 
-* properly configuring system permissions for the network command
-* allowing the backend service to execute specific networking commands with elevated privileges
-* configuring appropriate `sudo` permissions for the required commands
-* ensuring the backend user belongs to the correct system groups if necessary.
-
-The implementation must:
-
-* avoid granting unnecessary system privileges
-* restrict elevated access only to the required network management commands
-* prevent command injection risks.
-
----
-
-# Security Requirements
-
-Because this feature interacts with system-level networking:
-
-* validate all user input before executing commands
-* avoid executing raw shell commands built from unsanitized input
-* ensure that elevated privileges are **limited to specific commands only**.
+The refresh should be triggered by the **Back button navigation event**.
 
 ---
 
 # Code Quality Requirements
 
-While implementing the fix:
+Follow **industry-standard best practices**:
 
-* follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* keep WiFi management logic isolated from unrelated components
-* maintain clean backend command handling.
+* avoid duplicating WiFi status logic
+* keep UI state updates clean and predictable
+* ensure the refresh mechanism does not introduce unnecessary API calls or performance issues.
 
 ---
 
 # Validation
 
-After implementing the fix, verify that:
+After implementing the change, verify that:
 
-* WiFi networks can be connected successfully through the Kiosk Admin Panel
-* the **"Insufficient privileges" error no longer occurs**
-* the system can connect to secured WiFi networks
-* the web application remains secure and stable.
+* changing WiFi networks updates the **Connected WiFi label correctly**
+* returning to the Admin panel via the **Back button always refreshes the label**
+* no UI regressions occur in the Kiosk Admin Panel
+* the lightweight keyboard and other kiosk features continue to function normally.
 
 ---
 
 # Goal
 
-Ensure that the **WiFi configuration feature in the Kiosk Admin Panel works reliably**, allowing administrators to connect the Raspberry Pi to WiFi networks while maintaining **proper security and system permissions**.
+Ensure that the **Connected WiFi label in the Kiosk Admin Panel always reflects the real network state**, especially after navigating back from the WiFi configuration screen.

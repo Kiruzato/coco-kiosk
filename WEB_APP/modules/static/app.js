@@ -2523,6 +2523,9 @@ function showKioskMainView() {
     // Blur WiFi password field so VKB hides
     const wifiPwd = document.getElementById('kioskWifiPassword');
     if (wifiPwd) wifiPwd.blur();
+
+    // Refresh the WiFi status label to reflect any changes made in WiFi settings
+    loadKioskWifiStatus();
 }
 
 /**
