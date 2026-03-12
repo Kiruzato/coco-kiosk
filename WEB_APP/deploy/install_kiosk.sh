@@ -118,6 +118,47 @@ install_system_packages() {
 
 install_system_packages
 
+# ── Step 1b: WiFi management permissions ─────────────────────────────────
+# The backend needs elevated privileges for nmcli connection management
+# (add, delete, up). We grant targeted sudo access via a drop-in file
+# and add the kiosk user to the netdev group.
+
+configure_wifi_permissions() {
+    log "Configuring WiFi management permissions..."
+
+    # Add kiosk user to netdev group (standard Debian network management group)
+    if ! id -nG "$KIOSK_USER" | grep -qw netdev; then
+        usermod -aG netdev "$KIOSK_USER"
+        log "Added $KIOSK_USER to netdev group"
+    else
+        log "$KIOSK_USER already in netdev group"
+    fi
+
+    # Create targeted sudoers rule for nmcli connection commands only.
+    # Restricts sudo access to: connection add, connection delete, connection up.
+    # Safe for repeated execution (overwrites the same file).
+    local SUDOERS_FILE="/etc/sudoers.d/coco-wifi"
+    cat > "$SUDOERS_FILE" << SUDOEOF
+# CoCo Kiosk: Allow WiFi management via nmcli (no password prompt)
+$KIOSK_USER ALL=(ALL) NOPASSWD: /usr/bin/nmcli connection add *
+$KIOSK_USER ALL=(ALL) NOPASSWD: /usr/bin/nmcli connection delete *
+$KIOSK_USER ALL=(ALL) NOPASSWD: /usr/bin/nmcli connection up *
+SUDOEOF
+    chmod 440 "$SUDOERS_FILE"
+
+    # Validate the sudoers file syntax
+    if visudo -cf "$SUDOERS_FILE" > /dev/null 2>&1; then
+        log "Sudoers rule installed: $SUDOERS_FILE"
+    else
+        err "Invalid sudoers syntax in $SUDOERS_FILE — removing"
+        rm -f "$SUDOERS_FILE"
+    fi
+
+    echo ""
+}
+
+configure_wifi_permissions
+
 # ── Step 2: Python virtual environment & dependencies ─────────────────────
 # Uses a venv to avoid PEP 668 conflicts with system packages.
 # The venv is created once during install (not recreated on boot).

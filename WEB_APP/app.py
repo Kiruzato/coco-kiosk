@@ -3597,19 +3597,24 @@ async def kiosk_wifi_connect(data: WifiConnectRequest):
         raise HTTPException(status_code=400, detail="Invalid SSID")
 
     try:
+        # All nmcli connection commands use sudo because NetworkManager requires
+        # elevated privileges for creating/deleting/activating system-wide connections.
+        # A targeted sudoers rule in /etc/sudoers.d/coco-wifi restricts this
+        # to only nmcli connection subcommands (see install_kiosk.sh).
+        # All arguments are list items — no shell injection possible.
+
         # Step 1: Remove any existing connection profile for this SSID
         # (ignore errors — profile may not exist)
         subprocess.run(
-            ["nmcli", "connection", "delete", data.ssid],
+            ["sudo", "nmcli", "connection", "delete", data.ssid],
             capture_output=True, text=True, timeout=10
         )
 
         # Step 2: Create a new connection profile with explicit security settings.
-        # All arguments are list items — no shell injection possible.
         if data.wifi_password:
             # WPA/WPA2 secured network: explicitly set key-mgmt and psk
             add_cmd = [
-                "nmcli", "connection", "add",
+                "sudo", "nmcli", "connection", "add",
                 "type", "wifi",
                 "con-name", data.ssid,
                 "ssid", data.ssid,
@@ -3619,7 +3624,7 @@ async def kiosk_wifi_connect(data: WifiConnectRequest):
         else:
             # Open network: no security settings
             add_cmd = [
-                "nmcli", "connection", "add",
+                "sudo", "nmcli", "connection", "add",
                 "type", "wifi",
                 "con-name", data.ssid,
                 "ssid", data.ssid
@@ -3633,7 +3638,7 @@ async def kiosk_wifi_connect(data: WifiConnectRequest):
 
         # Step 3: Activate the connection
         up_result = subprocess.run(
-            ["nmcli", "connection", "up", data.ssid],
+            ["sudo", "nmcli", "connection", "up", data.ssid],
             capture_output=True, text=True, timeout=30
         )
 
@@ -3643,7 +3648,7 @@ async def kiosk_wifi_connect(data: WifiConnectRequest):
         else:
             # Clean up the profile if activation failed
             subprocess.run(
-                ["nmcli", "connection", "delete", data.ssid],
+                ["sudo", "nmcli", "connection", "delete", data.ssid],
                 capture_output=True, text=True, timeout=10
             )
             error_msg = up_result.stderr.strip() or "Failed to connect"

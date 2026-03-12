@@ -8,111 +8,83 @@ http://localhost:8000/
 
 Holding the **Fullscreen button for 5 seconds** opens the **Kiosk Admin Panel**.
 
-A **WiFi configuration feature** was recently implemented in this panel.
+A **WiFi configuration feature** was recently implemented in this panel so administrators can connect the Raspberry Pi to a WiFi network.
 
 ---
 
 # Problem
 
-When attempting to connect to a WiFi network using the Kiosk Admin WiFi configuration feature, the system returns the following error:
+When attempting to connect to a WiFi network through the Kiosk Admin Panel, the following error appears:
 
 ```
-Error: 802-11-wireless-security.key-mgmt: property is missing
+Error: Failed to add 'WiFi_name' connection: Insufficient privileges
 ```
 
-You previously attempted to fix this issue, but **the exact same error still occurs**, meaning the problem was **not actually resolved**.
+This indicates that the backend process attempting to run the WiFi connection command **does not have the required system permissions**.
+
+Because of this, the WiFi connection cannot be created.
 
 ---
 
 # Objective
 
-Investigate the WiFi connection logic again and **correctly fix the root cause** so that WiFi connections can be established successfully.
+Fix the system so that the WiFi configuration feature can successfully connect the Raspberry Pi to a selected network **without encountering the "Insufficient privileges" error**.
 
-Do **not repeat the previous fix without verifying the actual behavior**.
+The solution must be implemented **properly and securely**, not by applying unsafe workarounds.
 
 ---
 
 # Investigation Requirements
 
-Perform a proper investigation before applying changes.
+First identify how the WiFi connection is currently being executed.
 
-Specifically check:
+Investigate:
 
-### 1. Actual System Command Being Executed
+* what command is being used (`nmcli`, `wpa_cli`, etc.)
+* which user account the backend server is running under
+* whether the backend process has permission to manage network connections.
 
-Determine exactly what command the backend is using to connect to WiFi.
-
-Most likely this involves:
-
-* `nmcli`
-* `wpa_cli`
-* or other network management commands.
-
-Capture and inspect the **actual command being executed**.
-
-Verify whether the command includes the required security parameters.
-
----
-
-### 2. Network Security Handling
-
-Ensure the system correctly handles different network types:
-
-* WPA/WPA2 secured networks
-* open networks
-* hidden networks (if applicable)
-
-The connection command must correctly specify the **key management type** when required.
-
----
-
-### 3. NetworkManager Behavior on Raspberry Pi
-
-Check how **NetworkManager / nmcli expects WiFi connections to be created**.
-
-Verify that the parameters used by the system match what NetworkManager expects.
-
-Test commands manually if necessary to confirm the correct syntax.
-
----
-
-### 4. Backend Implementation
-
-Review the backend WiFi connection logic and determine whether:
-
-* parameters are missing
-* arguments are incorrectly formatted
-* the command is being executed incorrectly.
-
-Correct the implementation so that the command structure is valid.
+Determine why the backend process does not have sufficient privileges.
 
 ---
 
 # Required Fix
 
-Implement a **proper and reliable WiFi connection command** that works on Raspberry Pi OS using the installed network management system.
+Implement a correct solution that allows the backend to perform WiFi connection operations safely.
 
-Ensure the backend correctly passes:
+Possible approaches may include:
 
-* SSID
-* password
-* security configuration
+* properly configuring system permissions for the network command
+* allowing the backend service to execute specific networking commands with elevated privileges
+* configuring appropriate `sudo` permissions for the required commands
+* ensuring the backend user belongs to the correct system groups if necessary.
 
-to the connection command.
+The implementation must:
 
-The solution must work reliably for **typical WPA/WPA2 WiFi networks**.
+* avoid granting unnecessary system privileges
+* restrict elevated access only to the required network management commands
+* prevent command injection risks.
+
+---
+
+# Security Requirements
+
+Because this feature interacts with system-level networking:
+
+* validate all user input before executing commands
+* avoid executing raw shell commands built from unsanitized input
+* ensure that elevated privileges are **limited to specific commands only**.
 
 ---
 
 # Code Quality Requirements
 
-While fixing the issue:
+While implementing the fix:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* keep WiFi management logic **clean and isolated**
-* avoid insecure command execution
-* validate all user inputs before executing system commands.
+* keep WiFi management logic isolated from unrelated components
+* maintain clean backend command handling.
 
 ---
 
@@ -120,13 +92,13 @@ While fixing the issue:
 
 After implementing the fix, verify that:
 
-* WiFi networks can be connected successfully
-* the `key-mgmt property is missing` error no longer occurs
-* the system works for password-protected networks
-* connection feedback is displayed properly in the Kiosk Admin panel.
+* WiFi networks can be connected successfully through the Kiosk Admin Panel
+* the **"Insufficient privileges" error no longer occurs**
+* the system can connect to secured WiFi networks
+* the web application remains secure and stable.
 
 ---
 
 # Goal
 
-Ensure that the **WiFi configuration feature in the Kiosk Admin Panel works reliably**, allowing administrators to successfully connect the Raspberry Pi to WiFi networks without encountering the `key-mgmt property is missing` error.
+Ensure that the **WiFi configuration feature in the Kiosk Admin Panel works reliably**, allowing administrators to connect the Raspberry Pi to WiFi networks while maintaining **proper security and system permissions**.
