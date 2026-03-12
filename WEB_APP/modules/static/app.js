@@ -2925,7 +2925,10 @@ async function processVoiceInput(audioBlob) {
             sources: data.sources || [],
             rejected: data.rejected || false,
             structured_answer: data.structured_answer || null,
-            debug_info: data.debug_info || null
+            debug_info: data.debug_info || null,
+            metadata_visible: data.metadata_visible,
+            fusion_mode: data.fusion_mode,
+            fusion_label_visible: data.fusion_label_visible
         } : null;
 
         // Phase 41: Synchronized text-voice delivery
