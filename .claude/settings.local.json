@@ -155,7 +155,9 @@
       "Bash(venv311Scriptspython.exe -m WEB_APP)",
       "Bash(C:UserschannOneDriveDesktoprestartcocovibecoding_cocovenv311Scriptspython.exe -m WEB_APP)",
       "Bash(venv311/Scripts/python.exe:*)",
-      "Bash(chmod +x:*)"
+      "Bash(chmod +x:*)",
+      "Bash(head -5 /c/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/WEB_APP/modules/logs/conversations.jsonl 2>/dev/null | python3 -m json.tool 2>/dev/null | head -50)",
+      "Bash(head -2 /c/Users/chann/OneDrive/Desktop/restartcoco/vibecoding_coco/WEB_APP/modules/logs/conversations.jsonl | while read line; do echo \"$line\" | python3 -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\(json.dumps\\(data, indent=2\\)\\)\"; done)"
     ]
   }
 }

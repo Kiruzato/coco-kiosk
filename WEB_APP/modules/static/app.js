@@ -1460,6 +1460,9 @@ function renderStructuredAnswer(structured) {
  * Add an assistant message to the chat
  */
 function addAssistantMessage(data) {
+    // Disable feedback on all previous messages
+    disablePastFeedback();
+
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message assistant-message';
 
@@ -1535,8 +1538,9 @@ function addAssistantMessage(data) {
     // Feedback buttons (only for non-rejected answers) - Modern thumbs icons
     if (!data.rejected) {
         const feedbackId = `feedback-${Date.now()}`;
+        const queryId = data.timestamp || '';
         html += `
-            <div class="feedback-container" id="${feedbackId}">
+            <div class="feedback-container" id="${feedbackId}" data-query-id="${escapeHtml(queryId)}">
                 <div class="feedback-icons">
                     <button class="feedback-icon-btn thumbs-up" onclick="submitFeedback('${feedbackId}', true)" aria-label="Helpful" title="Helpful">
                         <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
@@ -1777,6 +1781,9 @@ function renderStreamingMetadata(container, metadata) {
  * Phase 50/51: Conditionally renders sources based on metadata.metadata_visible setting
  */
 function finalizeStreamingMessage(messageDiv, metadata, completeData, fullAnswer) {
+    // Disable feedback on all previous messages
+    disablePastFeedback();
+
     messageDiv.classList.remove('streaming');
 
     // Remove cursor
@@ -1805,10 +1812,11 @@ function finalizeStreamingMessage(messageDiv, metadata, completeData, fullAnswer
         messageDiv.querySelector('.message-content').insertAdjacentHTML('beforeend', sourcesHtml);
     }
 
-    // Add feedback buttons
+    // Add feedback buttons with queryId from metadata timestamp
     const feedbackId = `feedback-${Date.now()}`;
+    const queryId = metadata.timestamp || '';
     const feedbackHtml = `
-        <div class="feedback-container" id="${feedbackId}">
+        <div class="feedback-container" id="${feedbackId}" data-query-id="${escapeHtml(queryId)}">
             <div class="feedback-icons">
                 <button class="feedback-icon-btn thumbs-up" onclick="submitFeedback('${feedbackId}', true)" aria-label="Helpful" title="Helpful">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
@@ -1837,9 +1845,26 @@ function finalizeStreamingMessage(messageDiv, metadata, completeData, fullAnswer
 }
 
 /**
+ * Disable feedback buttons on all previous assistant messages.
+ * Called before rendering a new assistant message so only the latest has active feedback.
+ */
+function disablePastFeedback() {
+    document.querySelectorAll('.feedback-container').forEach(container => {
+        container.querySelectorAll('.feedback-icon-btn').forEach(btn => {
+            btn.disabled = true;
+        });
+        container.classList.add('feedback-disabled');
+    });
+}
+
+/**
  * Submit feedback for a response
  */
 async function submitFeedback(feedbackId, isHelpful) {
+    // Read the query ID from the feedback container's data attribute
+    const feedbackContainer = document.getElementById(feedbackId);
+    const queryId = feedbackContainer?.dataset?.queryId || lastQueryId || 'unknown';
+
     try {
         const response = await fetch('/feedback', {
             method: 'POST',
@@ -1848,14 +1873,13 @@ async function submitFeedback(feedbackId, isHelpful) {
             },
             body: JSON.stringify({
                 session_id: sessionId,
-                query_id: lastQueryId || 'unknown',
+                query_id: queryId,
                 is_helpful: isHelpful
             })
         });
 
         if (response.ok) {
             // Show selected state on clicked button, disable both
-            const feedbackContainer = document.getElementById(feedbackId);
             if (feedbackContainer) {
                 const buttons = feedbackContainer.querySelectorAll('.feedback-icon-btn');
                 buttons.forEach(btn => {
@@ -2928,7 +2952,8 @@ async function processVoiceInput(audioBlob) {
             debug_info: data.debug_info || null,
             metadata_visible: data.metadata_visible,
             fusion_mode: data.fusion_mode,
-            fusion_label_visible: data.fusion_label_visible
+            fusion_label_visible: data.fusion_label_visible,
+            timestamp: data.timestamp
         } : null;
 
         // Phase 41: Synchronized text-voice delivery
@@ -2942,7 +2967,7 @@ async function processVoiceInput(audioBlob) {
 
             // Show text and play audio together
             addAssistantMessage(chatResponse);
-            lastQueryId = Date.now();
+            lastQueryId = data.timestamp || Date.now();
 
             if (audioBlob) {
                 playAudioBlob(audioBlob);
@@ -2953,7 +2978,7 @@ async function processVoiceInput(audioBlob) {
             // No TTS - show text immediately
             if (chatResponse) {
                 addAssistantMessage(chatResponse);
-                lastQueryId = Date.now();
+                lastQueryId = data.timestamp || Date.now();
             }
             setVoiceState(VoiceState.IDLE);
         }

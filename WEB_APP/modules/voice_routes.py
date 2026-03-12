@@ -197,6 +197,8 @@ class VoiceChatResponse(BaseModel):
     metadata_visible: bool = True
     fusion_mode: str = "linear"
     fusion_label_visible: bool = True
+    # Phase 54: Timestamp for feedback linking
+    timestamp: Optional[str] = None
 
     # Audio
     audio_url: Optional[str] = None
@@ -942,10 +944,11 @@ async def voice_chat(
             structured_answer=result.chat_response.get('structured_answer') if result.chat_response else None,
             # Phase 39B: Include debug_info with voice service info merged
             debug_info=debug_info,
-            # Phase 54: Propagate metadata visibility settings
+            # Phase 54: Propagate metadata visibility and feedback linking
             metadata_visible=result.chat_response.get('metadata_visible', True) if result.chat_response else True,
             fusion_mode=result.chat_response.get('fusion_mode', 'linear') if result.chat_response else 'linear',
             fusion_label_visible=result.chat_response.get('fusion_label_visible', True) if result.chat_response else True,
+            timestamp=result.chat_response.get('timestamp') if result.chat_response else None,
             audio_url=audio_url,
             has_audio=has_audio,
             requires_text_confirmation=result.requires_text_fallback,

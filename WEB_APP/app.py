@@ -3505,6 +3505,7 @@ async def startup_event():
                     "metadata_visible": response.metadata_visible,
                     "fusion_mode": response.fusion_mode,
                     "fusion_label_visible": response.fusion_label_visible,
+                    "timestamp": response.timestamp,
                 }
 
             orchestrator = VoiceOrchestrator(
