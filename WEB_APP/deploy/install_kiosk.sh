@@ -105,6 +105,7 @@ install_system_packages() {
         espeak-ng-data \
         ffmpeg \
         unclutter \
+        fonts-noto-color-emoji \
         curl; then
         err "apt-get install failed. See output above for details."
         echo "  Try running: sudo apt --fix-broken install"

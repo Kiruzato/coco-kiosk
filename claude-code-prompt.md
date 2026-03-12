@@ -1,92 +1,95 @@
-You are working on the **CoCo Campus RAG Chatbot** project.
+You are working on the **CoCo Campus RAG Chatbot** project running on **Raspberry Pi OS in kiosk runtime**.
 
-There are two interfaces interacting with the system:
-
-**Chatbot UI**
+The web application runs at:
 
 ```
-http://localhost:8000
-```
-
-**Test Harness**
-
-```
-http://localhost:8000/admin#test-harness
+http://localhost:8000/
 ```
 
 ---
 
 # Problem
 
-The **Test Harness produces different responses from the CoCo chatbot**, even when using the same question.
+In the **Advertisement Panel**, specifically for **Text Advertisements**, emojis are **not rendering correctly**.
 
-This should not happen.
+Observed behavior:
 
-The **Test Harness is supposed to test the exact same system behavior as the chatbot**, but currently the output responses are **different**.
+* Emojis appear as **empty boxes / square placeholders** instead of the correct emoji characters.
 
-I do not know whether the issue is caused by:
+This issue occurs in **Raspberry Pi OS runtime**.
 
-* a different API endpoint being used
-* different query processing flow
-* different retrieval parameters
-* missing preprocessing
-* bypassing orchestration logic
-* missing conversation/session context
-* or other differences in the pipeline.
+The emojis appear correctly in some development environments, but **not on the Raspberry Pi system**.
 
 ---
 
 # Objective
 
-Fix the **Test Harness response pipeline** so that it produces **the exact same response output as the chatbot UI** for the same question.
+Fix the issue so that **emojis render correctly in Text Advertisements on Raspberry Pi OS**.
 
-The Test Harness must test the **actual chatbot system**, not a separate or simplified pathway.
+The Advertisement Panel should correctly display emojis embedded in the advertisement text.
 
 ---
 
 # Investigation Requirements
 
-Carefully compare the request flow between:
+Investigate the real cause of the emoji rendering issue.
 
-### Chatbot UI flow
+Possible causes may include:
+
+### Font Support
+
+The system may not have a font installed that supports emoji characters.
+
+Check whether the Raspberry Pi system has fonts such as:
+
+* `Noto Color Emoji`
+* `Noto Emoji`
+* other emoji-capable fonts.
+
+---
+
+### CSS Font Stack
+
+Check the CSS font-family used by the Text Advertisement component.
+
+Verify whether the font stack includes emoji-capable fonts.
+
+If necessary, extend the font stack to support emoji rendering.
+
+---
+
+### Encoding Issues
+
+Ensure that:
+
+* the page uses **UTF-8 encoding**
+* advertisement text is not losing emoji characters during storage or rendering.
+
+---
+
+### Deployment Script
+
+If the issue requires installing fonts on Raspberry Pi, update the deployment script:
 
 ```
-User → Chat UI → API endpoint → preprocessing → orchestration → retrieval → response generation → UI
+WEB_APP/deploy/install_kiosk.sh
 ```
 
-### Test Harness flow
+so that the required emoji fonts are installed automatically.
 
-```
-Test Harness → backend endpoint → response generation
-```
-
-Identify **all differences in the pipeline**, including:
-
-* preprocessing
-* retrieval logic
-* orchestration layers
-* configuration flags
-* response synthesis
-* session handling
-* metadata filtering.
-
-The Test Harness must call the **same internal logic used by the chatbot**, not an alternate path.
+Ensure this installation is **safe for repeated execution**.
 
 ---
 
 # Required Fix
 
-Refactor the Test Harness so that it uses the **exact same backend response generation path** as the chatbot.
+Implement a solution that ensures:
 
-The Test Harness should:
+* emojis render correctly in Text Advertisements
+* the fix works reliably on Raspberry Pi OS
+* the UI displays emojis consistently.
 
-* invoke the same core query processing function
-* use the same configuration
-* produce identical responses for identical inputs.
-
-Avoid duplicating logic.
-
-Instead, ensure the Test Harness **reuses the main chatbot response pipeline**.
+Avoid quick hacks that only work in some environments.
 
 ---
 
@@ -96,8 +99,8 @@ While implementing the fix:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* remove redundant or duplicated response logic
-* ensure the Test Harness depends on the **same core processing modules** used by the chatbot.
+* keep the CSS font configuration clean
+* avoid hardcoding system-specific assumptions where possible.
 
 ---
 
@@ -105,12 +108,13 @@ While implementing the fix:
 
 After implementing the fix, verify that:
 
-* asking the same question in the **Chatbot UI** and **Test Harness** produces the **same response output**
-* the Test Harness is using the **same backend logic**
-* no alternate or simplified processing pipeline remains.
+* emojis display correctly in the Advertisement Panel
+* emojis render properly in Raspberry Pi runtime
+* the solution persists after **system reboot**
+* the change does not break existing UI text rendering.
 
 ---
 
 # Goal
 
-Ensure the **Test Harness faithfully represents the real chatbot system behavior**, allowing it to accurately test the same responses generated by the CoCo chatbot.
+Ensure that **Text Advertisements in the Advertisement Panel can correctly display emojis on Raspberry Pi OS**, providing proper emoji rendering instead of placeholder boxes.
