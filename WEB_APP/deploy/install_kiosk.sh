@@ -377,7 +377,7 @@ configure_chromium_autostart() {
 Type=Application
 Name=CoCo Kiosk Browser
 Comment=Launch CoCo campus kiosk in fullscreen Chromium
-Exec=bash -c 'sleep 8 && $CHROMIUM_BIN --start-fullscreen --noerrdialogs --disable-infobars --disable-session-crashed-bubble --disable-translate --no-first-run http://localhost:8000'
+Exec=bash -c 'sleep 8 && $CHROMIUM_BIN --start-fullscreen --noerrdialogs --disable-infobars --disable-session-crashed-bubble --disable-translate --no-first-run --enable-features=VirtualKeyboard http://localhost:8000'
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true

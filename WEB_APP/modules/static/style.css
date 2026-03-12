@@ -414,11 +414,18 @@ body {
     line-height: 1;
 }
 
-/* Fullscreen mode styles */
+/* Fullscreen mode styles — use dvh for virtual keyboard compatibility */
 .kiosk-container.fullscreen-mode {
     border-radius: 0;
     max-width: 100%;
-    height: 100vh;
+    height: 100dvh;
+    height: 100vh; /* fallback for browsers without dvh support */
+}
+
+@supports (height: 100dvh) {
+    .kiosk-container.fullscreen-mode {
+        height: 100dvh;
+    }
 }
 
 body.fullscreen-active {
@@ -1587,11 +1594,17 @@ body.fullscreen-active {
    Phase 43: Fullscreen Kiosk Optimizations
    ============================================================================ */
 
-/* Remove max-width for true fullscreen kiosk */
+/* Remove max-width for true fullscreen kiosk — dvh for virtual keyboard */
 .kiosk-container {
     max-width: 100%;
     height: 100vh;
     border-radius: 0;
+}
+
+@supports (height: 100dvh) {
+    .kiosk-container {
+        height: 100dvh;
+    }
 }
 
 /* Phase 55: Header styles now defined in split layout section above */
