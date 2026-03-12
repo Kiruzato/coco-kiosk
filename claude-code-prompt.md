@@ -1,109 +1,156 @@
 You are working on the **CoCo Campus RAG Chatbot** project.
 
-This task concerns the **user feedback / liking system** in the **Kiosk UI** located at:
+This issue occurs **after deployment on Raspberry Pi** using the setup script:
 
-`http://localhost:8000/`
-
----
-
-# Problem 1 — Voice Query Feedback Not Saved
-
-Currently, the **feedback / liking system works only for responses generated from typewritten queries**.
-
-However, when the response comes from a **voice query**, user feedback (Like / Dislike) **is not saved**.
-
-This indicates that the **voice query response pipeline is not properly integrated with the feedback system**.
+```
+WEB_APP/deploy/install_kiosk.sh
+```
 
 ---
 
-# Objective 1
+# Problem
 
-Fix the system so that **responses generated from voice queries can also receive and correctly save user feedback**.
+After deploying the web app on **Raspberry Pi OS**, the Text-to-Speech system is **not using Piper**, even though Piper is supposed to be the **primary TTS engine**.
 
-Investigate the entire feedback flow:
+Observed behavior:
 
-User clicks Like / Dislike
-→ frontend event handler
-→ API request
-→ backend logging system
-→ feedback stored in the conversation log
+* In the Kiosk UI (`http://localhost:8000/`), the voice being used sounds like a **male robotic voice**, which indicates that **the fallback engine is being used instead of Piper**.
+* The intended voice should be **Piper**, which sounds more **natural and female-like**.
+* In the Admin Voice Settings panel:
 
-Verify that voice responses have the **necessary identifiers and metadata** required by the feedback system.
+```
+http://192.168.18.178:8000/admin#voice
+```
 
-If voice responses are missing required identifiers (such as message IDs or query IDs), correct the response generation logic so that feedback can be properly associated with the correct message.
+Piper is currently shown as **Offline**.
 
-Ensure that feedback for voice responses is **saved correctly in the conversation logging system**.
-
----
-
-# Problem 2 — Feedback on Past Messages Is Incorrect
-
-Currently, users can click Like / Dislike on **past chatbot responses**.
-
-However, this produces incorrect behavior:
-
-Feedback given to **past messages** is sometimes **applied to the most recent response instead**.
-
-This creates **incorrect feedback logging**.
+This indicates that the **Piper TTS engine is not being detected or initialized correctly in the Raspberry Pi runtime environment**.
 
 ---
 
-# Objective 2
+# Objective
 
-To prevent this incorrect behavior:
+Diagnose and fix the problem so that **Piper becomes the active TTS engine during Raspberry Pi runtime**.
 
-Disable the **Liking / Dislike functionality for past messages**.
+The system should:
 
-The feedback system should only be active for the **most recent chatbot response**.
-
-Requirements:
-
-* Only the **latest chatbot message** should have active Like / Dislike controls.
-* Past messages should **not allow feedback interaction**.
-* Past messages may still visually show their existing feedback status if already recorded.
-
-Ensure this behavior is implemented **cleanly in both the frontend and backend logic**.
+* correctly detect Piper
+* initialize the Piper engine
+* generate speech using Piper instead of the fallback engine.
 
 ---
 
 # Investigation
 
-Identify the root causes of both issues.
+Investigate the entire Piper runtime pipeline:
 
-Possible causes may include:
+### 1. Installation
 
-* missing response identifiers for voice responses
-* feedback API not triggered for voice responses
-* incorrect message ID mapping
-* frontend event handler binding problems
-* feedback API always referencing the latest message ID
+Verify that Piper is correctly installed by the deployment script:
 
-Do not implement superficial UI fixes — correct the **actual system behavior**.
+```
+WEB_APP/deploy/install_kiosk.sh
+```
+
+Check:
+
+* whether Piper binaries are installed
+* whether required Piper dependencies are installed
+* whether the Piper voice model is downloaded
 
 ---
 
-# Implementation Requirements
+### 2. Voice Model Availability
+
+Verify that the expected Piper voice model exists.
+
+Check:
+
+* the model file path
+* the ONNX model file
+* the configuration JSON
+* file permissions
+
+Ensure the correct model is present (for example something similar to):
+
+```
+en_US-amy-medium.onnx
+```
+
+---
+
+### 3. Runtime Detection
+
+Investigate why Piper is reported as **Offline** in the admin voice panel.
+
+Check:
+
+* the TTS engine detection logic
+* environment paths
+* runtime configuration loading
+* subprocess execution of Piper
+* whether the system fails silently and falls back to another engine.
+
+---
+
+### 4. Fallback Behavior
+
+Identify which engine is currently producing the **robotic male voice**.
+
+Likely candidates include:
+
+* espeak-ng
+* other fallback TTS engines
+
+Determine why the system is **falling back instead of using Piper**.
+
+---
+
+# Required Fix
+
+Ensure that:
+
+* Piper is correctly installed during deployment
+* Piper voice model is available
+* Piper engine detection works
+* Piper is successfully initialized during runtime
+* the system uses Piper as the **primary TTS engine**
+
+If fallback engines are used, they should only activate **when Piper truly fails**.
+
+---
+
+# Additional Checks
+
+Also verify that:
+
+* the admin voice status panel correctly reflects Piper's state
+* Piper detection logic matches the actual runtime status
+* the voice system behaves consistently after reboot.
+
+---
+
+# Code Quality Requirements
 
 While implementing the fix:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* ensure feedback handling logic is **consistent for both text and voice responses**
-* avoid duplicating logic between voice and text pipelines
-* keep the feedback system **clean and maintainable**
+* avoid hardcoded paths when possible
+* ensure the deployment script remains reliable for Raspberry Pi environments.
 
 ---
 
 # Validation
 
-After implementing the fixes, confirm that:
+After fixing the issue, confirm that:
 
-1. Feedback works correctly for **responses generated from voice queries**.
-2. Feedback is correctly **saved in the conversation logging system**.
-3. Feedback controls are **disabled for past chatbot responses**.
-4. Feedback actions always apply to the **correct response**.
-5. No regressions occur in the text query feedback system.
+* Piper is shown as **Online** in `admin#voice`
+* Piper is the **active TTS engine**
+* the voice produced in the kiosk UI matches the Piper voice model
+* fallback engines are not used unless Piper actually fails
+* the system works correctly after **Raspberry Pi reboot**.
 
 ---
 
-The goal is to ensure that the **feedback system is reliable, consistent across query types, and free from incorrect feedback associations**.
+The goal is to ensure that **Piper is correctly installed, detected, and used as the primary TTS engine in the Raspberry Pi deployment environment**.

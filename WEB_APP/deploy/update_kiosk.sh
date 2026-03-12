@@ -48,9 +48,37 @@ fi
 
 echo ""
 
-# ── Step 2: Update Python dependencies ───────────────────────────────────
+# ── Step 2: Ensure voice models exist ────────────────────────────────────
 
-echo -e "${YELLOW}[2/3] Updating Python dependencies...${NC}"
+echo -e "${YELLOW}[2/4] Checking voice models...${NC}"
+
+PIPER_MODEL_DIR="$WEB_APP_DIR/modules/voice/models/piper"
+PIPER_ONNX="$PIPER_MODEL_DIR/en_US-amy-medium.onnx"
+PIPER_JSON="$PIPER_MODEL_DIR/en_US-amy-medium.onnx.json"
+HF_BASE="https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/amy/medium"
+
+mkdir -p "$PIPER_MODEL_DIR"
+
+if [ -f "$PIPER_ONNX" ] && [ -f "$PIPER_JSON" ]; then
+    log "Piper voice model present"
+else
+    log "Downloading Piper voice model..."
+    curl -L --progress-bar -o "$PIPER_ONNX" "$HF_BASE/en_US-amy-medium.onnx" || warn "Piper model download failed"
+    curl -sL -o "$PIPER_JSON" "$HF_BASE/en_US-amy-medium.onnx.json" || warn "Piper config download failed"
+
+    if [ -f "$PIPER_ONNX" ] && [ -s "$PIPER_ONNX" ]; then
+        log "Piper voice model downloaded"
+    else
+        rm -f "$PIPER_ONNX" "$PIPER_JSON"
+        warn "Piper download failed — TTS will use espeak-ng fallback"
+    fi
+fi
+
+echo ""
+
+# ── Step 3: Update Python dependencies ───────────────────────────────────
+
+echo -e "${YELLOW}[3/4] Updating Python dependencies...${NC}"
 
 REQUIREMENTS="$WEB_APP_DIR/requirements_rpi.txt"
 
@@ -73,9 +101,9 @@ fi
 
 echo ""
 
-# ── Step 3: Restart service ──────────────────────────────────────────────
+# ── Step 4: Restart service ──────────────────────────────────────────────
 
-echo -e "${YELLOW}[3/3] Restarting kiosk service...${NC}"
+echo -e "${YELLOW}[4/4] Restarting kiosk service...${NC}"
 
 if systemctl is-active --quiet coco-kiosk 2>/dev/null; then
     sudo systemctl restart coco-kiosk

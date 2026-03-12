@@ -72,7 +72,7 @@ fix_hostname
 # ── Step 1: System packages ───────────────────────────────────────────────
 
 install_system_packages() {
-    echo -e "${YELLOW}[1/8] Installing system packages...${NC}"
+    echo -e "${YELLOW}[1/9] Installing system packages...${NC}"
 
     # Clean cached packages to avoid corrupt .deb files from prior downloads
     apt-get clean
@@ -122,7 +122,7 @@ install_system_packages
 # The venv is created once during install (not recreated on boot).
 
 install_python_deps() {
-    echo -e "${YELLOW}[2/8] Setting up Python environment...${NC}"
+    echo -e "${YELLOW}[2/9] Setting up Python environment...${NC}"
 
     local REQUIREMENTS="$WEB_APP_DIR/requirements_rpi.txt"
 
@@ -160,10 +160,68 @@ install_python_deps() {
 
 install_python_deps
 
-# ── Step 3: Setup .env file ──────────────────────────────────────────────
+# ── Step 3: Download voice models ────────────────────────────────────────
+
+download_voice_models() {
+    echo -e "${YELLOW}[3/9] Downloading voice models...${NC}"
+
+    local PIPER_MODEL_DIR="$WEB_APP_DIR/modules/voice/models/piper"
+    local PIPER_ONNX="$PIPER_MODEL_DIR/en_US-amy-medium.onnx"
+    local PIPER_JSON="$PIPER_MODEL_DIR/en_US-amy-medium.onnx.json"
+
+    # Hugging Face is the standard distribution channel for Piper voices
+    local HF_BASE="https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/amy/medium"
+
+    sudo -u "$KIOSK_USER" mkdir -p "$PIPER_MODEL_DIR"
+
+    if [ -f "$PIPER_ONNX" ] && [ -f "$PIPER_JSON" ]; then
+        local MODEL_SIZE
+        MODEL_SIZE=$(du -h "$PIPER_ONNX" | cut -f1)
+        log "Piper voice model already exists ($MODEL_SIZE)"
+    else
+        log "Downloading Piper voice model (en_US-amy-medium)..."
+
+        # Download ONNX model (~63 MB)
+        if ! sudo -u "$KIOSK_USER" curl -L --progress-bar \
+            -o "$PIPER_ONNX" \
+            "$HF_BASE/en_US-amy-medium.onnx"; then
+            err "Failed to download Piper ONNX model."
+            warn "TTS will fall back to espeak-ng (lower quality)."
+            echo ""
+            return
+        fi
+
+        # Download config JSON
+        if ! sudo -u "$KIOSK_USER" curl -sL \
+            -o "$PIPER_JSON" \
+            "$HF_BASE/en_US-amy-medium.onnx.json"; then
+            err "Failed to download Piper config JSON."
+            warn "TTS will fall back to espeak-ng (lower quality)."
+            echo ""
+            return
+        fi
+
+        # Verify download
+        if [ -f "$PIPER_ONNX" ] && [ -s "$PIPER_ONNX" ]; then
+            local MODEL_SIZE
+            MODEL_SIZE=$(du -h "$PIPER_ONNX" | cut -f1)
+            log "Piper voice model downloaded ($MODEL_SIZE)"
+        else
+            err "Piper model download appears corrupt or empty."
+            rm -f "$PIPER_ONNX" "$PIPER_JSON"
+            warn "TTS will fall back to espeak-ng (lower quality)."
+        fi
+    fi
+
+    echo ""
+}
+
+download_voice_models
+
+# ── Step 4: Setup .env file ──────────────────────────────────────────────
 
 setup_env_file() {
-    echo -e "${YELLOW}[3/8] Setting up environment file...${NC}"
+    echo -e "${YELLOW}[4/9] Setting up environment file...${NC}"
 
     local ENV_FILE="$WEB_APP_DIR/.env"
     local ENV_EXAMPLE="$WEB_APP_DIR/.env.example"
@@ -224,10 +282,10 @@ ENVEOF
 
 setup_env_file
 
-# ── Step 4: Verify vector store ───────────────────────────────────────────
+# ── Step 5: Verify vector store ───────────────────────────────────────────
 
 verify_vector_store() {
-    echo -e "${YELLOW}[4/8] Verifying vector store...${NC}"
+    echo -e "${YELLOW}[5/9] Verifying vector store...${NC}"
 
     local VECTOR_DIR="$WEB_APP_DIR/modules/vector_store"
 
@@ -247,10 +305,10 @@ verify_vector_store() {
 
 verify_vector_store
 
-# ── Step 5: Install systemd service ──────────────────────────────────────
+# ── Step 6: Install systemd service ──────────────────────────────────────
 
 install_systemd_service() {
-    echo -e "${YELLOW}[5/8] Installing systemd service...${NC}"
+    echo -e "${YELLOW}[6/9] Installing systemd service...${NC}"
 
     local SERVICE_SRC="$DEPLOY_DIR/coco-kiosk.service"
     local SERVICE_DST="/etc/systemd/system/coco-kiosk.service"
@@ -299,10 +357,10 @@ SERVICEEOF
 
 install_systemd_service
 
-# ── Step 6: Configure Chromium autostart ──────────────────────────────────
+# ── Step 7: Configure Chromium autostart ──────────────────────────────────
 
 configure_chromium_autostart() {
-    echo -e "${YELLOW}[6/8] Configuring Chromium autostart...${NC}"
+    echo -e "${YELLOW}[7/9] Configuring Chromium autostart...${NC}"
 
     # Detect Chromium binary name
     local CHROMIUM_BIN="chromium-browser"
@@ -333,10 +391,10 @@ DESKTOPEOF
 
 configure_chromium_autostart
 
-# ── Step 7: Disable screen blanking & power saving ───────────────────────
+# ── Step 8: Disable screen blanking & power saving ───────────────────────
 
 disable_screen_blanking() {
-    echo -e "${YELLOW}[7/8] Disabling screen blanking / power saving...${NC}"
+    echo -e "${YELLOW}[8/9] Disabling screen blanking / power saving...${NC}"
 
     # ── Method 1: LXDE autostart (append xset + unclutter) ──
     # IMPORTANT: We do NOT create our own LXDE autostart file.
@@ -402,10 +460,10 @@ AUTOSTART
 
 disable_screen_blanking
 
-# ── Step 8: Start the service ────────────────────────────────────────────
+# ── Step 9: Start the service ────────────────────────────────────────────
 
 start_and_verify() {
-    echo -e "${YELLOW}[8/8] Starting CoCo kiosk service...${NC}"
+    echo -e "${YELLOW}[9/9] Starting CoCo kiosk service...${NC}"
 
     systemctl restart coco-kiosk.service
 

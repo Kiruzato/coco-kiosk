@@ -62,6 +62,11 @@ class PiperTTSEngine(TTSEngine):
 
         if self.is_available():
             logger.info(f"[PIPER] Initialized with voice: {self.voice_name}")
+        else:
+            if not self._has_piper:
+                logger.warning("[PIPER] piper-tts package not installed (pip install piper-tts)")
+            if not self.model_path.exists():
+                logger.warning(f"[PIPER] Model file not found: {self.model_path}")
 
     def _check_piper_package(self) -> bool:
         """Check if piper-tts package is available."""
