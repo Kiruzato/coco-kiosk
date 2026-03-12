@@ -3961,3 +3961,184 @@ function escapeHtml(text) {
 
 // Expose toggle function globally for onclick handlers
 window.toggleFAQItem = toggleFAQItem;
+
+// ============================================================================
+// VIRTUAL KEYBOARD (Web-based, for fullscreen kiosk mode)
+// ============================================================================
+
+(function initVirtualKeyboard() {
+    const vkb = document.getElementById('virtualKeyboard');
+    if (!vkb) return;
+
+    let shiftActive = false;
+
+    /**
+     * Check if we're in fullscreen mode.
+     */
+    function isFullscreen() {
+        return !!(document.fullscreenElement || document.webkitFullscreenElement);
+    }
+
+    /**
+     * Show the virtual keyboard (only in fullscreen).
+     */
+    function showVKB() {
+        if (!isFullscreen()) return;
+        vkb.classList.add('vkb-visible');
+        document.body.classList.add('vkb-active');
+    }
+
+    /**
+     * Hide the virtual keyboard.
+     */
+    function hideVKB() {
+        vkb.classList.remove('vkb-visible');
+        document.body.classList.remove('vkb-active');
+    }
+
+    /**
+     * Update key labels for shift state.
+     */
+    function updateShiftDisplay() {
+        vkb.querySelectorAll('.vkb-key[data-key]').forEach(key => {
+            const ch = key.getAttribute('data-key');
+            if (ch.length === 1 && ch.match(/[a-z]/i)) {
+                key.textContent = shiftActive ? ch.toUpperCase() : ch.toLowerCase();
+            }
+        });
+        const shiftBtn = vkb.querySelector('.vkb-shift');
+        if (shiftBtn) {
+            shiftBtn.classList.toggle('active', shiftActive);
+        }
+    }
+
+    /**
+     * Insert a character into the input field at cursor position.
+     */
+    function insertChar(ch) {
+        if (!userInput) return;
+        const start = userInput.selectionStart;
+        const end = userInput.selectionEnd;
+        const value = userInput.value;
+        const charToInsert = shiftActive ? ch.toUpperCase() : ch;
+
+        userInput.value = value.substring(0, start) + charToInsert + value.substring(end);
+        userInput.selectionStart = userInput.selectionEnd = start + 1;
+
+        // Auto-disable shift after one character (like mobile keyboards)
+        if (shiftActive) {
+            shiftActive = false;
+            updateShiftDisplay();
+        }
+
+        // Keep focus on input
+        userInput.focus();
+    }
+
+    /**
+     * Handle special action keys.
+     */
+    function handleAction(action) {
+        switch (action) {
+            case 'shift':
+                shiftActive = !shiftActive;
+                updateShiftDisplay();
+                break;
+
+            case 'backspace':
+                if (!userInput) return;
+                const start = userInput.selectionStart;
+                const end = userInput.selectionEnd;
+                const value = userInput.value;
+
+                if (start !== end) {
+                    // Delete selection
+                    userInput.value = value.substring(0, start) + value.substring(end);
+                    userInput.selectionStart = userInput.selectionEnd = start;
+                } else if (start > 0) {
+                    // Delete character before cursor
+                    userInput.value = value.substring(0, start - 1) + value.substring(start);
+                    userInput.selectionStart = userInput.selectionEnd = start - 1;
+                }
+                userInput.focus();
+                break;
+
+            case 'space':
+                insertChar(' ');
+                break;
+
+            case 'send':
+                hideVKB();
+                if (chatForm) {
+                    chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+                }
+                break;
+        }
+    }
+
+    // --- Event Listeners ---
+
+    // Key press handling (use touchstart for responsiveness on touchscreens)
+    vkb.addEventListener('touchstart', function(e) {
+        const key = e.target.closest('.vkb-key');
+        if (!key) return;
+        e.preventDefault(); // Prevent focus stealing from input
+
+        const action = key.getAttribute('data-action');
+        if (action) {
+            handleAction(action);
+        } else {
+            const ch = key.getAttribute('data-key');
+            if (ch) insertChar(ch);
+        }
+    }, { passive: false });
+
+    // Mouse fallback (for development/testing on desktop)
+    vkb.addEventListener('mousedown', function(e) {
+        const key = e.target.closest('.vkb-key');
+        if (!key) return;
+        e.preventDefault(); // Prevent focus stealing from input
+
+        const action = key.getAttribute('data-action');
+        if (action) {
+            handleAction(action);
+        } else {
+            const ch = key.getAttribute('data-key');
+            if (ch) insertChar(ch);
+        }
+    });
+
+    // Show keyboard when input is focused in fullscreen
+    if (userInput) {
+        userInput.addEventListener('focus', function() {
+            showVKB();
+        });
+
+        // Hide keyboard when input loses focus (with delay to allow key presses)
+        userInput.addEventListener('blur', function() {
+            // Delay hide so that tapping a VKB key doesn't dismiss it
+            setTimeout(function() {
+                // Only hide if focus didn't return to input
+                if (document.activeElement !== userInput) {
+                    hideVKB();
+                }
+            }, 200);
+        });
+    }
+
+    // Hide keyboard when exiting fullscreen
+    document.addEventListener('fullscreenchange', function() {
+        if (!isFullscreen()) hideVKB();
+    });
+    document.addEventListener('webkitfullscreenchange', function() {
+        if (!isFullscreen()) hideVKB();
+    });
+
+    // Prevent keyboard div from stealing focus
+    vkb.addEventListener('focusin', function(e) {
+        e.preventDefault();
+        if (userInput) userInput.focus();
+    });
+
+    console.log('[VKB] Virtual keyboard initialized');
+})();

@@ -1,131 +1,126 @@
-You are working on the **CoCo Campus RAG Chatbot** project.
+You are working on the **CoCo Campus RAG Chatbot** project running on **Raspberry Pi OS in kiosk mode**.
 
-This task concerns the deployment script:
+The web application runs at:
 
 ```
-WEB_APP/deploy/install_kiosk.sh
+http://localhost:8000/
 ```
 
----
-
-# Context (Reference from Previous Task)
-
-Previously, the script was modified to allow **reconfiguration of the Virtual Keyboard fullscreen solution**.
-
-However, the current implementation **still detects existing configuration and silently skips the setup**, which means the reconfiguration logic **never actually asks the user for input**.
-
-Because of this, **new configuration changes are not applied**.
+and normally operates in **fullscreen mode**.
 
 ---
 
 # Problem
 
-The script currently behaves like this:
+The system requires a **virtual keyboard** so users can type into the chatbot input field.
 
-```
-configuration detected → skip setup automatically
-```
+However, in the Raspberry Pi runtime environment:
 
-But what I actually want is:
+* When the web app **is NOT in fullscreen**, the **Raspberry Pi virtual keyboard appears correctly** when the input field is focused.
+* When the web app **is in fullscreen**, the **virtual keyboard does not appear at all**.
 
-```
-configuration detected → ASK USER if they want to reconfigure
-```
+This makes the **chat input field unusable in fullscreen mode**, because users cannot type.
 
-The script must **not silently ignore the step just because it detects existing configuration**.
+Attempts have already been made to fix this by **reconfiguring the virtual keyboard through the deployment script**, but **the problem still persists**.
 
 ---
 
 # Objective
 
-Modify the **Virtual Keyboard setup section** of the script so that it **always asks the user whether to reconfigure**, even if the system detects that the configuration already exists.
+I need a **reliable solution that allows a virtual keyboard to work while the web app is running in fullscreen kiosk mode**.
 
-The script must explicitly prompt the user.
-
-Example:
-
-```
-Virtual Keyboard configuration already exists.
-Do you want to reinstall / reconfigure it? (Y/N):
-```
-
-Behavior:
-
-* **Y**
-
-  * Force re-run of the Virtual Keyboard configuration steps
-  * Apply the latest configuration changes
-
-* **N**
-
-  * Skip the configuration and continue the script
+You must **investigate and implement the best solution**, rather than repeatedly applying the same configuration.
 
 ---
 
-# Important Requirement
+# Investigation Requirements
 
-The prompt must appear **even when the script detects the system is already configured**.
+Investigate the full system stack involved:
 
-Do **not bypass the prompt automatically**.
+### Raspberry Pi OS
 
-The user must always be able to **manually trigger reconfiguration**.
+Check:
+
+* the **built-in virtual keyboard**
+* whether the system uses `matchbox-keyboard`, `onboard`, or another keyboard service
+* how the keyboard is triggered by **input focus events**
 
 ---
 
-# Implementation Guidance
+### Chromium / Kiosk Mode
 
-Refactor the script logic so that:
+Investigate how Chromium behaves in kiosk mode:
 
-1. Detection logic determines whether configuration exists.
-2. If configuration exists:
+* whether fullscreen suppresses the OS virtual keyboard
+* whether kiosk flags affect virtual keyboard activation
+* whether touchscreen keyboard support is disabled in fullscreen
 
-   * prompt the user **Y/N**
-   * run the configuration only if the user chooses **Y**
-3. If configuration does not exist:
+Check if additional Chromium flags are needed.
 
-   * run the configuration automatically.
+---
 
-Example logic flow:
+### Web Application
 
-```
-if configuration_exists:
-    ask user Y/N
-    if Y → reconfigure
-    if N → skip
-else:
-    run configuration
-```
+Check whether the web application:
 
-Ensure that **the prompt is always reached when configuration exists**.
+* prevents focus events from triggering the OS keyboard
+* uses input fields compatible with the Raspberry Pi keyboard trigger.
+
+---
+
+# Solution Requirements
+
+Implement the **most reliable solution for Raspberry Pi kiosk deployments**.
+
+Possible approaches may include:
+
+* properly enabling the OS virtual keyboard in kiosk mode
+* triggering the OS keyboard when the chat input field receives focus
+* adjusting Chromium kiosk flags
+* launching the virtual keyboard through system commands when needed
+* integrating a lightweight web-based keyboard if OS integration is impossible.
+
+Choose the **best approach that is stable and maintainable for kiosk environments**.
+
+Avoid fragile hacks.
+
+---
+
+# Constraints
+
+The solution must:
+
+* work while the web app is **in fullscreen**
+* allow users to type into the chat input field
+* work reliably after **system reboot**
+* integrate cleanly with the current kiosk deployment setup.
 
 ---
 
 # Code Quality Requirements
 
-While implementing the fix:
+While implementing the solution:
 
-* follow **industry-standard shell scripting practices**
-* keep the script **modular and readable**
-* avoid duplicated configuration logic
-* isolate Virtual Keyboard setup into a **clear function or section**
-* maintain **idempotent installation behavior**.
+* follow **industry-standard best practices**
+* apply **proper refactorization and modularization**
+* keep the deployment logic clean
+* avoid unnecessary dependencies
+* ensure the solution is **maintainable and stable**.
 
 ---
 
 # Validation
 
-After implementing the fix:
+After implementing the solution, verify that:
 
-Verify that:
-
-* the script **always prompts the user when configuration exists**
-* choosing **Y** re-runs the Virtual Keyboard configuration
-* choosing **N** skips the configuration
-* first-time installations still run automatically
-* no unrelated installation steps are affected.
+* the virtual keyboard appears when the chat input field is focused
+* the keyboard works **in fullscreen mode**
+* typing works correctly
+* the solution persists after reboot
+* kiosk functionality remains intact.
 
 ---
 
 # Goal
 
-Ensure that **new configuration changes (such as the fullscreen Virtual Keyboard solution)** can always be applied on an already-installed system by **allowing the user to manually trigger reconfiguration through a Y/N prompt**.
+Ensure that the **chat input field remains usable in fullscreen kiosk mode by providing a reliable virtual keyboard solution for Raspberry Pi OS runtime**.
