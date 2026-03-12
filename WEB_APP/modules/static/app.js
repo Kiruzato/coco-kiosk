@@ -3987,6 +3987,9 @@ window.toggleFAQItem = toggleFAQItem;
     const layerToggleBtn = vkb.querySelector('.vkb-layer-toggle');
 
     let shiftActive = false;
+    let capsLockActive = false; // Double-click shift = persistent caps
+    let lastShiftTime = 0;     // For double-click detection
+    const DOUBLE_CLICK_MS = 400;
     let symbolsActive = false;
 
     /**
@@ -4028,27 +4031,31 @@ window.toggleFAQItem = toggleFAQItem;
             layerToggleBtn.textContent = symbolsActive ? 'ABC' : '#+=';
             layerToggleBtn.classList.toggle('active', symbolsActive);
         }
-        // Reset shift when switching to symbols
-        if (symbolsActive && shiftActive) {
+        // Reset shift/caps lock when switching to symbols
+        if (symbolsActive && (shiftActive || capsLockActive)) {
             shiftActive = false;
+            capsLockActive = false;
             updateShiftDisplay();
         }
     }
 
     /**
-     * Update key labels for shift state (letters layer only).
+     * Update key labels for shift/caps lock state (letters layer only).
      */
     function updateShiftDisplay() {
         if (!lettersLayer) return;
+        const isUpper = shiftActive || capsLockActive;
         lettersLayer.querySelectorAll('.vkb-key[data-key]').forEach(key => {
             const ch = key.getAttribute('data-key');
             if (ch.length === 1 && ch.match(/[a-z]/i)) {
-                key.textContent = shiftActive ? ch.toUpperCase() : ch.toLowerCase();
+                key.textContent = isUpper ? ch.toUpperCase() : ch.toLowerCase();
             }
         });
         const shiftBtn = vkb.querySelector('.vkb-shift');
         if (shiftBtn) {
-            shiftBtn.classList.toggle('active', shiftActive);
+            shiftBtn.classList.toggle('active', isUpper);
+            // Visual distinction: underline for caps lock mode
+            shiftBtn.style.textDecoration = capsLockActive ? 'underline' : '';
         }
     }
 
@@ -4060,15 +4067,20 @@ window.toggleFAQItem = toggleFAQItem;
         const start = userInput.selectionStart;
         const end = userInput.selectionEnd;
         const value = userInput.value;
-        // Shift only applies to letters, not symbols/punctuation
+        // Shift/caps lock only applies to letters, not symbols/punctuation
         const isLetter = ch.length === 1 && ch.match(/[a-z]/i);
-        const charToInsert = (shiftActive && isLetter) ? ch.toUpperCase() : ch;
+        const isUpper = isLetter && (shiftActive || capsLockActive);
+        const charToInsert = isUpper ? ch.toUpperCase() : ch;
 
         userInput.value = value.substring(0, start) + charToInsert + value.substring(end);
-        userInput.selectionStart = userInput.selectionEnd = start + 1;
+        const newPos = start + 1;
+        // Use setSelectionRange to trigger native scroll-to-cursor
+        userInput.setSelectionRange(newPos, newPos);
+        // Fallback: ensure cursor is visible by scrolling input
+        userInput.scrollLeft = userInput.scrollWidth;
 
-        // Auto-disable shift after one letter (like mobile keyboards)
-        if (shiftActive && isLetter) {
+        // Auto-disable one-shot shift (but NOT caps lock)
+        if (shiftActive && !capsLockActive && isLetter) {
             shiftActive = false;
             updateShiftDisplay();
         }
@@ -4081,30 +4093,47 @@ window.toggleFAQItem = toggleFAQItem;
      */
     function handleAction(action) {
         switch (action) {
-            case 'shift':
-                shiftActive = !shiftActive;
+            case 'shift': {
+                const now = Date.now();
+                if (capsLockActive) {
+                    // Already in caps lock — disable everything
+                    capsLockActive = false;
+                    shiftActive = false;
+                } else if (shiftActive && (now - lastShiftTime) < DOUBLE_CLICK_MS) {
+                    // Double-click: activate caps lock
+                    capsLockActive = true;
+                    shiftActive = false;
+                } else {
+                    // Single click: one-shot shift
+                    shiftActive = !shiftActive;
+                }
+                lastShiftTime = now;
                 updateShiftDisplay();
                 break;
+            }
 
             case 'symbols':
                 toggleLayer();
                 break;
 
-            case 'backspace':
+            case 'backspace': {
                 if (!userInput) return;
-                const start = userInput.selectionStart;
-                const end = userInput.selectionEnd;
-                const value = userInput.value;
+                const bsStart = userInput.selectionStart;
+                const bsEnd = userInput.selectionEnd;
+                const bsValue = userInput.value;
+                let newCursorPos = bsStart;
 
-                if (start !== end) {
-                    userInput.value = value.substring(0, start) + value.substring(end);
-                    userInput.selectionStart = userInput.selectionEnd = start;
-                } else if (start > 0) {
-                    userInput.value = value.substring(0, start - 1) + value.substring(start);
-                    userInput.selectionStart = userInput.selectionEnd = start - 1;
+                if (bsStart !== bsEnd) {
+                    userInput.value = bsValue.substring(0, bsStart) + bsValue.substring(bsEnd);
+                    newCursorPos = bsStart;
+                } else if (bsStart > 0) {
+                    userInput.value = bsValue.substring(0, bsStart - 1) + bsValue.substring(bsStart);
+                    newCursorPos = bsStart - 1;
                 }
+                userInput.setSelectionRange(newCursorPos, newCursorPos);
                 userInput.focus();
                 break;
+            }
 
             case 'space':
                 insertChar(' ');

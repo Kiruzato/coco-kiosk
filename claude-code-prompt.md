@@ -1,100 +1,172 @@
 You are working on the **CoCo Campus RAG Chatbot** project running on **Raspberry Pi OS in kiosk fullscreen mode**.
 
-The web app runs at:
+The web application runs at:
 
 ```
 http://localhost:8000/
 ```
 
-A **lightweight built-in keyboard** was recently implemented to allow users to type into the chatbot input field while the application is running in fullscreen mode.
-
-The keyboard implementation is **working correctly**, but it currently **does not include many common symbols found on a standard keyboard**.
+A **lightweight built-in virtual keyboard** has already been implemented and is functioning.
+However, several improvements and fixes are required.
 
 ---
 
 # Objective
 
-Extend the built-in keyboard so that it includes **commonly used symbols typically available on a standard keyboard**.
+Improve the built-in keyboard by:
 
-The current keyboard is missing symbols such as:
-
-* Parentheses `( )`
-* Mathematical symbols such as `+ - × ÷ =`
-* Other common punctuation and symbols like:
-
-  * `!`
-  * `?`
-  * `:`
-  * `;`
-  * `'`
-  * `"`.
-  * `/`
-  * `\`
-  * `@`
-  * `#`
-  * `%`
-  * `&`
-  * `*`
-
-These symbols should be available **in a way that keeps the keyboard simple and usable in kiosk mode**.
+1. Ensuring common symbols exist
+2. Fixing layout spacing issues
+3. Improving Caps Lock behavior
+4. Adjusting keyboard alignment
+5. Improving input field scrolling behavior
 
 ---
 
-# Implementation Guidelines
+# 1. Symbol Coverage Check
 
-The keyboard should remain **lightweight and kiosk-friendly**.
+First, check whether the following symbols **already exist in the keyboard**.
 
-You may implement symbol support by:
+If any of them are **missing**, add them properly.
 
-* adding additional keys
-* adding a **symbol toggle layer** (for example a `?123` or `Symbols` key)
-* grouping symbols in a compact layout
+Symbols to verify:
 
-However, **do not turn the keyboard into a full complex desktop keyboard**.
+```
+~
+`
+!
+@
+#
+$
+%
+^
+&
+*
+(
+)
+_
+-
++
+=
+{
+[
+}
+]
+|
+\
+:
+;
+"
+'
+<
+,
+>
+.
+?
+/
+```
 
-The goal is to support **common typing scenarios**, especially:
+Only add symbols that are **not already present**.
 
-* general text
-* punctuation
-* basic mathematical expressions
-* typical chatbot queries.
+Ensure the added symbols:
+
+* insert correctly into the input field
+* follow the keyboard's existing design and layout style
+* do not break the current keyboard structure.
 
 ---
 
-# Requirements
+# 2. Key Spacing Fix
 
-Ensure that:
+Currently:
 
-* all added keys correctly insert characters into the input field
-* keyboard layout remains usable on a touchscreen
-* the keyboard does not overflow the UI
-* the keyboard works reliably in **fullscreen kiosk mode**.
+* The **last row of keys**
+* and the **row above the last row**
+
+are **cramped and touching each other**.
+
+Fix the keyboard layout so that:
+
+* spacing between these rows is **consistent**
+* the spacing matches the **upper rows of keys**
+* the layout remains clean and usable on a touchscreen.
+
+---
+
+# 3. Caps Lock Behavior
+
+Currently, pressing **Caps Lock** only capitalizes **one character at a time**.
+
+Improve the behavior to match typical keyboard functionality:
+
+* **Single click** → capitalize **next character only**
+* **Double click** → enable **continuous Caps Lock mode**
+
+In continuous mode, all characters remain capitalized until Caps Lock is disabled.
+
+Ensure this behavior is implemented cleanly and reliably.
+
+---
+
+# 4. Keyboard Alignment
+
+Currently the keyboard appears **centered on the screen**.
+
+Change the keyboard positioning so that it becomes:
+
+**Left-aligned instead of centered**.
+
+Ensure this alignment:
+
+* looks clean in fullscreen kiosk mode
+* does not break the layout
+* does not push the keyboard outside the viewport.
+
+---
+
+# 5. Input Field Scrolling Behavior
+
+When typing long text:
+
+* once the characters exceed the visible width of the input field,
+* the visible area **does not follow the cursor**.
+
+Fix this behavior so that:
+
+* the input field **automatically scrolls to the right**
+* the **latest typed characters remain visible**
+* the cursor position is always visible.
+
+This should behave similarly to **normal text input fields on standard systems**.
 
 ---
 
 # Code Quality Requirements
 
-While implementing this enhancement:
+While implementing these improvements:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* keep keyboard layout logic **clean and maintainable**
-* avoid hardcoding layout logic in scattered places
-* structure the keyboard configuration in a way that is easy to extend later.
+* keep keyboard logic clean and maintainable
+* avoid duplicating layout logic
+* avoid hardcoding values unnecessarily
+* keep the keyboard lightweight and kiosk-friendly.
 
 ---
 
 # Validation
 
-After implementation, verify that:
+After implementing the changes, verify that:
 
-* the keyboard contains the new symbols
-* symbols insert correctly into the chat input field
-* the keyboard remains responsive and usable on the touchscreen
-* the keyboard layout remains stable in fullscreen kiosk mode.
+* all listed symbols are available in the keyboard
+* keyboard rows have consistent spacing
+* Caps Lock supports both single-press and double-press behavior
+* the keyboard is left-aligned
+* the input field scrolls correctly when text exceeds the visible width
+* the keyboard remains fully functional in **fullscreen kiosk mode**.
 
 ---
 
 # Goal
 
-Enhance the **lightweight built-in keyboard** so that it supports **common symbols found on standard keyboards**, while keeping the implementation **simple, maintainable, and suitable for touchscreen kiosk usage**.
+Enhance the **built-in virtual keyboard** so that it behaves more like a **standard keyboard**, while remaining **lightweight, clean, and reliable for touchscreen kiosk usage**.
