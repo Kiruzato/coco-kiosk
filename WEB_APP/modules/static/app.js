@@ -1933,6 +1933,9 @@ async function resetConversation() {
         faqExpanded = false;
         await loadFAQs();
 
+        // Re-check voice service availability (may have changed during runtime)
+        await initVoice();
+
         // Note: Auto-focus disabled to prevent virtual keyboard from obstructing view on RPi
     } catch (error) {
         console.error('Error resetting conversation:', error);
@@ -2624,6 +2627,7 @@ async function initVoice() {
             if (voiceEnabled) {
                 voiceBtn.disabled = false;
                 voiceBtn.title = 'Click to speak';
+                voiceBtn.classList.remove('disabled');
             } else {
                 voiceBtn.disabled = true;
                 voiceBtn.title = 'Voice input unavailable';

@@ -1,114 +1,90 @@
-You are working on the **CoCo Campus RAG Chatbot** project running on **Raspberry Pi**.
+You are working on the **CoCo Campus RAG Chatbot** project.
 
-This issue concerns the **Voice System Status panel** in the Admin UI:
+This task concerns the **Kiosk UI** located at:
 
 ```
-http://192.168.18.178:8000/admin#voice
+http://localhost:8000/
 ```
 
 ---
 
-# Current Situation
+# Current Behavior
 
-In the Raspberry Pi runtime environment:
+The **Voice Input button** behaves correctly based on system availability:
 
-* The **Piper TTS voice model is now successfully working**.
-* The system is **actually generating speech using Piper**.
+* When **Voice Input is available**, the button is **clickable**.
+* When **Voice Input is not available**, the button is **disabled / not clickable**.
 
-However, the **Admin Voice panel still shows Piper as "Offline"**, which is incorrect.
-
-This means the **status detection logic is wrong or incomplete**, because Piper is functioning but the UI reports it as unavailable.
+This availability depends on the **voice service status**.
 
 ---
 
-# Objective
+# Required Enhancement
 
-Fix the system so that the **Piper status indicator accurately reflects the real runtime state**.
+I want the **New Conversation button** to also **refresh the Voice Input button’s usability state**.
 
-The Admin Voice panel should show:
+Meaning:
 
-* **Online** when Piper is correctly installed, available, and usable by the system.
-* **Offline** only when Piper is truly unavailable or failing.
+When the **New Conversation button is clicked**, the system should **re-check whether Voice Input is available or unavailable**, and update the **Voice Input button state accordingly**.
 
----
-
-# Investigation
-
-Identify how the system currently determines Piper’s status.
-
-Investigate the full pipeline:
-
-Admin UI
-→ API endpoint for voice status
-→ backend status detection logic
-→ Piper engine initialization / availability check
-
-Determine why the system reports **Offline even when Piper is functioning**.
-
-Possible causes may include:
-
-* incorrect runtime detection logic
-* checking only installation instead of runtime availability
-* incorrect path detection
-* outdated status caching
-* mismatched engine initialization state
-* checking wrong model paths
-* relying on a failed subprocess check even though the engine is usable.
+This ensures that if the **voice system becomes available or unavailable during runtime**, the UI can refresh its state without requiring a page reload.
 
 ---
 
-# Required Fix
+# Expected Behavior
 
-Refactor the status detection logic so that Piper status is determined based on **real engine usability**.
+When the **New Conversation button is clicked**:
 
-A proper check should verify things such as:
+1. The system resets the conversation (existing behavior).
+2. The system **re-checks the voice service availability**.
+3. The **Voice Input button state updates accordingly**:
 
-* Piper binary availability
-* voice model availability
-* ability to initialize the Piper engine
-* ability to synthesize audio (or at least initialize the model successfully)
-
-The system should **not rely on superficial checks** like static configuration flags.
+   * enabled if voice input is available
+   * disabled if voice input is unavailable.
 
 ---
 
-# Additional Requirements
+# Implementation Requirements
 
-Ensure that:
+Do **not implement this using page reloads**.
 
-* the admin status panel reflects the **true runtime state**
-* the voice status endpoint returns accurate information
-* Piper detection logic is **consistent with how the system actually uses Piper during TTS generation**
+Instead:
 
-Avoid duplicating logic between the **status checker and the actual TTS engine initialization**.
+* trigger a **proper voice availability check**
+* update the Voice Input button state programmatically
+* reuse existing logic used during initial page load (if applicable).
+
+Avoid duplicating logic.
+
+If the voice availability logic exists in a function, **reuse or refactor it into a reusable method**.
 
 ---
 
 # Code Quality Requirements
 
-While implementing the fix:
+While implementing this change:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* centralize TTS engine detection logic where possible
-* remove redundant or outdated status checks
-* ensure maintainability and clarity.
+* avoid duplicating voice availability logic
+* ensure the UI state update is clean and maintainable.
 
 ---
 
 # Validation
 
-After the fix:
+After implementing the change:
 
 Verify that:
 
-* Piper shows **Online** in `admin#voice` when it is functioning.
-* Piper shows **Offline** only when it is truly unavailable.
-* The status remains correct after **server restart**.
-* The status check does not introduce performance overhead.
+* clicking **New Conversation** refreshes the **Voice Input button availability state**
+* the button correctly switches between **enabled and disabled**
+* no page reload occurs
+* existing New Conversation functionality remains intact
+* no UI regressions occur.
 
 ---
 
 # Goal
 
-Ensure the **Admin Voice status panel accurately reflects the real operational state of the Piper TTS engine** in the Raspberry Pi runtime environment.
+Ensure that the **Voice Input button state remains accurate during runtime** and can be refreshed using the **New Conversation button without requiring a page reload**.
