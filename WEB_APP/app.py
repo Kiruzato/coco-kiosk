@@ -3575,7 +3575,12 @@ async def kiosk_wifi_scan(data: KioskAuthRequest):
 @app.post("/admin/kiosk/wifi/connect")
 async def kiosk_wifi_connect(data: WifiConnectRequest):
     """
-    Connect to a WiFi network using nmcli.
+    Connect to a WiFi network using nmcli connection add + up.
+
+    Uses explicit 'connection add' with wifi-sec.key-mgmt and wifi-sec.psk
+    instead of 'dev wifi connect', which fails on some NetworkManager versions
+    with "802-11-wireless-security.key-mgmt: property is missing".
+
     Requires admin password. Only works on Linux (RPi).
     """
     import platform
@@ -3592,27 +3597,56 @@ async def kiosk_wifi_connect(data: WifiConnectRequest):
         raise HTTPException(status_code=400, detail="Invalid SSID")
 
     try:
-        # Remove any stale connection profile for this SSID.
-        # Prevents "802-11-wireless-security.key-mgmt: property is missing"
-        # error caused by partially-created profiles without security settings.
+        # Step 1: Remove any existing connection profile for this SSID
+        # (ignore errors — profile may not exist)
         subprocess.run(
             ["nmcli", "connection", "delete", data.ssid],
             capture_output=True, text=True, timeout=10
         )
 
-        # Connect (nmcli creates a fresh profile with proper security detection)
-        # List arguments — no shell injection possible
-        cmd = ["nmcli", "dev", "wifi", "connect", data.ssid]
+        # Step 2: Create a new connection profile with explicit security settings.
+        # All arguments are list items — no shell injection possible.
         if data.wifi_password:
-            cmd += ["password", data.wifi_password]
+            # WPA/WPA2 secured network: explicitly set key-mgmt and psk
+            add_cmd = [
+                "nmcli", "connection", "add",
+                "type", "wifi",
+                "con-name", data.ssid,
+                "ssid", data.ssid,
+                "wifi-sec.key-mgmt", "wpa-psk",
+                "wifi-sec.psk", data.wifi_password
+            ]
+        else:
+            # Open network: no security settings
+            add_cmd = [
+                "nmcli", "connection", "add",
+                "type", "wifi",
+                "con-name", data.ssid,
+                "ssid", data.ssid
+            ]
 
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        add_result = subprocess.run(add_cmd, capture_output=True, text=True, timeout=15)
+        if add_result.returncode != 0:
+            error_msg = add_result.stderr.strip() or "Failed to create connection profile"
+            logger.warning(f"[KIOSK] WiFi profile creation failed: {error_msg}")
+            return {"status": "failed", "message": error_msg}
 
-        if result.returncode == 0:
+        # Step 3: Activate the connection
+        up_result = subprocess.run(
+            ["nmcli", "connection", "up", data.ssid],
+            capture_output=True, text=True, timeout=30
+        )
+
+        if up_result.returncode == 0:
             logger.info(f"[KIOSK] WiFi connected to: {data.ssid}")
             return {"status": "success", "message": f"Connected to {data.ssid}"}
         else:
-            error_msg = result.stderr.strip() or "Connection failed"
+            # Clean up the profile if activation failed
+            subprocess.run(
+                ["nmcli", "connection", "delete", data.ssid],
+                capture_output=True, text=True, timeout=10
+            )
+            error_msg = up_result.stderr.strip() or "Failed to connect"
             logger.warning(f"[KIOSK] WiFi connect failed: {error_msg}")
             return {"status": "failed", "message": error_msg}
 
