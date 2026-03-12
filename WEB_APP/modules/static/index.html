@@ -289,7 +289,10 @@
                 <div id="kioskMainView">
                     <h3>Kiosk Admin</h3>
                     <p id="kioskWifiStatus" class="kiosk-wifi-status">WiFi: checking...</p>
-                    <input type="password" id="kioskAdminPassword" class="kiosk-admin-input" placeholder="Enter admin password" autocomplete="off" inputmode="text">
+                    <div class="kiosk-password-wrapper">
+                        <input type="password" id="kioskAdminPassword" class="kiosk-admin-input" placeholder="Enter admin password" autocomplete="off" inputmode="text">
+                        <button type="button" class="kiosk-password-toggle" onclick="togglePasswordVisibility('kioskAdminPassword', this)">Show</button>
+                    </div>
                     <p id="kioskAdminError" class="kiosk-admin-error"></p>
                     <div class="kiosk-admin-actions">
                         <button class="kiosk-admin-btn kiosk-btn-primary" onclick="kioskAdminAction('exit_fullscreen')">Exit Fullscreen</button>
@@ -309,7 +312,10 @@
                     </div>
                     <div id="kioskWifiConnectSection" class="kiosk-wifi-connect-section" style="display: none;">
                         <p id="kioskWifiSelectedLabel" class="kiosk-wifi-selected"></p>
-                        <input type="password" id="kioskWifiPassword" class="kiosk-admin-input" placeholder="WiFi password" autocomplete="off" inputmode="text">
+                        <div class="kiosk-password-wrapper">
+                            <input type="password" id="kioskWifiPassword" class="kiosk-admin-input" placeholder="WiFi password" autocomplete="off" inputmode="text">
+                            <button type="button" class="kiosk-password-toggle" onclick="togglePasswordVisibility('kioskWifiPassword', this)">Show</button>
+                        </div>
                         <button class="kiosk-admin-btn kiosk-btn-primary" onclick="connectKioskWifi()">Connect</button>
                     </div>
                     <p id="kioskWifiMessage" class="kiosk-wifi-message"></p>

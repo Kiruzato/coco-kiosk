@@ -8,144 +8,108 @@ http://localhost:8000/
 
 Holding the **Fullscreen button for 5 seconds** opens the **Kiosk Admin Panel**.
 
----
+A **WiFi configuration feature** was recently added there.
 
-# Objective
-
-Add a **WiFi configuration feature** inside the **Kiosk Admin Panel** so that an administrator can **change the WiFi network that the Raspberry Pi connects to**.
-
-This feature should allow the admin to:
-
-1. View available WiFi networks
-2. Select a WiFi network
-3. Enter the WiFi password
-4. Connect the Raspberry Pi to the selected network
+However, there are two issues that need to be fixed.
 
 ---
 
-# Required Functionality
+# Issue 1 — WiFi Connection Error
 
-The WiFi configuration panel should include:
-
-### 1. Current Connection Status
-
-Display the current WiFi network the Raspberry Pi is connected to.
-
-Example:
+When attempting to connect to a WiFi network through the Kiosk Admin Panel, the system returns the following error:
 
 ```
-Connected WiFi: <SSID>
+Error: 802-11-wireless-security.key-mgmt: property is missing
 ```
 
-If not connected:
-
-```
-No WiFi connection
-```
+This indicates that the WiFi connection command is missing the required **security configuration parameters**.
 
 ---
 
-### 2. Scan Available Networks
+## Objective
 
-Provide a button such as:
+Fix the WiFi connection logic so that networks can be connected successfully.
+
+The system must correctly handle WiFi security configuration when connecting.
+
+Investigate the backend command being used (likely via `nmcli` or another network tool) and ensure that:
+
+* the correct **key management method** is provided
+* WPA/WPA2 networks are handled correctly
+* open networks are handled correctly
+* password-protected networks pass the required parameters.
+
+Ensure the connection command is **constructed properly and securely**.
+
+The WiFi connection flow should work reliably for typical secured networks.
+
+---
+
+# Issue 2 — Password Visibility Toggle
+
+Currently, the password fields do not allow administrators to verify what they typed.
+
+Add a **password visibility toggle button** (show/hide password) for the following fields:
+
+### 1. Kiosk Admin Panel login password
+
+### 2. WiFi configuration password field
+
+---
+
+## Required Behavior
+
+Each password field should include a **visibility toggle icon/button**, such as:
 
 ```
-Scan WiFi Networks
+[ password input ] 👁
 ```
 
-This should retrieve nearby WiFi networks and display them in a list.
+Behavior:
 
-Each entry should show:
+* Clicking the toggle switches the field between:
 
-* SSID
-* signal strength (if available)
+  * hidden (`type="password"`)
+  * visible (`type="text"`)
 
----
+This allows the admin to verify the entered password.
 
-### 3. Connect to Network
-
-When the admin selects a WiFi network:
-
-* allow entering the WiFi password
-* allow connecting to the network.
-
-Example UI flow:
-
-```
-Available Networks:
-[ Network_A ]
-[ Network_B ]
-[ Network_C ]
-
-Password: [________]
-
-[Connect]
-```
+The toggle should not break existing functionality.
 
 ---
 
-### 4. Connection Feedback
+# Implementation Requirements
 
-Provide feedback messages such as:
-
-* Connecting...
-* Connected successfully
-* Failed to connect
-
----
-
-# Backend Requirements
-
-The backend must securely interact with the Raspberry Pi networking system.
-
-Possible approaches include:
-
-* `nmcli`
-* `wpa_cli`
-* other Raspberry Pi network management tools.
-
-The implementation must:
-
-* avoid unsafe command execution
-* validate inputs
-* handle errors safely.
-
----
-
-# Security Considerations
-
-Since this feature interacts with system networking:
-
-* restrict access only through the **Kiosk Admin Panel**
-* ensure commands cannot be injected through user input
-* handle password input securely.
-
----
-
-# Code Quality Requirements
-
-While implementing the feature:
+While implementing these fixes:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* keep UI logic separated from system command execution
-* structure the WiFi management logic in a **clean backend module**
-* avoid tightly coupling WiFi logic with unrelated UI components.
+* avoid duplicating password toggle logic
+* keep WiFi connection logic clean and maintainable
+* ensure system command execution is **secure and validated**.
 
 ---
 
 # Validation
 
-After implementing the feature, verify that:
+After implementing the fixes, verify that:
 
-* the current WiFi network is displayed correctly
-* available networks can be scanned
-* the admin can connect to a new WiFi network
-* the system reconnects successfully
-* the web app remains accessible after network changes.
+### WiFi Connection
+
+* WiFi networks can be connected successfully
+* no `key-mgmt property is missing` error appears
+* both secured and open networks work correctly.
+
+### Password Visibility
+
+* password visibility toggle works for:
+
+  * Kiosk Admin login password
+  * WiFi password input
+* toggling visibility does not affect functionality.
 
 ---
 
 # Goal
 
-Provide a **simple and reliable WiFi configuration interface inside the Kiosk Admin Panel**, allowing administrators to manage Raspberry Pi WiFi connections directly from the kiosk system without needing terminal access.
+Ensure that the **WiFi configuration system works correctly** and that administrators can **verify passwords using a visibility toggle**, improving both reliability and usability of the Kiosk Admin Panel.

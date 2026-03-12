@@ -2356,7 +2356,11 @@ function showKioskAdminOverlay() {
     overlay.classList.add('visible');
     errorEl.textContent = '';
     pwdInput.value = '';
+    pwdInput.type = 'password';
     pwdInput.focus();
+
+    // Reset all password toggle buttons to "Show"
+    overlay.querySelectorAll('.kiosk-password-toggle').forEach(btn => btn.textContent = 'Show');
 
     // Fetch WiFi status
     loadKioskWifiStatus();
@@ -2392,6 +2396,13 @@ function hideKioskAdminOverlay() {
     const overlay = document.getElementById('kioskAdminOverlay');
     if (overlay) {
         overlay.classList.remove('visible');
+        // Reset password fields to hidden and toggle buttons to "Show"
+        overlay.querySelectorAll('.kiosk-admin-input[type="text"]').forEach(input => {
+            if (input.id === 'kioskAdminPassword' || input.id === 'kioskWifiPassword') {
+                input.type = 'password';
+            }
+        });
+        overlay.querySelectorAll('.kiosk-password-toggle').forEach(btn => btn.textContent = 'Show');
     }
     // Blur password fields so the virtual keyboard hides
     const pwdInput = document.getElementById('kioskAdminPassword');
@@ -2681,6 +2692,24 @@ window.showKioskMainView = showKioskMainView;
 window.scanKioskWifi = scanKioskWifi;
 window.selectKioskWifi = selectKioskWifi;
 window.connectKioskWifi = connectKioskWifi;
+
+/**
+ * Toggle password field visibility between hidden and visible.
+ * Shared by admin login and WiFi password fields.
+ */
+function togglePasswordVisibility(inputId, toggleBtn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        toggleBtn.textContent = 'Hide';
+    } else {
+        input.type = 'password';
+        toggleBtn.textContent = 'Show';
+    }
+}
+
+window.togglePasswordVisibility = togglePasswordVisibility;
 
 // ============================================================================
 // PHASE 39B: DEBUG PANEL

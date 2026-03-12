@@ -2360,9 +2360,15 @@ body {
     margin: 0 0 16px 0;
 }
 
+.kiosk-password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
 .kiosk-admin-input {
     width: 100%;
     padding: 12px 16px;
+    padding-right: 56px;
     border: 1px solid #475569;
     border-radius: 8px;
     background: #0f172a;
@@ -2375,6 +2381,28 @@ body {
 .kiosk-admin-input:focus {
     border-color: #3b82f6;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.kiosk-password-toggle {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #334155;
+    border: none;
+    border-radius: 4px;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 6px 10px;
+    transition: background 0.15s ease, color 0.15s ease;
+    z-index: 1;
+}
+
+.kiosk-password-toggle:hover {
+    background: #475569;
+    color: #e2e8f0;
 }
 
 .kiosk-admin-error {

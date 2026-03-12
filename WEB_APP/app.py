@@ -3592,7 +3592,16 @@ async def kiosk_wifi_connect(data: WifiConnectRequest):
         raise HTTPException(status_code=400, detail="Invalid SSID")
 
     try:
-        # Build command (list arguments — no shell injection possible)
+        # Remove any stale connection profile for this SSID.
+        # Prevents "802-11-wireless-security.key-mgmt: property is missing"
+        # error caused by partially-created profiles without security settings.
+        subprocess.run(
+            ["nmcli", "connection", "delete", data.ssid],
+            capture_output=True, text=True, timeout=10
+        )
+
+        # Connect (nmcli creates a fresh profile with proper security detection)
+        # List arguments — no shell injection possible
         cmd = ["nmcli", "dev", "wifi", "connect", data.ssid]
         if data.wifi_password:
             cmd += ["password", data.wifi_password]
