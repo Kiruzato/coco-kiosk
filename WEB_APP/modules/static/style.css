@@ -2430,6 +2430,131 @@ body {
     background: #334155;
 }
 
+.kiosk-btn-info {
+    background: #0ea5e9;
+    color: #fff;
+}
+
+.kiosk-btn-info:hover {
+    background: #0284c7;
+}
+
+/* WiFi Settings View */
+.kiosk-wifi-scan-btn {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.kiosk-wifi-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    background: #0f172a;
+    margin-bottom: 12px;
+}
+
+.kiosk-wifi-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.kiosk-wifi-list::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 3px;
+}
+
+.kiosk-wifi-empty {
+    color: #64748b;
+    font-size: 13px;
+    text-align: center;
+    padding: 20px 12px;
+    margin: 0;
+}
+
+.kiosk-wifi-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #1e293b;
+    transition: background 0.15s ease;
+}
+
+.kiosk-wifi-item:last-child {
+    border-bottom: none;
+}
+
+.kiosk-wifi-item:hover {
+    background: #1e293b;
+}
+
+.kiosk-wifi-item.selected {
+    background: #1e3a5f;
+    border-left: 3px solid #3b82f6;
+}
+
+.kiosk-wifi-item-ssid {
+    color: #e2e8f0;
+    font-size: 14px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+
+.kiosk-wifi-item-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.kiosk-wifi-signal {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.kiosk-wifi-signal.strong { color: #4ade80; }
+.kiosk-wifi-signal.good { color: #a3e635; }
+.kiosk-wifi-signal.weak { color: #fbbf24; }
+.kiosk-wifi-signal.very-weak { color: #f87171; }
+
+.kiosk-wifi-lock {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.kiosk-wifi-connect-section {
+    margin-bottom: 12px;
+}
+
+.kiosk-wifi-connect-section .kiosk-admin-input {
+    margin-bottom: 10px;
+}
+
+.kiosk-wifi-connect-section .kiosk-admin-btn {
+    width: 100%;
+}
+
+.kiosk-wifi-selected {
+    color: #94a3b8;
+    font-size: 13px;
+    margin: 0 0 8px 0;
+    text-align: left;
+}
+
+.kiosk-wifi-message {
+    font-size: 13px;
+    min-height: 18px;
+    margin: 0 0 10px 0;
+}
+
+.kiosk-wifi-message.success { color: #4ade80; }
+.kiosk-wifi-message.error { color: #f87171; }
+.kiosk-wifi-message.info { color: #94a3b8; }
+
 /* ============================================================================
    Virtual Keyboard (Web-based, for fullscreen kiosk mode)
    ============================================================================ */

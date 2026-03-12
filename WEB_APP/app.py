@@ -3515,6 +3515,105 @@ async def kiosk_wifi():
         return {"ssid": None, "message": "Unable to determine WiFi status"}
 
 
+class WifiConnectRequest(BaseModel):
+    """WiFi connection request."""
+    password: str
+    ssid: str
+    wifi_password: str = ""
+
+
+@app.post("/admin/kiosk/wifi/scan")
+async def kiosk_wifi_scan(data: KioskAuthRequest):
+    """
+    Scan for available WiFi networks using nmcli.
+    Requires admin password. Only works on Linux (RPi).
+    """
+    import platform
+    import subprocess
+
+    if data.password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Invalid password")
+
+    if platform.system() != "Linux":
+        return {"networks": [], "message": "WiFi scan only available on Raspberry Pi (Linux)."}
+
+    try:
+        result = subprocess.run(
+            ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list", "--rescan", "yes"],
+            capture_output=True, text=True, timeout=20
+        )
+
+        networks = []
+        seen = set()
+        for line in result.stdout.strip().split("\n"):
+            if not line.strip():
+                continue
+            # Split from right: SSID may contain colons, SIGNAL and SECURITY don't
+            parts = line.rsplit(":", 2)
+            if len(parts) < 3:
+                continue
+            ssid = parts[0].replace("\\:", ":").strip()
+            if not ssid or ssid in seen:
+                continue
+            seen.add(ssid)
+            signal = int(parts[1]) if parts[1].strip().isdigit() else 0
+            security = parts[2].strip()
+            networks.append({"ssid": ssid, "signal": signal, "security": security})
+
+        networks.sort(key=lambda x: x["signal"], reverse=True)
+        return {"networks": networks}
+
+    except FileNotFoundError:
+        return {"networks": [], "message": "nmcli not available on this system."}
+    except subprocess.TimeoutExpired:
+        return {"networks": [], "message": "WiFi scan timed out."}
+    except Exception as e:
+        logger.error(f"[KIOSK] WiFi scan failed: {e}")
+        return {"networks": [], "message": f"Scan failed: {e}"}
+
+
+@app.post("/admin/kiosk/wifi/connect")
+async def kiosk_wifi_connect(data: WifiConnectRequest):
+    """
+    Connect to a WiFi network using nmcli.
+    Requires admin password. Only works on Linux (RPi).
+    """
+    import platform
+    import subprocess
+
+    if data.password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Invalid password")
+
+    if platform.system() != "Linux":
+        return {"status": "skipped", "message": "WiFi connect only available on Raspberry Pi (Linux)."}
+
+    # Validate SSID (IEEE 802.11: max 32 bytes)
+    if not data.ssid or len(data.ssid) > 32:
+        raise HTTPException(status_code=400, detail="Invalid SSID")
+
+    try:
+        # Build command (list arguments — no shell injection possible)
+        cmd = ["nmcli", "dev", "wifi", "connect", data.ssid]
+        if data.wifi_password:
+            cmd += ["password", data.wifi_password]
+
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+
+        if result.returncode == 0:
+            logger.info(f"[KIOSK] WiFi connected to: {data.ssid}")
+            return {"status": "success", "message": f"Connected to {data.ssid}"}
+        else:
+            error_msg = result.stderr.strip() or "Connection failed"
+            logger.warning(f"[KIOSK] WiFi connect failed: {error_msg}")
+            return {"status": "failed", "message": error_msg}
+
+    except subprocess.TimeoutExpired:
+        return {"status": "failed", "message": "Connection attempt timed out."}
+    except Exception as e:
+        logger.error(f"[KIOSK] WiFi connect error: {e}")
+        raise HTTPException(status_code=500, detail=f"WiFi connect failed: {e}")
+
+
 # ==============================================================================
 # MOUNT STATIC FILES
 # ==============================================================================

@@ -2393,14 +2393,22 @@ function hideKioskAdminOverlay() {
     if (overlay) {
         overlay.classList.remove('visible');
     }
-    // Blur password field so the virtual keyboard hides
+    // Blur password fields so the virtual keyboard hides
     const pwdInput = document.getElementById('kioskAdminPassword');
     if (pwdInput) pwdInput.blur();
+    const wifiPwd = document.getElementById('kioskWifiPassword');
+    if (wifiPwd) wifiPwd.blur();
+
+    // Reset to main view and clear stored password
+    document.getElementById('kioskMainView').style.display = '';
+    document.getElementById('kioskWifiView').style.display = 'none';
+    kioskAdminStoredPassword = '';
+    kioskSelectedWifiSSID = '';
 }
 
 /**
  * Authenticate kiosk admin and perform an action.
- * @param {string} action - 'exit_fullscreen' | 'shutdown' | 'restart'
+ * @param {string} action - 'exit_fullscreen' | 'shutdown' | 'reboot' | 'wifi_settings'
  */
 async function kioskAdminAction(action) {
     const pwdInput = document.getElementById('kioskAdminPassword');
@@ -2448,12 +2456,231 @@ async function kioskAdminAction(action) {
         } catch (err) {
             errorEl.textContent = 'Connection error. Try again.';
         }
+    } else if (action === 'wifi_settings') {
+        // Verify password then switch to WiFi view
+        try {
+            const resp = await fetch('/admin/kiosk/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+            if (!resp.ok) {
+                errorEl.textContent = 'Invalid password.';
+                return;
+            }
+            kioskAdminStoredPassword = password;
+            showKioskWifiView();
+        } catch (err) {
+            errorEl.textContent = 'Connection error. Try again.';
+        }
     }
+}
+
+// ============================================================================
+// KIOSK WIFI SETTINGS
+// ============================================================================
+
+// Stored admin password for WiFi operations (cleared on overlay close/back)
+let kioskAdminStoredPassword = '';
+let kioskSelectedWifiSSID = '';
+
+/**
+ * Switch to the WiFi settings view.
+ */
+function showKioskWifiView() {
+    document.getElementById('kioskMainView').style.display = 'none';
+    document.getElementById('kioskWifiView').style.display = '';
+
+    // Load current WiFi status
+    loadKioskWifiCurrent();
+
+    // Reset state
+    kioskSelectedWifiSSID = '';
+    document.getElementById('kioskWifiConnectSection').style.display = 'none';
+    setKioskWifiMessage('', '');
+}
+
+/**
+ * Switch back to the main admin view.
+ */
+function showKioskMainView() {
+    document.getElementById('kioskWifiView').style.display = 'none';
+    document.getElementById('kioskMainView').style.display = '';
+    kioskAdminStoredPassword = '';
+    kioskSelectedWifiSSID = '';
+
+    // Blur WiFi password field so VKB hides
+    const wifiPwd = document.getElementById('kioskWifiPassword');
+    if (wifiPwd) wifiPwd.blur();
+}
+
+/**
+ * Load current WiFi SSID into the WiFi view header.
+ */
+async function loadKioskWifiCurrent() {
+    const el = document.getElementById('kioskWifiCurrent');
+    if (!el) return;
+    el.textContent = 'Connected: checking...';
+    el.style.color = '#94a3b8';
+    try {
+        const resp = await fetch('/admin/kiosk/wifi');
+        const data = await resp.json();
+        if (data.ssid) {
+            el.textContent = `Connected: ${data.ssid}`;
+            el.style.color = '#4ade80';
+        } else {
+            el.textContent = 'Not connected';
+            el.style.color = '#f87171';
+        }
+    } catch {
+        el.textContent = 'Unable to check';
+        el.style.color = '#f87171';
+    }
+}
+
+/**
+ * Scan for available WiFi networks.
+ */
+async function scanKioskWifi() {
+    const listEl = document.getElementById('kioskWifiList');
+    const scanBtn = document.getElementById('kioskWifiScanBtn');
+
+    listEl.innerHTML = '<p class="kiosk-wifi-empty">Scanning...</p>';
+    scanBtn.disabled = true;
+    scanBtn.textContent = 'Scanning...';
+    setKioskWifiMessage('', '');
+    document.getElementById('kioskWifiConnectSection').style.display = 'none';
+    kioskSelectedWifiSSID = '';
+
+    try {
+        const resp = await fetch('/admin/kiosk/wifi/scan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: kioskAdminStoredPassword })
+        });
+
+        if (resp.status === 401) {
+            setKioskWifiMessage('Session expired. Go back and re-enter password.', 'error');
+            listEl.innerHTML = '';
+            return;
+        }
+
+        const data = await resp.json();
+
+        if (!data.networks || data.networks.length === 0) {
+            listEl.innerHTML = `<p class="kiosk-wifi-empty">${data.message || 'No networks found'}</p>`;
+            return;
+        }
+
+        listEl.innerHTML = data.networks.map(n => {
+            const sigClass = n.signal >= 70 ? 'strong' : n.signal >= 50 ? 'good' : n.signal >= 30 ? 'weak' : 'very-weak';
+            const lockIcon = n.security && n.security !== '--' ? '&#x1F512;' : '';
+            return `<div class="kiosk-wifi-item" data-ssid="${escapeHtml(n.ssid)}" onclick="selectKioskWifi(this)">
+                <span class="kiosk-wifi-item-ssid">${escapeHtml(n.ssid)}</span>
+                <span class="kiosk-wifi-item-info">
+                    <span class="kiosk-wifi-signal ${sigClass}">${n.signal}%</span>
+                    <span class="kiosk-wifi-lock">${lockIcon}</span>
+                </span>
+            </div>`;
+        }).join('');
+
+    } catch (err) {
+        setKioskWifiMessage('Scan failed. Check connection.', 'error');
+        listEl.innerHTML = '<p class="kiosk-wifi-empty">Scan failed</p>';
+    } finally {
+        scanBtn.disabled = false;
+        scanBtn.textContent = 'Scan Networks';
+    }
+}
+
+/**
+ * Select a WiFi network from the scan list.
+ */
+function selectKioskWifi(el) {
+    // Deselect previous
+    document.querySelectorAll('.kiosk-wifi-item.selected').forEach(item => item.classList.remove('selected'));
+
+    // Select this one
+    el.classList.add('selected');
+    kioskSelectedWifiSSID = el.getAttribute('data-ssid');
+
+    // Show connect section
+    const connectSection = document.getElementById('kioskWifiConnectSection');
+    const label = document.getElementById('kioskWifiSelectedLabel');
+    const wifiPwd = document.getElementById('kioskWifiPassword');
+
+    label.textContent = `Network: ${kioskSelectedWifiSSID}`;
+    wifiPwd.value = '';
+    connectSection.style.display = '';
+    setKioskWifiMessage('', '');
+}
+
+/**
+ * Connect to the selected WiFi network.
+ */
+async function connectKioskWifi() {
+    if (!kioskSelectedWifiSSID) return;
+
+    const wifiPwd = document.getElementById('kioskWifiPassword');
+    const wifiPassword = wifiPwd?.value || '';
+
+    setKioskWifiMessage('Connecting...', 'info');
+
+    try {
+        const resp = await fetch('/admin/kiosk/wifi/connect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                password: kioskAdminStoredPassword,
+                ssid: kioskSelectedWifiSSID,
+                wifi_password: wifiPassword
+            })
+        });
+
+        if (resp.status === 401) {
+            setKioskWifiMessage('Session expired. Go back and re-enter password.', 'error');
+            return;
+        }
+
+        const data = await resp.json();
+
+        if (data.status === 'success') {
+            setKioskWifiMessage(data.message || 'Connected!', 'success');
+            loadKioskWifiCurrent();
+        } else {
+            setKioskWifiMessage(data.message || 'Connection failed.', 'error');
+        }
+    } catch (err) {
+        setKioskWifiMessage('Connection error. Try again.', 'error');
+    }
+}
+
+/**
+ * Set the WiFi feedback message.
+ */
+function setKioskWifiMessage(text, type) {
+    const el = document.getElementById('kioskWifiMessage');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'kiosk-wifi-message' + (type ? ' ' + type : '');
+}
+
+/**
+ * Escape HTML to prevent XSS in rendered network names.
+ */
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
 }
 
 // Expose for onclick handlers in the overlay HTML
 window.hideKioskAdminOverlay = hideKioskAdminOverlay;
 window.kioskAdminAction = kioskAdminAction;
+window.showKioskMainView = showKioskMainView;
+window.scanKioskWifi = scanKioskWifi;
+window.selectKioskWifi = selectKioskWifi;
+window.connectKioskWifi = connectKioskWifi;
 
 // ============================================================================
 // PHASE 39B: DEBUG PANEL
@@ -4029,6 +4256,10 @@ window.toggleFAQItem = toggleFAQItem;
     const symbolsLayer = document.getElementById('vkbSymbols');
     const layerToggleBtn = vkb.querySelector('.vkb-layer-toggle');
     const kioskAdminPassword = document.getElementById('kioskAdminPassword');
+    const kioskWifiPassword = document.getElementById('kioskWifiPassword');
+
+    // Track all VKB-enabled inputs so blur handler knows when to hide
+    const vkbInputs = new Set();
 
     let activeInput = null; // Currently targeted input field
     let shiftActive = false;
@@ -4240,15 +4471,14 @@ window.toggleFAQItem = toggleFAQItem;
      */
     function attachVKBInput(inputEl, opts) {
         if (!inputEl) return;
+        vkbInputs.add(inputEl);
         inputEl.addEventListener('focus', function() {
             showVKB(inputEl, opts);
         });
         inputEl.addEventListener('blur', function() {
             setTimeout(function() {
                 // Only hide if focus didn't go to another VKB-enabled input
-                if (document.activeElement !== inputEl &&
-                    document.activeElement !== userInput &&
-                    document.activeElement !== kioskAdminPassword) {
+                if (!vkbInputs.has(document.activeElement)) {
                     hideVKB();
                 }
             }, 200);
@@ -4259,6 +4489,8 @@ window.toggleFAQItem = toggleFAQItem;
     attachVKBInput(userInput);
     // Attach VKB to admin password input (center-aligned)
     attachVKBInput(kioskAdminPassword, { centered: true });
+    // Attach VKB to WiFi password input (center-aligned)
+    attachVKBInput(kioskWifiPassword, { centered: true });
 
     // Hide keyboard when exiting fullscreen
     document.addEventListener('fullscreenchange', function() {

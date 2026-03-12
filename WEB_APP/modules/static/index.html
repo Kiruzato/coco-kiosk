@@ -285,16 +285,36 @@
         <!-- Kiosk Admin Overlay (inside kiosk-container so it's visible in DOM fullscreen) -->
         <div id="kioskAdminOverlay" class="kiosk-admin-overlay">
             <div class="kiosk-admin-panel">
-                <h3>Kiosk Admin</h3>
-                <p id="kioskWifiStatus" class="kiosk-wifi-status">WiFi: checking...</p>
-                <input type="password" id="kioskAdminPassword" class="kiosk-admin-input" placeholder="Enter admin password" autocomplete="off" inputmode="text">
-                <p id="kioskAdminError" class="kiosk-admin-error"></p>
-                <div class="kiosk-admin-actions">
-                    <button class="kiosk-admin-btn kiosk-btn-primary" onclick="kioskAdminAction('exit_fullscreen')">Exit Fullscreen</button>
-                    <button class="kiosk-admin-btn kiosk-btn-warning" onclick="kioskAdminAction('shutdown')">Shutdown RPi</button>
-                    <button class="kiosk-admin-btn kiosk-btn-warning" onclick="kioskAdminAction('reboot')">Reboot RPi</button>
+                <!-- Main View -->
+                <div id="kioskMainView">
+                    <h3>Kiosk Admin</h3>
+                    <p id="kioskWifiStatus" class="kiosk-wifi-status">WiFi: checking...</p>
+                    <input type="password" id="kioskAdminPassword" class="kiosk-admin-input" placeholder="Enter admin password" autocomplete="off" inputmode="text">
+                    <p id="kioskAdminError" class="kiosk-admin-error"></p>
+                    <div class="kiosk-admin-actions">
+                        <button class="kiosk-admin-btn kiosk-btn-primary" onclick="kioskAdminAction('exit_fullscreen')">Exit Fullscreen</button>
+                        <button class="kiosk-admin-btn kiosk-btn-warning" onclick="kioskAdminAction('shutdown')">Shutdown RPi</button>
+                        <button class="kiosk-admin-btn kiosk-btn-warning" onclick="kioskAdminAction('reboot')">Reboot RPi</button>
+                        <button class="kiosk-admin-btn kiosk-btn-info" onclick="kioskAdminAction('wifi_settings')">WiFi Settings</button>
+                    </div>
+                    <button class="kiosk-admin-btn kiosk-btn-cancel" onclick="hideKioskAdminOverlay()">Cancel</button>
                 </div>
-                <button class="kiosk-admin-btn kiosk-btn-cancel" onclick="hideKioskAdminOverlay()">Cancel</button>
+                <!-- WiFi Settings View -->
+                <div id="kioskWifiView" style="display: none;">
+                    <h3>WiFi Settings</h3>
+                    <p id="kioskWifiCurrent" class="kiosk-wifi-status">Connected: checking...</p>
+                    <button id="kioskWifiScanBtn" class="kiosk-admin-btn kiosk-btn-primary kiosk-wifi-scan-btn" onclick="scanKioskWifi()">Scan Networks</button>
+                    <div id="kioskWifiList" class="kiosk-wifi-list">
+                        <p class="kiosk-wifi-empty">Click "Scan Networks" to find available networks</p>
+                    </div>
+                    <div id="kioskWifiConnectSection" class="kiosk-wifi-connect-section" style="display: none;">
+                        <p id="kioskWifiSelectedLabel" class="kiosk-wifi-selected"></p>
+                        <input type="password" id="kioskWifiPassword" class="kiosk-admin-input" placeholder="WiFi password" autocomplete="off" inputmode="text">
+                        <button class="kiosk-admin-btn kiosk-btn-primary" onclick="connectKioskWifi()">Connect</button>
+                    </div>
+                    <p id="kioskWifiMessage" class="kiosk-wifi-message"></p>
+                    <button class="kiosk-admin-btn kiosk-btn-cancel" onclick="showKioskMainView()">Back</button>
+                </div>
             </div>
         </div>
     </div>

@@ -1,4 +1,4 @@
-You are working on the **CoCo Campus RAG Chatbot** project running on **Raspberry Pi OS in kiosk runtime**.
+You are working on the **CoCo Campus RAG Chatbot** project running on **Raspberry Pi OS in kiosk mode**.
 
 The web application runs at:
 
@@ -6,115 +6,146 @@ The web application runs at:
 http://localhost:8000/
 ```
 
----
-
-# Problem
-
-In the **Advertisement Panel**, specifically for **Text Advertisements**, emojis are **not rendering correctly**.
-
-Observed behavior:
-
-* Emojis appear as **empty boxes / square placeholders** instead of the correct emoji characters.
-
-This issue occurs in **Raspberry Pi OS runtime**.
-
-The emojis appear correctly in some development environments, but **not on the Raspberry Pi system**.
+Holding the **Fullscreen button for 5 seconds** opens the **Kiosk Admin Panel**.
 
 ---
 
 # Objective
 
-Fix the issue so that **emojis render correctly in Text Advertisements on Raspberry Pi OS**.
+Add a **WiFi configuration feature** inside the **Kiosk Admin Panel** so that an administrator can **change the WiFi network that the Raspberry Pi connects to**.
 
-The Advertisement Panel should correctly display emojis embedded in the advertisement text.
+This feature should allow the admin to:
 
----
-
-# Investigation Requirements
-
-Investigate the real cause of the emoji rendering issue.
-
-Possible causes may include:
-
-### Font Support
-
-The system may not have a font installed that supports emoji characters.
-
-Check whether the Raspberry Pi system has fonts such as:
-
-* `Noto Color Emoji`
-* `Noto Emoji`
-* other emoji-capable fonts.
+1. View available WiFi networks
+2. Select a WiFi network
+3. Enter the WiFi password
+4. Connect the Raspberry Pi to the selected network
 
 ---
 
-### CSS Font Stack
+# Required Functionality
 
-Check the CSS font-family used by the Text Advertisement component.
+The WiFi configuration panel should include:
 
-Verify whether the font stack includes emoji-capable fonts.
+### 1. Current Connection Status
 
-If necessary, extend the font stack to support emoji rendering.
+Display the current WiFi network the Raspberry Pi is connected to.
 
----
-
-### Encoding Issues
-
-Ensure that:
-
-* the page uses **UTF-8 encoding**
-* advertisement text is not losing emoji characters during storage or rendering.
-
----
-
-### Deployment Script
-
-If the issue requires installing fonts on Raspberry Pi, update the deployment script:
+Example:
 
 ```
-WEB_APP/deploy/install_kiosk.sh
+Connected WiFi: <SSID>
 ```
 
-so that the required emoji fonts are installed automatically.
+If not connected:
 
-Ensure this installation is **safe for repeated execution**.
+```
+No WiFi connection
+```
 
 ---
 
-# Required Fix
+### 2. Scan Available Networks
 
-Implement a solution that ensures:
+Provide a button such as:
 
-* emojis render correctly in Text Advertisements
-* the fix works reliably on Raspberry Pi OS
-* the UI displays emojis consistently.
+```
+Scan WiFi Networks
+```
 
-Avoid quick hacks that only work in some environments.
+This should retrieve nearby WiFi networks and display them in a list.
+
+Each entry should show:
+
+* SSID
+* signal strength (if available)
+
+---
+
+### 3. Connect to Network
+
+When the admin selects a WiFi network:
+
+* allow entering the WiFi password
+* allow connecting to the network.
+
+Example UI flow:
+
+```
+Available Networks:
+[ Network_A ]
+[ Network_B ]
+[ Network_C ]
+
+Password: [________]
+
+[Connect]
+```
+
+---
+
+### 4. Connection Feedback
+
+Provide feedback messages such as:
+
+* Connecting...
+* Connected successfully
+* Failed to connect
+
+---
+
+# Backend Requirements
+
+The backend must securely interact with the Raspberry Pi networking system.
+
+Possible approaches include:
+
+* `nmcli`
+* `wpa_cli`
+* other Raspberry Pi network management tools.
+
+The implementation must:
+
+* avoid unsafe command execution
+* validate inputs
+* handle errors safely.
+
+---
+
+# Security Considerations
+
+Since this feature interacts with system networking:
+
+* restrict access only through the **Kiosk Admin Panel**
+* ensure commands cannot be injected through user input
+* handle password input securely.
 
 ---
 
 # Code Quality Requirements
 
-While implementing the fix:
+While implementing the feature:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* keep the CSS font configuration clean
-* avoid hardcoding system-specific assumptions where possible.
+* keep UI logic separated from system command execution
+* structure the WiFi management logic in a **clean backend module**
+* avoid tightly coupling WiFi logic with unrelated UI components.
 
 ---
 
 # Validation
 
-After implementing the fix, verify that:
+After implementing the feature, verify that:
 
-* emojis display correctly in the Advertisement Panel
-* emojis render properly in Raspberry Pi runtime
-* the solution persists after **system reboot**
-* the change does not break existing UI text rendering.
+* the current WiFi network is displayed correctly
+* available networks can be scanned
+* the admin can connect to a new WiFi network
+* the system reconnects successfully
+* the web app remains accessible after network changes.
 
 ---
 
 # Goal
 
-Ensure that **Text Advertisements in the Advertisement Panel can correctly display emojis on Raspberry Pi OS**, providing proper emoji rendering instead of placeholder boxes.
+Provide a **simple and reliable WiFi configuration interface inside the Kiosk Admin Panel**, allowing administrators to manage Raspberry Pi WiFi connections directly from the kiosk system without needing terminal access.
