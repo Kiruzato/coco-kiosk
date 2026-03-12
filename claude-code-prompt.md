@@ -1,4 +1,4 @@
-You are working on the **CoCo Campus RAG Chatbot** project running on **Raspberry Pi OS in kiosk mode**.
+You are working on the **CoCo Campus RAG Chatbot** project running on **Raspberry Pi OS in fullscreen kiosk mode**.
 
 The web application runs at:
 
@@ -8,111 +8,131 @@ http://localhost:8000/
 
 Holding the **Fullscreen button for 5 seconds** opens the **Kiosk Admin panel**.
 
-Several improvements are needed in this panel.
+---
+
+# Problem
+
+Inside the **Kiosk Admin panel**, there is a **password input field**.
+
+A **custom lightweight keyboard** was implemented so users can type even in fullscreen mode.
+
+The keyboard **does appear when the password field is focused**, but it **cannot be used**.
+
+Observed behavior:
+
+* The keyboard **visually appears on the screen**.
+* However, **clicking the keys does nothing**.
+* It appears that **a UI layer or overlay is blocking interaction with the keyboard**.
+
+This suggests that a **screen layer, overlay, or container element is intercepting pointer events**, preventing interaction with the keyboard.
 
 ---
 
-# 1. Enable Custom Keyboard in Kiosk Admin Password Field
+# Objective
 
-Currently, the **password input field inside the Kiosk Admin panel is unusable in fullscreen mode**, because the Raspberry Pi OS virtual keyboard does not appear.
+Fix the UI layering so the **custom keyboard is fully usable inside the Kiosk Admin panel**.
 
-A **custom lightweight keyboard** was previously implemented for the main chatbot input field.
+The keyboard must:
 
-I want this **same custom keyboard to be used for the password input field inside the Kiosk Admin panel**.
-
-However, there is one important difference:
-
-* In the **main chatbot UI**, the keyboard is **left-aligned**.
-* In the **Kiosk Admin panel**, the keyboard should appear **center-aligned**.
-
-Requirements:
-
-* The custom keyboard must activate when the **password input field receives focus**.
-* The keyboard must insert characters correctly into the password field.
-* The keyboard must be **center-aligned when used inside the Kiosk Admin panel**.
-* The existing keyboard behavior for the chatbot input field must remain unchanged.
-
-If necessary, refactor the keyboard implementation so that its **alignment can be controlled depending on context**.
+* remain visible
+* accept click/touch input
+* correctly insert characters into the password field.
 
 ---
 
-# 2. Replace “Restart Backend” with “Reboot RPI”
+# Investigation Requirements
 
-In the Kiosk Admin panel there is currently a button:
+Investigate the layout and layering behavior when the **Kiosk Admin panel is active**.
 
-```
-Restart Backend
-```
+Specifically check:
 
-This button only restarts the backend service.
+### 1. Overlay Layers
 
-Replace this functionality with a new button:
+Determine whether the Kiosk Admin panel uses an overlay element such as:
 
-```
-Reboot RPI
-```
+* modal background
+* screen blocker
+* fullscreen container layer.
 
-Behavior:
+Check whether that overlay:
 
-* When clicked, it should **restart the entire Raspberry Pi system**.
-* This should safely trigger a system reboot.
-
-Requirements:
-
-* Ensure the reboot command is executed securely.
-* Ensure proper permissions are handled correctly.
-* Avoid exposing unsafe command execution paths.
+* covers the keyboard
+* blocks pointer events
+* intercepts clicks.
 
 ---
 
-# 3. Display Current WiFi Network
+### 2. CSS Layering (z-index)
 
-In the Kiosk Admin panel, I also want to display the **WiFi network that the Raspberry Pi is currently connected to**.
+Check the CSS rules of the keyboard and surrounding elements:
 
-Add a section that shows something similar to:
+* `z-index`
+* `position`
+* `pointer-events`
+* container stacking context
+* modal overlay behavior.
 
-```
-Connected WiFi: <network_name>
-```
+Verify whether the keyboard is being rendered **under another layer in the stacking order**.
 
-Requirements:
+---
 
-* Retrieve the currently connected WiFi SSID from the system.
-* Display it clearly in the Kiosk Admin panel.
-* If no WiFi is connected, show an appropriate message such as:
+### 3. DOM Placement
 
-```
-No WiFi connection detected
-```
+Verify where the keyboard is inserted in the DOM.
+
+Check whether it is being appended:
+
+* inside the admin modal
+* inside a container that has `overflow:hidden`
+* outside the interactive container.
+
+The keyboard should be placed in a **layer where it can receive pointer events**.
+
+---
+
+# Required Fix
+
+Adjust the UI structure so that:
+
+* the keyboard is **above blocking layers**
+* the keyboard **receives pointer events**
+* the admin overlay does not intercept keyboard input.
+
+Possible fixes may include:
+
+* correcting `z-index` stacking
+* modifying modal overlay structure
+* disabling pointer blocking for the keyboard area
+* placing the keyboard in a higher-level container.
+
+However, avoid fragile hacks. Implement a **clean and maintainable solution**.
 
 ---
 
 # Code Quality Requirements
 
-While implementing these changes:
+While implementing the fix:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* keep the custom keyboard logic reusable and maintainable
-* avoid duplicating keyboard logic
-* ensure system commands are handled securely
-* keep UI code clean and maintainable.
+* keep keyboard logic reusable
+* avoid hardcoded z-index values scattered throughout the code
+* maintain clear layering rules for modal UI elements.
 
 ---
 
 # Validation
 
-After implementing the changes, verify that:
+After implementing the fix, verify that:
 
-* the custom keyboard works in the **Kiosk Admin password input field**
-* the keyboard appears **center-aligned in the Kiosk Admin panel**
-* the keyboard behavior for the main chatbot input remains unchanged
-* the **Reboot RPI** button correctly reboots the system
-* the **connected WiFi network name is displayed correctly**
-* the system behaves correctly after reboot.
+* the keyboard appears when the password field is focused
+* keyboard keys are clickable
+* characters correctly appear in the password input field
+* the fix does not break the keyboard for the main chatbot input field
+* the Kiosk Admin panel UI still behaves correctly.
 
 ---
 
 # Goal
 
-Improve the **Kiosk Admin panel usability and functionality** by enabling keyboard input for the password field, adding system-level control through reboot functionality, and displaying the Raspberry Pi’s current WiFi connection.
+Ensure that the **custom keyboard inside the Kiosk Admin panel is fully interactive and usable in fullscreen kiosk mode**, without any UI layers blocking user interaction.
