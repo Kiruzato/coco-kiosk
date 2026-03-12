@@ -2602,8 +2602,19 @@ async function scanKioskWifi() {
         setKioskWifiMessage('Scan failed. Check connection.', 'error');
         listEl.innerHTML = '<p class="kiosk-wifi-empty">Scan failed</p>';
     } finally {
-        scanBtn.disabled = false;
-        scanBtn.textContent = 'Scan Networks';
+        // 5-second cooldown to prevent rapid repeated scans
+        let cooldown = 5;
+        scanBtn.textContent = `Wait ${cooldown}s`;
+        const interval = setInterval(() => {
+            cooldown--;
+            if (cooldown <= 0) {
+                clearInterval(interval);
+                scanBtn.disabled = false;
+                scanBtn.textContent = 'Scan Networks';
+            } else {
+                scanBtn.textContent = `Wait ${cooldown}s`;
+            }
+        }, 1000);
     }
 }
 

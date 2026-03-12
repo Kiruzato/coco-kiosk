@@ -11,72 +11,74 @@ Holding the **Fullscreen button for 5 seconds** opens the **Kiosk Admin Panel**.
 Claude previously implemented:
 
 * a **lightweight built-in keyboard**
-* a **WiFi configuration function** inside the Kiosk Admin Panel.
+* a **WiFi configuration interface** in the Kiosk Admin Panel.
 
-Inside the WiFi configuration screen, there is a **Back button** that returns the admin to the **main Kiosk Admin Panel**.
-
----
-
-# Problem
-
-When the admin changes the WiFi connection and then presses the **Back button** to return to the Kiosk Admin Panel, the **Connected WiFi label** in the Admin panel **does not refresh**.
-
-This means the displayed WiFi network may be outdated even though the connection has already changed.
+Inside the WiFi configuration screen there is a **Scan Networks** function that displays the list of available WiFi networks.
 
 ---
 
-# Objective
+# Task 1 — Investigate the Scan Networks Behavior
 
-Modify the system so that **when the Back button is clicked in the WiFi configuration screen**, the **Connected WiFi label in the Kiosk Admin Panel refreshes automatically** to reflect the **current active WiFi connection**.
+I want you to determine how the **Scan Networks** feature currently works.
+
+Specifically, investigate whether the system:
+
+1. **Performs a real WiFi scan each time the button is clicked**, or
+2. **Only retrieves cached results from the previous scan performed by the system**.
+
+Check:
+
+* the backend logic handling the scan request
+* the system command used (`nmcli`, `iw`, etc.)
+* whether a **fresh scan is explicitly triggered**.
+
+After investigating, confirm which behavior is currently implemented.
+
+If the system is **only retrieving cached results**, modify the implementation so that the **Scan Networks button performs a proper active WiFi scan** before retrieving the network list.
+
+The goal is for the list to reflect the **current available networks** rather than stale results.
 
 ---
 
-# Expected Behavior
+# Task 2 — Add Button Cooldown
 
-After returning from the WiFi configuration screen:
+Implement a **5-second cooldown** for the **Scan Networks** button.
 
-* the Admin Kiosk Panel should **re-query the current WiFi connection**
-* the **Connected WiFi label should update immediately**
-* the displayed network must reflect the **actual current connection state**.
+Requirements:
 
-The refresh should occur **every time the admin navigates back from WiFi configuration**, not only after a successful connection.
+* After the button is clicked, it should be **disabled for 5 seconds**.
+* During the cooldown, the button should **visually indicate it is disabled**.
+* After 5 seconds, the button should become **clickable again**.
+* The cooldown should prevent **rapid repeated scans** that could overload the system.
 
----
-
-# Implementation Guidelines
-
-When implementing the solution:
-
-* ensure the WiFi status is retrieved from the **actual system network state** (e.g., via backend endpoint or existing WiFi status logic)
-* avoid duplicating logic that already exists for checking WiFi status
-* reuse existing API endpoints if possible.
-
-The refresh should be triggered by the **Back button navigation event**.
+The cooldown must be handled **cleanly in the UI layer**, while still allowing backend validation if needed.
 
 ---
 
 # Code Quality Requirements
 
-Follow **industry-standard best practices**:
+While implementing the changes:
 
+* follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* avoid duplicating WiFi status logic
-* keep UI state updates clean and predictable
-* ensure the refresh mechanism does not introduce unnecessary API calls or performance issues.
+* avoid duplicating network scanning logic
+* ensure backend commands are executed **safely and securely**
+* keep the UI behavior **predictable and maintainable**.
 
 ---
 
 # Validation
 
-After implementing the change, verify that:
+Verify that:
 
-* changing WiFi networks updates the **Connected WiFi label correctly**
-* returning to the Admin panel via the **Back button always refreshes the label**
-* no UI regressions occur in the Kiosk Admin Panel
-* the lightweight keyboard and other kiosk features continue to function normally.
+* clicking **Scan Networks** performs an **actual WiFi scan**
+* the network list reflects **currently available networks**
+* the **5-second cooldown works correctly**
+* the cooldown prevents repeated scanning
+* no regressions occur in the WiFi configuration UI or the Kiosk Admin Panel.
 
 ---
 
 # Goal
 
-Ensure that the **Connected WiFi label in the Kiosk Admin Panel always reflects the real network state**, especially after navigating back from the WiFi configuration screen.
+Ensure the **Scan Networks feature performs a proper real-time WiFi scan** and prevent excessive scanning by implementing a **5-second cooldown on the Scan Networks button**.
