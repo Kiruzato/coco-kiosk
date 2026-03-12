@@ -1,126 +1,99 @@
-You are assisting in validating the **technical accuracy of the Appendix – Source Code section** of a research paper for the project **CoCo: AI-Powered Campus Assistant**.
+You are working on the **CoCo Campus RAG Chatbot** project.
 
-A file named:
+This task concerns the **Developer Settings panel** located at:
 
-`appendix_source_code_candidates.txt`
+`http://localhost:8000/admin#developer`
 
-already exists. This file contains **candidate source code snippets** selected as representative implementations for the **Appendix – Source Code** section of the research paper.
-
-However, it is important to ensure that the snippets included in the appendix represent **actual runtime behavior of the system**, and not **unused, deprecated, or dead code**.
-
-Your task is to **verify whether the components listed in `appendix_source_code_candidates.txt` are truly used by the system during runtime**.
+Specifically the **Response Metadata Toggle**.
 
 ---
 
-## Objective
+# Problem
 
-Confirm that every code snippet listed in `appendix_source_code_candidates.txt` corresponds to **code that is actively used in the system’s execution path**.
+The **Response Metadata Toggle** currently works **only for typewritten queries**.
 
-The goal is to ensure that the appendix reflects **real implementation logic**, not:
+However, when using **voice queries**, the metadata visibility toggle **does not work**.
 
-* unused helper functions
-* deprecated modules
-* experimental features
-* dead code
-* unused alternative implementations
+This means the toggle behavior is **inconsistent between text and voice query flows**.
 
 ---
 
-## Scope of Investigation
+# Objective
 
-Focus your analysis on the project's main implementation directories, especially:
+Fix the system so that the **Response Metadata Toggle behaves consistently for both query types**:
 
-* `WEB_APP`
-* `INGESTION_MODULE`
+* typewritten queries
+* voice queries
 
-You may explore other relevant parts of the repository if necessary to trace execution paths.
-
----
-
-## Verification Tasks
-
-For each entry in `appendix_source_code_candidates.txt`:
-
-1. Locate the referenced file and code snippet.
-
-2. Determine whether the snippet is **actually used in the system's runtime execution**.
-
-3. Trace where and how the code is invoked by:
-
-   * main application entry points
-   * API routes
-   * ingestion pipelines
-   * retrieval pipelines
-   * background processes
-   * other modules
-
-4. Identify whether the code is:
-
-   * actively used
-   * indirectly used through other modules
-   * configurable but currently unused
-   * completely unused / dead code
-
-Your conclusions must be based on **actual call paths and execution flow**, not assumptions.
+The toggle must correctly control the visibility of response metadata regardless of the input method.
 
 ---
 
-## If Issues Are Found
+# Investigation
 
-If any code snippet in `appendix_source_code_candidates.txt` is determined to be:
+First, identify why the metadata toggle is not applied to voice responses.
 
-* unused
-* unreachable in the runtime
-* deprecated
-* misleading for understanding the system
+Investigate the full response flow:
 
-Then update the file accordingly.
+Text Query Flow:
 
-Possible updates include:
+```
+UI → chat endpoint → response assembly → UI rendering
+```
 
-* removing the snippet
-* replacing it with a more accurate snippet
-* correcting the description
-* clarifying how the component is used in runtime
+Voice Query Flow:
 
-Do **not remove entries unnecessarily**. Only modify the file if the runtime analysis confirms the code is not representative of the real system.
+```
+STT → voice orchestrator → chat processing → TTS → UI rendering
+```
 
----
+Determine where the **metadata visibility setting is lost or ignored** in the voice pipeline.
 
-## Updating the File
+Possible causes may include:
 
-Maintain the existing structure of:
-
-`appendix_source_code_candidates.txt`
-
-Each entry should still contain:
-
-* file path
-* description
-* code snippet
-* explanation of significance
-
-If replacements are necessary, ensure the new snippets still **clearly represent the system’s actual implementation**.
+* different response assembly logic
+* missing metadata flag propagation
+* separate rendering logic
+* bypassed response formatting layer
 
 ---
 
-## Best Practices
+# Required Fix
 
-Follow **industry-standard software analysis practices** while performing this verification:
+Ensure that:
 
-* Trace **actual execution paths** starting from system entry points.
-* Confirm usage through **imports, function calls, and invocation chains**.
-* Distinguish between **available implementations** and **runtime-executed implementations**.
-* Avoid relying solely on comments, filenames, or assumptions.
-* Prefer code snippets that are **self-contained and clearly demonstrate system functionality**.
-* Ensure appendix snippets remain **concise, readable, and representative**.
+* the **same metadata visibility logic** is applied to both text and voice responses
+* the toggle setting from `http://localhost:8000/admin#developer` is respected in **both pipelines**
+* metadata rendering logic is **centralized rather than duplicated**
+
+Avoid implementing separate or duplicate logic for voice queries.
 
 ---
 
-## Deliverable
+# Code Quality Requirements
 
-Update and finalize:
+While implementing the fix:
 
-`appendix_source_code_candidates.txt`
+* follow **industry-standard best practices**
+* apply **proper refactorization and modularization**
+* avoid code duplication between voice and text pipelines
+* keep response formatting logic **consistent and maintainable**
 
-The updated file should contain **only source code snippets that are confirmed to be used in the system runtime**, ensuring that the research paper appendix accurately represents the **actual implementation of the CoCo system**.
+If necessary, refactor response assembly so that **both query types share the same metadata handling layer**.
+
+---
+
+# Validation
+
+After implementing the fix:
+
+Confirm that:
+
+* the Response Metadata Toggle works correctly for **typewritten queries**
+* the Response Metadata Toggle works correctly for **voice queries**
+* metadata visibility is **consistently controlled by the toggle**
+* no regressions occur in either pipeline.
+
+---
+
+Focus on **correcting the underlying response pipeline behavior**, not just masking the issue at the UI level.
