@@ -286,12 +286,13 @@
         <div id="kioskAdminOverlay" class="kiosk-admin-overlay">
             <div class="kiosk-admin-panel">
                 <h3>Kiosk Admin</h3>
-                <input type="password" id="kioskAdminPassword" class="kiosk-admin-input" placeholder="Enter admin password" autocomplete="off">
+                <p id="kioskWifiStatus" class="kiosk-wifi-status">WiFi: checking...</p>
+                <input type="password" id="kioskAdminPassword" class="kiosk-admin-input" placeholder="Enter admin password" autocomplete="off" inputmode="text">
                 <p id="kioskAdminError" class="kiosk-admin-error"></p>
                 <div class="kiosk-admin-actions">
                     <button class="kiosk-admin-btn kiosk-btn-primary" onclick="kioskAdminAction('exit_fullscreen')">Exit Fullscreen</button>
                     <button class="kiosk-admin-btn kiosk-btn-warning" onclick="kioskAdminAction('shutdown')">Shutdown RPi</button>
-                    <button class="kiosk-admin-btn kiosk-btn-warning" onclick="kioskAdminAction('restart')">Restart Backend</button>
+                    <button class="kiosk-admin-btn kiosk-btn-warning" onclick="kioskAdminAction('reboot')">Reboot RPi</button>
                 </div>
                 <button class="kiosk-admin-btn kiosk-btn-cancel" onclick="hideKioskAdminOverlay()">Cancel</button>
             </div>

@@ -2348,9 +2348,15 @@ body {
 
 .kiosk-admin-panel h3 {
     color: #f1f5f9;
-    margin: 0 0 20px 0;
+    margin: 0 0 12px 0;
     font-size: 20px;
     font-weight: 600;
+}
+
+.kiosk-wifi-status {
+    color: #94a3b8;
+    font-size: 13px;
+    margin: 0 0 16px 0;
 }
 
 .kiosk-admin-input {
@@ -2541,6 +2547,12 @@ body {
 .vkb-layer-toggle.active {
     background: #3182ce;
     color: #fff;
+}
+
+/* Center-aligned mode (used in kiosk admin panel) */
+.vkb.vkb-centered .vkb-row {
+    justify-content: center;
+    padding-left: 0;
 }
 
 /* When virtual keyboard is visible, tighten input padding */

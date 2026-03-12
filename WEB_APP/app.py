@@ -3392,10 +3392,10 @@ async def kiosk_shutdown(data: KioskAuthRequest):
         raise HTTPException(status_code=500, detail=f"Shutdown failed: {e}")
 
 
-@app.post("/admin/kiosk/restart")
-async def kiosk_restart(data: KioskAuthRequest):
+@app.post("/admin/kiosk/reboot")
+async def kiosk_reboot(data: KioskAuthRequest):
     """
-    Restart the CoCo backend service via systemd. Requires admin password.
+    Reboot the Raspberry Pi system. Requires admin password.
     Only executes on Linux (RPi). No-op on other platforms.
     """
     import platform
@@ -3405,14 +3405,55 @@ async def kiosk_restart(data: KioskAuthRequest):
         raise HTTPException(status_code=401, detail="Invalid password")
 
     if platform.system() != "Linux":
-        return {"status": "skipped", "message": "Restart only available on Raspberry Pi (Linux)."}
+        return {"status": "skipped", "message": "Reboot only available on Raspberry Pi (Linux)."}
 
     try:
-        subprocess.Popen(["sudo", "systemctl", "restart", "coco-kiosk"])
-        return {"status": "success", "message": "Restart command sent. Backend will restart shortly."}
+        subprocess.Popen(["sudo", "reboot"])
+        return {"status": "success", "message": "Reboot command sent. The device will restart shortly."}
     except Exception as e:
-        logger.error(f"[KIOSK] Restart failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Restart failed: {e}")
+        logger.error(f"[KIOSK] Reboot failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Reboot failed: {e}")
+
+
+@app.get("/admin/kiosk/wifi")
+async def kiosk_wifi():
+    """
+    Get the currently connected WiFi SSID.
+    Only works on Linux (RPi). Returns null SSID on other platforms.
+    """
+    import platform
+    import subprocess
+
+    if platform.system() != "Linux":
+        return {"ssid": None, "message": "WiFi info only available on Raspberry Pi (Linux)."}
+
+    try:
+        result = subprocess.run(
+            ["iwgetid", "-r"],
+            capture_output=True, text=True, timeout=5
+        )
+        ssid = result.stdout.strip()
+        if ssid:
+            return {"ssid": ssid}
+        else:
+            return {"ssid": None, "message": "No WiFi connection detected"}
+    except FileNotFoundError:
+        # iwgetid not available, try nmcli
+        try:
+            result = subprocess.run(
+                ["nmcli", "-t", "-f", "active,ssid", "dev", "wifi"],
+                capture_output=True, text=True, timeout=5
+            )
+            for line in result.stdout.strip().split("\n"):
+                if line.startswith("yes:"):
+                    ssid = line.split(":", 1)[1]
+                    return {"ssid": ssid}
+            return {"ssid": None, "message": "No WiFi connection detected"}
+        except Exception:
+            return {"ssid": None, "message": "Unable to determine WiFi status"}
+    except Exception as e:
+        logger.error(f"[KIOSK] WiFi check failed: {e}")
+        return {"ssid": None, "message": "Unable to determine WiFi status"}
 
 
 # ==============================================================================

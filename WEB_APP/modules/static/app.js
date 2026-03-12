@@ -2343,6 +2343,32 @@ function showKioskAdminOverlay() {
     errorEl.textContent = '';
     pwdInput.value = '';
     pwdInput.focus();
+
+    // Fetch WiFi status
+    loadKioskWifiStatus();
+}
+
+/**
+ * Fetch and display the current WiFi SSID in the kiosk admin panel.
+ */
+async function loadKioskWifiStatus() {
+    const el = document.getElementById('kioskWifiStatus');
+    if (!el) return;
+    el.textContent = 'WiFi: checking...';
+    try {
+        const resp = await fetch('/admin/kiosk/wifi');
+        const data = await resp.json();
+        if (data.ssid) {
+            el.textContent = `Connected WiFi: ${data.ssid}`;
+            el.style.color = '#4ade80';
+        } else {
+            el.textContent = data.message || 'No WiFi connection detected';
+            el.style.color = '#f87171';
+        }
+    } catch {
+        el.textContent = 'WiFi: unable to check';
+        el.style.color = '#f87171';
+    }
 }
 
 /**
@@ -2388,7 +2414,7 @@ async function kioskAdminAction(action) {
         } catch (err) {
             errorEl.textContent = 'Connection error. Try again.';
         }
-    } else if (action === 'shutdown' || action === 'restart') {
+    } else if (action === 'shutdown' || action === 'reboot') {
         try {
             const resp = await fetch(`/admin/kiosk/${action}`, {
                 method: 'POST',
@@ -3985,7 +4011,9 @@ window.toggleFAQItem = toggleFAQItem;
     const lettersLayer = document.getElementById('vkbLetters');
     const symbolsLayer = document.getElementById('vkbSymbols');
     const layerToggleBtn = vkb.querySelector('.vkb-layer-toggle');
+    const kioskAdminPassword = document.getElementById('kioskAdminPassword');
 
+    let activeInput = null; // Currently targeted input field
     let shiftActive = false;
     let capsLockActive = false; // Double-click shift = persistent caps
     let lastShiftTime = 0;     // For double-click detection
@@ -4004,11 +4032,15 @@ window.toggleFAQItem = toggleFAQItem;
     }
 
     /**
-     * Show the virtual keyboard (only in fullscreen).
+     * Show the virtual keyboard for a specific input field.
+     * @param {HTMLInputElement} inputEl - The input to target
+     * @param {object} [opts] - Options: { centered: boolean }
      */
-    function showVKB() {
+    function showVKB(inputEl, opts) {
         if (!isFullscreen()) return;
+        activeInput = inputEl || userInput;
         vkb.classList.add('vkb-visible');
+        vkb.classList.toggle('vkb-centered', !!(opts && opts.centered));
         document.body.classList.add('vkb-active');
     }
 
@@ -4017,7 +4049,9 @@ window.toggleFAQItem = toggleFAQItem;
      */
     function hideVKB() {
         vkb.classList.remove('vkb-visible');
+        vkb.classList.remove('vkb-centered');
         document.body.classList.remove('vkb-active');
+        activeInput = null;
     }
 
     /**
@@ -4060,24 +4094,23 @@ window.toggleFAQItem = toggleFAQItem;
     }
 
     /**
-     * Insert a character into the input field at cursor position.
+     * Insert a character into the active input field at cursor position.
      */
     function insertChar(ch) {
-        if (!userInput) return;
-        const start = userInput.selectionStart;
-        const end = userInput.selectionEnd;
-        const value = userInput.value;
+        const target = activeInput;
+        if (!target) return;
+        const start = target.selectionStart;
+        const end = target.selectionEnd;
+        const value = target.value;
         // Shift/caps lock only applies to letters, not symbols/punctuation
         const isLetter = ch.length === 1 && ch.match(/[a-z]/i);
         const isUpper = isLetter && (shiftActive || capsLockActive);
         const charToInsert = isUpper ? ch.toUpperCase() : ch;
 
-        userInput.value = value.substring(0, start) + charToInsert + value.substring(end);
+        target.value = value.substring(0, start) + charToInsert + value.substring(end);
         const newPos = start + 1;
-        // Use setSelectionRange to trigger native scroll-to-cursor
-        userInput.setSelectionRange(newPos, newPos);
-        // Fallback: ensure cursor is visible by scrolling input
-        userInput.scrollLeft = userInput.scrollWidth;
+        target.setSelectionRange(newPos, newPos);
+        target.scrollLeft = target.scrollWidth;
 
         // Auto-disable one-shot shift (but NOT caps lock)
         if (shiftActive && !capsLockActive && isLetter) {
@@ -4085,7 +4118,7 @@ window.toggleFAQItem = toggleFAQItem;
             updateShiftDisplay();
         }
 
-        userInput.focus();
+        target.focus();
     }
 
     /**
@@ -4117,21 +4150,22 @@ window.toggleFAQItem = toggleFAQItem;
                 break;
 
             case 'backspace': {
-                if (!userInput) return;
-                const bsStart = userInput.selectionStart;
-                const bsEnd = userInput.selectionEnd;
-                const bsValue = userInput.value;
+                const target = activeInput;
+                if (!target) return;
+                const bsStart = target.selectionStart;
+                const bsEnd = target.selectionEnd;
+                const bsValue = target.value;
                 let newCursorPos = bsStart;
 
                 if (bsStart !== bsEnd) {
-                    userInput.value = bsValue.substring(0, bsStart) + bsValue.substring(bsEnd);
+                    target.value = bsValue.substring(0, bsStart) + bsValue.substring(bsEnd);
                     newCursorPos = bsStart;
                 } else if (bsStart > 0) {
-                    userInput.value = bsValue.substring(0, bsStart - 1) + bsValue.substring(bsStart);
+                    target.value = bsValue.substring(0, bsStart - 1) + bsValue.substring(bsStart);
                     newCursorPos = bsStart - 1;
                 }
-                userInput.setSelectionRange(newCursorPos, newCursorPos);
-                userInput.focus();
+                target.setSelectionRange(newCursorPos, newCursorPos);
+                target.focus();
                 break;
             }
 
@@ -4140,9 +4174,13 @@ window.toggleFAQItem = toggleFAQItem;
                 break;
 
             case 'send':
-                hideVKB();
-                if (chatForm) {
+                // Only submit the chat form if the active input is the chat input
+                if (activeInput === userInput && chatForm) {
+                    hideVKB();
                     chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+                } else {
+                    // For other inputs (e.g., admin password), just hide the keyboard
+                    hideVKB();
                 }
                 break;
         }
@@ -4180,23 +4218,32 @@ window.toggleFAQItem = toggleFAQItem;
         }
     });
 
-    // Show keyboard when input is focused in fullscreen
-    if (userInput) {
-        userInput.addEventListener('focus', function() {
-            showVKB();
+    /**
+     * Attach VKB focus/blur listeners to an input element.
+     * @param {HTMLInputElement} inputEl - The input element
+     * @param {object} [opts] - Options passed to showVKB (e.g., { centered: true })
+     */
+    function attachVKBInput(inputEl, opts) {
+        if (!inputEl) return;
+        inputEl.addEventListener('focus', function() {
+            showVKB(inputEl, opts);
         });
-
-        // Hide keyboard when input loses focus (with delay to allow key presses)
-        userInput.addEventListener('blur', function() {
-            // Delay hide so that tapping a VKB key doesn't dismiss it
+        inputEl.addEventListener('blur', function() {
             setTimeout(function() {
-                // Only hide if focus didn't return to input
-                if (document.activeElement !== userInput) {
+                // Only hide if focus didn't go to another VKB-enabled input
+                if (document.activeElement !== inputEl &&
+                    document.activeElement !== userInput &&
+                    document.activeElement !== kioskAdminPassword) {
                     hideVKB();
                 }
             }, 200);
         });
     }
+
+    // Attach VKB to chat input (left-aligned, default)
+    attachVKBInput(userInput);
+    // Attach VKB to admin password input (center-aligned)
+    attachVKBInput(kioskAdminPassword, { centered: true });
 
     // Hide keyboard when exiting fullscreen
     document.addEventListener('fullscreenchange', function() {
@@ -4206,9 +4253,9 @@ window.toggleFAQItem = toggleFAQItem;
         if (!isFullscreen()) hideVKB();
     });
 
-    // If keyboard somehow steals focus, redirect it back to input
+    // If keyboard somehow steals focus, redirect it back to active input
     vkb.addEventListener('focusin', function() {
-        if (userInput) userInput.focus();
+        if (activeInput) activeInput.focus();
     });
 
     console.log('[VKB] Virtual keyboard initialized');

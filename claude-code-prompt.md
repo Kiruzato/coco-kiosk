@@ -1,4 +1,4 @@
-You are working on the **CoCo Campus RAG Chatbot** project running on **Raspberry Pi OS in kiosk fullscreen mode**.
+You are working on the **CoCo Campus RAG Chatbot** project running on **Raspberry Pi OS in kiosk mode**.
 
 The web application runs at:
 
@@ -6,151 +6,97 @@ The web application runs at:
 http://localhost:8000/
 ```
 
-A **lightweight built-in virtual keyboard** has already been implemented and is functioning.
-However, several improvements and fixes are required.
+Holding the **Fullscreen button for 5 seconds** opens the **Kiosk Admin panel**.
+
+Several improvements are needed in this panel.
 
 ---
 
-# Objective
+# 1. Enable Custom Keyboard in Kiosk Admin Password Field
 
-Improve the built-in keyboard by:
+Currently, the **password input field inside the Kiosk Admin panel is unusable in fullscreen mode**, because the Raspberry Pi OS virtual keyboard does not appear.
 
-1. Ensuring common symbols exist
-2. Fixing layout spacing issues
-3. Improving Caps Lock behavior
-4. Adjusting keyboard alignment
-5. Improving input field scrolling behavior
+A **custom lightweight keyboard** was previously implemented for the main chatbot input field.
+
+I want this **same custom keyboard to be used for the password input field inside the Kiosk Admin panel**.
+
+However, there is one important difference:
+
+* In the **main chatbot UI**, the keyboard is **left-aligned**.
+* In the **Kiosk Admin panel**, the keyboard should appear **center-aligned**.
+
+Requirements:
+
+* The custom keyboard must activate when the **password input field receives focus**.
+* The keyboard must insert characters correctly into the password field.
+* The keyboard must be **center-aligned when used inside the Kiosk Admin panel**.
+* The existing keyboard behavior for the chatbot input field must remain unchanged.
+
+If necessary, refactor the keyboard implementation so that its **alignment can be controlled depending on context**.
 
 ---
 
-# 1. Symbol Coverage Check
+# 2. Replace “Restart Backend” with “Reboot RPI”
 
-First, check whether the following symbols **already exist in the keyboard**.
-
-If any of them are **missing**, add them properly.
-
-Symbols to verify:
+In the Kiosk Admin panel there is currently a button:
 
 ```
-~
-`
-!
-@
-#
-$
-%
-^
-&
-*
-(
-)
-_
--
-+
-=
-{
-[
-}
-]
-|
-\
-:
-;
-"
-'
-<
-,
->
-.
-?
-/
+Restart Backend
 ```
 
-Only add symbols that are **not already present**.
+This button only restarts the backend service.
 
-Ensure the added symbols:
+Replace this functionality with a new button:
 
-* insert correctly into the input field
-* follow the keyboard's existing design and layout style
-* do not break the current keyboard structure.
+```
+Reboot RPI
+```
 
----
+Behavior:
 
-# 2. Key Spacing Fix
+* When clicked, it should **restart the entire Raspberry Pi system**.
+* This should safely trigger a system reboot.
 
-Currently:
+Requirements:
 
-* The **last row of keys**
-* and the **row above the last row**
-
-are **cramped and touching each other**.
-
-Fix the keyboard layout so that:
-
-* spacing between these rows is **consistent**
-* the spacing matches the **upper rows of keys**
-* the layout remains clean and usable on a touchscreen.
+* Ensure the reboot command is executed securely.
+* Ensure proper permissions are handled correctly.
+* Avoid exposing unsafe command execution paths.
 
 ---
 
-# 3. Caps Lock Behavior
+# 3. Display Current WiFi Network
 
-Currently, pressing **Caps Lock** only capitalizes **one character at a time**.
+In the Kiosk Admin panel, I also want to display the **WiFi network that the Raspberry Pi is currently connected to**.
 
-Improve the behavior to match typical keyboard functionality:
+Add a section that shows something similar to:
 
-* **Single click** → capitalize **next character only**
-* **Double click** → enable **continuous Caps Lock mode**
+```
+Connected WiFi: <network_name>
+```
 
-In continuous mode, all characters remain capitalized until Caps Lock is disabled.
+Requirements:
 
-Ensure this behavior is implemented cleanly and reliably.
+* Retrieve the currently connected WiFi SSID from the system.
+* Display it clearly in the Kiosk Admin panel.
+* If no WiFi is connected, show an appropriate message such as:
 
----
-
-# 4. Keyboard Alignment
-
-Currently the keyboard appears **centered on the screen**.
-
-Change the keyboard positioning so that it becomes:
-
-**Left-aligned instead of centered**.
-
-Ensure this alignment:
-
-* looks clean in fullscreen kiosk mode
-* does not break the layout
-* does not push the keyboard outside the viewport.
-
----
-
-# 5. Input Field Scrolling Behavior
-
-When typing long text:
-
-* once the characters exceed the visible width of the input field,
-* the visible area **does not follow the cursor**.
-
-Fix this behavior so that:
-
-* the input field **automatically scrolls to the right**
-* the **latest typed characters remain visible**
-* the cursor position is always visible.
-
-This should behave similarly to **normal text input fields on standard systems**.
+```
+No WiFi connection detected
+```
 
 ---
 
 # Code Quality Requirements
 
-While implementing these improvements:
+While implementing these changes:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* keep keyboard logic clean and maintainable
-* avoid duplicating layout logic
-* avoid hardcoding values unnecessarily
-* keep the keyboard lightweight and kiosk-friendly.
+* keep the custom keyboard logic reusable and maintainable
+* avoid duplicating keyboard logic
+* ensure system commands are handled securely
+* keep UI code clean and maintainable.
 
 ---
 
@@ -158,15 +104,15 @@ While implementing these improvements:
 
 After implementing the changes, verify that:
 
-* all listed symbols are available in the keyboard
-* keyboard rows have consistent spacing
-* Caps Lock supports both single-press and double-press behavior
-* the keyboard is left-aligned
-* the input field scrolls correctly when text exceeds the visible width
-* the keyboard remains fully functional in **fullscreen kiosk mode**.
+* the custom keyboard works in the **Kiosk Admin password input field**
+* the keyboard appears **center-aligned in the Kiosk Admin panel**
+* the keyboard behavior for the main chatbot input remains unchanged
+* the **Reboot RPI** button correctly reboots the system
+* the **connected WiFi network name is displayed correctly**
+* the system behaves correctly after reboot.
 
 ---
 
 # Goal
 
-Enhance the **built-in virtual keyboard** so that it behaves more like a **standard keyboard**, while remaining **lightweight, clean, and reliable for touchscreen kiosk usage**.
+Improve the **Kiosk Admin panel usability and functionality** by enabling keyboard input for the password field, adding system-level control through reboot functionality, and displaying the Raspberry Pi’s current WiFi connection.
