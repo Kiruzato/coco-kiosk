@@ -2221,11 +2221,17 @@ window.submitFeedback = submitFeedback;
 // KIOSK FULLSCREEN + LONG PRESS ADMIN ACCESS
 // ============================================================================
 
+// When true, fullscreen detection is overridden to return false.
+// Set by exitFullscreen() to handle --start-fullscreen/--kiosk mode where
+// the Fullscreen API has no control over the browser window state.
+let fullscreenOverrideActive = false;
+
 /**
  * Enter fullscreen mode (never exits on normal tap).
  * Exiting fullscreen is only allowed via kiosk admin overlay.
  */
 function enterFullscreen() {
+    fullscreenOverrideActive = false;
     if (!document.fullscreenElement && !document.webkitFullscreenElement) {
         const elem = kioskContainer || document.documentElement;
         if (elem.requestFullscreen) {
@@ -2238,8 +2244,10 @@ function enterFullscreen() {
 
 /**
  * Exit fullscreen mode (admin-only action).
+ * Handles both DOM Fullscreen API and Chromium --start-fullscreen/--kiosk.
  */
 function exitFullscreen() {
+    // Exit DOM Fullscreen API if active
     if (document.fullscreenElement || document.webkitFullscreenElement) {
         if (document.exitFullscreen) {
             document.exitFullscreen();
@@ -2247,12 +2255,18 @@ function exitFullscreen() {
             document.webkitExitFullscreen();
         }
     }
+    // Override detection for --start-fullscreen mode (no API to exit,
+    // but we revert the UI to non-fullscreen state)
+    fullscreenOverrideActive = true;
+    updateFullscreenButton();
 }
 
 /**
  * Detect fullscreen state (both Fullscreen API and Chromium --start-fullscreen/--kiosk).
+ * Respects the manual override set by exitFullscreen().
  */
 function detectFullscreen() {
+    if (fullscreenOverrideActive) return false;
     if (document.fullscreenElement || document.webkitFullscreenElement) return true;
     if (window.innerWidth >= screen.width && window.innerHeight >= screen.height) return true;
     return false;
@@ -2379,6 +2393,9 @@ function hideKioskAdminOverlay() {
     if (overlay) {
         overlay.classList.remove('visible');
     }
+    // Blur password field so the virtual keyboard hides
+    const pwdInput = document.getElementById('kioskAdminPassword');
+    if (pwdInput) pwdInput.blur();
 }
 
 /**
@@ -4026,9 +4043,7 @@ window.toggleFAQItem = toggleFAQItem;
      * and Chromium --start-fullscreen / --kiosk (window fills screen without API).
      */
     function isFullscreen() {
-        if (document.fullscreenElement || document.webkitFullscreenElement) return true;
-        if (window.innerWidth >= screen.width && window.innerHeight >= screen.height) return true;
-        return false;
+        return detectFullscreen();
     }
 
     /**

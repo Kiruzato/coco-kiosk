@@ -12,100 +12,64 @@ Holding the **Fullscreen button for 5 seconds** opens the **Kiosk Admin panel**.
 
 # Problem
 
-Inside the **Kiosk Admin panel**, there is a **password input field**.
+Inside the **Kiosk Admin panel**, there is a button:
 
-A **custom lightweight keyboard** was implemented so users can type even in fullscreen mode.
+```
+Exit Fullscreen
+```
 
-The keyboard **does appear when the password field is focused**, but it **cannot be used**.
+However, the button **does not work correctly**.
 
-Observed behavior:
+Current behavior:
 
-* The keyboard **visually appears on the screen**.
-* However, **clicking the keys does nothing**.
-* It appears that **a UI layer or overlay is blocking interaction with the keyboard**.
+* Clicking **Exit Fullscreen** only **closes the Kiosk Admin panel**.
+* It **does NOT actually exit fullscreen mode**.
 
-This suggests that a **screen layer, overlay, or container element is intercepting pointer events**, preventing interaction with the keyboard.
+Expected behavior:
+
+* Clicking **Exit Fullscreen** should **exit the browser fullscreen mode**.
+* The Kiosk Admin panel should then close normally after exiting fullscreen.
 
 ---
 
 # Objective
 
-Fix the UI layering so the **custom keyboard is fully usable inside the Kiosk Admin panel**.
+Fix the **Exit Fullscreen button behavior** so that it correctly exits fullscreen mode.
 
-The keyboard must:
+The button must:
 
-* remain visible
-* accept click/touch input
-* correctly insert characters into the password field.
+1. Exit fullscreen mode.
+2. Close the Kiosk Admin panel.
+3. Return the application to normal (non-fullscreen) browser mode.
 
 ---
 
 # Investigation Requirements
 
-Investigate the layout and layering behavior when the **Kiosk Admin panel is active**.
+Investigate how fullscreen mode is currently handled in the system.
 
-Specifically check:
+Check:
 
-### 1. Overlay Layers
+* whether fullscreen is controlled through the **Fullscreen API** (`document.exitFullscreen()` / `requestFullscreen()`)
+* whether the fullscreen state is managed through **custom UI logic**
+* whether the Kiosk Admin panel is intercepting the click event.
 
-Determine whether the Kiosk Admin panel uses an overlay element such as:
-
-* modal background
-* screen blocker
-* fullscreen container layer.
-
-Check whether that overlay:
-
-* covers the keyboard
-* blocks pointer events
-* intercepts clicks.
-
----
-
-### 2. CSS Layering (z-index)
-
-Check the CSS rules of the keyboard and surrounding elements:
-
-* `z-index`
-* `position`
-* `pointer-events`
-* container stacking context
-* modal overlay behavior.
-
-Verify whether the keyboard is being rendered **under another layer in the stacking order**.
-
----
-
-### 3. DOM Placement
-
-Verify where the keyboard is inserted in the DOM.
-
-Check whether it is being appended:
-
-* inside the admin modal
-* inside a container that has `overflow:hidden`
-* outside the interactive container.
-
-The keyboard should be placed in a **layer where it can receive pointer events**.
+Determine why the current button action **only closes the admin panel instead of exiting fullscreen**.
 
 ---
 
 # Required Fix
 
-Adjust the UI structure so that:
+Refactor the **Exit Fullscreen button logic** so that:
 
-* the keyboard is **above blocking layers**
-* the keyboard **receives pointer events**
-* the admin overlay does not intercept keyboard input.
+* it explicitly calls the **correct fullscreen exit method**
+* the fullscreen exit is handled **before or together with closing the admin panel**
+* the behavior works reliably across the kiosk UI.
 
-Possible fixes may include:
+Ensure the implementation handles cases where:
 
-* correcting `z-index` stacking
-* modifying modal overlay structure
-* disabling pointer blocking for the keyboard area
-* placing the keyboard in a higher-level container.
-
-However, avoid fragile hacks. Implement a **clean and maintainable solution**.
+* the browser is currently in fullscreen
+* the browser is not in fullscreen.
 
 ---
 
@@ -115,9 +79,9 @@ While implementing the fix:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* keep keyboard logic reusable
-* avoid hardcoded z-index values scattered throughout the code
-* maintain clear layering rules for modal UI elements.
+* avoid duplicating fullscreen control logic
+* centralize fullscreen handling if necessary
+* keep the UI logic clean and maintainable.
 
 ---
 
@@ -125,14 +89,14 @@ While implementing the fix:
 
 After implementing the fix, verify that:
 
-* the keyboard appears when the password field is focused
-* keyboard keys are clickable
-* characters correctly appear in the password input field
-* the fix does not break the keyboard for the main chatbot input field
-* the Kiosk Admin panel UI still behaves correctly.
+* clicking **Exit Fullscreen** exits fullscreen mode
+* the Kiosk Admin panel closes afterward
+* the application returns to normal browser view
+* the fullscreen toggle button in the main UI still works correctly
+* the fix does not introduce UI regressions.
 
 ---
 
 # Goal
 
-Ensure that the **custom keyboard inside the Kiosk Admin panel is fully interactive and usable in fullscreen kiosk mode**, without any UI layers blocking user interaction.
+Ensure the **Exit Fullscreen button in the Kiosk Admin panel correctly exits fullscreen mode instead of only closing the admin panel**, restoring the expected kiosk control behavior.
