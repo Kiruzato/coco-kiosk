@@ -2437,17 +2437,76 @@ async def delete_test_harness_question(question_id: str):
 
 
 async def execute_single_test(question: Dict) -> Dict:
-    """Execute a single test question against the chat endpoint."""
+    """Execute a single test question against the streaming chat endpoint.
+
+    Uses /chat/stream (the same endpoint as the chatbot UI) to ensure
+    the test harness exercises the exact same processing pipeline.
+    Parses SSE events and reconstructs a response dict matching ChatResponse.
+    """
     session_id = f"test-harness-{uuid.uuid4()}"
 
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(
-                "http://localhost:8000/chat",
+            async with client.stream(
+                "POST",
+                "http://localhost:8000/chat/stream",
                 json={"message": question["question"], "session_id": session_id},
                 timeout=60.0
-            )
-            return response.json()
+            ) as sse_response:
+                metadata = {}
+                full_answer = ""
+                complete_data = {}
+                current_event = None
+
+                async for line in sse_response.aiter_lines():
+                    line = line.strip()
+                    if not line:
+                        current_event = None
+                        continue
+                    if line.startswith("event:"):
+                        current_event = line[6:].strip()
+                    elif line.startswith("data:"):
+                        data_str = line[5:].strip()
+                        try:
+                            parsed = json.loads(data_str)
+                        except json.JSONDecodeError:
+                            continue
+                        if current_event == "metadata":
+                            metadata = parsed
+                        elif current_event == "token":
+                            full_answer += parsed.get("content", "")
+                        elif current_event == "complete":
+                            complete_data = parsed
+                        elif current_event == "error":
+                            return {"error": parsed.get("message", "Stream error")}
+
+                # Reconstruct response in ChatResponse-compatible format.
+                # Normalize streaming debug_info field names to match
+                # the DebugInfo model used by evaluate_test_result().
+                debug_info = metadata.get("debug_info") or {}
+                if debug_info:
+                    # Map streaming field names → DebugInfo field names
+                    if "extractor_name" in debug_info and "extractor_used" not in debug_info:
+                        debug_info["extractor_used"] = debug_info["extractor_name"]
+                    if "grounded" in debug_info and "grounding_passed" not in debug_info:
+                        debug_info["grounding_passed"] = debug_info["grounded"]
+
+                return {
+                    "session_id": metadata.get("session_id", session_id),
+                    "answer": full_answer,
+                    "sources": metadata.get("sources", []),
+                    "confidence_level": metadata.get("confidence_level", "N/A"),
+                    "confidence_score": metadata.get("confidence_score", 0),
+                    "grounding_mode": metadata.get("grounding_mode", "unknown"),
+                    "rejected": complete_data.get("rejected", False),
+                    "timestamp": datetime.now().isoformat(),
+                    "mode": metadata.get("mode", "unknown"),
+                    "extractor_used": metadata.get("extractor_used"),
+                    "debug_info": debug_info,
+                    "metadata_visible": metadata.get("metadata_visible", True),
+                    "fusion_mode": metadata.get("fusion_mode"),
+                    "fusion_label_visible": metadata.get("fusion_label_visible", False)
+                }
         except Exception as e:
             return {"error": str(e)}
 

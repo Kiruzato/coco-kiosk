@@ -1,75 +1,92 @@
-You are working on the **CoCo Campus RAG Chatbot** project running on **Raspberry Pi OS in fullscreen kiosk mode**.
+You are working on the **CoCo Campus RAG Chatbot** project.
 
-The web application runs at:
+There are two interfaces interacting with the system:
+
+**Chatbot UI**
 
 ```
-http://localhost:8000/
+http://localhost:8000
 ```
 
-Holding the **Fullscreen button for 5 seconds** opens the **Kiosk Admin panel**.
+**Test Harness**
+
+```
+http://localhost:8000/admin#test-harness
+```
 
 ---
 
 # Problem
 
-Inside the **Kiosk Admin panel**, there is a button:
+The **Test Harness produces different responses from the CoCo chatbot**, even when using the same question.
 
-```
-Exit Fullscreen
-```
+This should not happen.
 
-However, the button **does not work correctly**.
+The **Test Harness is supposed to test the exact same system behavior as the chatbot**, but currently the output responses are **different**.
 
-Current behavior:
+I do not know whether the issue is caused by:
 
-* Clicking **Exit Fullscreen** only **closes the Kiosk Admin panel**.
-* It **does NOT actually exit fullscreen mode**.
-
-Expected behavior:
-
-* Clicking **Exit Fullscreen** should **exit the browser fullscreen mode**.
-* The Kiosk Admin panel should then close normally after exiting fullscreen.
+* a different API endpoint being used
+* different query processing flow
+* different retrieval parameters
+* missing preprocessing
+* bypassing orchestration logic
+* missing conversation/session context
+* or other differences in the pipeline.
 
 ---
 
 # Objective
 
-Fix the **Exit Fullscreen button behavior** so that it correctly exits fullscreen mode.
+Fix the **Test Harness response pipeline** so that it produces **the exact same response output as the chatbot UI** for the same question.
 
-The button must:
-
-1. Exit fullscreen mode.
-2. Close the Kiosk Admin panel.
-3. Return the application to normal (non-fullscreen) browser mode.
+The Test Harness must test the **actual chatbot system**, not a separate or simplified pathway.
 
 ---
 
 # Investigation Requirements
 
-Investigate how fullscreen mode is currently handled in the system.
+Carefully compare the request flow between:
 
-Check:
+### Chatbot UI flow
 
-* whether fullscreen is controlled through the **Fullscreen API** (`document.exitFullscreen()` / `requestFullscreen()`)
-* whether the fullscreen state is managed through **custom UI logic**
-* whether the Kiosk Admin panel is intercepting the click event.
+```
+User → Chat UI → API endpoint → preprocessing → orchestration → retrieval → response generation → UI
+```
 
-Determine why the current button action **only closes the admin panel instead of exiting fullscreen**.
+### Test Harness flow
+
+```
+Test Harness → backend endpoint → response generation
+```
+
+Identify **all differences in the pipeline**, including:
+
+* preprocessing
+* retrieval logic
+* orchestration layers
+* configuration flags
+* response synthesis
+* session handling
+* metadata filtering.
+
+The Test Harness must call the **same internal logic used by the chatbot**, not an alternate path.
 
 ---
 
 # Required Fix
 
-Refactor the **Exit Fullscreen button logic** so that:
+Refactor the Test Harness so that it uses the **exact same backend response generation path** as the chatbot.
 
-* it explicitly calls the **correct fullscreen exit method**
-* the fullscreen exit is handled **before or together with closing the admin panel**
-* the behavior works reliably across the kiosk UI.
+The Test Harness should:
 
-Ensure the implementation handles cases where:
+* invoke the same core query processing function
+* use the same configuration
+* produce identical responses for identical inputs.
 
-* the browser is currently in fullscreen
-* the browser is not in fullscreen.
+Avoid duplicating logic.
+
+Instead, ensure the Test Harness **reuses the main chatbot response pipeline**.
 
 ---
 
@@ -79,9 +96,8 @@ While implementing the fix:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* avoid duplicating fullscreen control logic
-* centralize fullscreen handling if necessary
-* keep the UI logic clean and maintainable.
+* remove redundant or duplicated response logic
+* ensure the Test Harness depends on the **same core processing modules** used by the chatbot.
 
 ---
 
@@ -89,14 +105,12 @@ While implementing the fix:
 
 After implementing the fix, verify that:
 
-* clicking **Exit Fullscreen** exits fullscreen mode
-* the Kiosk Admin panel closes afterward
-* the application returns to normal browser view
-* the fullscreen toggle button in the main UI still works correctly
-* the fix does not introduce UI regressions.
+* asking the same question in the **Chatbot UI** and **Test Harness** produces the **same response output**
+* the Test Harness is using the **same backend logic**
+* no alternate or simplified processing pipeline remains.
 
 ---
 
 # Goal
 
-Ensure the **Exit Fullscreen button in the Kiosk Admin panel correctly exits fullscreen mode instead of only closing the admin panel**, restoring the expected kiosk control behavior.
+Ensure the **Test Harness faithfully represents the real chatbot system behavior**, allowing it to accurately test the same responses generated by the CoCo chatbot.
