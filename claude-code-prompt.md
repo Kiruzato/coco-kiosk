@@ -1,6 +1,6 @@
 You are working on the **CoCo Campus RAG Chatbot** project running on **Raspberry Pi OS in kiosk mode**.
 
-The web application runs at:
+The web app runs at:
 
 ```
 http://localhost:8000/
@@ -10,117 +10,144 @@ and normally operates in **fullscreen mode**.
 
 ---
 
-# Problem
+# Current Situation
 
-The system requires a **virtual keyboard** so users can type into the chatbot input field.
+Previously, the system had a problem where the **Raspberry Pi virtual keyboard did not appear when the web app was in fullscreen mode**.
 
-However, in the Raspberry Pi runtime environment:
+To solve this, you implemented a **lightweight built-in web keyboard** inside the web app.
 
-* When the web app **is NOT in fullscreen**, the **Raspberry Pi virtual keyboard appears correctly** when the input field is focused.
-* When the web app **is in fullscreen**, the **virtual keyboard does not appear at all**.
+However, **the built-in keyboard currently does not work**.
 
-This makes the **chat input field unusable in fullscreen mode**, because users cannot type.
+The keyboard either:
 
-Attempts have already been made to fix this by **reconfiguring the virtual keyboard through the deployment script**, but **the problem still persists**.
+* does not appear
+* appears but does not type into the input field
+* or does not trigger correctly when the input field is focused.
+
+---
+
+# Important Context
+
+After the keyboard implementation:
+
+* I **only pulled the latest code changes**
+* I **restarted the Raspberry Pi**
+* I **did NOT run** the deployment script again:
+
+```
+WEB_APP/deploy/install_kiosk.sh
+```
+
+Because of this, the issue might be caused by either:
+
+1. **Broken frontend code / keyboard implementation**
+2. **Missing configuration that the install script should apply**
+3. **A runtime issue related to kiosk mode or fullscreen behavior**
+
+Your task is to **determine which of these is the real cause**.
 
 ---
 
 # Objective
 
-I need a **reliable solution that allows a virtual keyboard to work while the web app is running in fullscreen kiosk mode**.
+Investigate and **fix the built-in keyboard so it works correctly in fullscreen kiosk mode**.
 
-You must **investigate and implement the best solution**, rather than repeatedly applying the same configuration.
+The keyboard must allow users to **type into the chat input field while the web app is fullscreen**.
 
 ---
 
-# Investigation Requirements
+# Step 1 — Investigation
 
-Investigate the full system stack involved:
-
-### Raspberry Pi OS
+First determine the root cause.
 
 Check:
 
-* the **built-in virtual keyboard**
-* whether the system uses `matchbox-keyboard`, `onboard`, or another keyboard service
-* how the keyboard is triggered by **input focus events**
+### Frontend Implementation
+
+Verify:
+
+* keyboard UI rendering
+* keyboard event handling
+* key press handling
+* input field binding
+* focus handling
+* keyboard visibility logic
+* compatibility with fullscreen mode
+
+Check whether:
+
+* keyboard keys actually insert characters
+* keyboard events target the correct input element
+* keyboard container visibility logic is broken.
 
 ---
 
-### Chromium / Kiosk Mode
+### Runtime / Deployment Requirements
 
-Investigate how Chromium behaves in kiosk mode:
+Determine whether the keyboard implementation depends on:
 
-* whether fullscreen suppresses the OS virtual keyboard
-* whether kiosk flags affect virtual keyboard activation
-* whether touchscreen keyboard support is disabled in fullscreen
+* files created during `install_kiosk.sh`
+* environment configuration
+* system-level services.
 
-Check if additional Chromium flags are needed.
-
----
-
-### Web Application
-
-Check whether the web application:
-
-* prevents focus events from triggering the OS keyboard
-* uses input fields compatible with the Raspberry Pi keyboard trigger.
+If the keyboard requires changes from the deployment script, clearly identify them.
 
 ---
 
-# Solution Requirements
+# Step 2 — Determine Deployment Requirement
 
-Implement the **most reliable solution for Raspberry Pi kiosk deployments**.
+If the keyboard requires **deployment configuration**, explain clearly:
 
-Possible approaches may include:
+* whether `install_kiosk.sh` must be run again
+* what configuration step is required
+* why the keyboard does not work without it.
 
-* properly enabling the OS virtual keyboard in kiosk mode
-* triggering the OS keyboard when the chat input field receives focus
-* adjusting Chromium kiosk flags
-* launching the virtual keyboard through system commands when needed
-* integrating a lightweight web-based keyboard if OS integration is impossible.
-
-Choose the **best approach that is stable and maintainable for kiosk environments**.
-
-Avoid fragile hacks.
+If the deployment script is **not required**, fix the keyboard **directly in the codebase**.
 
 ---
 
-# Constraints
+# Step 3 — Fix the Implementation
 
-The solution must:
+Fix the keyboard so that it:
 
-* work while the web app is **in fullscreen**
-* allow users to type into the chat input field
-* work reliably after **system reboot**
-* integrate cleanly with the current kiosk deployment setup.
+* appears correctly
+* sends characters to the chat input field
+* works reliably in fullscreen mode
+* does not interfere with existing UI behavior.
+
+Ensure keyboard input works with:
+
+* normal typing
+* backspace
+* space
+* enter / send message.
 
 ---
 
 # Code Quality Requirements
 
-While implementing the solution:
+While implementing the fix:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* keep the deployment logic clean
-* avoid unnecessary dependencies
-* ensure the solution is **maintainable and stable**.
+* keep the keyboard implementation **clean and maintainable**
+* avoid tightly coupling keyboard logic with unrelated UI code
+* avoid unnecessary complexity.
 
 ---
 
 # Validation
 
-After implementing the solution, verify that:
+After implementing the fix, verify that:
 
-* the virtual keyboard appears when the chat input field is focused
-* the keyboard works **in fullscreen mode**
-* typing works correctly
-* the solution persists after reboot
-* kiosk functionality remains intact.
+* the keyboard appears when needed
+* keys correctly type into the chat input field
+* the keyboard works in **fullscreen kiosk mode**
+* the solution works after **Raspberry Pi reboot**
+* the keyboard does not break existing UI behavior.
 
 ---
 
 # Goal
 
-Ensure that the **chat input field remains usable in fullscreen kiosk mode by providing a reliable virtual keyboard solution for Raspberry Pi OS runtime**.
+Ensure that the **built-in web keyboard works reliably in fullscreen kiosk mode**, allowing users to type into the chatbot even when the Raspberry Pi OS virtual keyboard cannot be used.

@@ -554,6 +554,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('fullscreenchange', updateFullscreenButton);
     document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
 
+    // Detect initial fullscreen state (Chromium --start-fullscreen won't fire fullscreenchange)
+    updateFullscreenButton();
+
     // Note: Auto-focus disabled to prevent virtual keyboard from obstructing view on RPi
 
     // Phase 48: Initialize advertisement slideshow
@@ -2247,20 +2250,29 @@ function exitFullscreen() {
 }
 
 /**
+ * Detect fullscreen state (both Fullscreen API and Chromium --start-fullscreen/--kiosk).
+ */
+function detectFullscreen() {
+    if (document.fullscreenElement || document.webkitFullscreenElement) return true;
+    if (window.innerWidth >= screen.width && window.innerHeight >= screen.height) return true;
+    return false;
+}
+
+/**
  * Update fullscreen button icon based on current state.
  */
 function updateFullscreenButton() {
-    const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+    const isFS = detectFullscreen();
     const icon = fullscreenBtn?.querySelector('.fullscreen-icon');
 
     if (icon) {
-        icon.innerHTML = isFullscreen ? '&#x26F6;' : '&#x26F6;';
+        icon.innerHTML = isFS ? '&#x26F6;' : '&#x26F6;';
     }
 
     if (kioskContainer) {
-        kioskContainer.classList.toggle('fullscreen-mode', isFullscreen);
+        kioskContainer.classList.toggle('fullscreen-mode', isFS);
     }
-    document.body.classList.toggle('fullscreen-active', isFullscreen);
+    document.body.classList.toggle('fullscreen-active', isFS);
 }
 
 /**
@@ -3974,9 +3986,15 @@ window.toggleFAQItem = toggleFAQItem;
 
     /**
      * Check if we're in fullscreen mode.
+     * Detects both the DOM Fullscreen API (user tapped fullscreen button)
+     * and Chromium --start-fullscreen / --kiosk (window fills screen without API).
      */
     function isFullscreen() {
-        return !!(document.fullscreenElement || document.webkitFullscreenElement);
+        // DOM Fullscreen API
+        if (document.fullscreenElement || document.webkitFullscreenElement) return true;
+        // Chromium --start-fullscreen or --kiosk: window fills the screen
+        if (window.innerWidth >= screen.width && window.innerHeight >= screen.height) return true;
+        return false;
     }
 
     /**
@@ -4134,9 +4152,8 @@ window.toggleFAQItem = toggleFAQItem;
         if (!isFullscreen()) hideVKB();
     });
 
-    // Prevent keyboard div from stealing focus
-    vkb.addEventListener('focusin', function(e) {
-        e.preventDefault();
+    // If keyboard somehow steals focus, redirect it back to input
+    vkb.addEventListener('focusin', function() {
         if (userInput) userInput.focus();
     });
 
