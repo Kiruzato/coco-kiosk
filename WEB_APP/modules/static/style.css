@@ -2522,6 +2522,20 @@ body {
     background: #2c5282;
 }
 
+/* Layer toggle button (#+=  / ABC) */
+.vkb-layer-toggle {
+    width: 12%;
+    max-width: 80px;
+    background: #2d3748;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.vkb-layer-toggle.active {
+    background: #3182ce;
+    color: #fff;
+}
+
 /* When virtual keyboard is visible, tighten input padding */
 body.vkb-active .input-container {
     padding-bottom: 8px;

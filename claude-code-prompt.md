@@ -6,145 +6,95 @@ The web app runs at:
 http://localhost:8000/
 ```
 
----
+A **lightweight built-in keyboard** was recently implemented to allow users to type into the chatbot input field while the application is running in fullscreen mode.
 
-# Problem
-
-A **lightweight built-in keyboard** was implemented to solve the issue where the **Raspberry Pi OS virtual keyboard does not appear in fullscreen mode**.
-
-However, the **built-in keyboard is currently not working**.
-
-Claude previously attempted to fix it, but the keyboard **still does not function**.
-
----
-
-# Observed Behavior
-
-Here are some observations that might help identify the problem:
-
-1. When focusing on the **chat input field**, the **panel where the input field belongs moves slightly downward**.
-
-2. The keyboard **does not appear usable in the UI**, even though the feature was implemented.
-
-3. I suspect that the keyboard **might actually be spawning outside the fullscreen viewport**, similar to how the **Admin panel appears outside fullscreen when holding the fullscreen button for 5 seconds**.
-
-This suggests the keyboard **may exist in the DOM but is rendered outside the visible fullscreen container**.
-
-These observations may or may not be the exact cause, but they may help guide debugging.
+The keyboard implementation is **working correctly**, but it currently **does not include many common symbols found on a standard keyboard**.
 
 ---
 
 # Objective
 
-Fix the **built-in keyboard implementation so it works correctly in fullscreen kiosk mode**.
+Extend the built-in keyboard so that it includes **commonly used symbols typically available on a standard keyboard**.
 
-The keyboard must:
+The current keyboard is missing symbols such as:
 
-* appear correctly in the UI
-* remain inside the visible fullscreen viewport
-* send characters to the chat input field
-* work reliably for typing messages.
+* Parentheses `( )`
+* Mathematical symbols such as `+ - × ÷ =`
+* Other common punctuation and symbols like:
 
----
+  * `!`
+  * `?`
+  * `:`
+  * `;`
+  * `'`
+  * `"`.
+  * `/`
+  * `\`
+  * `@`
+  * `#`
+  * `%`
+  * `&`
+  * `*`
 
-# Investigation Requirements
-
-Before modifying code, investigate the implementation carefully.
-
-Check:
-
-### 1. Keyboard Rendering
-
-Verify whether the keyboard is:
-
-* correctly inserted into the DOM
-* visible but positioned outside the viewport
-* hidden due to CSS positioning issues
-* rendered inside the correct container.
-
-Investigate CSS rules such as:
-
-* `position`
-* `z-index`
-* `overflow`
-* `transform`
-* `viewport height`
-* fullscreen container boundaries.
+These symbols should be available **in a way that keeps the keyboard simple and usable in kiosk mode**.
 
 ---
 
-### 2. Fullscreen Container Behavior
+# Implementation Guidelines
 
-Investigate how the kiosk UI handles fullscreen layout.
+The keyboard should remain **lightweight and kiosk-friendly**.
 
-Check whether:
+You may implement symbol support by:
 
-* the keyboard is attached to the wrong DOM container
-* the keyboard is appended outside the fullscreen root element
-* CSS clipping or overflow hides the keyboard.
+* adding additional keys
+* adding a **symbol toggle layer** (for example a `?123` or `Symbols` key)
+* grouping symbols in a compact layout
 
----
+However, **do not turn the keyboard into a full complex desktop keyboard**.
 
-### 3. Focus Behavior
+The goal is to support **common typing scenarios**, especially:
 
-Investigate the **input focus behavior**:
-
-* why the input panel shifts downward when focused
-* whether layout resizing pushes the keyboard out of view
-* whether mobile-style keyboard adjustments are interfering.
-
----
-
-### 4. Event Handling
-
-Verify that:
-
-* keyboard keys correctly send characters
-* the input field receives inserted text
-* keyboard events are bound properly.
+* general text
+* punctuation
+* basic mathematical expressions
+* typical chatbot queries.
 
 ---
 
-# Implementation Requirements
+# Requirements
 
-After identifying the root cause, fix the keyboard so that:
+Ensure that:
 
-* it renders **inside the fullscreen viewport**
-* it remains visible above the UI
-* it types correctly into the input field
-* it works reliably in fullscreen kiosk mode.
-
-Avoid temporary or superficial fixes.
-
-The solution should **correct the root layout/rendering problem**.
+* all added keys correctly insert characters into the input field
+* keyboard layout remains usable on a touchscreen
+* the keyboard does not overflow the UI
+* the keyboard works reliably in **fullscreen kiosk mode**.
 
 ---
 
 # Code Quality Requirements
 
-While implementing the fix:
+While implementing this enhancement:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* keep keyboard logic isolated from unrelated UI components
-* maintain clean and maintainable code.
-
-Avoid introducing unnecessary complexity.
+* keep keyboard layout logic **clean and maintainable**
+* avoid hardcoding layout logic in scattered places
+* structure the keyboard configuration in a way that is easy to extend later.
 
 ---
 
 # Validation
 
-After implementing the fix, verify that:
+After implementation, verify that:
 
-* the keyboard appears when the input field is focused
-* the keyboard is visible within the fullscreen viewport
-* keys correctly insert characters into the input field
-* the keyboard works consistently in fullscreen kiosk mode
-* the solution works after **Raspberry Pi reboot**.
+* the keyboard contains the new symbols
+* symbols insert correctly into the chat input field
+* the keyboard remains responsive and usable on the touchscreen
+* the keyboard layout remains stable in fullscreen kiosk mode.
 
 ---
 
 # Goal
 
-Ensure that the **built-in web keyboard functions reliably in fullscreen kiosk mode**, allowing users to type into the chatbot input field even when the Raspberry Pi OS virtual keyboard cannot be used.
+Enhance the **lightweight built-in keyboard** so that it supports **common symbols found on standard keyboards**, while keeping the implementation **simple, maintainable, and suitable for touchscreen kiosk usage**.

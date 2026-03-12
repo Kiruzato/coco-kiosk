@@ -3982,7 +3982,12 @@ window.toggleFAQItem = toggleFAQItem;
     const vkb = document.getElementById('virtualKeyboard');
     if (!vkb) return;
 
+    const lettersLayer = document.getElementById('vkbLetters');
+    const symbolsLayer = document.getElementById('vkbSymbols');
+    const layerToggleBtn = vkb.querySelector('.vkb-layer-toggle');
+
     let shiftActive = false;
+    let symbolsActive = false;
 
     /**
      * Check if we're in fullscreen mode.
@@ -3990,9 +3995,7 @@ window.toggleFAQItem = toggleFAQItem;
      * and Chromium --start-fullscreen / --kiosk (window fills screen without API).
      */
     function isFullscreen() {
-        // DOM Fullscreen API
         if (document.fullscreenElement || document.webkitFullscreenElement) return true;
-        // Chromium --start-fullscreen or --kiosk: window fills the screen
         if (window.innerWidth >= screen.width && window.innerHeight >= screen.height) return true;
         return false;
     }
@@ -4015,10 +4018,29 @@ window.toggleFAQItem = toggleFAQItem;
     }
 
     /**
-     * Update key labels for shift state.
+     * Toggle between letters and symbols layers.
+     */
+    function toggleLayer() {
+        symbolsActive = !symbolsActive;
+        if (lettersLayer) lettersLayer.style.display = symbolsActive ? 'none' : '';
+        if (symbolsLayer) symbolsLayer.style.display = symbolsActive ? '' : 'none';
+        if (layerToggleBtn) {
+            layerToggleBtn.textContent = symbolsActive ? 'ABC' : '#+=';
+            layerToggleBtn.classList.toggle('active', symbolsActive);
+        }
+        // Reset shift when switching to symbols
+        if (symbolsActive && shiftActive) {
+            shiftActive = false;
+            updateShiftDisplay();
+        }
+    }
+
+    /**
+     * Update key labels for shift state (letters layer only).
      */
     function updateShiftDisplay() {
-        vkb.querySelectorAll('.vkb-key[data-key]').forEach(key => {
+        if (!lettersLayer) return;
+        lettersLayer.querySelectorAll('.vkb-key[data-key]').forEach(key => {
             const ch = key.getAttribute('data-key');
             if (ch.length === 1 && ch.match(/[a-z]/i)) {
                 key.textContent = shiftActive ? ch.toUpperCase() : ch.toLowerCase();
@@ -4038,18 +4060,19 @@ window.toggleFAQItem = toggleFAQItem;
         const start = userInput.selectionStart;
         const end = userInput.selectionEnd;
         const value = userInput.value;
-        const charToInsert = shiftActive ? ch.toUpperCase() : ch;
+        // Shift only applies to letters, not symbols/punctuation
+        const isLetter = ch.length === 1 && ch.match(/[a-z]/i);
+        const charToInsert = (shiftActive && isLetter) ? ch.toUpperCase() : ch;
 
         userInput.value = value.substring(0, start) + charToInsert + value.substring(end);
         userInput.selectionStart = userInput.selectionEnd = start + 1;
 
-        // Auto-disable shift after one character (like mobile keyboards)
-        if (shiftActive) {
+        // Auto-disable shift after one letter (like mobile keyboards)
+        if (shiftActive && isLetter) {
             shiftActive = false;
             updateShiftDisplay();
         }
 
-        // Keep focus on input
         userInput.focus();
     }
 
@@ -4063,6 +4086,10 @@ window.toggleFAQItem = toggleFAQItem;
                 updateShiftDisplay();
                 break;
 
+            case 'symbols':
+                toggleLayer();
+                break;
+
             case 'backspace':
                 if (!userInput) return;
                 const start = userInput.selectionStart;
@@ -4070,11 +4097,9 @@ window.toggleFAQItem = toggleFAQItem;
                 const value = userInput.value;
 
                 if (start !== end) {
-                    // Delete selection
                     userInput.value = value.substring(0, start) + value.substring(end);
                     userInput.selectionStart = userInput.selectionEnd = start;
                 } else if (start > 0) {
-                    // Delete character before cursor
                     userInput.value = value.substring(0, start - 1) + value.substring(start);
                     userInput.selectionStart = userInput.selectionEnd = start - 1;
                 }
