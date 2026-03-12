@@ -2427,15 +2427,14 @@ body {
    Virtual Keyboard (Web-based, for fullscreen kiosk mode)
    ============================================================================ */
 
+/* VKB is a flex child of .kiosk-container (no position:fixed — must stay
+   inside the fullscreen element so it's visible in DOM fullscreen mode). */
 .vkb {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
+    display: none; /* Shown via JS when input focused in fullscreen */
+    flex-shrink: 0;
     background: #2c3e50;
     padding: 8px 4px 12px;
     z-index: 9000;
-    display: none; /* Shown via JS when input focused in fullscreen */
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
     touch-action: manipulation;
     user-select: none;
@@ -2523,12 +2522,7 @@ body {
     background: #2c5282;
 }
 
-/* When virtual keyboard is visible, adjust layout */
+/* When virtual keyboard is visible, tighten input padding */
 body.vkb-active .input-container {
     padding-bottom: 8px;
-}
-
-body.vkb-active .kiosk-container {
-    height: calc(100vh - 280px);
-    height: calc(100dvh - 280px);
 }
