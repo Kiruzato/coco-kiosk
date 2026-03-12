@@ -359,19 +359,12 @@ install_systemd_service
 
 # ── Step 7: Configure Chromium autostart ──────────────────────────────────
 
-configure_chromium_autostart() {
-    echo -e "${YELLOW}[7/9] Configuring Chromium autostart...${NC}"
+_write_chromium_desktop() {
+    # Write/overwrite the Chromium autostart desktop file.
+    # Separated so it can be called from both fresh install and reconfigure paths.
+    local CHROMIUM_BIN="$1"
+    local AUTOSTART_DIR="$2"
 
-    # Detect Chromium binary name
-    local CHROMIUM_BIN="chromium-browser"
-    if command -v chromium > /dev/null 2>&1 && ! command -v chromium-browser > /dev/null 2>&1; then
-        CHROMIUM_BIN="chromium"
-    fi
-
-    local AUTOSTART_DIR="$KIOSK_HOME/.config/autostart"
-    sudo -u "$KIOSK_USER" mkdir -p "$AUTOSTART_DIR"
-
-    # Generate the desktop file with correct Chromium binary
     cat > "$AUTOSTART_DIR/coco-chromium.desktop" << DESKTOPEOF
 [Desktop Entry]
 Type=Application
@@ -384,8 +377,47 @@ X-GNOME-Autostart-enabled=true
 DESKTOPEOF
 
     chown "$KIOSK_USER:$KIOSK_USER" "$AUTOSTART_DIR/coco-chromium.desktop"
+}
 
-    log "Chromium autostart configured (binary: $CHROMIUM_BIN, delay: 8s)"
+configure_chromium_autostart() {
+    echo -e "${YELLOW}[7/9] Configuring Chromium autostart...${NC}"
+
+    # Detect Chromium binary name
+    local CHROMIUM_BIN="chromium-browser"
+    if command -v chromium > /dev/null 2>&1 && ! command -v chromium-browser > /dev/null 2>&1; then
+        CHROMIUM_BIN="chromium"
+    fi
+
+    local AUTOSTART_DIR="$KIOSK_HOME/.config/autostart"
+    sudo -u "$KIOSK_USER" mkdir -p "$AUTOSTART_DIR"
+
+    local DESKTOP_FILE="$AUTOSTART_DIR/coco-chromium.desktop"
+
+    if [ -f "$DESKTOP_FILE" ]; then
+        # Config exists — check if it already has the latest flags
+        if grep -qF "enable-features=VirtualKeyboard" "$DESKTOP_FILE" 2>/dev/null; then
+            log "Chromium autostart already configured with Virtual Keyboard support"
+        else
+            # Existing config is outdated — prompt to update
+            echo ""
+            echo -e "  ${YELLOW}Chromium autostart configuration already exists.${NC}"
+            echo -e "  A new Virtual Keyboard configuration is available."
+            echo ""
+            read -p "  Do you want to reconfigure Chromium autostart? (Y/N): " RECONFIGURE
+            echo ""
+            if [[ "${RECONFIGURE^^}" == "Y" ]]; then
+                _write_chromium_desktop "$CHROMIUM_BIN" "$AUTOSTART_DIR"
+                log "Chromium autostart reconfigured with Virtual Keyboard support"
+            else
+                log "Skipped Chromium autostart reconfiguration"
+            fi
+        fi
+    else
+        # Fresh install — write config
+        _write_chromium_desktop "$CHROMIUM_BIN" "$AUTOSTART_DIR"
+        log "Chromium autostart configured (binary: $CHROMIUM_BIN, delay: 8s)"
+    fi
+
     echo ""
 }
 

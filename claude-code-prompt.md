@@ -1,110 +1,114 @@
-You are working on the **CoCo Campus RAG Chatbot** deployed on **Raspberry Pi OS** running in **kiosk mode**.
+You are working on the **CoCo Campus RAG Chatbot** project.
 
-The web application is accessed at:
+This task concerns the **deployment script**:
 
 ```
-http://localhost:8000/
+WEB_APP/deploy/install_kiosk.sh
 ```
-
-and typically runs in **fullscreen mode**.
 
 ---
 
-# Problem
+# Current Situation
 
-Raspberry Pi OS has a **built-in virtual keyboard**.
+After fetching the latest commits, I ran the deployment script again:
 
-Observed behavior:
+```
+WEB_APP/deploy/install_kiosk.sh
+```
 
-* When the web app is **not in fullscreen**, clicking the **text input field** correctly triggers the **virtual keyboard**.
-* When the web app is in **fullscreen**, clicking the **text input field does NOT trigger the virtual keyboard**.
+However, the script **detected that everything was already installed and configured**, so it skipped most steps.
 
-This results in the **typing input field becoming unusable in fullscreen mode**, because there is **no keyboard available for input**.
+Because of this behavior, **the new Virtual Keyboard solution for fullscreen mode was not applied**.
+
+The script currently assumes the system is already fully configured and **does not reapply configuration changes introduced in newer commits**.
 
 ---
 
 # Objective
 
-Investigate and implement a solution so that **a keyboard can still be used when the web app is in fullscreen kiosk mode**.
+Modify the installation script so that **changes related to the Virtual Keyboard fullscreen solution can still be applied even when the system is already installed**.
 
-The solution must allow users to **type into the input field while the web app is running fullscreen**.
+Specifically:
 
----
+When the script reaches the **Virtual Keyboard configuration section**, it should ask the user:
 
-# Investigation
+```
+Virtual Keyboard configuration already exists.
+Do you want to reinstall / reconfigure it? (Y/N)
+```
 
-Determine the root cause of why the virtual keyboard does not appear in fullscreen.
+Behavior:
 
-Investigate:
+* If the user selects **Y**:
 
-* Raspberry Pi OS **on-screen keyboard behavior**
-* how the system detects **focus events**
-* whether fullscreen mode blocks **input focus detection**
-* how Chromium kiosk mode interacts with the **RPI virtual keyboard**
-* whether the keyboard requires a specific **input method framework**
-* whether fullscreen suppresses the **on-screen keyboard trigger**
+  * Reapply the Virtual Keyboard setup and configuration.
+  * Update any related system settings required for fullscreen keyboard functionality.
 
-Also determine if the system uses:
+* If the user selects **N**:
 
-* `matchbox-keyboard`
-* `onboard`
-* Raspberry Pi OS built-in virtual keyboard service
-* other input frameworks.
+  * Skip that section and continue the installation script normally.
 
 ---
 
-# Possible Solutions to Evaluate
+# Requirements
 
-Evaluate practical solutions such as:
+The script should:
 
-* triggering the system virtual keyboard when the input field receives focus
-* explicitly launching the OS virtual keyboard when the input field is clicked
-* configuring Chromium kiosk flags for touchscreen keyboards
-* integrating a lightweight web-based keyboard as a fallback
-* adjusting kiosk launch parameters in the deployment setup.
+* remain **safe to run multiple times** (idempotent installation).
+* only reconfigure the **Virtual Keyboard-related setup when explicitly requested**.
+* not reinstall unrelated dependencies unnecessarily.
 
-Select the **most stable and maintainable approach** suitable for Raspberry Pi kiosk environments.
-
-Avoid solutions that rely on fragile hacks or heavy third-party libraries unless absolutely necessary.
+Avoid forcing full reinstallations.
 
 ---
 
-# Implementation Requirements
+# Implementation Guidelines
 
-The implemented solution should:
+Update the script so that:
 
-* allow typing into the input field while the app is **fullscreen**
-* work reliably in **Raspberry Pi kiosk runtime**
-* not require exiting fullscreen
-* not introduce UI regressions.
+* the Virtual Keyboard configuration section is **isolated into its own function or section**.
+* the script **detects existing configuration**.
+* the user is prompted whether to **reapply the setup**.
 
-Prefer **system keyboard integration** over building a custom keyboard if possible.
+The logic should follow this structure:
+
+```
+if keyboard_config_exists:
+    ask user Y/N
+    if yes → reconfigure
+    if no → skip
+else:
+    install and configure normally
+```
 
 ---
 
 # Code Quality Requirements
 
-While implementing the solution:
+While modifying the script:
 
-* follow **industry-standard best practices**
-* apply **proper refactorization and modularization**
-* avoid tightly coupling keyboard logic with unrelated UI code
-* keep the implementation **clean and maintainable**.
+* follow **industry-standard shell scripting practices**
+* keep the script **clean and modular**
+* avoid duplicated logic
+* maintain **readability and maintainability**
+* ensure the script remains **safe for repeated execution**
+
+If necessary, refactor the relevant portion of the script into **clearly separated functions**.
 
 ---
 
 # Validation
 
-After implementing the solution, confirm that:
+After implementing the changes, verify that:
 
-* the keyboard appears when the input field is focused in **fullscreen mode**
-* typing works normally
-* kiosk fullscreen mode remains intact
-* the solution works after **system reboot**
-* the solution works in **Raspberry Pi runtime environment**.
+* running `install_kiosk.sh` again **offers the reconfiguration option**.
+* selecting **Y** correctly reapplies the Virtual Keyboard setup.
+* selecting **N** skips the step.
+* the script still behaves correctly for **first-time installations**.
+* no unrelated components are reinstalled unnecessarily.
 
 ---
 
 # Goal
 
-Ensure that the **chat input field remains usable in fullscreen kiosk mode by enabling a working keyboard solution in Raspberry Pi OS runtime**.
+Ensure that **new deployment changes (such as the Virtual Keyboard fullscreen solution)** can be **applied on already-installed systems without requiring a full reinstall**, while keeping the installation script **safe, modular, and maintainable**.
