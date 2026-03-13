@@ -1810,31 +1810,21 @@ async def update_voice_config(config: VoiceConfigUpdate):
 # ADMIN VOICE USAGE & CREDENTIALS - Phase 38
 # ==============================================================================
 
-# Global usage tracker instance
-_stt_usage_tracker = None
-
-def get_stt_usage_tracker():
-    """Get or create STT usage tracker singleton."""
-    global _stt_usage_tracker
-    if _stt_usage_tracker is None:
-        from WEB_APP.modules.voice.usage_tracker import STTUsageTracker
-        data_dir = Path(__file__).parent / "data"
-        _stt_usage_tracker = STTUsageTracker(data_dir)
-    return _stt_usage_tracker
-
-
 @app.get("/admin/voice/usage", dependencies=[Depends(verify_admin_session)])
 async def get_voice_usage():
     """
     Get STT usage statistics for Google Cloud STT.
 
     Phase 38: Returns current month's usage against the 60-minute free tier quota.
+    Creates a fresh tracker each call so it reads the latest data from disk
+    (the file is written by voice_routes when transcriptions occur).
 
     Returns:
         Usage statistics including used/remaining seconds and percentage
     """
     try:
-        tracker = get_stt_usage_tracker()
+        from WEB_APP.modules.voice.usage_tracker import STTUsageTracker
+        tracker = STTUsageTracker(Path(__file__).parent / "data")
         usage_data = tracker.to_dict()
 
         return {
