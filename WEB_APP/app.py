@@ -1969,29 +1969,56 @@ async def verify_credentials(request: CredentialVerifyRequest):
 
         try:
             creds_data = json.loads(request.credentials_json)
+        except json.JSONDecodeError as e:
+            return {"valid": False, "error": f"Invalid JSON: {str(e)}"}
 
-            if 'type' not in creds_data or creds_data.get('type') != 'service_account':
-                return {
-                    "valid": False,
-                    "error": "Not a valid service account JSON (missing 'type' field or wrong type)"
-                }
+        # Structure checks
+        if creds_data.get('type') != 'service_account':
+            return {
+                "valid": False,
+                "error": "Not a valid service account JSON (missing 'type' field or wrong type)"
+            }
 
-            if 'project_id' not in creds_data:
-                return {
-                    "valid": False,
-                    "error": "Missing 'project_id' field"
-                }
+        if 'project_id' not in creds_data:
+            return {"valid": False, "error": "Missing 'project_id' field"}
+
+        # Real authentication test: obtain an access token from Google's
+        # auth servers using the service account credentials.  This validates
+        # the private key and client_email without making an STT API call.
+        try:
+            from google.oauth2 import service_account
+            from google.auth.transport.requests import Request
+
+            credentials = service_account.Credentials.from_service_account_info(
+                creds_data,
+                scopes=["https://www.googleapis.com/auth/cloud-platform"]
+            )
+
+            import asyncio
+            await asyncio.get_event_loop().run_in_executor(
+                None,
+                lambda: credentials.refresh(Request())
+            )
 
             return {
                 "valid": True,
                 "project_id": creds_data.get('project_id'),
                 "client_email": creds_data.get('client_email', 'N/A')
             }
-
-        except json.JSONDecodeError as e:
+        except ImportError:
+            # google-cloud-speech not installed — fall back to structure check
+            return {
+                "valid": True,
+                "project_id": creds_data.get('project_id'),
+                "client_email": creds_data.get('client_email', 'N/A'),
+                "note": "Structure valid. Google Cloud SDK not installed for full verification."
+            }
+        except Exception as e:
+            error_msg = str(e)
+            logger.warning(f"[ADMIN] Google credential verification failed: {error_msg}")
             return {
                 "valid": False,
-                "error": f"Invalid JSON: {str(e)}"
+                "error": "Authentication failed. Service account credentials are invalid or lack permissions."
             }
 
     elif request.provider == "openai":
@@ -2014,7 +2041,7 @@ async def verify_credentials(request: CredentialVerifyRequest):
                 "error": "API key appears too short"
             }
 
-        # Verify by listing models (free, no quota consumed)
+        # Real API validation: list models (lightweight, no quota consumed)
         try:
             from openai import OpenAI
             client = OpenAI(api_key=request.api_key)
@@ -2023,17 +2050,19 @@ async def verify_credentials(request: CredentialVerifyRequest):
                 "valid": True,
                 "note": "API key verified successfully."
             }
-        except Exception as e:
-            error_msg = str(e)
-            if "authentication" in error_msg.lower() or "invalid" in error_msg.lower() or "401" in error_msg:
-                return {
-                    "valid": False,
-                    "error": "API key is invalid or expired."
-                }
-            # Network/timeout errors — key format is OK but can't reach API
+        except ImportError:
             return {
                 "valid": True,
-                "note": f"Format valid. Could not reach OpenAI to verify: {error_msg}"
+                "note": "Format valid. OpenAI SDK not installed for full verification."
+            }
+        except Exception as e:
+            # Any failure from the API call means the key is invalid or
+            # unreachable.  Don't assume validity on network errors —
+            # the user should retry when connectivity is restored.
+            logger.warning(f"[ADMIN] OpenAI key verification failed: {e}")
+            return {
+                "valid": False,
+                "error": "API key verification failed. Key may be invalid, expired, or the API is unreachable."
             }
 
     else:

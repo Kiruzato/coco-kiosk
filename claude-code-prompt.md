@@ -1,139 +1,125 @@
+# Prompt for Claude Code Agent — Opus 4.6
+
 You are working on the **CoCo Campus RAG Chatbot kiosk system** running on **Raspberry Pi OS**.
 
-The main kiosk interface is available at:
+The admin panel is available at:
 
 ```
-http://localhost:8000
+http://localhost:8000/admin#voice
 ```
 
-The system supports **voice input** using **Google Cloud Speech-to-Text (STT)**.
+In the **Cloud Credentials** panel there are two credential verification features:
+
+1. **OpenAI API Key verification**
+2. **Google Cloud Service Account JSON verification**
+
+Each credential has a **Verify button** that should check whether the credential is valid.
 
 ---
 
-# Background
+# Problem
 
-During voice input, the UI provides feedback about whether the system detects silence or speech.
+Currently, both **Verify buttons are not functioning correctly**.
 
-The screen shows two states:
+### OpenAI API Key
 
-**State 1 – Silence detected**
+I tested by entering a **nonexistent / invalid OpenAI API key**, saving it, and pressing **Verify**.
 
-```
-Listening... (speak now)
-```
-
-This appears when the system detects **silence** and is waiting for the user to start speaking.
-
-**State 2 – Speech detected**
-
-```
-Listening... (auto-stops when done)
-```
-
-This appears when the system **detects that the user has started speaking**.
-
-Therefore, the system already has a **speech detection mechanism or threshold** that determines when the user transitions from silence to speaking.
+The UI still shows the key as **Valid**, which is incorrect.
 
 ---
 
-# Current Issue
+### Google Cloud Service Account
 
-A **silence trimming system** was implemented to remove the **silent portion at the beginning of the recording** before sending audio to **Google STT**.
+I tested by uploading a **Google Cloud Service Account JSON file with incorrect credentials**.
 
-However, I want the silence trimmer to use the **same speech detection threshold** that controls the UI transition between:
-
-```
-Listening... (speak now)
-```
-
-and
-
-```
-Listening... (auto-stops when done)
-```
-
-Currently, it is unclear whether the silence trimmer uses the **same threshold and detection logic**.
+After saving and pressing **Verify**, the UI still shows the credential as **Valid**, which is also incorrect.
 
 ---
 
 # Objective
 
-Investigate the configuration responsible for the **transition between silence detection and speech detection**, and update the **silence trimming system** so that it uses the **same threshold and detection criteria**.
+Fix the credential verification logic so that the **Verify buttons perform real credential validation**, not just UI confirmation.
 
-The goal is to ensure that:
-
-* the **exact moment the system detects speech** (when the UI changes state)
-* is also the **starting point of the audio segment sent to Google STT**.
+The system must accurately determine whether the credentials are **valid or invalid**.
 
 ---
 
-# Required Tasks
+# Required Investigation
 
-### 1. Locate Speech Detection Logic
+First determine how the current verification works.
 
-Find where the system determines when the UI transitions between:
+Check whether the system currently:
 
-```
-Listening... (speak now)
-```
+* only verifies **file existence**
+* only checks **JSON format**
+* only checks whether the credential is **saved in configuration**
+* or incorrectly assumes validity.
 
-and
-
-```
-Listening... (auto-stops when done)
-```
-
-Identify the underlying mechanism, such as:
-
-* voice activity detection (VAD)
-* amplitude threshold
-* silence detection window
-* RMS energy threshold
-* any other speech detection logic.
+Determine why invalid credentials are still marked as **valid**.
 
 ---
 
-### 2. Verify Silence Trimmer Configuration
+# Required Behavior
 
-Inspect the current silence trimming implementation and determine:
+### 1. OpenAI API Key Verification
 
-* whether it uses the **same threshold**
-* whether it uses a **different detection method**
-* whether it trims audio **before or after speech detection occurs**.
+The **Verify button** must perform a **real API validation**.
 
----
+Possible approach:
 
-### 3. Align the Silence Trimmer with Speech Detection
+* perform a lightweight request to the OpenAI API using the provided key
+* confirm that the API returns a **successful authentication response**.
 
-Update the silence trimming logic so that it uses the **same detection configuration** used by the UI speech detection system.
-
-This ensures that:
-
-* the audio sent to Google STT **starts exactly when speech is detected**
-* the initial silence is **reliably removed**
-* the system behaves consistently with what the user sees in the UI.
+If authentication fails, the UI must display **Invalid**.
 
 ---
 
-### 4. Ensure Reliable Behavior
+### 2. Google Cloud Service Account Verification
 
-The updated implementation must:
+The **Verify button** must confirm that the uploaded service account JSON is **usable for Google STT**.
 
-* avoid cutting off the start of actual speech
-* avoid trimming too aggressively
-* remain efficient for **Raspberry Pi hardware**
-* maintain a smooth voice interaction experience.
+Verification should include:
+
+* confirming the JSON structure is valid
+* confirming authentication with Google Cloud services works
+* ideally performing a **lightweight STT client initialization test**.
+
+If authentication fails, the UI must display **Invalid**.
+
+---
+
+# Error Handling
+
+If a verification attempt fails:
+
+* return a clear error message
+* update the UI to indicate **Invalid credentials**.
+
+Avoid silent failures.
+
+---
+
+# If Real Verification Is Not Possible
+
+If real verification is technically impossible due to API limitations or security constraints, clearly explain:
+
+* why verification cannot be implemented
+* what the **best alternative validation approach** would be.
+
+Do not fake validation.
 
 ---
 
 # Code Quality Requirements
 
-While implementing this change:
+While implementing the fix:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* avoid duplicating speech detection logic
-* reuse the existing detection configuration wherever possible.
+* keep credential verification logic clean and isolated
+* avoid exposing sensitive credential data in logs
+* ensure secure handling of API keys and service account files.
 
 ---
 
@@ -141,14 +127,14 @@ While implementing this change:
 
 Verify that:
 
-* the silence trimming starts exactly when the system switches to
-  **"Listening... (auto-stops when done)"**
-* initial silent audio is no longer sent to Google STT
-* Google STT usage reflects only **actual spoken audio**
-* the voice input system remains stable and responsive.
+* invalid OpenAI API keys are detected correctly
+* valid OpenAI API keys pass verification
+* invalid Google Service Account credentials fail verification
+* valid service account credentials pass verification
+* the UI displays correct **Valid / Invalid status**.
 
 ---
 
 # Goal
 
-Ensure that the **silence trimming mechanism uses the same detection threshold as the UI speech detection system**, so that the audio sent to Google STT begins precisely when the system detects speech, eliminating unnecessary silent audio processing.
+Ensure that the **Verify buttons in the Cloud Credentials panel perform real credential validation**, accurately indicating whether the **OpenAI API Key and Google Cloud Service Account credentials are actually usable by the system**.
