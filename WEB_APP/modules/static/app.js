@@ -4095,45 +4095,69 @@ function stopAudioVisualizer() {
 // ============================================================================
 // Uses Pointer Events API for unified mouse, touch, and pen/trackpad support.
 // Scoped to #chatContainer only — no other panels are affected.
+// Distinguishes taps from drags: only activates scrolling after a 5px movement
+// threshold, so clicks on FAQ items and other elements still work normally.
 
 (function initDragScroll() {
     const chatContainer = document.getElementById('chatContainer');
     if (!chatContainer) return;
 
+    const DRAG_THRESHOLD = 5; // px — movement needed to start dragging
+
+    let isPointerDown = false;
     let isDragging = false;
     let startY = 0;
     let startScrollTop = 0;
+    let pointerId = null;
 
     chatContainer.addEventListener('pointerdown', (e) => {
-        // Skip interactive elements
+        // Skip interactive elements (buttons, links, inputs)
         if (e.target.closest('button, a, input, textarea, select, .feedback-icon-btn')) {
             return;
         }
-        isDragging = true;
+        isPointerDown = true;
+        isDragging = false;
         startY = e.clientY;
         startScrollTop = chatContainer.scrollTop;
-        chatContainer.setPointerCapture(e.pointerId);
-        chatContainer.style.cursor = 'grabbing';
+        pointerId = e.pointerId;
     });
 
     chatContainer.addEventListener('pointermove', (e) => {
-        if (!isDragging) return;
+        if (!isPointerDown || e.pointerId !== pointerId) return;
+
         const deltaY = startY - e.clientY;
+
+        // Activate drag mode only after exceeding the threshold
+        if (!isDragging) {
+            if (Math.abs(deltaY) < DRAG_THRESHOLD) return;
+            isDragging = true;
+            chatContainer.setPointerCapture(e.pointerId);
+            chatContainer.style.cursor = 'grabbing';
+        }
+
         chatContainer.scrollTop = startScrollTop + deltaY;
     });
 
     chatContainer.addEventListener('pointerup', (e) => {
-        if (!isDragging) return;
+        if (e.pointerId !== pointerId) return;
+        if (isDragging) {
+            chatContainer.releasePointerCapture(e.pointerId);
+            chatContainer.style.cursor = '';
+        }
+        isPointerDown = false;
         isDragging = false;
-        chatContainer.releasePointerCapture(e.pointerId);
-        chatContainer.style.cursor = '';
+        pointerId = null;
     });
 
     chatContainer.addEventListener('pointercancel', (e) => {
-        if (!isDragging) return;
+        if (e.pointerId !== pointerId) return;
+        if (isDragging) {
+            chatContainer.releasePointerCapture(e.pointerId);
+            chatContainer.style.cursor = '';
+        }
+        isPointerDown = false;
         isDragging = false;
-        chatContainer.releasePointerCapture(e.pointerId);
-        chatContainer.style.cursor = '';
+        pointerId = null;
     });
 })();
 

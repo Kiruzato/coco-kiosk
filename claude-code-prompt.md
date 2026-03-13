@@ -1,112 +1,102 @@
 You are working on the **CoCo Campus RAG Chatbot kiosk system** running on **Raspberry Pi OS**.
 
-The kiosk UI is available at:
+The main kiosk interface is available at:
 
-```
+```id="j9p21v"
 http://localhost:8000
 ```
 
-The **Conversation Panel** (where chat messages appear) is currently scrollable **only via the scrollbar**.
+---
 
-Previously, swipe scrolling was attempted specifically for **touchscreen devices**, but the implementation did **not work during testing**.
+# Background
+
+Swipe / drag scrolling was implemented for the **Conversation Panel** so users can scroll through chat messages by swiping or dragging the screen.
+
+This feature **now works correctly for scrolling**.
+
+However, a new problem appeared.
 
 ---
 
-# New Direction
+# Problem
 
-Instead of implementing swipe scrolling specifically for **touchscreen input**, implement a **general swipe/drag scrolling behavior** for the **Conversation Panel**.
+The swipe scrolling implementation **prevents the FAQ questions from opening**.
 
-The idea is that the user should be able to:
+The FAQ section is located near the **top of the conversation panel**, and each FAQ question is supposed to expand when clicked/tapped.
 
-* click/touch the conversation panel
-* **drag up or down**
-* and the panel scrolls accordingly.
+Currently:
 
-This behavior should work with:
-
-* mouse dragging
-* touch swiping
-* trackpad gestures
-
-without depending on device-specific touchscreen logic.
+* tapping a FAQ question **does nothing**
+* the swipe/drag scrolling behavior **intercepts the interaction**
+* the FAQ toggle action is **blocked by the scrolling logic**.
 
 ---
 
 # Objective
 
-Implement **drag/swipe scrolling behavior for the Conversation Panel** that works **generally across input types**, including:
+Fix the interaction conflict so that **both features work correctly**:
 
-* mouse
-* touchscreen
-* trackpad.
-
-The goal is to make the conversation panel behave similarly to a **mobile chat interface**, where the user can scroll through messages by dragging the content.
+1. Swipe / drag scrolling must continue working in the **Conversation Panel**.
+2. FAQ questions must still be **clickable/tappable and expandable**.
 
 ---
 
-# Scope
+# Investigation Requirements
 
-The drag/swipe scrolling behavior must apply **only to the Conversation Panel**.
+Investigate how the swipe scrolling behavior was implemented.
 
-It must **not affect**:
+Check whether the implementation:
 
-* advertisement panel
-* headers
-* admin panels
-* other UI components.
+* intercepts pointer / touch events globally
+* prevents default click behavior
+* blocks event propagation
+* captures events on the container before they reach the FAQ elements.
 
-Only the **chat conversation container** should support this behavior.
+Determine exactly **why FAQ click/tap events are not firing**.
+
+---
+
+# Required Fix
+
+Adjust the implementation so that:
+
+* swipe scrolling continues to work for scrolling
+* FAQ elements can still receive **click or tap events**.
+
+Possible strategies may include:
+
+* allowing events to propagate when the gesture is a **tap rather than a drag**
+* excluding FAQ elements from the drag handler
+* detecting gesture movement thresholds before activating drag scrolling.
+
+The solution should **not remove swipe scrolling**.
 
 ---
 
 # Implementation Guidelines
 
-Implement the scrolling in a **general input-friendly way**.
+The solution must:
 
-Possible approaches include:
+* preserve smooth swipe/drag scrolling
+* preserve FAQ click/tap functionality
+* avoid fragile event hacks
+* maintain clean event handling logic.
 
-* enabling proper native scroll behavior on the container
-* implementing controlled drag-to-scroll behavior using pointer events or similar mechanisms.
+Prefer a **gesture detection approach** that distinguishes between:
 
-Avoid solutions that are **specific only to touchscreen APIs**.
-
-Prefer solutions that work across **multiple input types**.
-
-Ensure the implementation does not conflict with:
-
-* message interaction
-* input field focus
-* other UI components.
-
----
-
-# Behavior Requirements
-
-Users should be able to:
-
-* drag/swipe **upward** to scroll down through older messages
-* drag/swipe **downward** to scroll toward newer messages.
-
-Scrolling should feel:
-
-* smooth
-* responsive
-* natural.
-
-The **existing scrollbar must remain functional**.
+* **tap (FAQ interaction)**
+* **drag (scrolling)**.
 
 ---
 
 # Code Quality Requirements
 
-While implementing this change:
+While implementing the fix:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* keep the scrolling logic isolated to the conversation panel
-* avoid overly complex gesture handling.
-
-Prefer **clean and maintainable implementation**.
+* keep event-handling logic clean and maintainable
+* avoid complex or brittle gesture logic.
 
 ---
 
@@ -114,13 +104,14 @@ Prefer **clean and maintainable implementation**.
 
 Verify that:
 
-* dragging or swiping on the conversation panel scrolls messages
-* the behavior works with **mouse, touchscreen, and trackpad**
-* the scrollbar still works normally
-* no other UI components are affected.
+* swipe scrolling still works in the conversation panel
+* FAQ questions can be opened normally
+* tapping a question expands its answer
+* dragging still scrolls the conversation
+* both features work smoothly on the **Raspberry Pi touchscreen environment**.
 
 ---
 
 # Goal
 
-Enable **general drag/swipe scrolling for the Conversation Panel**, allowing users to navigate chat messages naturally without relying solely on the scrollbar, while maintaining compatibility across different input devices.
+Ensure that **swipe scrolling and FAQ interaction coexist properly**, allowing users to scroll the conversation panel while still being able to **tap FAQ questions to expand their answers**.
