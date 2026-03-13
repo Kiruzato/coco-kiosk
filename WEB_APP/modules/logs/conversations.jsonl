@@ -1639,3 +1639,6 @@
 {"query_id": "20260312_125252_933603", "timestamp": "2026-03-12T12:52:52.933603", "query": "Aint no way", "answer": "It sounds like you're surprised! What’s on your mind?", "feedback": null}
 {"query_id": "20260313_083940_976770", "timestamp": "2026-03-13T08:39:40.976770", "query": "Hi", "answer": "Hello there! How can I help you today? If you have any questions about campus, feel free to ask!", "feedback": null}
 {"query_id": "20260313_083953_869428", "timestamp": "2026-03-13T08:39:53.869428", "query": "Hello.", "answer": "Hi there! Welcome to the campus information kiosk. How can I help you today?", "feedback": null}
+{"query_id": "20260313_084929_469624", "timestamp": "2026-03-13T08:49:29.469624", "query": "Hi", "answer": "Hello there! How can I help you today? If you have any questions about campus, feel free to ask!", "feedback": null}
+{"query_id": "20260313_084941_969992", "timestamp": "2026-03-13T08:49:41.969992", "query": "What's up?", "answer": "Hey there! Not much, just here to help you with any campus info you need. What can I assist you with today?", "feedback": null}
+{"query_id": "20260313_084951_168251", "timestamp": "2026-03-13T08:49:51.168251", "query": "Hi.", "answer": "Hi there! Welcome to the campus information kiosk. How can I help you today?", "feedback": null}

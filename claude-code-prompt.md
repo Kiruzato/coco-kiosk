@@ -1,145 +1,120 @@
 You are working on the **CoCo Campus RAG Chatbot kiosk system** running on **Raspberry Pi OS**.
 
-The web application runs at:
+The web application admin panel is accessible at:
 
 ```
-http://localhost:8000/
+http://localhost:8000/admin#voice
 ```
 
-The chatbot supports:
-
-* **Voice input**
-* **Typewritten query input**
+This panel contains a **Google STT Monthly Usage Tracker** intended to display the usage of **Google Cloud Speech-to-Text (STT)**.
 
 ---
 
-# Background
+# Problem
 
-Previously I asked for a loading feedback system that would replace the voice-processing label:
+The **Google STT Monthly Usage tracker is currently not working**.
 
-```
-... Processing Audio...
-```
+The tracker should display the **current monthly usage of Google STT**, but the values are either:
 
-with:
-
-```
-CoCo is thinking...
-```
-
-and apply it to both **voice input** and **typed queries**.
-
-However, the implementation was **incorrect**.
-
----
-
-# Problem With The Previous Implementation
-
-The system implemented a **fullscreen overlay** with the "CoCo is thinking..." message that **blocks the entire screen**.
-
-This is **not what I want**.
-
-The correct behavior should instead **reuse the existing loading panel that appears below the input panel**.
-
-Additionally, the implementation **failed to locate the actual "Processing Audio..." label**, even though it clearly appears when using voice input.
+* not updating,
+* not being tracked,
+* or not displayed correctly.
 
 ---
 
 # Objective
 
-Fix the loading feedback implementation correctly.
+Investigate and fix the **Google STT Monthly Usage tracker** so that it properly reflects the **actual usage of Google Cloud STT within the system**.
 
 ---
 
-# Step 1 — Locate the Existing "Processing Audio..." Panel
+# Investigation Requirements
 
-Search the codebase for where this label originates:
+Before implementing a fix, perform a proper investigation.
 
-```
-... Processing Audio...
-```
+Determine the following:
 
-It appears **below the input panel**, specifically under the area containing:
+### 1. Whether usage tracking logic exists
 
-* Voice input button
-* Text input field
-* Send button
+Check if the system currently has logic that records STT usage when voice transcription occurs.
 
-You must **find the actual code responsible for displaying this panel**.
+Specifically inspect:
 
-Do **not assume the location** — search the codebase.
+* the **Google STT integration code**
+* the **voice orchestrator / STT service layer**
+* any **usage tracking module (e.g., usage_tracker or similar)**.
 
----
+Determine whether usage data is:
 
-# Step 2 — Modify the Existing Panel (Do NOT Create Overlays)
-
-Once found, modify the **existing loading panel**.
-
-Requirements:
-
-1. Replace the label:
-
-```
-... Processing Audio...
-```
-
-with:
-
-```
-CoCo is thinking...
-```
-
-2. Add a lightweight animation:
-
-```
-CoCo is thinking.
-CoCo is thinking..
-CoCo is thinking...
-```
-
-Then repeat continuously.
-
-3. The animation must **stop automatically when the response arrives**.
-
-4. The panel must remain **in its original position below the input panel**.
+* recorded
+* partially recorded
+* or never recorded at all.
 
 ---
 
-# Step 3 — Apply the Same Feedback to Typed Queries
+### 2. Where usage data is stored
 
-Currently, typed queries **do not display any loading feedback**.
+Identify where STT usage is supposed to be stored.
 
-Modify the system so that when a **typewritten query is submitted**, the same loading panel appears.
+Possible locations may include:
 
-Requirements:
+* JSON logs
+* in-memory counters
+* a local file
+* or another tracking mechanism.
 
-* Use the **same panel used by voice input**
-* Use the same **"CoCo is thinking..." animated text**
-* Hide the panel once the chatbot response appears.
-
----
-
-# Important Restrictions
-
-Do NOT:
-
-* create fullscreen overlays
-* block the entire UI
-* create duplicate loading panels
-* implement a separate system for voice and typed queries.
-
-Both input methods must **reuse the same loading feedback component**.
+Verify whether the stored data structure is correct and whether it persists correctly.
 
 ---
 
-# Implementation Guidelines
+### 3. Monthly reset logic
 
-Follow **industry-standard best practices**:
+Determine how the **monthly usage reset** is supposed to work.
 
-* apply proper **refactorization and modularization**
-* reuse existing UI components instead of duplicating logic
-* keep the animation lightweight (important for Raspberry Pi performance)
-* ensure loading state is properly cleaned up when responses arrive.
+Check whether the system:
+
+* tracks usage by **calendar month**
+* automatically resets when a new month starts
+* properly handles month transitions.
+
+If the reset logic is missing or broken, implement a correct and reliable mechanism.
+
+---
+
+### 4. Admin UI integration
+
+Check the connection between:
+
+* backend usage tracking logic
+* the admin API endpoint
+* the **UI component in `/admin#voice`**.
+
+Ensure the admin panel is actually retrieving the **real usage data** from the backend.
+
+Fix any broken API or UI binding if necessary.
+
+---
+
+# Required Behavior
+
+After fixing the system:
+
+* Google STT usage must be **tracked whenever transcription occurs**
+* the usage counter must reflect the **current calendar month**
+* the admin panel must display the **correct monthly usage value**
+* the counter must **reset automatically when a new month begins**.
+
+---
+
+# Code Quality Requirements
+
+While implementing the fix:
+
+* follow **industry-standard best practices**
+* apply **proper refactorization and modularization**
+* avoid duplicating logic
+* ensure usage tracking is **lightweight and reliable**
+* keep the implementation **maintainable and clear**.
 
 ---
 
@@ -147,22 +122,14 @@ Follow **industry-standard best practices**:
 
 Verify that:
 
-* the existing **Processing Audio panel is correctly located**
-* it now displays **"CoCo is thinking..."**
-* the animated dots cycle correctly
-* the panel appears for **voice queries**
-* the panel appears for **typed queries**
-* the panel disappears once the response is received
-* the UI is **not blocked by overlays**.
+* STT usage increases when voice queries are processed
+* the monthly counter updates correctly
+* the admin panel displays the correct value
+* the system handles month changes properly
+* no regressions occur in the voice input pipeline.
 
 ---
 
 # Goal
 
-Use the **existing loading panel below the input controls** and convert it into a **shared thinking indicator** displaying:
-
-```
-CoCo is thinking...
-```
-
-with animated dots, working consistently for both **voice input and typed queries**, without blocking the screen.
+Ensure that the **Google STT Monthly Usage tracker in `/admin#voice` accurately reflects the real monthly usage of Google Cloud Speech-to-Text**, with correct tracking, storage, reset logic, and admin panel display.

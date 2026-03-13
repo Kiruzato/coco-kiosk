@@ -399,7 +399,8 @@ def _get_voice_usage_tracker():
     global _voice_usage_tracker
     if _voice_usage_tracker is None:
         from WEB_APP.modules.voice.usage_tracker import STTUsageTracker
-        data_dir = Path(__file__).parent / "data"
+        # Use WEB_APP/data/ — same directory the admin endpoint reads from
+        data_dir = Path(__file__).resolve().parent.parent / "data"
         _voice_usage_tracker = STTUsageTracker(data_dir)
     return _voice_usage_tracker
 
