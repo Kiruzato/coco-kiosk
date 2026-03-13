@@ -6,43 +6,16 @@ The web application runs at:
 http://localhost:8000/
 ```
 
-The chatbot supports two input modes:
+The chatbot supports:
 
-1. **Voice input**
-2. **Typewritten query input**
-
----
-
-# Current Behavior
-
-When using **voice input**:
-
-* After recording finishes, a panel appears **below the input panel** (the area containing the voice button, text input field, and send button).
-* This panel displays the label:
-
-```
-... Processing Audio...
-```
-
-This acts as a **loading indicator** while the system processes the request.
-
-However, when using **typewritten queries**, there is **no loading feedback shown at all**.
-
-This creates an **inconsistent user experience**.
+* **Voice input**
+* **Typewritten query input**
 
 ---
 
-# Objective
+# Background
 
-Improve the loading feedback system for both **voice input and typewritten queries**.
-
----
-
-# Required Changes
-
-### 1. Change the Loading Label
-
-Replace the current label:
+Previously I asked for a loading feedback system that would replace the voice-processing label:
 
 ```
 ... Processing Audio...
@@ -54,13 +27,69 @@ with:
 CoCo is thinking...
 ```
 
-This message should be used **for both voice queries and typewritten queries**.
+and apply it to both **voice input** and **typed queries**.
+
+However, the implementation was **incorrect**.
 
 ---
 
-### 2. Add Animated Thinking Indicator
+# Problem With The Previous Implementation
 
-The label should animate using the following loop:
+The system implemented a **fullscreen overlay** with the "CoCo is thinking..." message that **blocks the entire screen**.
+
+This is **not what I want**.
+
+The correct behavior should instead **reuse the existing loading panel that appears below the input panel**.
+
+Additionally, the implementation **failed to locate the actual "Processing Audio..." label**, even though it clearly appears when using voice input.
+
+---
+
+# Objective
+
+Fix the loading feedback implementation correctly.
+
+---
+
+# Step 1 — Locate the Existing "Processing Audio..." Panel
+
+Search the codebase for where this label originates:
+
+```
+... Processing Audio...
+```
+
+It appears **below the input panel**, specifically under the area containing:
+
+* Voice input button
+* Text input field
+* Send button
+
+You must **find the actual code responsible for displaying this panel**.
+
+Do **not assume the location** — search the codebase.
+
+---
+
+# Step 2 — Modify the Existing Panel (Do NOT Create Overlays)
+
+Once found, modify the **existing loading panel**.
+
+Requirements:
+
+1. Replace the label:
+
+```
+... Processing Audio...
+```
+
+with:
+
+```
+CoCo is thinking...
+```
+
+2. Add a lightweight animation:
 
 ```
 CoCo is thinking.
@@ -70,52 +99,47 @@ CoCo is thinking...
 
 Then repeat continuously.
 
-Example sequence:
+3. The animation must **stop automatically when the response arrives**.
 
-```
-CoCo is thinking.
-CoCo is thinking..
-CoCo is thinking...
-CoCo is thinking.
-CoCo is thinking..
-...
-```
-
-The animation should run **until the response is received**.
+4. The panel must remain **in its original position below the input panel**.
 
 ---
 
-### 3. Apply the Loading Indicator to Typed Queries
+# Step 3 — Apply the Same Feedback to Typed Queries
 
-When a user submits a **typewritten query**:
+Currently, typed queries **do not display any loading feedback**.
 
-* The same **loading panel** should appear
-* The same **"CoCo is thinking..." animated label** should be displayed
-* The indicator should remain visible **until the chatbot response is received**.
+Modify the system so that when a **typewritten query is submitted**, the same loading panel appears.
 
-This ensures **consistent feedback for both input methods**.
+Requirements:
+
+* Use the **same panel used by voice input**
+* Use the same **"CoCo is thinking..." animated text**
+* Hide the panel once the chatbot response appears.
+
+---
+
+# Important Restrictions
+
+Do NOT:
+
+* create fullscreen overlays
+* block the entire UI
+* create duplicate loading panels
+* implement a separate system for voice and typed queries.
+
+Both input methods must **reuse the same loading feedback component**.
 
 ---
 
 # Implementation Guidelines
 
-* Avoid duplicating logic between voice and text query flows.
-* Use a **shared loading state mechanism** for both input types.
-* Ensure the animation stops cleanly once a response is rendered.
-* Prevent multiple loading panels from appearing simultaneously.
-
-The loading indicator should be **lightweight and efficient**, since the kiosk runs on **Raspberry Pi hardware**.
-
----
-
-# Code Quality Requirements
-
 Follow **industry-standard best practices**:
 
-* apply **proper refactorization and modularization**
-* keep UI state management clean
-* avoid duplicate loading logic
-* ensure the solution is maintainable and predictable.
+* apply proper **refactorization and modularization**
+* reuse existing UI components instead of duplicating logic
+* keep the animation lightweight (important for Raspberry Pi performance)
+* ensure loading state is properly cleaned up when responses arrive.
 
 ---
 
@@ -123,15 +147,22 @@ Follow **industry-standard best practices**:
 
 Verify that:
 
-* the label now displays **"CoCo is thinking..."**
-* the animation cycles correctly (`.`, `..`, `...`)
-* the loading indicator appears for **voice queries**
-* the loading indicator appears for **typewritten queries**
-* the indicator disappears once the response arrives
-* no UI regressions occur.
+* the existing **Processing Audio panel is correctly located**
+* it now displays **"CoCo is thinking..."**
+* the animated dots cycle correctly
+* the panel appears for **voice queries**
+* the panel appears for **typed queries**
+* the panel disappears once the response is received
+* the UI is **not blocked by overlays**.
 
 ---
 
 # Goal
 
-Provide a **consistent and clear loading feedback system** so that users always see **"CoCo is thinking..." with animated dots** whenever the chatbot is processing a request, regardless of whether the query was submitted via **voice or typing**.
+Use the **existing loading panel below the input controls** and convert it into a **shared thinking indicator** displaying:
+
+```
+CoCo is thinking...
+```
+
+with animated dots, working consistently for both **voice input and typed queries**, without blocking the screen.

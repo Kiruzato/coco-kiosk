@@ -538,30 +538,44 @@ const kioskContainer = document.querySelector('.kiosk-container');
 let thinkingInterval = null;
 
 /**
- * Show the loading overlay with animated "CoCo is thinking..." dots.
+ * Show the inline status panel below the input area with animated
+ * "CoCo is thinking..." dots.  Reuses the existing #voiceStatus bar.
  * Safe to call multiple times — clears any existing animation first.
  */
 function startThinkingAnimation() {
     stopThinkingAnimation();
-    const loadingText = document.getElementById('loadingText');
-    loadingIndicator.style.display = 'flex';
+    const voiceStatus = document.getElementById('voiceStatus');
+    const voiceStatusText = voiceStatus?.querySelector('.voice-status-text');
+    const voiceStatusIcon = voiceStatus?.querySelector('.voice-status-icon');
+    if (!voiceStatus) return;
+
+    voiceStatus.style.display = 'flex';
+    voiceStatus.classList.add('processing');
+    if (voiceStatusIcon) voiceStatusIcon.style.display = 'none';
+
     let dotCount = 1;
-    if (loadingText) loadingText.textContent = 'CoCo is thinking.';
+    if (voiceStatusText) voiceStatusText.textContent = 'CoCo is thinking.';
     thinkingInterval = setInterval(() => {
         dotCount = (dotCount % 3) + 1;
-        if (loadingText) loadingText.textContent = 'CoCo is thinking' + '.'.repeat(dotCount);
+        if (voiceStatusText) voiceStatusText.textContent = 'CoCo is thinking' + '.'.repeat(dotCount);
     }, 500);
 }
 
 /**
- * Hide the loading overlay and stop the dot animation.
+ * Hide the thinking panel and stop the dot animation.
  */
 function stopThinkingAnimation() {
     if (thinkingInterval) {
         clearInterval(thinkingInterval);
         thinkingInterval = null;
     }
-    loadingIndicator.style.display = 'none';
+    const voiceStatus = document.getElementById('voiceStatus');
+    if (voiceStatus) {
+        voiceStatus.style.display = 'none';
+        voiceStatus.classList.remove('processing');
+        const voiceStatusIcon = voiceStatus.querySelector('.voice-status-icon');
+        if (voiceStatusIcon) voiceStatusIcon.style.display = '';
+    }
 }
 
 // ============================================================================
@@ -3088,8 +3102,6 @@ function setVoiceState(newState, message = null) {
     switch (newState) {
         case VoiceState.IDLE:
             voiceBtn.disabled = !voiceEnabled;
-            voiceStatus.style.display = 'none';
-            // Phase 40: voiceIndicator removed - TTS now silent
             stopThinkingAnimation();
             // Re-enable typed input when voice returns to idle (unless waiting for chat response)
             if (!isWaiting) {
@@ -3109,9 +3121,6 @@ function setVoiceState(newState, message = null) {
         case VoiceState.PROCESSING:
             voiceBtn.classList.add('processing');
             voiceBtn.disabled = true;
-            voiceStatus.style.display = 'flex';
-            voiceStatus.classList.add('processing');
-            if (voiceStatusText) voiceStatusText.textContent = message || 'Processing...';
             startThinkingAnimation();
             break;
 
@@ -3119,7 +3128,6 @@ function setVoiceState(newState, message = null) {
             // Phase 40: Silent TTS - no visual indicator, audio plays in background
             // Keep UI in normal state so user can read response while listening
             voiceBtn.disabled = !voiceEnabled;
-            voiceStatus.style.display = 'none';
             stopThinkingAnimation();
             // Phase 41 fix: Re-enable inputs during RESPONDING so user can interact
             // while TTS plays (this is the "silent TTS" UX - user can type new query)
@@ -3128,6 +3136,7 @@ function setVoiceState(newState, message = null) {
             break;
 
         case VoiceState.ERROR:
+            stopThinkingAnimation();
             voiceBtn.classList.add('error');
             voiceBtn.disabled = false;
             voiceStatus.style.display = 'flex';

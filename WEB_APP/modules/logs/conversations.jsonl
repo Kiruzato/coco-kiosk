@@ -1637,3 +1637,5 @@
 {"query_id": "20260312_125226_568991", "timestamp": "2026-03-12T12:52:26.568991", "query": "Hello.", "answer": "Hi there! Welcome! How can I help you today?", "feedback": true}
 {"query_id": "20260312_125240_928748", "timestamp": "2026-03-12T12:52:40.928748", "query": "What is up girl", "answer": "\"Up girl\" is a casual greeting often used among friends, especially in a playful or flirty context. It’s a way to ask how someone is doing or what’s going on in their life.", "feedback": null}
 {"query_id": "20260312_125252_933603", "timestamp": "2026-03-12T12:52:52.933603", "query": "Aint no way", "answer": "It sounds like you're surprised! What’s on your mind?", "feedback": null}
+{"query_id": "20260313_083940_976770", "timestamp": "2026-03-13T08:39:40.976770", "query": "Hi", "answer": "Hello there! How can I help you today? If you have any questions about campus, feel free to ask!", "feedback": null}
+{"query_id": "20260313_083953_869428", "timestamp": "2026-03-13T08:39:53.869428", "query": "Hello.", "answer": "Hi there! Welcome to the campus information kiosk. How can I help you today?", "feedback": null}
