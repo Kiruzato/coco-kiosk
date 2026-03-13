@@ -3538,9 +3538,25 @@ async def kiosk_wifi_scan(data: KioskAuthRequest):
         return {"networks": [], "message": "WiFi scan only available on Raspberry Pi (Linux)."}
 
     try:
+        # Step 1: Force a fresh WiFi scan on the radio hardware.
+        # nmcli dev wifi rescan triggers an actual RF scan rather than
+        # returning cached results.  We use sudo because the kiosk user
+        # may lack direct device-control privileges.
+        subprocess.run(
+            ["sudo", "nmcli", "dev", "wifi", "rescan"],
+            capture_output=True, text=True, timeout=10
+        )
+
+        # Step 2: Wait for the scan to complete.  The radio needs a few
+        # seconds to discover nearby access points (especially newly
+        # enabled hotspots).
+        import asyncio
+        await asyncio.sleep(3)
+
+        # Step 3: Retrieve the (now-fresh) scan results.
         result = subprocess.run(
-            ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list", "--rescan", "yes"],
-            capture_output=True, text=True, timeout=20
+            ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list"],
+            capture_output=True, text=True, timeout=10
         )
 
         networks = []

@@ -11,74 +11,116 @@ Holding the **Fullscreen button for 5 seconds** opens the **Kiosk Admin Panel**.
 Claude previously implemented:
 
 * a **lightweight built-in keyboard**
-* a **WiFi configuration interface** in the Kiosk Admin Panel.
+* a **WiFi configuration interface** inside the Kiosk Admin Panel.
 
-Inside the WiFi configuration screen there is a **Scan Networks** function that displays the list of available WiFi networks.
+Inside the WiFi configuration screen there is a **Scan Networks** function used to display available WiFi networks.
 
 ---
 
-# Task 1 — Investigate the Scan Networks Behavior
+# Problem
 
-I want you to determine how the **Scan Networks** feature currently works.
+When I enable my **phone hotspot** and immediately click **Scan Networks**, the hotspot **does not appear in the list**.
 
-Specifically, investigate whether the system:
+However:
 
-1. **Performs a real WiFi scan each time the button is clicked**, or
-2. **Only retrieves cached results from the previous scan performed by the system**.
+* the hotspot **is confirmed to be available**
+* other devices **can detect it immediately**
+* the hotspot **only appears after several minutes when scanning again**.
+
+Therefore the issue is **not that the hotspot is unavailable**, but that the system **is not detecting it immediately**.
+
+---
+
+# Objective
+
+Investigate why the **Scan Networks function fails to detect newly available WiFi networks immediately**, and fix the issue so that **new networks appear right away when scanning**.
+
+---
+
+# Investigation Requirements
+
+Perform a proper investigation before modifying anything.
+
+Determine:
+
+### 1. How WiFi scanning is implemented
 
 Check:
 
-* the backend logic handling the scan request
-* the system command used (`nmcli`, `iw`, etc.)
-* whether a **fresh scan is explicitly triggered**.
+* what backend command is used (`nmcli`, `iw`, etc.)
+* whether the command **forces a fresh scan** or just retrieves cached results.
 
-After investigating, confirm which behavior is currently implemented.
+For example, verify whether the system is using something like:
 
-If the system is **only retrieving cached results**, modify the implementation so that the **Scan Networks button performs a proper active WiFi scan** before retrieving the network list.
+```
+nmcli device wifi list
+```
 
-The goal is for the list to reflect the **current available networks** rather than stale results.
+instead of
+
+```
+nmcli device wifi rescan
+```
+
+or an equivalent forced scan.
 
 ---
 
-# Task 2 — Add Button Cooldown
+### 2. NetworkManager scan caching behavior
 
-Implement a **5-second cooldown** for the **Scan Networks** button.
+NetworkManager often **caches scan results** for a period of time.
 
-Requirements:
+Determine whether the current implementation is simply reading **cached scan results**, which would explain why the hotspot only appears later.
 
-* After the button is clicked, it should be **disabled for 5 seconds**.
-* During the cooldown, the button should **visually indicate it is disabled**.
-* After 5 seconds, the button should become **clickable again**.
-* The cooldown should prevent **rapid repeated scans** that could overload the system.
+---
 
-The cooldown must be handled **cleanly in the UI layer**, while still allowing backend validation if needed.
+### 3. Scan timing and hardware behavior
+
+Check if:
+
+* the WiFi adapter requires a **manual rescan command**
+* the system needs a **short delay after triggering a scan**
+* the scan command is executed **before results are ready**.
+
+---
+
+# Required Fix
+
+Modify the implementation so that **Scan Networks triggers a proper real-time WiFi scan**.
+
+The solution should:
+
+1. Force a **fresh WiFi scan**.
+2. Wait until scan results are available.
+3. Then retrieve the updated list of networks.
+
+The goal is that **newly created networks (such as phone hotspots) appear immediately after scanning**.
 
 ---
 
 # Code Quality Requirements
 
-While implementing the changes:
+While implementing the fix:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* avoid duplicating network scanning logic
-* ensure backend commands are executed **safely and securely**
-* keep the UI behavior **predictable and maintainable**.
+* avoid duplicating WiFi scanning logic
+* keep system command execution secure
+* ensure backend logic is clean and maintainable.
 
 ---
 
 # Validation
 
-Verify that:
+After implementing the fix, verify that:
 
-* clicking **Scan Networks** performs an **actual WiFi scan**
-* the network list reflects **currently available networks**
-* the **5-second cooldown works correctly**
-* the cooldown prevents repeated scanning
-* no regressions occur in the WiFi configuration UI or the Kiosk Admin Panel.
+* enabling a **new WiFi network (such as a phone hotspot)** and clicking **Scan Networks** immediately detects it
+* network lists refresh correctly
+* the feature works reliably on **Raspberry Pi OS**
+* no regressions occur in the WiFi configuration UI.
 
 ---
 
 # Goal
 
-Ensure the **Scan Networks feature performs a proper real-time WiFi scan** and prevent excessive scanning by implementing a **5-second cooldown on the Scan Networks button**.
+Ensure that the **Scan Networks feature performs a proper real-time WiFi scan**, allowing newly available networks (such as phone hotspots) to appear **immediately after scanning**, without requiring several minutes of waiting.

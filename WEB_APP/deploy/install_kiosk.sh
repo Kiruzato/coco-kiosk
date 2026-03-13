@@ -134,8 +134,8 @@ configure_wifi_permissions() {
         log "$KIOSK_USER already in netdev group"
     fi
 
-    # Create targeted sudoers rule for nmcli connection commands only.
-    # Restricts sudo access to: connection add, connection delete, connection up.
+    # Create targeted sudoers rule for nmcli WiFi management.
+    # Restricts sudo access to: connection add/delete/up and dev wifi rescan.
     # Safe for repeated execution (overwrites the same file).
     local SUDOERS_FILE="/etc/sudoers.d/coco-wifi"
     cat > "$SUDOERS_FILE" << SUDOEOF
@@ -143,6 +143,7 @@ configure_wifi_permissions() {
 $KIOSK_USER ALL=(ALL) NOPASSWD: /usr/bin/nmcli connection add *
 $KIOSK_USER ALL=(ALL) NOPASSWD: /usr/bin/nmcli connection delete *
 $KIOSK_USER ALL=(ALL) NOPASSWD: /usr/bin/nmcli connection up *
+$KIOSK_USER ALL=(ALL) NOPASSWD: /usr/bin/nmcli dev wifi rescan
 SUDOEOF
     chmod 440 "$SUDOERS_FILE"
 
