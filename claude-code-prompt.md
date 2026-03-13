@@ -1,68 +1,68 @@
-You are working on the **CoCo Campus RAG Chatbot kiosk system**.
+You are working on the **CoCo Campus RAG Chatbot kiosk system** running on **Raspberry Pi OS**.
 
-The advertisement management page is located at:
+The main interface is available at:
 
 ```
-http://192.168.18.178:8000/admin#advertisements
+http://localhost:8000
 ```
 
----
-
-# Problem
-
-In the **Advertisement Management UI**, specifically in the **list of advertisements displayed below the upload/publish section**, there is a layout issue.
-
-The following UI elements are **overlapping each other**:
-
-* the **advertisement number label**
-* the **delete button (X icon)**
-
-This overlap makes the UI look broken and may affect usability.
+When the **Fullscreen button is held for 5 seconds**, a **Kiosk Admin Panel** appears.
 
 ---
 
 # Objective
 
-Fix the layout so that the **advertisement number label and the delete button no longer overlap**.
+I want to display the **current IP address of the Raspberry Pi** in the **Kiosk Admin Panel**.
 
-Both elements must remain **clearly visible and clickable**.
+The IP address must appear **below the "Connected WiFi" information** in the panel.
 
 ---
 
 # Requirements
 
-Ensure that:
+The Kiosk Admin Panel should display something like:
 
-* the **advertisement number label** and **delete (X) button** are properly spaced
-* the UI remains **clean and readable**
-* the delete button remains **easy to click**
-* the layout works consistently across **different screen sizes** used by the admin panel.
+```
+Connected WiFi: <WiFi Name>
+IP Address: <Raspberry Pi IP Address>
+```
 
-Avoid quick fixes that only shift the elements slightly without solving the layout structure.
-
-Instead, **adjust the container layout properly**.
+The IP address must reflect the **actual active network interface used by the system**.
 
 ---
 
 # Implementation Guidelines
 
-When fixing the layout:
+* Retrieve the **current IP address from the backend**, not from hardcoded values.
+* Ensure the system retrieves the IP address from the **active network interface (usually wlan0 for WiFi)**.
+* The value should reflect the **current runtime network state**.
+* The frontend should fetch the value from a **backend endpoint or existing network status logic**.
 
-* inspect the CSS and HTML structure responsible for the advertisement list
-* adjust the layout using a proper approach such as **flexbox or grid alignment**
-* ensure the delete button is placed in a **stable corner or dedicated container**
-* avoid absolute positioning hacks unless necessary.
+If there is already an endpoint that provides WiFi status, extend or reuse it to include the IP address instead of creating redundant endpoints.
+
+---
+
+# Behavior Requirements
+
+* The IP address must **update when the Kiosk Admin Panel opens**.
+* If the WiFi connection changes, the IP address displayed should reflect the **current connection state**.
+* If no network is connected, display a fallback message such as:
+
+```
+IP Address: Not available
+```
 
 ---
 
 # Code Quality Requirements
 
-While implementing the fix:
+While implementing this feature:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* keep layout logic clean and maintainable
-* avoid hard-coded offsets that may break on different screen sizes.
+* avoid duplicating network status logic
+* keep backend and frontend responsibilities clean
+* ensure the implementation remains maintainable.
 
 ---
 
@@ -70,13 +70,13 @@ While implementing the fix:
 
 Verify that:
 
-* the **advertisement number label and delete button no longer overlap**
-* both elements remain **clearly visible**
-* the delete button is **fully clickable**
-* the layout works properly across typical admin panel resolutions.
+* the **IP address appears below the Connected WiFi label**
+* the displayed IP matches the **actual Raspberry Pi network address**
+* the value updates when the Kiosk Admin Panel opens
+* the UI layout remains clean and readable.
 
 ---
 
 # Goal
 
-Ensure the **advertisement list layout in `/admin#advertisements` is visually correct and usable**, with the advertisement number label and delete button properly separated and aligned.
+Enhance the **Kiosk Admin Panel** by displaying the **Raspberry Pi’s current IP address below the Connected WiFi information**, allowing administrators to quickly see the device’s network address.

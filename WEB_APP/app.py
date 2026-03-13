@@ -3527,25 +3527,25 @@ async def kiosk_reboot(data: KioskAuthRequest):
 @app.get("/admin/kiosk/wifi")
 async def kiosk_wifi():
     """
-    Get the currently connected WiFi SSID.
+    Get the currently connected WiFi SSID and IP address.
     Only works on Linux (RPi). Returns null SSID on other platforms.
     """
     import platform
     import subprocess
 
     if platform.system() != "Linux":
-        return {"ssid": None, "message": "WiFi info only available on Raspberry Pi (Linux)."}
+        return {"ssid": None, "ip_address": None, "message": "WiFi info only available on Raspberry Pi (Linux)."}
 
+    ssid = None
+    ip_address = None
+
+    # Get SSID
     try:
         result = subprocess.run(
             ["iwgetid", "-r"],
             capture_output=True, text=True, timeout=5
         )
-        ssid = result.stdout.strip()
-        if ssid:
-            return {"ssid": ssid}
-        else:
-            return {"ssid": None, "message": "No WiFi connection detected"}
+        ssid = result.stdout.strip() or None
     except FileNotFoundError:
         # iwgetid not available, try nmcli
         try:
@@ -3556,13 +3556,28 @@ async def kiosk_wifi():
             for line in result.stdout.strip().split("\n"):
                 if line.startswith("yes:"):
                     ssid = line.split(":", 1)[1]
-                    return {"ssid": ssid}
-            return {"ssid": None, "message": "No WiFi connection detected"}
+                    break
         except Exception:
-            return {"ssid": None, "message": "Unable to determine WiFi status"}
+            pass
     except Exception as e:
-        logger.error(f"[KIOSK] WiFi check failed: {e}")
-        return {"ssid": None, "message": "Unable to determine WiFi status"}
+        logger.error(f"[KIOSK] WiFi SSID check failed: {e}")
+
+    # Get IP address from the active network interface
+    try:
+        result = subprocess.run(
+            ["hostname", "-I"],
+            capture_output=True, text=True, timeout=5
+        )
+        ips = result.stdout.strip().split()
+        if ips:
+            ip_address = ips[0]  # First IP is typically the primary interface
+    except Exception as e:
+        logger.error(f"[KIOSK] IP address check failed: {e}")
+
+    response = {"ssid": ssid, "ip_address": ip_address}
+    if not ssid:
+        response["message"] = "No WiFi connection detected"
+    return response
 
 
 class WifiConnectRequest(BaseModel):

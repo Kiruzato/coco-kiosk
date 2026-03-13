@@ -2413,25 +2413,40 @@ function showKioskAdminOverlay() {
 }
 
 /**
- * Fetch and display the current WiFi SSID in the kiosk admin panel.
+ * Fetch and display the current WiFi SSID and IP address in the kiosk admin panel.
  */
 async function loadKioskWifiStatus() {
-    const el = document.getElementById('kioskWifiStatus');
-    if (!el) return;
-    el.textContent = 'WiFi: checking...';
+    const wifiEl = document.getElementById('kioskWifiStatus');
+    const ipEl = document.getElementById('kioskIpAddress');
+    if (!wifiEl) return;
+    wifiEl.textContent = 'WiFi: checking...';
+    if (ipEl) ipEl.textContent = 'IP Address: checking...';
     try {
         const resp = await fetch('/admin/kiosk/wifi');
         const data = await resp.json();
         if (data.ssid) {
-            el.textContent = `Connected WiFi: ${data.ssid}`;
-            el.style.color = '#4ade80';
+            wifiEl.textContent = `Connected WiFi: ${data.ssid}`;
+            wifiEl.style.color = '#4ade80';
         } else {
-            el.textContent = data.message || 'No WiFi connection detected';
-            el.style.color = '#f87171';
+            wifiEl.textContent = data.message || 'No WiFi connection detected';
+            wifiEl.style.color = '#f87171';
+        }
+        if (ipEl) {
+            if (data.ip_address) {
+                ipEl.textContent = `IP Address: ${data.ip_address}`;
+                ipEl.style.color = '#4ade80';
+            } else {
+                ipEl.textContent = 'IP Address: Not available';
+                ipEl.style.color = '#f87171';
+            }
         }
     } catch {
-        el.textContent = 'WiFi: unable to check';
-        el.style.color = '#f87171';
+        wifiEl.textContent = 'WiFi: unable to check';
+        wifiEl.style.color = '#f87171';
+        if (ipEl) {
+            ipEl.textContent = 'IP Address: Not available';
+            ipEl.style.color = '#f87171';
+        }
     }
 }
 
