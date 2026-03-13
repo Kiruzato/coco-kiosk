@@ -1,96 +1,84 @@
-Here is a **clear, intent-focused prompt** for **Claude Code agent Opus 4.6**.
-
----
-
-# Prompt for Claude Code Agent — Opus 4.6
-
 You are working on the **CoCo Campus RAG Chatbot kiosk system** running on **Raspberry Pi OS**.
 
-The main kiosk interface is available at:
+The kiosk UI is available at:
 
-```
+```id="9xftjq"
 http://localhost:8000
 ```
 
-This interface is used in **kiosk mode with a touchscreen**.
+This system runs on a **touchscreen monitor connected to the Raspberry Pi**.
 
 ---
 
-# Problem
+# Current Behavior
 
-When users interact with the kiosk (tapping, dragging, or touching the screen), **text highlighting sometimes appears**.
+The **Conversation Panel** (where chat messages appear) is currently scrollable **only via the scrollbar**.
 
-This creates a **messy and distracting UI experience**, which is undesirable for a kiosk environment.
-
-For example:
-
-* touching or dragging on the screen highlights text
-* this leaves visible blue selection highlights across the interface.
+This works for mouse interaction but is **not convenient for touchscreen users**.
 
 ---
 
 # Objective
 
-Disable **text highlighting/selection behavior** across the kiosk interface to provide a **clean kiosk experience**.
+Enable **touch swipe scrolling** for the **Conversation Panel** so that users can scroll the conversation by **swiping up and down on the screen**.
 
-Users should **not be able to highlight text accidentally while interacting with the screen**.
+This behavior must be optimized for the **Raspberry Pi touchscreen monitor**.
 
 ---
 
-# Requirements
+# Scope
 
-Text selection must be disabled for the kiosk UI.
+The swipe scrolling behavior must apply **only to the Conversation Panel**.
 
-This should apply to:
+It must **not affect other UI sections**, including:
 
-* general page text
-* UI labels
-* buttons
-* advertisement text
-* chatbot messages
-* FAQ content
-* header and panels.
+* advertisement panel
+* headers
+* admin panels
+* other scrollable containers.
 
-However, **input fields must remain selectable**, including:
+Only the **chat conversation container** should respond to swipe gestures for scrolling.
 
-* the chatbot **text input field**
-* any other form inputs where text entry is required.
+---
 
-Users must still be able to:
+# Expected Behavior
 
-* place the cursor
-* type text
-* edit typed queries.
+Users should be able to:
+
+* swipe **up** to scroll down through older messages
+* swipe **down** to scroll back toward newer messages.
+
+The scrolling must feel **natural and smooth**, similar to typical mobile chat applications.
+
+The existing **scrollbar functionality must remain intact**.
 
 ---
 
 # Implementation Guidelines
 
-Implement this using proper **CSS-based text selection control**.
+When implementing this:
 
-For example:
+* ensure the container properly supports **touch scrolling**
+* configure CSS and container properties appropriately (e.g., overflow behavior and touch scrolling settings)
+* avoid implementing unnecessary heavy JavaScript scroll handlers unless required.
 
-* disable selection globally for non-input UI components
-* allow selection only for **input fields and text areas**.
+Prefer **native browser scrolling behavior** whenever possible.
 
-Ensure the solution works properly for:
+Ensure the implementation works reliably with:
 
-* **touch interactions**
-* **mouse interactions**
-* **Chromium kiosk mode**.
-
-Avoid JavaScript hacks for this unless necessary.
+* Chromium kiosk mode
+* Raspberry Pi touchscreen input.
 
 ---
 
 # Code Quality Requirements
 
-While implementing the change:
+While implementing this feature:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* avoid scattering style overrides across multiple components
-* centralize the behavior in the **global UI stylesheet** where appropriate.
+* avoid introducing scroll conflicts with other UI elements
+* keep the scrolling logic clean and maintainable.
 
 ---
 
@@ -98,13 +86,14 @@ While implementing the change:
 
 Verify that:
 
-* text can **no longer be highlighted accidentally**
-* the kiosk UI remains visually clean during touch interaction
-* **input fields still allow normal typing and cursor placement**
-* no UI functionality is broken.
+* the conversation panel scrolls smoothly using **touch swipe gestures**
+* scrolling works both **upward and downward**
+* the scrollbar still functions normally
+* other UI components are **not affected by swipe scrolling**
+* the feature works reliably on the **Raspberry Pi touchscreen environment**.
 
 ---
 
 # Goal
 
-Ensure the **kiosk interface prevents accidental text highlighting**, while still allowing normal interaction with **text input fields**, resulting in a cleaner and more professional kiosk experience.
+Enable **smooth swipe-based scrolling for the conversation panel**, allowing touchscreen users to navigate chat messages naturally without relying on the scrollbar.

@@ -444,15 +444,14 @@ body.fullscreen-active {
 /* Chat Container */
 .chat-container {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: scroll;
     padding: 25px 20px; /* Reduced horizontal padding for wider bubbles */
     background: #f5f7fa;
 
     /* Touch-scroll optimizations for kiosk */
-    -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling on iOS */
-    overscroll-behavior: contain; /* Prevent scroll chaining to parent */
-    scroll-behavior: smooth; /* Smooth programmatic scrolling */
-    touch-action: pan-y; /* Allow vertical touch gestures */
+    -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling on WebKit */
+    overscroll-behavior-y: contain; /* Prevent scroll chaining to parent */
+    touch-action: pan-y; /* Allow vertical touch swipe scrolling */
 }
 
 /* Drag-to-scroll styles (DISABLED - interferes with text selection)
