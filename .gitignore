@@ -72,3 +72,14 @@ ARCHIVE/misc/sa_stt.json
 WEB_APP/data/.google_sa_temp.json
 RPI-logs.txt
 
+CLAUDE.md
+PROJECT_CONTEXT-filtered.md
+PROJECT_CONTEXT.md
+ingestion_process_report.txt
+claude-code-prompt.md
+
+# DATA custom
+WEB_APP/modules/data/advertisement_registry.json
+WEB_APP/modules/data/advertisements
+WEB_APP/modules/data/faq_data.json
+
