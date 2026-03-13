@@ -1,6 +1,6 @@
 You are working on the **CoCo Campus RAG Chatbot kiosk system** running on **Raspberry Pi OS**.
 
-The main interface is available at:
+The main kiosk interface is available at:
 
 ```
 http://localhost:8000
@@ -12,101 +12,143 @@ The system supports **voice input** using **Google Cloud Speech-to-Text (STT)**.
 
 # Background
 
-Previously, the system was sending the **entire recorded audio** to Google STT, including the **silent portion at the beginning** when users delay speaking after pressing the voice input button.
+During voice input, the UI provides feedback about whether the system detects silence or speech.
 
-You implemented a **beginning-silence trimming mechanism** intended to remove the silent portion before sending audio to Google STT.
+The screen shows two states:
+
+**State 1 – Silence detected**
+
+```
+Listening... (speak now)
+```
+
+This appears when the system detects **silence** and is waiting for the user to start speaking.
+
+**State 2 – Speech detected**
+
+```
+Listening... (auto-stops when done)
+```
+
+This appears when the system **detects that the user has started speaking**.
+
+Therefore, the system already has a **speech detection mechanism or threshold** that determines when the user transitions from silence to speaking.
 
 ---
 
-# Problem
+# Current Issue
 
-After testing the system, I am **not confident that the silence trimming is actually working**.
+A **silence trimming system** was implemented to remove the **silent portion at the beginning of the recording** before sending audio to **Google STT**.
 
-Observation:
+However, I want the silence trimmer to use the **same speech detection threshold** that controls the UI transition between:
 
-* When users **pause before speaking**, the **Google STT usage tracker still increases as if the silence was included**.
-* This suggests that either:
+```
+Listening... (speak now)
+```
 
-  * the silence trimming **is not actually being applied**, or
-  * the trimming logic **does not affect the audio segment sent to Google STT**.
+and
+
+```
+Listening... (auto-stops when done)
+```
+
+Currently, it is unclear whether the silence trimmer uses the **same threshold and detection logic**.
 
 ---
 
 # Objective
 
-Investigate whether the **beginning silence trimming feature is actually working as intended**.
+Investigate the configuration responsible for the **transition between silence detection and speech detection**, and update the **silence trimming system** so that it uses the **same threshold and detection criteria**.
 
-Do not assume it works just because the code exists — verify the **real behavior of the voice pipeline**.
+The goal is to ensure that:
 
----
-
-# Investigation Requirements
-
-Trace the **entire voice input pipeline**, including:
-
-* voice recording start
-* speech detection / VAD
-* silence trimming logic
-* audio preprocessing
-* the final audio segment being sent to Google STT.
-
-Determine:
-
-1. Whether the **initial silent portion is truly removed** before the STT request.
-2. Whether the trimming logic **is executed at the correct stage of the pipeline**.
-3. Whether the audio sent to Google STT **still contains the initial silence** despite the trimming logic.
-4. Whether the **usage tracker increases because silence is still included** in the STT request.
+* the **exact moment the system detects speech** (when the UI changes state)
+* is also the **starting point of the audio segment sent to Google STT**.
 
 ---
 
-# Verification Requirement
+# Required Tasks
 
-Add temporary debugging if necessary to verify behavior, such as:
+### 1. Locate Speech Detection Logic
 
-* logging the **duration of the original recording**
-* logging the **duration of the trimmed audio**
-* confirming what **audio segment is actually sent to Google STT**.
+Find where the system determines when the UI transitions between:
 
-The goal is to determine **whether the trimming actually affects the STT input**.
+```
+Listening... (speak now)
+```
+
+and
+
+```
+Listening... (auto-stops when done)
+```
+
+Identify the underlying mechanism, such as:
+
+* voice activity detection (VAD)
+* amplitude threshold
+* silence detection window
+* RMS energy threshold
+* any other speech detection logic.
 
 ---
 
-# If the Trimmer Is Not Working
+### 2. Verify Silence Trimmer Configuration
 
-If the investigation confirms that the silence trimming **is not actually affecting the STT request**, fix the implementation so that:
+Inspect the current silence trimming implementation and determine:
 
-* audio **before the first detected speech** is removed
-* only the **actual speech portion** is sent to Google STT.
+* whether it uses the **same threshold**
+* whether it uses a **different detection method**
+* whether it trims audio **before or after speech detection occurs**.
 
-Ensure the fix:
+---
 
-* does not cut off the start of real speech
-* does not introduce noticeable latency
-* works reliably on **Raspberry Pi hardware**.
+### 3. Align the Silence Trimmer with Speech Detection
+
+Update the silence trimming logic so that it uses the **same detection configuration** used by the UI speech detection system.
+
+This ensures that:
+
+* the audio sent to Google STT **starts exactly when speech is detected**
+* the initial silence is **reliably removed**
+* the system behaves consistently with what the user sees in the UI.
+
+---
+
+### 4. Ensure Reliable Behavior
+
+The updated implementation must:
+
+* avoid cutting off the start of actual speech
+* avoid trimming too aggressively
+* remain efficient for **Raspberry Pi hardware**
+* maintain a smooth voice interaction experience.
 
 ---
 
 # Code Quality Requirements
 
-While investigating and fixing the issue:
+While implementing this change:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* avoid introducing duplicate logic
-* keep the voice pipeline clean and maintainable.
+* avoid duplicating speech detection logic
+* reuse the existing detection configuration wherever possible.
 
 ---
 
-# Deliverables
+# Validation
 
-Provide:
+Verify that:
 
-1. A clear explanation of **whether the silence trimmer actually works**.
-2. Evidence of what **audio segment is sent to Google STT**.
-3. If necessary, a **correct implementation that guarantees silence is removed before STT submission**.
+* the silence trimming starts exactly when the system switches to
+  **"Listening... (auto-stops when done)"**
+* initial silent audio is no longer sent to Google STT
+* Google STT usage reflects only **actual spoken audio**
+* the voice input system remains stable and responsive.
 
 ---
 
 # Goal
 
-Ensure that the **voice pipeline truly trims the silent portion at the beginning of recordings**, so that **Google STT usage reflects only the actual spoken audio**, improving efficiency and reducing unnecessary STT usage.
+Ensure that the **silence trimming mechanism uses the same detection threshold as the UI speech detection system**, so that the audio sent to Google STT begins precisely when the system detects speech, eliminating unnecessary silent audio processing.

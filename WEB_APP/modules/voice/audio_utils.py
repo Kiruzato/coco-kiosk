@@ -339,9 +339,21 @@ def _convert_with_pydub(
         raise AudioConversionError(f"pydub conversion failed: {e}")
 
 
+# Speech detection threshold aligned with the frontend UI.
+#
+# The frontend (app.js SILENCE_DETECTION.SPEECH_THRESHOLD) uses 0.025
+# on a normalized -1..+1 scale.  For 16-bit PCM (-32768..32767) the
+# equivalent is:  0.025 * 32768 ≈ 819.
+#
+# This constant is used by trim_leading_silence() so the backend trims
+# audio at the same point the UI switches from "Listening... (speak now)"
+# to "Listening... (auto-stops when done)".
+SPEECH_RMS_THRESHOLD = 820  # 0.025 normalized × 32768
+
+
 def trim_leading_silence(
     audio_data: bytes,
-    threshold_rms: float = 500.0,
+    threshold_rms: float = SPEECH_RMS_THRESHOLD,
     consecutive_windows: int = 3,
     buffer_ms: int = 200,
     window_ms: int = 20,
@@ -354,12 +366,14 @@ def trim_leading_silence(
     speech, not a brief noise spike).  Keeps a safety buffer before
     that point to avoid clipping the onset of speech.
 
+    The default threshold is aligned with the frontend speech detection
+    (app.js SILENCE_DETECTION.SPEECH_THRESHOLD = 0.025 normalized),
+    converted to the 16-bit PCM scale: 0.025 × 32768 ≈ 820.
+
     Args:
         audio_data: WAV audio bytes (16-bit PCM)
-        threshold_rms: RMS amplitude that indicates speech.
-                       16-bit PCM range is -32768..32767; ambient noise
-                       with browser noise suppression is typically 100-400
-                       RMS, speech onset is ~500+.
+        threshold_rms: RMS amplitude that indicates speech (16-bit scale).
+                       Default matches frontend speech detection threshold.
         consecutive_windows: Number of consecutive windows above threshold
                              required to confirm speech (avoids false
                              triggers from brief noise spikes).

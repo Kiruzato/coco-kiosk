@@ -2963,6 +2963,10 @@ let analyserNode = null;
 let visualizerAnimationId = null;
 
 // Silence Detection Configuration (Phase 35: Auto-stop on speech end)
+// NOTE: SPEECH_THRESHOLD is also used by the backend silence trimmer
+// (audio_utils.py SPEECH_RMS_THRESHOLD) to trim leading silence before
+// STT.  If you change SPEECH_THRESHOLD here, update the backend constant
+// too:  new_value × 32768 = backend RMS threshold.
 const SILENCE_DETECTION = {
     SILENCE_THRESHOLD: 0.015,      // RMS below this = silence
     SPEECH_THRESHOLD: 0.025,       // RMS above this = speech detected
