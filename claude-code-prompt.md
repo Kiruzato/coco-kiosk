@@ -1,68 +1,96 @@
+Here is a **clear, intent-focused prompt** for **Claude Code agent Opus 4.6**.
+
+---
+
+# Prompt for Claude Code Agent — Opus 4.6
+
 You are working on the **CoCo Campus RAG Chatbot kiosk system** running on **Raspberry Pi OS**.
 
-The main interface is available at:
+The main kiosk interface is available at:
 
 ```
 http://localhost:8000
 ```
 
-When the **Fullscreen button is held for 5 seconds**, a **Kiosk Admin Panel** appears.
+This interface is used in **kiosk mode with a touchscreen**.
+
+---
+
+# Problem
+
+When users interact with the kiosk (tapping, dragging, or touching the screen), **text highlighting sometimes appears**.
+
+This creates a **messy and distracting UI experience**, which is undesirable for a kiosk environment.
+
+For example:
+
+* touching or dragging on the screen highlights text
+* this leaves visible blue selection highlights across the interface.
 
 ---
 
 # Objective
 
-I want to display the **current IP address of the Raspberry Pi** in the **Kiosk Admin Panel**.
+Disable **text highlighting/selection behavior** across the kiosk interface to provide a **clean kiosk experience**.
 
-The IP address must appear **below the "Connected WiFi" information** in the panel.
+Users should **not be able to highlight text accidentally while interacting with the screen**.
 
 ---
 
 # Requirements
 
-The Kiosk Admin Panel should display something like:
+Text selection must be disabled for the kiosk UI.
 
-```
-Connected WiFi: <WiFi Name>
-IP Address: <Raspberry Pi IP Address>
-```
+This should apply to:
 
-The IP address must reflect the **actual active network interface used by the system**.
+* general page text
+* UI labels
+* buttons
+* advertisement text
+* chatbot messages
+* FAQ content
+* header and panels.
+
+However, **input fields must remain selectable**, including:
+
+* the chatbot **text input field**
+* any other form inputs where text entry is required.
+
+Users must still be able to:
+
+* place the cursor
+* type text
+* edit typed queries.
 
 ---
 
 # Implementation Guidelines
 
-* Retrieve the **current IP address from the backend**, not from hardcoded values.
-* Ensure the system retrieves the IP address from the **active network interface (usually wlan0 for WiFi)**.
-* The value should reflect the **current runtime network state**.
-* The frontend should fetch the value from a **backend endpoint or existing network status logic**.
+Implement this using proper **CSS-based text selection control**.
 
-If there is already an endpoint that provides WiFi status, extend or reuse it to include the IP address instead of creating redundant endpoints.
+For example:
 
----
+* disable selection globally for non-input UI components
+* allow selection only for **input fields and text areas**.
 
-# Behavior Requirements
+Ensure the solution works properly for:
 
-* The IP address must **update when the Kiosk Admin Panel opens**.
-* If the WiFi connection changes, the IP address displayed should reflect the **current connection state**.
-* If no network is connected, display a fallback message such as:
+* **touch interactions**
+* **mouse interactions**
+* **Chromium kiosk mode**.
 
-```
-IP Address: Not available
-```
+Avoid JavaScript hacks for this unless necessary.
 
 ---
 
 # Code Quality Requirements
 
-While implementing this feature:
+While implementing the change:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* avoid duplicating network status logic
-* keep backend and frontend responsibilities clean
-* ensure the implementation remains maintainable.
+* avoid scattering style overrides across multiple components
+* centralize the behavior in the **global UI stylesheet** where appropriate.
 
 ---
 
@@ -70,13 +98,13 @@ While implementing this feature:
 
 Verify that:
 
-* the **IP address appears below the Connected WiFi label**
-* the displayed IP matches the **actual Raspberry Pi network address**
-* the value updates when the Kiosk Admin Panel opens
-* the UI layout remains clean and readable.
+* text can **no longer be highlighted accidentally**
+* the kiosk UI remains visually clean during touch interaction
+* **input fields still allow normal typing and cursor placement**
+* no UI functionality is broken.
 
 ---
 
 # Goal
 
-Enhance the **Kiosk Admin Panel** by displaying the **Raspberry Pi’s current IP address below the Connected WiFi information**, allowing administrators to quickly see the device’s network address.
+Ensure the **kiosk interface prevents accidental text highlighting**, while still allowing normal interaction with **text input fields**, resulting in a cleaner and more professional kiosk experience.
