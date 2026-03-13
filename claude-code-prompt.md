@@ -1,5 +1,3 @@
-# Prompt for Claude Code Agent — Opus 4.6
-
 You are working on the **CoCo Campus RAG Chatbot kiosk system** running on **Raspberry Pi OS**.
 
 The admin panel is available at:
@@ -8,133 +6,145 @@ The admin panel is available at:
 http://localhost:8000/admin#voice
 ```
 
-In the **Cloud Credentials** panel there are two credential verification features:
+In the **Cloud Credentials panel**, there are two credential verification features:
 
 1. **OpenAI API Key verification**
-2. **Google Cloud Service Account JSON verification**
+2. **Google Cloud Service Account verification**
 
-Each credential has a **Verify button** that should check whether the credential is valid.
-
----
-
-# Problem
-
-Currently, both **Verify buttons are not functioning correctly**.
-
-### OpenAI API Key
-
-I tested by entering a **nonexistent / invalid OpenAI API key**, saving it, and pressing **Verify**.
-
-The UI still shows the key as **Valid**, which is incorrect.
+Each credential has a **Verify button**, and the UI displays a **VALID label** when the credential is considered valid.
 
 ---
 
-### Google Cloud Service Account
+# Background
 
-I tested by uploading a **Google Cloud Service Account JSON file with incorrect credentials**.
+Previously, I reported that both **Verify buttons were not working properly**.
 
-After saving and pressing **Verify**, the UI still shows the credential as **Valid**, which is also incorrect.
+Testing revealed that:
+
+* entering a **nonexistent OpenAI API key** still results in the UI showing **VALID**
+* uploading an **invalid Google Cloud Service Account JSON** still results in **VALID**.
+
+You attempted to fix this previously, but the problem **still persists**.
+
+The **VALID label does not change at all**, even after re-testing with invalid credentials.
 
 ---
 
 # Objective
 
-Fix the credential verification logic so that the **Verify buttons perform real credential validation**, not just UI confirmation.
+Perform a **proper investigation of the verification system** and determine exactly what the **Verify buttons are actually verifying**, because it appears they are **not validating credentials correctly**.
 
-The system must accurately determine whether the credentials are **valid or invalid**.
-
----
-
-# Required Investigation
-
-First determine how the current verification works.
-
-Check whether the system currently:
-
-* only verifies **file existence**
-* only checks **JSON format**
-* only checks whether the credential is **saved in configuration**
-* or incorrectly assumes validity.
-
-Determine why invalid credentials are still marked as **valid**.
+After identifying the root cause, **fix the system so that credential verification works correctly**.
 
 ---
 
-# Required Behavior
+# Investigation Requirements
 
-### 1. OpenAI API Key Verification
+Do not immediately rewrite the feature.
 
-The **Verify button** must perform a **real API validation**.
+First investigate the full verification flow.
 
-Possible approach:
+Trace the entire path from:
 
-* perform a lightweight request to the OpenAI API using the provided key
-* confirm that the API returns a **successful authentication response**.
+1. **Verify button click in the UI**
+2. **Frontend request sent to the backend**
+3. **Backend verification logic**
+4. **Response returned to the UI**
+5. **UI label update logic**
 
-If authentication fails, the UI must display **Invalid**.
+Determine which part is broken.
 
----
+Possible failure points include:
 
-### 2. Google Cloud Service Account Verification
-
-The **Verify button** must confirm that the uploaded service account JSON is **usable for Google STT**.
-
-Verification should include:
-
-* confirming the JSON structure is valid
-* confirming authentication with Google Cloud services works
-* ideally performing a **lightweight STT client initialization test**.
-
-If authentication fails, the UI must display **Invalid**.
+* the Verify button not calling the correct API
+* the backend endpoint not performing real verification
+* the backend returning incorrect status
+* the frontend not updating the VALID label properly
+* verification logic checking only file existence or format instead of real authentication.
 
 ---
 
-# Error Handling
+# Specific Questions to Answer
 
-If a verification attempt fails:
+During the investigation, determine:
 
-* return a clear error message
-* update the UI to indicate **Invalid credentials**.
+1. What exactly does the **Verify button currently check**?
+2. Does the backend actually attempt authentication with:
 
-Avoid silent failures.
+   * OpenAI API
+   * Google Cloud STT service?
+3. Does the backend always return **success regardless of credential validity**?
+4. Does the frontend **ignore verification results** and always show VALID?
 
 ---
 
-# If Real Verification Is Not Possible
+# Required Fix
 
-If real verification is technically impossible due to API limitations or security constraints, clearly explain:
+After identifying the root cause, implement a proper fix so that:
 
-* why verification cannot be implemented
-* what the **best alternative validation approach** would be.
+### OpenAI API Key Verification
 
-Do not fake validation.
+The Verify button must perform **real API authentication** using the provided key.
+
+For example:
+
+* perform a lightweight request to the OpenAI API
+* if authentication fails, return **Invalid**
+* if successful, return **Valid**.
+
+---
+
+### Google Cloud Service Account Verification
+
+The Verify button must verify that the **uploaded service account JSON is actually usable**.
+
+Possible checks:
+
+* validate JSON structure
+* initialize Google STT client with the credential
+* confirm authentication succeeds.
+
+If authentication fails, return **Invalid**.
+
+---
+
+# UI Behavior
+
+Ensure the **VALID label in the UI updates dynamically** based on the verification result.
+
+The label must:
+
+* change to **Valid** only when credentials pass verification
+* change to **Invalid** when verification fails.
+
+The UI must not show **Valid by default** without verification.
 
 ---
 
 # Code Quality Requirements
 
-While implementing the fix:
+While fixing this:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* keep credential verification logic clean and isolated
-* avoid exposing sensitive credential data in logs
+* isolate credential verification logic
+* avoid exposing sensitive credentials in logs
 * ensure secure handling of API keys and service account files.
 
 ---
 
 # Validation
 
-Verify that:
+After implementing the fix, verify that:
 
-* invalid OpenAI API keys are detected correctly
+* invalid OpenAI API keys are correctly detected
 * valid OpenAI API keys pass verification
 * invalid Google Service Account credentials fail verification
 * valid service account credentials pass verification
-* the UI displays correct **Valid / Invalid status**.
+* the **VALID label updates correctly in the UI**.
 
 ---
 
 # Goal
 
-Ensure that the **Verify buttons in the Cloud Credentials panel perform real credential validation**, accurately indicating whether the **OpenAI API Key and Google Cloud Service Account credentials are actually usable by the system**.
+Ensure that the **Verify buttons in the Cloud Credentials panel perform real credential validation**, and that the **UI correctly reflects the verification result instead of always displaying VALID**.

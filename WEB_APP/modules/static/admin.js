@@ -846,13 +846,10 @@ function displayCredentialsStatus(data) {
             const cred = data.google_cloud_stt;
             if (cred.is_configured) {
                 googlePath.textContent = cred.masked_path || 'Configured';
-                if (cred.is_valid) {
-                    googleStatus.textContent = 'Valid';
-                    googleStatus.className = 'status-badge valid';
-                } else {
-                    googleStatus.textContent = 'Invalid';
-                    googleStatus.className = 'status-badge invalid';
-                }
+                // Show "Configured" rather than "Valid" — real validation
+                // only happens when the user clicks the Verify button.
+                googleStatus.textContent = 'Configured';
+                googleStatus.className = 'status-badge';
                 // Phase 39A: Show project ID and updated timestamp
                 if (googleProjectId) {
                     googleProjectId.textContent = cred.project_id ? `Project: ${cred.project_id}` : '';
@@ -862,14 +859,14 @@ function displayCredentialsStatus(data) {
                 }
             } else {
                 googlePath.textContent = 'Not configured';
-                googleStatus.textContent = '--';
+                googleStatus.textContent = 'Not set';
                 googleStatus.className = 'status-badge';
                 if (googleProjectId) googleProjectId.textContent = '';
                 if (googleUpdatedAt) googleUpdatedAt.textContent = '';
             }
         } else {
             googlePath.textContent = 'Not configured';
-            googleStatus.textContent = '--';
+            googleStatus.textContent = 'Not set';
             googleStatus.className = 'status-badge';
             if (googleProjectId) googleProjectId.textContent = '';
             if (googleUpdatedAt) googleUpdatedAt.textContent = '';
@@ -886,26 +883,23 @@ function displayCredentialsStatus(data) {
             const cred = data.openai;
             if (cred.is_configured) {
                 openaiKey.textContent = cred.masked_key || 'Configured';
-                if (cred.is_valid) {
-                    openaiStatus.textContent = 'Valid';
-                    openaiStatus.className = 'status-badge valid';
-                } else {
-                    openaiStatus.textContent = 'Invalid';
-                    openaiStatus.className = 'status-badge invalid';
-                }
+                // Show "Configured" rather than "Valid" — real validation
+                // only happens when the user clicks the Verify button.
+                openaiStatus.textContent = 'Configured';
+                openaiStatus.className = 'status-badge';
                 // Phase 39A: Show updated timestamp
                 if (openaiUpdatedAt && cred.updated_at) {
                     openaiUpdatedAt.textContent = `Updated: ${formatTimestamp(cred.updated_at)}`;
                 }
             } else {
                 openaiKey.textContent = 'Not configured';
-                openaiStatus.textContent = '--';
+                openaiStatus.textContent = 'Not set';
                 openaiStatus.className = 'status-badge';
                 if (openaiUpdatedAt) openaiUpdatedAt.textContent = '';
             }
         } else {
             openaiKey.textContent = 'Not configured';
-            openaiStatus.textContent = '--';
+            openaiStatus.textContent = 'Not set';
             openaiStatus.className = 'status-badge';
             if (openaiUpdatedAt) openaiUpdatedAt.textContent = '';
         }
@@ -953,11 +947,17 @@ function toggleOpenaiKeyVisibility() {
 async function verifyOpenaiKey() {
     const input = document.getElementById('openaiApiKeyInput');
     const key = input.value.trim();
+    const statusBadge = document.getElementById('openaiCredentialStatus');
+    const verifyBtn = document.getElementById('verifyOpenaiKeyBtn');
 
     if (!key) {
         showNotification('Please enter an API key to verify', 'error');
         return;
     }
+
+    // Show verifying state
+    if (verifyBtn) { verifyBtn.disabled = true; verifyBtn.textContent = 'Verifying...'; }
+    if (statusBadge) { statusBadge.textContent = 'Verifying...'; statusBadge.className = 'status-badge'; }
 
     try {
         const data = await apiCall('/admin/voice/credentials/verify', {
@@ -970,12 +970,17 @@ async function verifyOpenaiKey() {
         });
 
         if (data.valid) {
-            showNotification('API key format is valid', 'success');
+            showNotification(data.note || 'API key is valid', 'success');
+            if (statusBadge) { statusBadge.textContent = 'Valid'; statusBadge.className = 'status-badge valid'; }
         } else {
             showNotification(`Invalid: ${data.error}`, 'error');
+            if (statusBadge) { statusBadge.textContent = 'Invalid'; statusBadge.className = 'status-badge invalid'; }
         }
     } catch (error) {
         showNotification(`Verification failed: ${error.message}`, 'error');
+        if (statusBadge) { statusBadge.textContent = 'Error'; statusBadge.className = 'status-badge invalid'; }
+    } finally {
+        if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.textContent = 'Verify'; }
     }
 }
 
@@ -1065,10 +1070,17 @@ function handleGoogleCredentialFile(event) {
  * Phase 39A: Verify Google Cloud credentials
  */
 async function verifyGoogleCredential() {
+    const statusBadge = document.getElementById('googleCredentialStatus');
+    const verifyBtn = document.getElementById('verifyGoogleCredBtn');
+
     if (!pendingGoogleCredentialJson) {
         showNotification('Please select a credentials file first', 'error');
         return;
     }
+
+    // Show verifying state
+    if (verifyBtn) { verifyBtn.disabled = true; verifyBtn.textContent = 'Verifying...'; }
+    if (statusBadge) { statusBadge.textContent = 'Verifying...'; statusBadge.className = 'status-badge'; }
 
     try {
         const data = await apiCall('/admin/voice/credentials/verify', {
@@ -1082,11 +1094,16 @@ async function verifyGoogleCredential() {
 
         if (data.valid) {
             showNotification(`Valid! Project: ${data.project_id}`, 'success');
+            if (statusBadge) { statusBadge.textContent = 'Valid'; statusBadge.className = 'status-badge valid'; }
         } else {
             showNotification(`Invalid: ${data.error}`, 'error');
+            if (statusBadge) { statusBadge.textContent = 'Invalid'; statusBadge.className = 'status-badge invalid'; }
         }
     } catch (error) {
         showNotification(`Verification failed: ${error.message}`, 'error');
+        if (statusBadge) { statusBadge.textContent = 'Error'; statusBadge.className = 'status-badge invalid'; }
+    } finally {
+        if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.textContent = 'Verify'; }
     }
 }
 
