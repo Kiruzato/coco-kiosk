@@ -1,0 +1,32 @@
+{
+  "faqs": [
+    {
+      "id": "d460006f-dfae-43ea-89b4-ac5195ba16b6",
+      "question": "Who are you?",
+      "answer": "I am Coco, an AI-integrated information assistant developed as a thesis project under the Bachelor of Science in Computer Engineering program. My purpose is to provide accessible and efficient responses to user inquiries as part of an AI-integrated academic information system.",
+      "display_order": 0,
+      "created_at": "2026-02-25T02:30:28.298187",
+      "updated_at": "2026-02-26T00:29:20.157568",
+      "status": "active"
+    },
+    {
+      "id": "182d9354-0564-419c-8eb2-efe999e47c71",
+      "question": "What are the vision, mission and goals of this school?",
+      "answer": "The vision of Columban College is to be an innovative institution of learning, extension, and research guided by Catholic faith and a culture of excellence by 2025. Its mission is to transform lives through holistic education, Christian formation, and service.\n\nThe strategic goals of the school include sustaining its Catholic identity, enhancing administrative operations and financial management, innovating the curriculum to improve teaching and learning, providing differentiated student services, and maintaining responsible management of resources. Additionally, the school aims to create effective global visibility for its research outputs and enrich the involvement of alumni, parents, and industry partners.",
+      "display_order": 2,
+      "created_at": "2026-02-25T02:30:51.737371",
+      "updated_at": "2026-03-08T14:26:30.456076",
+      "status": "active"
+    },
+    {
+      "id": "f61c088e-932c-4e6f-8bb5-c3e17ab732e7",
+      "question": "How to enroll?",
+      "answer": "To enroll at Columban College, follow these steps:\n\n1. If some subjects are not yet encoded, proceed to the admissions and registration office and present your school ID to request an enrollment form (CC Form 1).\n2. Go to the dean's office for the schedule of subjects and approval of the enrollment form.\n3. Return to the admissions and registration office for encoding of subjects and printing of the unofficial registration form.\n4. Check the entries in the unofficial registration form to ensure they match the approved enrollment form.\n5. Pay the required fees through any of the following options: payment at the cashier, BDO bank transfer, BPI bank transfer, or Landbank bank transfer.\n6. After payment, present the official receipt and the approved enrollment form (CC Form 1) to the admissions and registration office to claim the official registration form (CC Form 2) and confirm your enrollment. Two copies are issued: the white copy for the student and the blue copy for the parent or guardian.\n\nIf you are using the online enrollment process, you can log in to the student portal and follow the steps outlined in the documents to view approved subjects and schedules, check encoded subjects, and submit your payment.",
+      "display_order": 1,
+      "created_at": "2026-02-26T00:29:08.283413",
+      "updated_at": "2026-02-26T00:29:20.157568",
+      "status": "active"
+    }
+  ],
+  "updated_at": "2026-03-13T14:07:58.252958"
+}

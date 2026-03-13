@@ -1,0 +1,114 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-03-13T14:08:54.379939Z",
+  "advertisements": [
+    {
+      "id": "cf5966fd-c477-4ff6-9ac3-476c866e0759",
+      "ad_type": "image",
+      "uploaded_at": "2026-03-13T14:08:29.119617Z",
+      "status": "active",
+      "display_order": 1,
+      "filename": "ad_cf0039766e2a.jpg",
+      "original_name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg",
+      "mime_type": "image/jpeg",
+      "file_size": 213774,
+      "content": null
+    },
+    {
+      "id": "7eb1f2b1-c530-4539-aa7e-f41c4ab78f25",
+      "ad_type": "image",
+      "uploaded_at": "2026-03-13T14:08:32.862178Z",
+      "status": "active",
+      "display_order": 2,
+      "filename": "ad_1abd4a470465.jpg",
+      "original_name": "1b1f5606-3e50-473b-9bf6-5a37869a0d6d.jpg",
+      "mime_type": "image/jpeg",
+      "file_size": 204077,
+      "content": null
+    },
+    {
+      "id": "3360ee9d-f6c0-4b1b-bfc5-996088ad3aa4",
+      "ad_type": "image",
+      "uploaded_at": "2026-03-13T14:08:37.023770Z",
+      "status": "active",
+      "display_order": 3,
+      "filename": "ad_441d7caab92f.jpg",
+      "original_name": "6ec89cd9-bb22-430c-920c-3c68c5801c6b.jpg",
+      "mime_type": "image/jpeg",
+      "file_size": 261298,
+      "content": null
+    },
+    {
+      "id": "ea900057-da37-4ddd-a124-76365be4d7a3",
+      "ad_type": "image",
+      "uploaded_at": "2026-03-13T14:08:40.399889Z",
+      "status": "active",
+      "display_order": 4,
+      "filename": "ad_e82932a0b86a.jpg",
+      "original_name": "b100f68c-8ceb-4c5f-921d-80b19a8454f8.jpg",
+      "mime_type": "image/jpeg",
+      "file_size": 376758,
+      "content": null
+    },
+    {
+      "id": "f2d38abb-e6b5-4e68-bfd1-823c7f033930",
+      "ad_type": "image",
+      "uploaded_at": "2026-03-13T14:08:43.414085Z",
+      "status": "active",
+      "display_order": 5,
+      "filename": "ad_1948dd1c9e06.jpg",
+      "original_name": "68fd04cf-fc28-409a-9957-1e5416665863.jpg",
+      "mime_type": "image/jpeg",
+      "file_size": 276518,
+      "content": null
+    },
+    {
+      "id": "b899985c-377e-4eda-99be-7a5248a56a5a",
+      "ad_type": "image",
+      "uploaded_at": "2026-03-13T14:08:46.307886Z",
+      "status": "active",
+      "display_order": 6,
+      "filename": "ad_8ba153b7cbe6.jpg",
+      "original_name": "2de1bcbd-99a1-42d0-a30b-7117af6737ca.jpg",
+      "mime_type": "image/jpeg",
+      "file_size": 341410,
+      "content": null
+    },
+    {
+      "id": "91627d7b-438d-4102-9857-f2c71719610b",
+      "ad_type": "image",
+      "uploaded_at": "2026-03-13T14:08:49.213614Z",
+      "status": "active",
+      "display_order": 7,
+      "filename": "ad_45388aac286b.jpg",
+      "original_name": "f8cd459b-5771-4519-bccd-543f189528b4.jpg",
+      "mime_type": "image/jpeg",
+      "file_size": 323551,
+      "content": null
+    },
+    {
+      "id": "275f1b7a-65f6-4060-b731-e7557ecafc72",
+      "ad_type": "image",
+      "uploaded_at": "2026-03-13T14:08:52.058735Z",
+      "status": "active",
+      "display_order": 8,
+      "filename": "ad_64a934273e0d.jpg",
+      "original_name": "e5cbacff-51f5-45bc-b2b2-454b4dd3f289.jpg",
+      "mime_type": "image/jpeg",
+      "file_size": 361075,
+      "content": null
+    },
+    {
+      "id": "8065d1aa-a2d9-4cfb-ba56-39d316dbf834",
+      "ad_type": "image",
+      "uploaded_at": "2026-03-13T14:08:54.379939Z",
+      "status": "active",
+      "display_order": 9,
+      "filename": "ad_90f616e5a08e.jpg",
+      "original_name": "dc44d617-479c-4393-a86c-4b51ab46f128.jpg",
+      "mime_type": "image/jpeg",
+      "file_size": 663949,
+      "content": null
+    }
+  ]
+}

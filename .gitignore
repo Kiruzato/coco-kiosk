@@ -79,8 +79,3 @@ ingestion_process_report.txt
 claude-code-prompt.md
 .claude
 
-# DATA custom
-WEB_APP/modules/data/advertisement_registry.json
-WEB_APP/modules/data/advertisements
-WEB_APP/modules/data/faq_data.json
-
