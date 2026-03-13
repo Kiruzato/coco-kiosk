@@ -81,25 +81,8 @@ class TTSService:
     - SSML support for natural prosody
     """
 
-    # Common abbreviations to expand for speech
-    ABBREVIATIONS = {
-        'Dr.': 'Doctor',
-        'Engr.': 'Engineer',
-        'Atty.': 'Attorney',
-        'Prof.': 'Professor',
-        'Bldg.': 'Building',
-        'Rm.': 'Room',
-        'Flr.': 'Floor',
-        'St.': 'Street',
-        'Ave.': 'Avenue',
-        'vs.': 'versus',
-        'etc.': 'etcetera',
-        'e.g.': 'for example',
-        'i.e.': 'that is',
-        'CCIT': 'C C I T',  # Spell out acronyms
-        'CABEIHM': 'CABEIHM',  # Leave complex acronyms as-is
-        'CoCo': 'Coco',  # Pronounce as word
-    }
+    # Abbreviation expansion is now handled by tts_text_preprocessor module
+    # for context-aware processing (e.g., "St." → "Saint" vs "Street")
 
     def __init__(self, config: Dict[str, Any]):
         """
@@ -256,9 +239,9 @@ class TTSService:
         # Remove markdown formatting
         text = self._strip_markdown(text)
 
-        # Expand abbreviations
-        for abbr, expansion in self.ABBREVIATIONS.items():
-            text = text.replace(abbr, expansion)
+        # Context-aware abbreviation expansion
+        from .tts_text_preprocessor import preprocess_for_tts
+        text = preprocess_for_tts(text)
 
         # Expand numbered lists for natural reading
         text = self._expand_numbered_lists(text)
