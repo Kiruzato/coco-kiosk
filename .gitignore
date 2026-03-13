@@ -77,6 +77,7 @@ PROJECT_CONTEXT-filtered.md
 PROJECT_CONTEXT.md
 ingestion_process_report.txt
 claude-code-prompt.md
+.claude
 
 # DATA custom
 WEB_APP/modules/data/advertisement_registry.json
