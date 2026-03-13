@@ -6,118 +6,107 @@ The kiosk UI is available at:
 http://localhost:8000
 ```
 
-The system runs on a **touchscreen monitor connected to a Raspberry Pi**.
+The **Conversation Panel** (where chat messages appear) is currently scrollable **only via the scrollbar**.
+
+Previously, swipe scrolling was attempted specifically for **touchscreen devices**, but the implementation did **not work during testing**.
 
 ---
 
-# Background
+# New Direction
 
-Previously, swipe scrolling was requested for the **Conversation Panel** so that users can scroll through messages by **swiping up and down on the touchscreen**, similar to mobile chat apps.
+Instead of implementing swipe scrolling specifically for **touchscreen input**, implement a **general swipe/drag scrolling behavior** for the **Conversation Panel**.
 
-Claude attempted to implement this feature.
+The idea is that the user should be able to:
 
-However, after testing on the **Raspberry Pi touchscreen**, the swipe scrolling **does not work**.
+* click/touch the conversation panel
+* **drag up or down**
+* and the panel scrolls accordingly.
 
-The conversation panel still only scrolls via the **scrollbar**, and swipe gestures do nothing.
+This behavior should work with:
+
+* mouse dragging
+* touch swiping
+* trackpad gestures
+
+without depending on device-specific touchscreen logic.
 
 ---
 
 # Objective
 
-Investigate why the **swipe scrolling implementation is not working**, and fix it so that **touch swipe gestures properly scroll the conversation panel**.
+Implement **drag/swipe scrolling behavior for the Conversation Panel** that works **generally across input types**, including:
+
+* mouse
+* touchscreen
+* trackpad.
+
+The goal is to make the conversation panel behave similarly to a **mobile chat interface**, where the user can scroll through messages by dragging the content.
 
 ---
 
-# Investigation Requirements
+# Scope
 
-Do not blindly reimplement swipe scrolling.
+The drag/swipe scrolling behavior must apply **only to the Conversation Panel**.
 
-First determine **why the current implementation fails**.
+It must **not affect**:
 
-Check the following areas:
+* advertisement panel
+* headers
+* admin panels
+* other UI components.
 
-### 1. CSS configuration of the conversation container
-
-Verify whether the container properly supports touch scrolling.
-
-Check properties such as:
-
-* overflow settings
-* height constraints
-* touch scrolling behavior
-* scroll container configuration.
-
-Ensure the container actually allows **touch-driven scrolling**.
-
----
-
-### 2. Touch event handling
-
-Determine whether the implementation attempted to use:
-
-* native scrolling
-* JavaScript touch events.
-
-If JavaScript was used, verify that:
-
-* touchstart / touchmove events are actually firing
-* event handlers are not blocked by other UI layers.
-
----
-
-### 3. Scroll blocking from other UI settings
-
-Check whether other UI configurations are interfering with swipe scrolling, such as:
-
-* `preventDefault()` on touch events
-* CSS rules disabling touch behavior
-* text selection or pointer settings
-* overlays or parent containers blocking the scroll.
-
----
-
-### 4. Chromium kiosk touchscreen behavior
-
-Since this runs on **Chromium in kiosk mode on Raspberry Pi**, verify whether the current implementation is compatible with:
-
-* Chromium touch input handling
-* Raspberry Pi touchscreen drivers.
-
-Prefer **native scrolling behavior** rather than complex JavaScript gesture logic if possible.
-
----
-
-# Required Fix
-
-After identifying the root cause, implement a **working swipe scrolling solution** for the **Conversation Panel only**.
-
-The fix must ensure that:
-
-* users can scroll the conversation by **swiping up and down**
-* scrolling feels **smooth and natural**
-* the existing scrollbar continues to work
-* the behavior only applies to the **conversation panel**, not the entire page.
+Only the **chat conversation container** should support this behavior.
 
 ---
 
 # Implementation Guidelines
 
-Prefer **native browser scrolling** instead of heavy custom gesture handling.
+Implement the scrolling in a **general input-friendly way**.
 
-Ensure the conversation container is correctly configured as a **scrollable touch container**.
+Possible approaches include:
 
-Avoid unnecessary JavaScript solutions if proper CSS configuration can achieve the behavior.
+* enabling proper native scroll behavior on the container
+* implementing controlled drag-to-scroll behavior using pointer events or similar mechanisms.
+
+Avoid solutions that are **specific only to touchscreen APIs**.
+
+Prefer solutions that work across **multiple input types**.
+
+Ensure the implementation does not conflict with:
+
+* message interaction
+* input field focus
+* other UI components.
+
+---
+
+# Behavior Requirements
+
+Users should be able to:
+
+* drag/swipe **upward** to scroll down through older messages
+* drag/swipe **downward** to scroll toward newer messages.
+
+Scrolling should feel:
+
+* smooth
+* responsive
+* natural.
+
+The **existing scrollbar must remain functional**.
 
 ---
 
 # Code Quality Requirements
 
-While fixing this:
+While implementing this change:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* avoid introducing fragile gesture code
-* ensure the solution remains **maintainable and efficient**.
+* keep the scrolling logic isolated to the conversation panel
+* avoid overly complex gesture handling.
+
+Prefer **clean and maintainable implementation**.
 
 ---
 
@@ -125,14 +114,13 @@ While fixing this:
 
 Verify that:
 
-* the conversation panel scrolls when users **swipe up or down**
-* the behavior works on the **Raspberry Pi touchscreen**
-* the scrollbar still functions
-* other UI panels are **not affected by swipe scrolling**
-* scrolling feels **smooth and responsive**.
+* dragging or swiping on the conversation panel scrolls messages
+* the behavior works with **mouse, touchscreen, and trackpad**
+* the scrollbar still works normally
+* no other UI components are affected.
 
 ---
 
 # Goal
 
-Ensure the **Conversation Panel supports swipe-based scrolling on the Raspberry Pi touchscreen**, allowing users to navigate chat messages naturally without relying on the scrollbar.
+Enable **general drag/swipe scrolling for the Conversation Panel**, allowing users to navigate chat messages naturally without relying solely on the scrollbar, while maintaining compatibility across different input devices.

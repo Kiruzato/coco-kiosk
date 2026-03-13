@@ -447,14 +447,15 @@ body.fullscreen-active {
     overflow-y: scroll;
     padding: 25px 20px; /* Reduced horizontal padding for wider bubbles */
     background: #f5f7fa;
+    cursor: grab;
 
-    /* Touch-scroll optimizations for kiosk */
+    /* Scroll optimizations for kiosk */
     -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling on WebKit */
     overscroll-behavior-y: contain; /* Prevent scroll chaining to parent */
-    touch-action: pan-y; /* Allow vertical touch swipe scrolling */
+    touch-action: pan-y; /* Allow vertical touch/pointer scrolling */
 }
 
-/* Drag-to-scroll styles (DISABLED - interferes with text selection)
+/* Drag-to-scroll styles (DISABLED - old mouse-only version, replaced by pointer events)
 .chat-container {
     cursor: grab;
 }
