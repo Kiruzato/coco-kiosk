@@ -25,22 +25,10 @@ logger = logging.getLogger(__name__)
 # CONTEXT-AWARE ABBREVIATION RULES
 # =============================================================================
 
-# Words that indicate a street/address context BEFORE "St."
-_STREET_CONTEXT_WORDS = {
-    'main', 'elm', 'oak', 'pine', 'maple', 'cedar', 'park', 'market',
-    'broad', 'high', 'wall', 'baker', 'king', 'queen', 'church',
-    'north', 'south', 'east', 'west', '1st', '2nd', '3rd', '4th', '5th',
-}
-
 # Pattern: "St." followed by a capitalized word (likely "Saint [Name]")
+# e.g., "St. Thomas" → "Saint Thomas", "St. Columban" → "Saint Columban"
 _ST_SAINT_PATTERN = re.compile(
     r'\bSt\.\s+([A-Z][a-z])',
-)
-
-# Pattern: word before "St." that suggests street context
-# e.g., "Main St.", "Elm St.", or a number like "123 St."
-_ST_STREET_PATTERN = re.compile(
-    r'(\b\w+)\s+St\.(?:\s|$|,|;)',
 )
 
 

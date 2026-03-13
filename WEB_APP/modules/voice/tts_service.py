@@ -180,8 +180,12 @@ class TTSService:
                 text_length=0,
             )
 
-        # Optimize text for speech
-        optimized_text = self._optimize_for_speech(text)
+        # Optimize text for speech (non-fatal — falls back to raw text)
+        try:
+            optimized_text = self._optimize_for_speech(text)
+        except Exception as e:
+            logger.warning(f"[TTS] Text optimization failed, using raw text: {e}")
+            optimized_text = text
 
         # Try primary engine
         if self.primary_engine and self.primary_engine.is_available():
@@ -230,18 +234,21 @@ class TTSService:
         """
         Optimize text for natural speech output.
 
-        - Expand abbreviations
         - Remove markdown formatting
-        - Add pauses at appropriate points
+        - Expand abbreviations (context-aware)
+        - Expand numbered lists for natural reading
 
         Note: Text is no longer truncated - TTS reads the entire response.
         """
         # Remove markdown formatting
         text = self._strip_markdown(text)
 
-        # Context-aware abbreviation expansion
-        from .tts_text_preprocessor import preprocess_for_tts
-        text = preprocess_for_tts(text)
+        # Context-aware abbreviation expansion (safe — falls back to original on error)
+        try:
+            from .tts_text_preprocessor import preprocess_for_tts
+            text = preprocess_for_tts(text)
+        except Exception as e:
+            logger.warning(f"[TTS] Preprocessing failed, using text as-is: {e}")
 
         # Expand numbered lists for natural reading
         text = self._expand_numbered_lists(text)
