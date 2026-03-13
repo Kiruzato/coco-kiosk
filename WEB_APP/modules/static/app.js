@@ -4091,6 +4091,45 @@ function stopAudioVisualizer() {
 */
 
 // ============================================================================
+// TOUCH SWIPE SCROLLING FOR CONVERSATION PANEL
+// ============================================================================
+// RPi touchscreen + Chromium kiosk may not support native CSS touch scrolling.
+// This lightweight handler enables swipe-to-scroll on the chat container only.
+
+(function initTouchScroll() {
+    const chatContainer = document.getElementById('chatContainer');
+    if (!chatContainer) return;
+
+    let startY = 0;
+    let startScrollTop = 0;
+    let isSwiping = false;
+
+    chatContainer.addEventListener('touchstart', (e) => {
+        // Don't intercept touches on interactive elements
+        if (e.target.closest('button, a, input, textarea, select, .feedback-icon-btn')) {
+            return;
+        }
+        isSwiping = true;
+        startY = e.touches[0].clientY;
+        startScrollTop = chatContainer.scrollTop;
+    }, { passive: true });
+
+    chatContainer.addEventListener('touchmove', (e) => {
+        if (!isSwiping) return;
+        const deltaY = startY - e.touches[0].clientY;
+        chatContainer.scrollTop = startScrollTop + deltaY;
+    }, { passive: true });
+
+    chatContainer.addEventListener('touchend', () => {
+        isSwiping = false;
+    }, { passive: true });
+
+    chatContainer.addEventListener('touchcancel', () => {
+        isSwiping = false;
+    }, { passive: true });
+})();
+
+// ============================================================================
 // FAQ ACCORDION SECTION
 // ============================================================================
 
