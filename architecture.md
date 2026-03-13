@@ -247,7 +247,7 @@ Layer 1: Governance
 Layer 2: Retrieval
 ├── FAISS vector similarity search (k=8)
 ├── BM25 keyword scoring
-├── Reciprocal Rank Fusion (RRF) score combination
+├── Linear weighted score combination (0.7 vector + 0.3 keyword)
 ├── Grounding validation (query terms must appear in chunks)
 ├── Semantic relevance scoring (HIGH / MEDIUM / LOW)
 ├── Section diversity limiting (max 3 chunks per section)
@@ -650,7 +650,6 @@ python WEB_APP/app.py
 | **STT** | Speech-to-Text — converting audio speech to text transcription |
 | **TTS** | Text-to-Speech — converting text to synthesized audio speech |
 | **LLM** | Large Language Model — AI model for natural language generation (GPT-4o-mini) |
-| **RRF** | Reciprocal Rank Fusion — method for combining ranked result lists from multiple retrieval systems |
 | **BM25** | Best Matching 25 — probabilistic keyword-based document ranking algorithm |
 | **SSE** | Server-Sent Events — HTTP-based protocol for server-to-client streaming |
 | **FAISS IndexFlatL2** | Brute-force L2 (Euclidean) distance search index — exact nearest neighbor lookup |
@@ -661,6 +660,6 @@ python WEB_APP/app.py
 | **RPi** | Raspberry Pi — single-board ARM computer used as kiosk deployment target |
 | **CoCo** | Columban College Information Kiosk — the project name |
 | **Grounding** | Validation that LLM responses are supported by retrieved document content |
-| **Hybrid Retrieval** | Combining vector similarity search with keyword-based (BM25) search for better recall |
+| **Hybrid Retrieval** | Combining vector similarity search with keyword-based (BM25) search via linear weighted scoring for better recall |
 | **Deterministic Extractor** | Regex-based data extraction that bypasses LLM for 100% accurate enumeration queries |
 | **Synthetic Chunk** | Consolidation of related content scattered across multiple chunks into a single comprehensive chunk |
