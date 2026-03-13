@@ -295,7 +295,7 @@ async function uploadRAGPackage(file) {
         // Reset file input
         const ragFileInput = document.getElementById('ragFileInput');
         ragFileInput.value = '';
-        document.getElementById('ragFileName').textContent = 'Choose a .zip file or drag & drop';
+        document.getElementById('ragFileName').textContent = 'Choose a .zip file';
         uploadBtn.disabled = true;
 
         // Reload documents table
@@ -2623,7 +2623,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('ragFileName').textContent = file.name;
                 ragUploadBtn.disabled = false;
             } else {
-                document.getElementById('ragFileName').textContent = 'Choose a .zip file or drag & drop';
+                document.getElementById('ragFileName').textContent = 'Choose a .zip file';
                 ragUploadBtn.disabled = true;
             }
         });

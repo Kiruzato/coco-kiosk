@@ -1,145 +1,93 @@
-You are working on the **CoCo Campus RAG Chatbot kiosk system** running on **Raspberry Pi OS**.
+You are working on the **CoCo Campus RAG Chatbot kiosk system**.
 
-The developer tools panel is available at:
-
-```
-http://localhost:8000/dev
-```
-
-The admin voice configuration panel is available at:
+The RAG package management page is located at:
 
 ```
-http://192.168.18.178:8000/admin#voice
+http://localhost:8000/admin#rag-package
 ```
 
 ---
 
 # Objective
 
-I want to add a **Developer Toggle** in:
+Update the **RAG Package ingestion instructions and upload label text** to reflect the current workflow using the **Ingestion Module**, instead of the previous command-line ingestion process.
 
-```
-/dev
-```
-
-This toggle will **hide specific advanced UI elements** in the Voice Configuration page:
-
-```
-/admin#voice
-```
-
-The goal is to simplify the UI for normal usage while still allowing developers to enable advanced controls when needed.
+If the wording of the new instructions sounds grammatically incorrect or unclear, improve the wording while **preserving the intended meaning**.
 
 ---
 
-# Toggle Behavior
+# Task 1 — Update the RAG Package Instructions
 
-Create a **toggle switch in `/dev`** that controls the visibility of several UI elements inside `/admin#voice`.
-
-### Default State
-
-The toggle must default to:
+Currently, the page shows instructions similar to:
 
 ```
-HIDDEN
+How to Create a RAG Package
+On your development machine, run: python -m coco_ingestion.ingest <documents_folder>
+Find the generated package at: Desktop/CoCo_RAG_Packages/
+Upload the .zip file here
+
+Package Requirements
+Must be a .zip file
+Must contain: index.faiss, index.pkl
 ```
 
-This means the UI elements listed below are hidden unless the toggle is enabled.
+Replace these instructions with updated instructions that reflect the **current ingestion workflow using the Ingestion Module GUI/tool**.
+
+Target wording (improve grammar if needed):
+
+```
+How to Create a RAG Package
+On your computer or laptop, run the Ingestion Module.
+Select the folder containing the files you want to ingest and proceed.
+Find the generated package in the same folder.
+Upload the .zip file here.
+
+Package Requirements
+Must be a .zip file.
+```
+
+You may refine this wording if necessary so it sounds **clear, professional, and natural**.
+
+Do **not reintroduce references to the old command-line ingestion system**.
 
 ---
 
-# UI Elements to Hide
+# Task 2 — Update the Upload Label
 
-When the toggle is **enabled (hide mode ON)**, hide the following elements in `/admin#voice`.
+On the same page, the upload field currently shows a label similar to:
+
+```
+Choose a .zip file or drag and drop
+```
+
+Modify this label to display only:
+
+```
+Choose a .zip file
+```
+
+The **"drag and drop" text must be removed**.
+
+Ensure the change does not break the upload component behavior.
 
 ---
 
-## Speech-to-Text (STT) Panel
+# Implementation Requirements
 
-Hide:
-
-1. The label:
-
-```
-Select the engine for converting speech to text
-```
-
-2. The entire panel:
-
-```
-Whisper.cpp (Local)
-```
-
-3. The entire section:
-
-```
-Fallback Engine
-```
-
----
-
-## Text-to-Speech (TTS) Panel
-
-Hide:
-
-1. The label:
-
-```
-Select the engine for converting text to speech
-```
-
-2. The entire section:
-
-```
-Fallback Engine
-```
-
----
-
-## Bottom Configuration Section
-
-Hide the button:
-
-```
-Save Configuration
-```
-
-at the bottom of:
-
-```
-/admin#voice
-```
-
----
-
-# Persistence Requirement
-
-The toggle state must **persist across system restarts and reboots**.
-
-This means the selected state must be **stored in a persistent configuration**, not only in frontend memory.
-
-When the system starts again, the UI must respect the **last saved toggle state**.
-
----
-
-# Implementation Guidelines
-
-* The toggle should control **UI visibility only**, not disable backend functionality.
-* Hidden components should **not break layout structure**.
-* Avoid duplicating UI logic.
-* Prefer using **centralized configuration or feature flags** for the toggle state.
+* Update only the **UI text content**, not the backend logic.
+* Ensure the layout and styling remain consistent.
+* Avoid introducing UI regressions.
 
 ---
 
 # Code Quality Requirements
 
-While implementing this feature:
+While implementing these changes:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* avoid duplicated visibility logic
-* keep developer-specific configuration isolated
-* ensure maintainability and clarity of the code.
+* avoid hardcoding duplicated text across multiple components
+* ensure the UI text remains **maintainable and centralized where possible**.
 
 ---
 
@@ -147,14 +95,13 @@ While implementing this feature:
 
 Verify that:
 
-* the toggle appears in `/dev`
-* the toggle **hides and reveals the specified UI elements**
-* the **default state is hidden**
-* the toggle state **persists across system restarts**
-* the admin voice page continues functioning normally.
+* the new instructions appear correctly in `/admin#rag-package`
+* the instructions reflect the **Ingestion Module workflow**
+* the upload label now displays **"Choose a .zip file"**
+* the upload functionality continues to work normally.
 
 ---
 
 # Goal
 
-Provide a **developer toggle in `/dev` that hides advanced configuration elements in `/admin#voice`**, simplifying the UI for normal operation while allowing developers to re-enable those controls when needed.
+Update the **RAG package instructions and upload label** so they correctly reflect the **current ingestion workflow using the Ingestion Module**, while improving clarity and maintaining a clean, maintainable UI implementation.

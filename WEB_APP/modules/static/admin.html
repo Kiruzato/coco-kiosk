@@ -179,7 +179,7 @@
                             >
                             <label for="ragFileInput" class="file-label rag-label">
                                 <span class="file-icon">&#128230;</span>
-                                <span id="ragFileName">Choose a .zip file or drag & drop</span>
+                                <span id="ragFileName">Choose a .zip file</span>
                                 <span class="file-types">Vector store package (.zip)</span>
                             </label>
                             <button type="button" id="ragUploadBtn" class="btn-primary" disabled>
@@ -192,18 +192,14 @@
                         <div class="info-box">
                             <h4>How to Create a RAG Package</h4>
                             <ol>
-                                <li>On your development machine, run:
-                                    <code>python -m coco_ingestion.ingest &lt;documents_folder&gt;</code>
-                                </li>
-                                <li>Find the generated package at:
-                                    <code>Desktop/CoCo_RAG_Packages/</code>
-                                </li>
-                                <li>Upload the <code>.zip</code> file here</li>
+                                <li>On your computer or laptop, run the Ingestion Module.</li>
+                                <li>Select the folder containing the files you want to ingest and proceed.</li>
+                                <li>Find the generated package in the same folder.</li>
+                                <li>Upload the <code>.zip</code> file here.</li>
                             </ol>
                             <h4>Package Requirements</h4>
                             <ul>
-                                <li>Must be a <code>.zip</code> file</li>
-                                <li>Must contain: <code>index.faiss</code>, <code>index.pkl</code></li>
+                                <li>Must be a <code>.zip</code> file.</li>
                             </ul>
                         </div>
                     </div>
