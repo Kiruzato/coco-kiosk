@@ -341,23 +341,29 @@ def _convert_with_pydub(
 
 def trim_leading_silence(
     audio_data: bytes,
-    threshold_rms: float = 200.0,
-    buffer_ms: int = 150,
+    threshold_rms: float = 500.0,
+    consecutive_windows: int = 3,
+    buffer_ms: int = 200,
     window_ms: int = 20,
 ) -> bytes:
     """
     Trim silence from the beginning of WAV audio.
 
-    Scans the audio in small windows and finds the first window where
-    RMS exceeds the threshold (speech start).  Keeps a safety buffer
-    before that point to avoid clipping the onset of speech.
+    Scans the audio in small windows and finds the point where RMS
+    exceeds the threshold for several consecutive windows (sustained
+    speech, not a brief noise spike).  Keeps a safety buffer before
+    that point to avoid clipping the onset of speech.
 
     Args:
         audio_data: WAV audio bytes (16-bit PCM)
-        threshold_rms: RMS amplitude above which audio is considered speech.
-                       16-bit PCM range is -32768..32767; typical quiet room
-                       noise is ~50-150 RMS, speech is ~500+.
-        buffer_ms: Milliseconds of audio to keep before detected speech start
+        threshold_rms: RMS amplitude that indicates speech.
+                       16-bit PCM range is -32768..32767; ambient noise
+                       with browser noise suppression is typically 100-400
+                       RMS, speech onset is ~500+.
+        consecutive_windows: Number of consecutive windows above threshold
+                             required to confirm speech (avoids false
+                             triggers from brief noise spikes).
+        buffer_ms: Milliseconds of audio to keep before detected speech
         window_ms: Size of each analysis window in milliseconds
 
     Returns:
@@ -373,22 +379,37 @@ def trim_leading_silence(
                 frames = wav.readframes(n_frames)
 
         if sample_width != 2 or channels != 1:
-            # Only process 16-bit mono; return unmodified otherwise
+            logger.info("[AUDIO] Silence trim skipped: audio is not 16-bit mono")
             return audio_data
 
         samples = struct.unpack(f'<{len(frames) // 2}h', frames)
         window_size = int(sample_rate * window_ms / 1000)
+        original_duration = len(samples) / sample_rate
 
-        # Find first window where RMS exceeds threshold
-        speech_start_sample = 0
+        # Scan windows and find sustained speech start
+        above_count = 0
+        speech_start_sample = None
+
         for i in range(0, len(samples) - window_size, window_size):
             window = samples[i:i + window_size]
             rms = (sum(s * s for s in window) / len(window)) ** 0.5
+
             if rms >= threshold_rms:
-                speech_start_sample = i
-                break
-        else:
-            # No speech detected — return original to let STT handle it
+                above_count += 1
+                if above_count >= consecutive_windows:
+                    # Speech confirmed — mark the start of the first
+                    # above-threshold window in this consecutive run
+                    speech_start_sample = i - (consecutive_windows - 1) * window_size
+                    break
+            else:
+                above_count = 0
+
+        if speech_start_sample is None:
+            logger.info(
+                f"[AUDIO] Silence trim: no sustained speech detected in "
+                f"{original_duration:.2f}s audio (threshold={threshold_rms}). "
+                f"Sending full audio to STT."
+            )
             return audio_data
 
         # Apply safety buffer (go back buffer_ms before speech start)
@@ -396,11 +417,16 @@ def trim_leading_silence(
         trim_sample = max(0, speech_start_sample - buffer_samples)
 
         if trim_sample == 0:
-            return audio_data  # Nothing to trim
+            logger.info(
+                f"[AUDIO] Silence trim: speech starts at "
+                f"{speech_start_sample / sample_rate:.2f}s, within buffer "
+                f"({buffer_ms}ms). No trimming needed for "
+                f"{original_duration:.2f}s audio."
+            )
+            return audio_data
 
         trimmed_frames = frames[trim_sample * sample_width:]
         trimmed_duration = (len(samples) - trim_sample) / sample_rate
-        original_duration = len(samples) / sample_rate
         trimmed_amount = original_duration - trimmed_duration
 
         logger.info(
