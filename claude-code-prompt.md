@@ -1,93 +1,68 @@
 You are working on the **CoCo Campus RAG Chatbot kiosk system**.
 
-The RAG package management page is located at:
+The advertisement management page is located at:
 
 ```
-http://localhost:8000/admin#rag-package
+http://192.168.18.178:8000/admin#advertisements
 ```
+
+---
+
+# Problem
+
+In the **Advertisement Management UI**, specifically in the **list of advertisements displayed below the upload/publish section**, there is a layout issue.
+
+The following UI elements are **overlapping each other**:
+
+* the **advertisement number label**
+* the **delete button (X icon)**
+
+This overlap makes the UI look broken and may affect usability.
 
 ---
 
 # Objective
 
-Update the **RAG Package ingestion instructions and upload label text** to reflect the current workflow using the **Ingestion Module**, instead of the previous command-line ingestion process.
+Fix the layout so that the **advertisement number label and the delete button no longer overlap**.
 
-If the wording of the new instructions sounds grammatically incorrect or unclear, improve the wording while **preserving the intended meaning**.
-
----
-
-# Task 1 — Update the RAG Package Instructions
-
-Currently, the page shows instructions similar to:
-
-```
-How to Create a RAG Package
-On your development machine, run: python -m coco_ingestion.ingest <documents_folder>
-Find the generated package at: Desktop/CoCo_RAG_Packages/
-Upload the .zip file here
-
-Package Requirements
-Must be a .zip file
-Must contain: index.faiss, index.pkl
-```
-
-Replace these instructions with updated instructions that reflect the **current ingestion workflow using the Ingestion Module GUI/tool**.
-
-Target wording (improve grammar if needed):
-
-```
-How to Create a RAG Package
-On your computer or laptop, run the Ingestion Module.
-Select the folder containing the files you want to ingest and proceed.
-Find the generated package in the same folder.
-Upload the .zip file here.
-
-Package Requirements
-Must be a .zip file.
-```
-
-You may refine this wording if necessary so it sounds **clear, professional, and natural**.
-
-Do **not reintroduce references to the old command-line ingestion system**.
+Both elements must remain **clearly visible and clickable**.
 
 ---
 
-# Task 2 — Update the Upload Label
+# Requirements
 
-On the same page, the upload field currently shows a label similar to:
+Ensure that:
 
-```
-Choose a .zip file or drag and drop
-```
+* the **advertisement number label** and **delete (X) button** are properly spaced
+* the UI remains **clean and readable**
+* the delete button remains **easy to click**
+* the layout works consistently across **different screen sizes** used by the admin panel.
 
-Modify this label to display only:
+Avoid quick fixes that only shift the elements slightly without solving the layout structure.
 
-```
-Choose a .zip file
-```
-
-The **"drag and drop" text must be removed**.
-
-Ensure the change does not break the upload component behavior.
+Instead, **adjust the container layout properly**.
 
 ---
 
-# Implementation Requirements
+# Implementation Guidelines
 
-* Update only the **UI text content**, not the backend logic.
-* Ensure the layout and styling remain consistent.
-* Avoid introducing UI regressions.
+When fixing the layout:
+
+* inspect the CSS and HTML structure responsible for the advertisement list
+* adjust the layout using a proper approach such as **flexbox or grid alignment**
+* ensure the delete button is placed in a **stable corner or dedicated container**
+* avoid absolute positioning hacks unless necessary.
 
 ---
 
 # Code Quality Requirements
 
-While implementing these changes:
+While implementing the fix:
 
 * follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* avoid hardcoding duplicated text across multiple components
-* ensure the UI text remains **maintainable and centralized where possible**.
+* keep layout logic clean and maintainable
+* avoid hard-coded offsets that may break on different screen sizes.
 
 ---
 
@@ -95,13 +70,13 @@ While implementing these changes:
 
 Verify that:
 
-* the new instructions appear correctly in `/admin#rag-package`
-* the instructions reflect the **Ingestion Module workflow**
-* the upload label now displays **"Choose a .zip file"**
-* the upload functionality continues to work normally.
+* the **advertisement number label and delete button no longer overlap**
+* both elements remain **clearly visible**
+* the delete button is **fully clickable**
+* the layout works properly across typical admin panel resolutions.
 
 ---
 
 # Goal
 
-Update the **RAG package instructions and upload label** so they correctly reflect the **current ingestion workflow using the Ingestion Module**, while improving clarity and maintaining a clean, maintainable UI implementation.
+Ensure the **advertisement list layout in `/admin#advertisements` is visually correct and usable**, with the advertisement number label and delete button properly separated and aligned.

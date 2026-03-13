@@ -2602,7 +2602,7 @@ body {
 .ad-order-badge {
     position: absolute;
     top: 8px;
-    right: 8px;
+    left: 42px;
     width: 24px;
     height: 24px;
     background: rgba(0, 0, 0, 0.7);
