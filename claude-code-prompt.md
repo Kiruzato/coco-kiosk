@@ -6,121 +6,132 @@ The web application runs at:
 http://localhost:8000/
 ```
 
-Holding the **Fullscreen button for 5 seconds** opens the **Kiosk Admin Panel**.
+The chatbot supports two input modes:
 
-Claude previously implemented:
-
-* a **lightweight built-in keyboard**
-* a **WiFi configuration interface** inside the Kiosk Admin Panel.
-
-Inside the WiFi configuration screen there is a **Scan Networks** function used to display available WiFi networks.
+1. **Voice input**
+2. **Typewritten query input**
 
 ---
 
-# Problem
+# Current Behavior
 
-When I enable my **phone hotspot** and immediately click **Scan Networks**, the hotspot **does not appear in the list**.
+When using **voice input**:
 
-However:
+* After recording finishes, a panel appears **below the input panel** (the area containing the voice button, text input field, and send button).
+* This panel displays the label:
 
-* the hotspot **is confirmed to be available**
-* other devices **can detect it immediately**
-* the hotspot **only appears after several minutes when scanning again**.
+```
+... Processing Audio...
+```
 
-Therefore the issue is **not that the hotspot is unavailable**, but that the system **is not detecting it immediately**.
+This acts as a **loading indicator** while the system processes the request.
+
+However, when using **typewritten queries**, there is **no loading feedback shown at all**.
+
+This creates an **inconsistent user experience**.
 
 ---
 
 # Objective
 
-Investigate why the **Scan Networks function fails to detect newly available WiFi networks immediately**, and fix the issue so that **new networks appear right away when scanning**.
+Improve the loading feedback system for both **voice input and typewritten queries**.
 
 ---
 
-# Investigation Requirements
+# Required Changes
 
-Perform a proper investigation before modifying anything.
+### 1. Change the Loading Label
 
-Determine:
-
-### 1. How WiFi scanning is implemented
-
-Check:
-
-* what backend command is used (`nmcli`, `iw`, etc.)
-* whether the command **forces a fresh scan** or just retrieves cached results.
-
-For example, verify whether the system is using something like:
+Replace the current label:
 
 ```
-nmcli device wifi list
+... Processing Audio...
 ```
 
-instead of
+with:
 
 ```
-nmcli device wifi rescan
+CoCo is thinking...
 ```
 
-or an equivalent forced scan.
+This message should be used **for both voice queries and typewritten queries**.
 
 ---
 
-### 2. NetworkManager scan caching behavior
+### 2. Add Animated Thinking Indicator
 
-NetworkManager often **caches scan results** for a period of time.
+The label should animate using the following loop:
 
-Determine whether the current implementation is simply reading **cached scan results**, which would explain why the hotspot only appears later.
+```
+CoCo is thinking.
+CoCo is thinking..
+CoCo is thinking...
+```
+
+Then repeat continuously.
+
+Example sequence:
+
+```
+CoCo is thinking.
+CoCo is thinking..
+CoCo is thinking...
+CoCo is thinking.
+CoCo is thinking..
+...
+```
+
+The animation should run **until the response is received**.
 
 ---
 
-### 3. Scan timing and hardware behavior
+### 3. Apply the Loading Indicator to Typed Queries
 
-Check if:
+When a user submits a **typewritten query**:
 
-* the WiFi adapter requires a **manual rescan command**
-* the system needs a **short delay after triggering a scan**
-* the scan command is executed **before results are ready**.
+* The same **loading panel** should appear
+* The same **"CoCo is thinking..." animated label** should be displayed
+* The indicator should remain visible **until the chatbot response is received**.
+
+This ensures **consistent feedback for both input methods**.
 
 ---
 
-# Required Fix
+# Implementation Guidelines
 
-Modify the implementation so that **Scan Networks triggers a proper real-time WiFi scan**.
+* Avoid duplicating logic between voice and text query flows.
+* Use a **shared loading state mechanism** for both input types.
+* Ensure the animation stops cleanly once a response is rendered.
+* Prevent multiple loading panels from appearing simultaneously.
 
-The solution should:
-
-1. Force a **fresh WiFi scan**.
-2. Wait until scan results are available.
-3. Then retrieve the updated list of networks.
-
-The goal is that **newly created networks (such as phone hotspots) appear immediately after scanning**.
+The loading indicator should be **lightweight and efficient**, since the kiosk runs on **Raspberry Pi hardware**.
 
 ---
 
 # Code Quality Requirements
 
-While implementing the fix:
+Follow **industry-standard best practices**:
 
-* follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* avoid duplicating WiFi scanning logic
-* keep system command execution secure
-* ensure backend logic is clean and maintainable.
+* keep UI state management clean
+* avoid duplicate loading logic
+* ensure the solution is maintainable and predictable.
 
 ---
 
 # Validation
 
-After implementing the fix, verify that:
+Verify that:
 
-* enabling a **new WiFi network (such as a phone hotspot)** and clicking **Scan Networks** immediately detects it
-* network lists refresh correctly
-* the feature works reliably on **Raspberry Pi OS**
-* no regressions occur in the WiFi configuration UI.
+* the label now displays **"CoCo is thinking..."**
+* the animation cycles correctly (`.`, `..`, `...`)
+* the loading indicator appears for **voice queries**
+* the loading indicator appears for **typewritten queries**
+* the indicator disappears once the response arrives
+* no UI regressions occur.
 
 ---
 
 # Goal
 
-Ensure that the **Scan Networks feature performs a proper real-time WiFi scan**, allowing newly available networks (such as phone hotspots) to appear **immediately after scanning**, without requiring several minutes of waiting.
+Provide a **consistent and clear loading feedback system** so that users always see **"CoCo is thinking..." with animated dots** whenever the chatbot is processing a request, regardless of whether the query was submitted via **voice or typing**.

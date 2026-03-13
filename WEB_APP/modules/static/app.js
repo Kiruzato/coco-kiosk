@@ -532,6 +532,39 @@ const refreshAdBtn = document.getElementById('refreshAdBtn'); // Phase 55
 const kioskContainer = document.querySelector('.kiosk-container');
 
 // ============================================================================
+// THINKING ANIMATION
+// ============================================================================
+
+let thinkingInterval = null;
+
+/**
+ * Show the loading overlay with animated "CoCo is thinking..." dots.
+ * Safe to call multiple times — clears any existing animation first.
+ */
+function startThinkingAnimation() {
+    stopThinkingAnimation();
+    const loadingText = document.getElementById('loadingText');
+    loadingIndicator.style.display = 'flex';
+    let dotCount = 1;
+    if (loadingText) loadingText.textContent = 'CoCo is thinking.';
+    thinkingInterval = setInterval(() => {
+        dotCount = (dotCount % 3) + 1;
+        if (loadingText) loadingText.textContent = 'CoCo is thinking' + '.'.repeat(dotCount);
+    }, 500);
+}
+
+/**
+ * Hide the loading overlay and stop the dot animation.
+ */
+function stopThinkingAnimation() {
+    if (thinkingInterval) {
+        clearInterval(thinkingInterval);
+        thinkingInterval = null;
+    }
+    loadingIndicator.style.display = 'none';
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 
@@ -1691,8 +1724,8 @@ async function sendMessageStreaming(message) {
                         metadata = data;
                         updateSessionId(data.session_id);
                         renderStreamingMetadata(metadataDiv, metadata);
-                        // Hide loading indicator once metadata arrives
-                        loadingIndicator.style.display = 'none';
+                        // Hide thinking animation once metadata arrives
+                        stopThinkingAnimation();
                     } else if (currentEvent === 'token') {
                         fullAnswer += data.content;
                         // Update content with formatted text and cursor
@@ -1974,8 +2007,8 @@ async function handleSubmit(event) {
     // Show user message
     addUserMessage(message);
 
-    // Show loading indicator
-    loadingIndicator.style.display = 'flex';
+    // Show thinking animation
+    startThinkingAnimation();
 
     try {
         // Phase 47: Use streaming if enabled (and TTS disabled for now)
@@ -1999,8 +2032,7 @@ async function handleSubmit(event) {
             // Note: TTS plays for ALL answers including graceful refusals (rejected=true)
             console.log('[Phase 41] TTS check:', { ttsEnabled, hasAnswer: !!data.answer });
             if (ttsEnabled && data.answer) {
-                // Update loading text to indicate preparing response
-                if (loadingText) loadingText.textContent = 'Preparing response...';
+                // Keep thinking animation visible during TTS synthesis
 
                 // Synthesize TTS (keep loading indicator visible)
                 console.log('[Phase 41] Synthesizing TTS for typed input...');
@@ -2012,8 +2044,8 @@ async function handleSubmit(event) {
                     data.debug_info.tts_engine = ttsResult.engine;
                 }
 
-                // Hide loading indicator
-                loadingIndicator.style.display = 'none';
+                // Hide thinking animation
+                stopThinkingAnimation();
 
                 // Show text and play audio together
                 addAssistantMessage(data);
@@ -2026,14 +2058,14 @@ async function handleSubmit(event) {
             } else {
                 // No TTS - show text immediately
                 console.log('[Phase 41] Skipping TTS:', { ttsEnabled, hasAnswer: !!data.answer });
-                loadingIndicator.style.display = 'none';
+                stopThinkingAnimation();
                 addAssistantMessage(data);
             }
         }
 
     } catch (error) {
-        // Hide loading indicator
-        loadingIndicator.style.display = 'none';
+        // Hide thinking animation
+        stopThinkingAnimation();
 
         // Show error message
         addErrorMessage('Sorry, I encountered an error processing your request. Please try again.');
@@ -3058,7 +3090,7 @@ function setVoiceState(newState, message = null) {
             voiceBtn.disabled = !voiceEnabled;
             voiceStatus.style.display = 'none';
             // Phase 40: voiceIndicator removed - TTS now silent
-            loadingIndicator.style.display = 'none';
+            stopThinkingAnimation();
             // Re-enable typed input when voice returns to idle (unless waiting for chat response)
             if (!isWaiting) {
                 userInput.disabled = false;
@@ -3080,8 +3112,7 @@ function setVoiceState(newState, message = null) {
             voiceStatus.style.display = 'flex';
             voiceStatus.classList.add('processing');
             if (voiceStatusText) voiceStatusText.textContent = message || 'Processing...';
-            loadingIndicator.style.display = 'flex';
-            if (loadingText) loadingText.textContent = 'Processing your voice...';
+            startThinkingAnimation();
             break;
 
         case VoiceState.RESPONDING:
@@ -3089,7 +3120,7 @@ function setVoiceState(newState, message = null) {
             // Keep UI in normal state so user can read response while listening
             voiceBtn.disabled = !voiceEnabled;
             voiceStatus.style.display = 'none';
-            loadingIndicator.style.display = 'none';
+            stopThinkingAnimation();
             // Phase 41 fix: Re-enable inputs during RESPONDING so user can interact
             // while TTS plays (this is the "silent TTS" UX - user can type new query)
             userInput.disabled = false;
@@ -3645,16 +3676,15 @@ async function handlePreviewSend() {
         addUserMessage(message);
 
         // Send to chat
-        loadingIndicator.style.display = 'flex';
-        if (loadingText) loadingText.textContent = 'Searching campus information...';
+        startThinkingAnimation();
 
         try {
             const data = await sendMessage(message);
-            loadingIndicator.style.display = 'none';
+            stopThinkingAnimation();
             addAssistantMessage(data);
             lastQueryId = data.timestamp;
         } catch (error) {
-            loadingIndicator.style.display = 'none';
+            stopThinkingAnimation();
             addErrorMessage('Sorry, I encountered an error processing your request.');
         }
     }
