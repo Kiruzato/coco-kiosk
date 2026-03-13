@@ -10,6 +10,7 @@ const fusionRadios = document.querySelectorAll('input[name="fusionMethod"]');
 const fusionLabelToggle = document.getElementById('fusionLabelToggle');
 const optionLinear = document.getElementById('optionLinear');
 const optionRrf = document.getElementById('optionRrf');
+const voiceAdvancedToggle = document.getElementById('voiceAdvancedToggle');
 
 // State
 let isUpdating = false;
@@ -28,6 +29,7 @@ async function loadSettings() {
         updateDevSectionUI(data.dev_section_visible);
         updateFusionMethodUI(data.fusion_method || 'linear');
         updateFusionLabelUI(data.fusion_label_visible !== false);
+        updateVoiceAdvancedUI(data.voice_advanced_visible === true);
     } catch (error) {
         showNotification('Failed to load settings: ' + error.message, 'error');
     }
@@ -125,6 +127,43 @@ async function toggleFusionLabel(enabled) {
 }
 
 /**
+ * Toggle voice advanced config visibility
+ */
+async function toggleVoiceAdvanced(enabled) {
+    if (isUpdating) return;
+    isUpdating = true;
+
+    try {
+        const response = await fetch('/dev/settings/voice-advanced-visible', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled: enabled })
+        });
+
+        if (response.status === 401) {
+            window.location.href = '/dev/login';
+            return;
+        }
+
+        const data = await response.json();
+        updateVoiceAdvancedUI(data.voice_advanced_visible);
+        showNotification(data.message, 'success');
+    } catch (error) {
+        showNotification('Failed to toggle voice advanced config: ' + error.message, 'error');
+        voiceAdvancedToggle.checked = !enabled;
+    } finally {
+        isUpdating = false;
+    }
+}
+
+/**
+ * Update voice advanced toggle UI
+ */
+function updateVoiceAdvancedUI(visible) {
+    voiceAdvancedToggle.checked = visible;
+}
+
+/**
  * Update dev section UI
  */
 function updateDevSectionUI(visible) {
@@ -183,6 +222,10 @@ fusionRadios.forEach(radio => {
 
 fusionLabelToggle.addEventListener('change', (e) => {
     toggleFusionLabel(e.target.checked);
+});
+
+voiceAdvancedToggle.addEventListener('change', (e) => {
+    toggleVoiceAdvanced(e.target.checked);
 });
 
 // Initialize on page load

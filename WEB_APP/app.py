@@ -119,12 +119,13 @@ dev_section_visible: bool = True  # Controls Developer section visibility in adm
 fusion_method: str = "linear"  # "linear" or "rrf" — hybrid score combination method
 fusion_label_visible: bool = True  # Show fusion mode label in kiosk responses
 rrf_k: int = 60  # RRF k parameter (default 60)
+voice_advanced_visible: bool = False  # Show advanced voice config elements in admin
 
 
 def load_debug_settings() -> dict:
     """Load debug/developer settings from JSON file."""
     global debug_mode_enabled, metadata_visible, dev_section_visible
-    global fusion_method, fusion_label_visible, rrf_k
+    global fusion_method, fusion_label_visible, rrf_k, voice_advanced_visible
     try:
         if DEBUG_SETTINGS_PATH.exists():
             import json
@@ -136,22 +137,25 @@ def load_debug_settings() -> dict:
             fusion_method = data.get('fusion_method', 'linear')
             fusion_label_visible = data.get('fusion_label_visible', True)
             rrf_k = data.get('rrf_k', 60)
+            voice_advanced_visible = data.get('voice_advanced_visible', False)
             return data
     except Exception as e:
         logger.warning(f"[DEBUG] Failed to load debug settings: {e}")
     return {"debug_enabled": False, "metadata_visible": True, "dev_section_visible": True,
-            "fusion_method": "linear", "fusion_label_visible": True, "rrf_k": 60, "updated_at": None}
+            "fusion_method": "linear", "fusion_label_visible": True, "rrf_k": 60,
+            "voice_advanced_visible": False, "updated_at": None}
 
 
 def save_debug_settings(debug_enabled: bool = None, metadata_visible_setting: bool = None,
                         dev_section_visible_setting: bool = None, fusion_method_setting: str = None,
-                        fusion_label_visible_setting: bool = None, rrf_k_setting: int = None) -> dict:
+                        fusion_label_visible_setting: bool = None, rrf_k_setting: int = None,
+                        voice_advanced_visible_setting: bool = None) -> dict:
     """Save debug/developer settings to JSON file.
 
     Only updates the fields that are passed (not None).
     """
     global debug_mode_enabled, metadata_visible, dev_section_visible
-    global fusion_method, fusion_label_visible, rrf_k
+    global fusion_method, fusion_label_visible, rrf_k, voice_advanced_visible
     try:
         import json
         DEBUG_SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -186,6 +190,9 @@ def save_debug_settings(debug_enabled: bool = None, metadata_visible_setting: bo
         if rrf_k_setting is not None:
             rrf_k = rrf_k_setting
             current['rrf_k'] = rrf_k_setting
+        if voice_advanced_visible_setting is not None:
+            voice_advanced_visible = voice_advanced_visible_setting
+            current['voice_advanced_visible'] = voice_advanced_visible_setting
 
         current['updated_at'] = datetime.utcnow().isoformat() + 'Z'
 
@@ -197,7 +204,8 @@ def save_debug_settings(debug_enabled: bool = None, metadata_visible_setting: bo
         logger.error(f"[DEBUG] Failed to save debug settings: {e}")
         return {"debug_enabled": debug_mode_enabled, "metadata_visible": metadata_visible,
                 "dev_section_visible": dev_section_visible, "fusion_method": fusion_method,
-                "fusion_label_visible": fusion_label_visible, "rrf_k": rrf_k, "updated_at": None}
+                "fusion_label_visible": fusion_label_visible, "rrf_k": rrf_k,
+                "voice_advanced_visible": voice_advanced_visible, "updated_at": None}
 
 
 # Load debug settings at startup
@@ -1322,6 +1330,10 @@ class FusionLabelToggleRequest(BaseModel):
     """Request model for toggling fusion label visibility."""
     enabled: bool
 
+class VoiceAdvancedToggleRequest(BaseModel):
+    """Request model for toggling voice advanced config visibility."""
+    enabled: bool
+
 
 @app.get("/dev/login")
 async def serve_dev_login_page():
@@ -1363,7 +1375,8 @@ async def get_dev_settings():
         "dev_section_visible": dev_section_visible,
         "fusion_method": fusion_method,
         "fusion_label_visible": fusion_label_visible,
-        "rrf_k": rrf_k
+        "rrf_k": rrf_k,
+        "voice_advanced_visible": voice_advanced_visible
     }
 
 
@@ -1407,10 +1420,28 @@ async def toggle_fusion_label_visible(request: FusionLabelToggleRequest):
     }
 
 
+@app.post("/dev/settings/voice-advanced-visible", dependencies=[Depends(verify_dev_session)])
+async def toggle_voice_advanced_visible(request: VoiceAdvancedToggleRequest):
+    """Toggle voice advanced config visibility in admin voice page."""
+    save_debug_settings(voice_advanced_visible_setting=request.enabled)
+    logger.info(f"[DEV] Voice advanced config visibility: {'shown' if request.enabled else 'hidden'}")
+    return {
+        "success": True,
+        "voice_advanced_visible": voice_advanced_visible,
+        "message": f"Voice advanced config {'shown' if request.enabled else 'hidden'}"
+    }
+
+
 @app.get("/api/settings/dev-section-visible")
 async def get_dev_section_visibility():
     """Public read-only endpoint: whether Developer section is visible in admin sidebar."""
     return {"dev_section_visible": dev_section_visible}
+
+
+@app.get("/api/settings/voice-advanced-visible")
+async def get_voice_advanced_visibility():
+    """Public read-only endpoint: whether voice advanced config is visible."""
+    return {"voice_advanced_visible": voice_advanced_visible}
 
 
 # ==============================================================================

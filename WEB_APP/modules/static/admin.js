@@ -581,12 +581,42 @@ async function loadVoiceConfig() {
         loadSTTUsage();
         loadCredentialsStatus();
 
+        // Apply voice advanced config visibility
+        applyVoiceAdvancedVisibility();
+
     } catch (error) {
         console.error('Failed to load voice config:', error);
         sttProviders.innerHTML = '<div class="provider-loading">Voice configuration unavailable</div>';
         ttsProviders.innerHTML = '<div class="provider-loading">Voice configuration unavailable</div>';
     } finally {
         loadingIndicator.classList.add('hidden');
+    }
+}
+
+/**
+ * Apply voice advanced config visibility based on dev setting.
+ * Hides: STT/TTS description labels, Whisper.cpp provider item,
+ * both fallback sections, and Save Configuration button.
+ */
+async function applyVoiceAdvancedVisibility() {
+    try {
+        const response = await fetch('/api/settings/voice-advanced-visible');
+        if (!response.ok) return;
+        const data = await response.json();
+        const visible = data.voice_advanced_visible === true;
+
+        // Toggle all elements marked with voice-advanced-element class
+        document.querySelectorAll('.voice-advanced-element').forEach(el => {
+            el.style.display = visible ? '' : 'none';
+        });
+
+        // Hide Whisper.cpp (Local) provider item
+        const whisperItem = document.querySelector('[data-provider-id="whisper.cpp"]');
+        if (whisperItem) {
+            whisperItem.style.display = visible ? '' : 'none';
+        }
+    } catch (error) {
+        console.error('Failed to load voice advanced visibility:', error);
     }
 }
 

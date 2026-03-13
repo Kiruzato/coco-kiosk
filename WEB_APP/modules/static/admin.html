@@ -488,12 +488,12 @@
                         <!-- STT Providers -->
                         <div class="card voice-provider-card">
                             <h3>Speech-to-Text (STT)</h3>
-                            <p class="card-description">Select the engine for converting speech to text</p>
+                            <p id="sttDescription" class="card-description voice-advanced-element">Select the engine for converting speech to text</p>
                             <div id="sttProviders" class="provider-list">
                                 <div class="provider-loading">Loading providers...</div>
                             </div>
                             <!-- Phase 37: Fallback Selection -->
-                            <div class="fallback-section">
+                            <div id="sttFallbackSection" class="fallback-section voice-advanced-element">
                                 <h4>Fallback Engine</h4>
                                 <p class="fallback-description">Used when primary engine fails or has low confidence</p>
                                 <select id="sttFallbackSelect" class="fallback-select">
@@ -505,12 +505,12 @@
                         <!-- TTS Providers -->
                         <div class="card voice-provider-card">
                             <h3>Text-to-Speech (TTS)</h3>
-                            <p class="card-description">Select the engine for converting text to speech</p>
+                            <p id="ttsDescription" class="card-description voice-advanced-element">Select the engine for converting text to speech</p>
                             <div id="ttsProviders" class="provider-list">
                                 <div class="provider-loading">Loading providers...</div>
                             </div>
                             <!-- Phase 37: Fallback Selection -->
-                            <div class="fallback-section">
+                            <div id="ttsFallbackSection" class="fallback-section voice-advanced-element">
                                 <h4>Fallback Engine</h4>
                                 <p class="fallback-description">Used when primary engine fails</p>
                                 <select id="ttsFallbackSelect" class="fallback-select">
@@ -608,7 +608,7 @@
                         </p>
                     </div>
 
-                    <div class="voice-actions">
+                    <div id="voiceActions" class="voice-actions voice-advanced-element">
                         <button id="saveVoiceConfigBtn" class="btn-primary" disabled>Save Configuration</button>
                         <span id="voiceConfigStatus" class="config-status"></span>
                     </div>
