@@ -183,13 +183,16 @@ def normalize_audio(
     logger.info(f"[AUDIO] Input format: {fmt}, size: {len(audio_data)} bytes")
 
     if fmt == 'wav':
-        return _normalize_wav(audio_data, target_sample_rate, target_channels)
+        normalized = _normalize_wav(audio_data, target_sample_rate, target_channels)
     elif fmt in ('webm', 'ogg', 'mp3'):
         # These formats require external libraries (pydub/ffmpeg)
         # For now, we'll try to use pydub if available
-        return _convert_with_pydub(audio_data, fmt, target_sample_rate, target_channels)
+        normalized = _convert_with_pydub(audio_data, fmt, target_sample_rate, target_channels)
     else:
         raise AudioConversionError(f"Cannot convert format: {fmt}")
+
+    # Trim leading silence to reduce unnecessary STT processing
+    return trim_leading_silence(normalized)
 
 
 def _normalize_wav(
@@ -334,6 +337,90 @@ def _convert_with_pydub(
     except Exception as e:
         logger.error(f"[AUDIO] pydub conversion failed: {e}")
         raise AudioConversionError(f"pydub conversion failed: {e}")
+
+
+def trim_leading_silence(
+    audio_data: bytes,
+    threshold_rms: float = 200.0,
+    buffer_ms: int = 150,
+    window_ms: int = 20,
+) -> bytes:
+    """
+    Trim silence from the beginning of WAV audio.
+
+    Scans the audio in small windows and finds the first window where
+    RMS exceeds the threshold (speech start).  Keeps a safety buffer
+    before that point to avoid clipping the onset of speech.
+
+    Args:
+        audio_data: WAV audio bytes (16-bit PCM)
+        threshold_rms: RMS amplitude above which audio is considered speech.
+                       16-bit PCM range is -32768..32767; typical quiet room
+                       noise is ~50-150 RMS, speech is ~500+.
+        buffer_ms: Milliseconds of audio to keep before detected speech start
+        window_ms: Size of each analysis window in milliseconds
+
+    Returns:
+        WAV audio bytes with leading silence removed
+    """
+    try:
+        with io.BytesIO(audio_data) as f:
+            with wave.open(f, 'rb') as wav:
+                sample_rate = wav.getframerate()
+                channels = wav.getnchannels()
+                sample_width = wav.getsampwidth()
+                n_frames = wav.getnframes()
+                frames = wav.readframes(n_frames)
+
+        if sample_width != 2 or channels != 1:
+            # Only process 16-bit mono; return unmodified otherwise
+            return audio_data
+
+        samples = struct.unpack(f'<{len(frames) // 2}h', frames)
+        window_size = int(sample_rate * window_ms / 1000)
+
+        # Find first window where RMS exceeds threshold
+        speech_start_sample = 0
+        for i in range(0, len(samples) - window_size, window_size):
+            window = samples[i:i + window_size]
+            rms = (sum(s * s for s in window) / len(window)) ** 0.5
+            if rms >= threshold_rms:
+                speech_start_sample = i
+                break
+        else:
+            # No speech detected — return original to let STT handle it
+            return audio_data
+
+        # Apply safety buffer (go back buffer_ms before speech start)
+        buffer_samples = int(sample_rate * buffer_ms / 1000)
+        trim_sample = max(0, speech_start_sample - buffer_samples)
+
+        if trim_sample == 0:
+            return audio_data  # Nothing to trim
+
+        trimmed_frames = frames[trim_sample * sample_width:]
+        trimmed_duration = (len(samples) - trim_sample) / sample_rate
+        original_duration = len(samples) / sample_rate
+        trimmed_amount = original_duration - trimmed_duration
+
+        logger.info(
+            f"[AUDIO] Trimmed {trimmed_amount:.2f}s of leading silence "
+            f"({original_duration:.2f}s -> {trimmed_duration:.2f}s)"
+        )
+
+        # Write trimmed WAV
+        output = io.BytesIO()
+        with wave.open(output, 'wb') as wav_out:
+            wav_out.setnchannels(channels)
+            wav_out.setsampwidth(sample_width)
+            wav_out.setframerate(sample_rate)
+            wav_out.writeframes(trimmed_frames)
+
+        return output.getvalue()
+
+    except Exception as e:
+        logger.warning(f"[AUDIO] Leading silence trim failed, using original: {e}")
+        return audio_data
 
 
 def create_wav_header(

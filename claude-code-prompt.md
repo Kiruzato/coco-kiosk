@@ -1,94 +1,101 @@
 You are working on the **CoCo Campus RAG Chatbot kiosk system** running on **Raspberry Pi OS**.
 
-The Voice configuration panel is accessible at:
+The main kiosk UI is available at:
 
-```
-http://localhost:8000/admin#voice
+```id="a3rm9f"
+http://localhost:8000
 ```
 
-This panel includes the **Google STT Monthly Usage tracker**, which displays the current monthly usage of **Google Cloud Speech-to-Text (STT)**.
+The system supports **voice input** through a voice input button.
 
 ---
 
-# Current Situation
+# Background
 
-The **Google STT Monthly Usage tracker is functioning**, but there is a usability issue.
+When the **Voice Input button** is clicked, the system begins listening for the user's speech.
 
-Currently:
+The UI already includes a feature that **detects when the user actually starts speaking**, and there is visual feedback on the screen indicating this detection.
 
-* The usage value shown in the UI **only updates after a system reboot**.
-* During runtime, the displayed value **does not refresh automatically**, even though STT usage may increase.
+However, in real usage, users sometimes **do not start speaking immediately** after clicking the voice input button. There can be a **short silent period at the beginning** before the user begins speaking.
+
+---
+
+# Concern
+
+I want to determine whether the **silent portion at the beginning of the recording** is included in the audio sent to **Google Speech-to-Text (STT)**.
+
+I noticed that the **Google STT usage tracker increases even when the beginning of the recording contains silence**, which suggests that the silent portion might be included in the transcription request.
 
 ---
 
 # Objective
 
-Update the system so the **Google STT Monthly Usage tracker refreshes dynamically in the UI** without requiring a system reboot.
+Investigate the voice input pipeline to determine exactly how the audio sent to **Google STT** is handled.
+
+Specifically determine:
+
+1. Whether the **initial silent portion of the recording** is included in the audio sent to Google STT.
+2. Whether the system already **trims or discards the silent portion before speech begins**.
+3. Whether the **voice activity detection (VAD) or speech start detection** affects what portion of the audio is actually transmitted to Google STT.
 
 ---
 
-# Required Behavior
+# Investigation Scope
 
-### 1. Refresh Usage When Navigating to Voice Config
+Inspect the entire voice input pipeline, including:
 
-When the admin navigates to **Voice Config** through the **Admin Sidebar**, the system must:
+* voice recording logic
+* speech start detection logic
+* voice activity detection (if present)
+* preprocessing of audio before STT submission
+* the STT request being sent to Google Cloud.
 
-* retrieve the **current Google STT monthly usage from the backend**
-* update the UI to display the **latest usage value**.
-
-This ensures the tracker always shows **current usage when the page is opened**.
-
----
-
-### 2. Include Usage Refresh in the Refresh Button
-
-The **Refresh button** in the Voice configuration panel must also:
-
-* request the **latest Google STT usage value**
-* update the **Google STT Monthly Usage tracker in the UI**.
-
-The refresh button should update:
-
-* voice configuration status
-* **Google STT usage value**
-
-so the entire panel reflects the **latest runtime state**.
+Determine the **exact audio segment that is being transmitted** to the STT service.
 
 ---
 
-# Implementation Guidelines
+# If Silent Audio Is Being Sent
 
-When implementing this change:
+If the investigation confirms that **the silent portion at the beginning is included in the STT request**, propose and implement an improvement so that:
 
-* reuse the **existing backend usage-retrieval logic**
-* avoid duplicating STT usage tracking code
-* use **clean asynchronous API calls** from the frontend
-* ensure the UI updates only the necessary components.
+* audio before **actual speech detection** is removed or trimmed
+* only the **relevant speech portion** is sent to Google STT.
+
+The goal is to **reduce unnecessary STT usage and improve efficiency**.
+
+---
+
+# Implementation Requirements
+
+If a fix is implemented:
+
+* ensure trimming is reliable and does not cut off the beginning of speech
+* ensure the change does not introduce noticeable delays
+* keep the solution **lightweight for Raspberry Pi hardware**.
 
 ---
 
 # Code Quality Requirements
 
-Follow **industry-standard best practices**:
+While performing the investigation and possible fix:
 
+* follow **industry-standard best practices**
 * apply **proper refactorization and modularization**
-* avoid duplicated logic
-* keep backend usage retrieval centralized
-* maintain clear separation between **UI logic and backend logic**.
+* avoid duplicating logic
+* keep the voice pipeline clean and maintainable.
 
 ---
 
-# Validation
+# Deliverable
 
-Verify that:
+Provide:
 
-* navigating to **Voice Config via the sidebar** updates the usage value
-* clicking the **Refresh button** updates the usage value
-* the UI reflects the **latest STT usage without rebooting**
-* no regressions occur in the Voice configuration panel.
+1. A clear explanation of **whether silent audio is currently being sent to Google STT**.
+2. If applicable, implement an improvement so that **only the speech portion of the audio is sent to STT**.
+3. Ensure the voice input system continues to function reliably.
 
 ---
 
 # Goal
 
-Ensure that the **Google STT Monthly Usage tracker in `/admin#voice` always displays the current usage value**, updating automatically when the Voice Config page is opened and when the Refresh button is used, without requiring a system reboot.
+Determine whether the **initial silent portion of voice recordings is being transmitted to Google STT**, and if so, improve the system so that **only actual speech is sent**, reducing unnecessary STT usage and improving efficiency.
