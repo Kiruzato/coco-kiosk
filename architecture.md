@@ -246,8 +246,8 @@ Layer 1: Governance
 
 Layer 2: Retrieval
 ├── FAISS vector similarity search (k=8)
-├── BM25 keyword scoring
-├── Linear weighted score combination (0.7 vector + 0.3 keyword)
+├── Custom keyword term coverage scoring
+├── Linear weighted fusion (0.7 × vector_score + 0.3 × keyword_score)
 ├── Grounding validation (query terms must appear in chunks)
 ├── Semantic relevance scoring (HIGH / MEDIUM / LOW)
 ├── Section diversity limiting (max 3 chunks per section)
@@ -265,6 +265,30 @@ Layer 4: LLM Synthesis
 ├── OpenAI ChatGPT generation
 └── Style hints for response formatting
 ```
+
+**Hybrid Retrieval (Layer 2 Detail):**
+
+The retrieval layer combines two scoring methods via linear weighted fusion:
+
+1. **FAISS Semantic Search** — Queries the vector store for the top-k (default k=8) most similar chunks using cosine similarity on OpenAI `text-embedding-3-small` embeddings (1536 dimensions).
+
+2. **Custom Keyword Term Coverage Scoring** — A lightweight keyword relevance algorithm that scores each chunk based on how many query terms appear in its content. The scoring formula:
+
+   ```
+   coverage_score   = matched_terms / total_query_terms
+   frequency_bonus  = min(total_occurrences × 0.05, 0.2)
+   keyword_score    = min(coverage_score + frequency_bonus, 1.0)
+   ```
+
+   Features: regex-based word matching, simple plural handling (suffix stripping). This is **not** BM25 — it does not implement IDF weighting, document length normalization, or TF saturation.
+
+3. **Linear Weighted Fusion** — The final hybrid score for each chunk is computed as:
+
+   ```
+   hybrid_score = (0.7 × vector_score) + (0.3 × keyword_score)
+   ```
+
+   Default weights: 70% vector similarity, 30% keyword term coverage. Chunks are re-ranked by hybrid score before grounding validation.
 
 **Response Modes:**
 
@@ -650,7 +674,7 @@ python WEB_APP/app.py
 | **STT** | Speech-to-Text — converting audio speech to text transcription |
 | **TTS** | Text-to-Speech — converting text to synthesized audio speech |
 | **LLM** | Large Language Model — AI model for natural language generation (GPT-4o-mini) |
-| **BM25** | Best Matching 25 — probabilistic keyword-based document ranking algorithm |
+| **Term Coverage Scoring** | Custom keyword relevance algorithm — computes query term coverage ratio plus a capped frequency bonus; does not use IDF, document length normalization, or TF saturation |
 | **SSE** | Server-Sent Events — HTTP-based protocol for server-to-client streaming |
 | **FAISS IndexFlatL2** | Brute-force L2 (Euclidean) distance search index — exact nearest neighbor lookup |
 | **NFKC** | Unicode Normalization Form KC — canonical decomposition followed by compatibility composition |
@@ -660,6 +684,6 @@ python WEB_APP/app.py
 | **RPi** | Raspberry Pi — single-board ARM computer used as kiosk deployment target |
 | **CoCo** | Columban College Information Kiosk — the project name |
 | **Grounding** | Validation that LLM responses are supported by retrieved document content |
-| **Hybrid Retrieval** | Combining vector similarity search with keyword-based (BM25) search via linear weighted scoring for better recall |
+| **Hybrid Retrieval** | Combining FAISS vector similarity search with custom keyword term coverage scoring via linear weighted fusion (0.7 vector / 0.3 keyword) for better recall |
 | **Deterministic Extractor** | Regex-based data extraction that bypasses LLM for 100% accurate enumeration queries |
 | **Synthetic Chunk** | Consolidation of related content scattered across multiple chunks into a single comprehensive chunk |

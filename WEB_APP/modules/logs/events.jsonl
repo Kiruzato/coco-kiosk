@@ -9375,3 +9375,21 @@
 {"event_type": "voice_interaction", "timestamp": "2026-03-12T12:52:26.817071", "session_id": "19058f92-7056-42d8-a04a-d9ca5e2702a8", "metadata": {"stt_success": true, "stt_confidence": 0.6580902934074402, "stt_engine": "google-cloud-stt", "chat_success": true, "chat_mode": "general", "tts_success": true, "total_latency_ms": 4845.800399780273, "requires_text_fallback": true, "has_error": false}}
 {"event_type": "voice_interaction", "timestamp": "2026-03-13T08:39:54.270688", "session_id": "23a035b6-6e7d-4fd4-a500-25a85ecfd895", "metadata": {"stt_success": true, "stt_confidence": 0.7350779175758362, "stt_engine": "google-cloud-stt", "chat_success": true, "chat_mode": "general", "tts_success": true, "total_latency_ms": 4516.350030899048, "requires_text_fallback": false, "has_error": false}}
 {"event_type": "voice_interaction", "timestamp": "2026-03-13T08:49:42.467239", "session_id": "23a035b6-6e7d-4fd4-a500-25a85ecfd895", "metadata": {"stt_success": true, "stt_confidence": 0.9541366100311279, "stt_engine": "google-cloud-stt", "chat_success": true, "chat_mode": "general", "tts_success": true, "total_latency_ms": 3893.855094909668, "requires_text_fallback": false, "has_error": false}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-14T05:24:08.665324", "session_id": "ba18c74c-5099-40db-9cba-487e3f9e30f1", "metadata": {"extractor": "contacts"}}
+{"event_type": "routing_general_fallback", "timestamp": "2026-03-14T05:24:38.121908", "session_id": "ba18c74c-5099-40db-9cba-487e3f9e30f1", "metadata": {"confidence": 0.0, "grounded": false}}
+{"event_type": "routing_general_fallback", "timestamp": "2026-03-14T05:25:01.026175", "session_id": "ba18c74c-5099-40db-9cba-487e3f9e30f1", "metadata": {"confidence": 0.0, "grounded": false}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-14T05:25:46.533726", "session_id": "ba18c74c-5099-40db-9cba-487e3f9e30f1", "metadata": {"extractor": "contacts"}}
+{"event_type": "routing_general_fallback", "timestamp": "2026-03-14T05:28:30.953786", "session_id": "ba18c74c-5099-40db-9cba-487e3f9e30f1", "metadata": {"confidence": 0.0, "grounded": false}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-14T05:33:39.787553", "session_id": "ba18c74c-5099-40db-9cba-487e3f9e30f1", "metadata": {"extractor": "contacts"}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-14T05:35:06.307770", "session_id": "ba18c74c-5099-40db-9cba-487e3f9e30f1", "metadata": {"extractor": "contacts"}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-14T05:35:21.967402", "session_id": "ba18c74c-5099-40db-9cba-487e3f9e30f1", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-14T05:35:32.882113", "session_id": "ba18c74c-5099-40db-9cba-487e3f9e30f1", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-14T05:35:46.164954", "session_id": "ba18c74c-5099-40db-9cba-487e3f9e30f1", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-14T05:35:58.769713", "session_id": "ba18c74c-5099-40db-9cba-487e3f9e30f1", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-14T05:37:50.433927", "session_id": "ba18c74c-5099-40db-9cba-487e3f9e30f1", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-14T05:38:02.951946", "session_id": "ba18c74c-5099-40db-9cba-487e3f9e30f1", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-14T05:38:14.541635", "session_id": "ba18c74c-5099-40db-9cba-487e3f9e30f1", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-14T05:56:26.994912", "session_id": "561dcc6d-3b16-4808-b777-e708b3000f1a", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-14T05:56:45.393276", "session_id": "561dcc6d-3b16-4808-b777-e708b3000f1a", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-14T05:57:01.267030", "session_id": "561dcc6d-3b16-4808-b777-e708b3000f1a", "metadata": {}}
+{"event_type": "routing_general_fallback", "timestamp": "2026-03-14T05:59:39.361911", "session_id": "561dcc6d-3b16-4808-b777-e708b3000f1a", "metadata": {"confidence": 70.0, "grounded": false}}

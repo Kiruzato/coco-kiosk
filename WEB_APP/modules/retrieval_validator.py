@@ -45,10 +45,15 @@ STOPWORDS = {
     'and', 'or', 'but', 'if', 'then', 'so', 'as', 'because', 'while',
     # Common question phrases
     'tell', 'know', 'find', 'need', 'want', 'please', 'help',
-    # Command/enumeration words (Phase 17C: don't penalize keyword scoring)
+    # Command/enumeration words (don't penalize keyword scoring)
     'list', 'show', 'give', 'name', 'all', 'every', 'each',
     # Campus-specific common words (still want to extract the subject)
     'campus', 'school', 'college', 'university',
+    # Professional titles — these are modifiers, not topic-identifying terms.
+    # Including them causes grounding failures because "engr" (without period)
+    # won't match "engr." in normalized document text.
+    'dr', 'engr', 'prof', 'atty', 'arch', 'mr', 'ms', 'mrs',
+    'doctor', 'engineer', 'professor', 'attorney', 'architect',
 }
 
 # Minimum term length to consider meaningful
