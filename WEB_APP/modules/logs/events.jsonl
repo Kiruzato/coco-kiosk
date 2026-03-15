@@ -9393,3 +9393,5 @@
 {"event_type": "routing_document_success", "timestamp": "2026-03-14T05:56:45.393276", "session_id": "561dcc6d-3b16-4808-b777-e708b3000f1a", "metadata": {}}
 {"event_type": "routing_document_success", "timestamp": "2026-03-14T05:57:01.267030", "session_id": "561dcc6d-3b16-4808-b777-e708b3000f1a", "metadata": {}}
 {"event_type": "routing_general_fallback", "timestamp": "2026-03-14T05:59:39.361911", "session_id": "561dcc6d-3b16-4808-b777-e708b3000f1a", "metadata": {"confidence": 70.0, "grounded": false}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-16T07:30:01.827690", "session_id": "281675eb-02e2-41b4-b354-db487083c19a", "metadata": {"extractor": "deans"}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-16T07:30:35.141611", "session_id": "281675eb-02e2-41b4-b354-db487083c19a", "metadata": {}}
