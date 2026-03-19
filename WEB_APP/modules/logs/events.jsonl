@@ -9395,3 +9395,18 @@
 {"event_type": "routing_general_fallback", "timestamp": "2026-03-14T05:59:39.361911", "session_id": "561dcc6d-3b16-4808-b777-e708b3000f1a", "metadata": {"confidence": 70.0, "grounded": false}}
 {"event_type": "routing_document_success", "timestamp": "2026-03-16T07:30:01.827690", "session_id": "281675eb-02e2-41b4-b354-db487083c19a", "metadata": {"extractor": "deans"}}
 {"event_type": "routing_document_success", "timestamp": "2026-03-16T07:30:35.141611", "session_id": "281675eb-02e2-41b4-b354-db487083c19a", "metadata": {}}
+{"event_type": "routing_general_fallback", "timestamp": "2026-03-19T07:22:43.176059", "session_id": "e14f9d7f-b05c-407a-89b3-f83f06248ae8", "metadata": {"confidence": 0.0, "grounded": false}}
+{"event_type": "routing_general_fallback", "timestamp": "2026-03-19T07:23:08.833466", "session_id": "e14f9d7f-b05c-407a-89b3-f83f06248ae8", "metadata": {"confidence": 0.0, "grounded": false}}
+{"event_type": "routing_general_fallback", "timestamp": "2026-03-19T07:23:25.217643", "session_id": "e14f9d7f-b05c-407a-89b3-f83f06248ae8", "metadata": {"confidence": 0.0, "grounded": false}}
+{"event_type": "routing_general_fallback", "timestamp": "2026-03-19T07:23:33.312021", "session_id": "e14f9d7f-b05c-407a-89b3-f83f06248ae8", "metadata": {"confidence": 0.0, "grounded": false}}
+{"event_type": "routing_general_fallback", "timestamp": "2026-03-19T07:23:44.728024", "session_id": "e14f9d7f-b05c-407a-89b3-f83f06248ae8", "metadata": {"confidence": 0.0, "grounded": false}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-19T07:24:42.589823", "session_id": "e14f9d7f-b05c-407a-89b3-f83f06248ae8", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-19T07:25:10.498634", "session_id": "e14f9d7f-b05c-407a-89b3-f83f06248ae8", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-19T07:25:22.619242", "session_id": "e14f9d7f-b05c-407a-89b3-f83f06248ae8", "metadata": {"extractor": "deans"}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-19T07:25:48.210317", "session_id": "e14f9d7f-b05c-407a-89b3-f83f06248ae8", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-19T07:26:02.697953", "session_id": "e14f9d7f-b05c-407a-89b3-f83f06248ae8", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-19T07:26:34.418304", "session_id": "e14f9d7f-b05c-407a-89b3-f83f06248ae8", "metadata": {"extractor": "deans"}}
+{"event_type": "routing_general_fallback", "timestamp": "2026-03-19T07:39:11.060511", "session_id": "e14f9d7f-b05c-407a-89b3-f83f06248ae8", "metadata": {"confidence": 70.0, "grounded": false}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-19T07:39:22.153805", "session_id": "e14f9d7f-b05c-407a-89b3-f83f06248ae8", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-19T07:39:34.171731", "session_id": "e14f9d7f-b05c-407a-89b3-f83f06248ae8", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-19T07:39:46.271042", "session_id": "e14f9d7f-b05c-407a-89b3-f83f06248ae8", "metadata": {"extractor": "deans"}}

@@ -1316,20 +1316,27 @@ class DocumentManager:
         self.registry = DocumentRegistry(registry_path)
         self.vector_store_path = vector_store_path
         self.api_key = openai_api_key or OPENAI_API_KEY
-
-        if not self.api_key:
-            raise ValueError("OpenAI API key not found. Set OPENAI_API_KEY environment variable.")
-
-        self.embeddings = OpenAIEmbeddings(openai_api_key=self.api_key)
         self.vector_store = None
+
+        if self.api_key:
+            self.embeddings = OpenAIEmbeddings(openai_api_key=self.api_key)
+        else:
+            self.embeddings = None
+            logger.warning(
+                "[DOC_MANAGER] No OpenAI API key — embeddings unavailable. "
+                "Vector store loading and ingestion are disabled until a key is configured."
+            )
 
     def load_vector_store(self) -> Optional[FAISS]:
         """
         Load existing vector store from disk.
 
         Returns:
-            FAISS vector store or None if not found
+            FAISS vector store or None if not found or not loadable
         """
+        if not self.embeddings:
+            logger.warning("Cannot load vector store — no embeddings (OpenAI API key missing).")
+            return None
         if self.vector_store_path.exists():
             logger.info(f"Loading vector store from {self.vector_store_path}")
             self.vector_store = FAISS.load_local(

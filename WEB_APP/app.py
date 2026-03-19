@@ -31,7 +31,7 @@ from fastapi.responses import FileResponse, RedirectResponse
 import shutil
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.prompts import SystemMessagePromptTemplate, HumanMessagePromptTemplate, ChatPromptTemplate
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_classic.memory import ConversationBufferWindowMemory
@@ -79,10 +79,10 @@ try:
 except Exception as e:
     logger.warning(f"[STARTUP] Credential manager init failed: {e}")
 
-# Now validate required keys (may come from .env OR encrypted storage)
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY environment variable not set")
+# Load OpenAI API key (may come from .env OR encrypted storage).
+# If missing, the server still starts — AI features are disabled until the key
+# is configured via the admin panel.
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") or None
 
 ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
 if not ADMIN_API_KEY:
@@ -220,86 +220,118 @@ doc_manager = DocumentManager(
     registry_path=REGISTRY_PATH,
     vector_store_path=VECTOR_STORE_PATH
 )
-doc_manager.load_vector_store()
 
-if doc_manager.vector_store is None:
-    raise RuntimeError(
-        "No vector store found. This server runs in RUNTIME MODE only.\n"
-        "To create a vector store:\n"
-        "  1. On your dev machine: python ingest.py <documents_folder> (from INGESTION_MODULE)\n"
-        "  2. Upload via Admin UI > RAG Package, OR\n"
-        "  3. Copy vector_store/ folder and restart server"
+# Load vector store safely — corrupted files must not crash the server.
+try:
+    doc_manager.load_vector_store()
+except Exception as e:
+    logger.error(f"[STARTUP] Failed to load vector store: {e}")
+    doc_manager.vector_store = None
+
+# Track whether RAG knowledge base is available.
+# When False, the system runs in "empty knowledge mode" — all queries use
+# general knowledge only.  Transitions to True after a RAG package is uploaded
+# via the Admin UI, without requiring a server restart.
+rag_available: bool = doc_manager.vector_store is not None
+
+if not rag_available:
+    logger.warning(
+        "[STARTUP] No vector store found — running in EMPTY KNOWLEDGE MODE.\n"
+        "  RAG retrieval is disabled. All queries will use general knowledge.\n"
+        "  Upload a RAG package via Admin UI > RAG Package to enable full functionality."
     )
 
 # Phase 25: Load metadata index
 from WEB_APP.modules.metadata_index import MetadataIndex
 metadata_index = MetadataIndex()
-if not metadata_index.load():
+if rag_available and not metadata_index.load():
     logger.info("[PHASE25] Building metadata index from vector store...")
     metadata_index.build_from_vector_store(doc_manager.vector_store)
     metadata_index.save()
 
-# Initialize LLM
-llm = ChatOpenAI(
-    model_name="gpt-4o-mini",
-    temperature=0,
-    openai_api_key=OPENAI_API_KEY
-)
+# Initialize LLM and orchestrators.
+# When no API key is present, these are set to None — AI features are disabled
+# until a key is configured via the admin panel (calls _reload_llm).
+llm = None
+llm_streaming = None
+response_orchestrator = None
+response_orchestrator_streaming = None
 
-# Phase 47: Streaming LLM instance for SSE responses
-llm_streaming = ChatOpenAI(
-    model_name="gpt-4o-mini",
-    temperature=0,
-    openai_api_key=OPENAI_API_KEY,
-    streaming=True
-)
+# Track whether AI (LLM) services are available
+ai_available: bool = False
 
-# Initialize Response Orchestrator (Phase 44: LLM-as-Final-Synthesizer)
-# Singleton instance reused across all requests
-response_orchestrator = ResponseOrchestrator(
-    llm=llm,
-    doc_manager=doc_manager,
-    config={
-        "retrieval_top_k": RETRIEVAL_TOP_K,
-        "relevance_threshold": RELEVANCE_SCORE_THRESHOLD,
-        "min_grounding_terms": 1,
-        "semantic_threshold_high": 0.78,
-        "semantic_threshold_medium": 0.65
-    }
-)
-logger.info("[PHASE44] ResponseOrchestrator initialized (singleton)")
+_ORCH_CONFIG = {
+    "retrieval_top_k": RETRIEVAL_TOP_K,
+    "relevance_threshold": RELEVANCE_SCORE_THRESHOLD,
+    "min_grounding_terms": 1,
+    "semantic_threshold_high": 0.78,
+    "semantic_threshold_medium": 0.65,
+}
 
-# Phase 47: Streaming Response Orchestrator
-response_orchestrator_streaming = ResponseOrchestrator(
-    llm=llm_streaming,
-    doc_manager=doc_manager,
-    config={
-        "retrieval_top_k": RETRIEVAL_TOP_K,
-        "relevance_threshold": RELEVANCE_SCORE_THRESHOLD,
-        "min_grounding_terms": 1,
-        "semantic_threshold_high": 0.78,
-        "semantic_threshold_medium": 0.65
-    }
-)
-logger.info("[PHASE47] Streaming ResponseOrchestrator initialized")
+if OPENAI_API_KEY:
+    try:
+        llm = ChatOpenAI(
+            model_name="gpt-4o-mini",
+            temperature=0,
+            openai_api_key=OPENAI_API_KEY
+        )
+        llm_streaming = ChatOpenAI(
+            model_name="gpt-4o-mini",
+            temperature=0,
+            openai_api_key=OPENAI_API_KEY,
+            streaming=True
+        )
+        response_orchestrator = ResponseOrchestrator(
+            llm=llm, doc_manager=doc_manager, config=_ORCH_CONFIG
+        )
+        logger.info("[PHASE44] ResponseOrchestrator initialized (singleton)")
+        response_orchestrator_streaming = ResponseOrchestrator(
+            llm=llm_streaming, doc_manager=doc_manager, config=_ORCH_CONFIG
+        )
+        logger.info("[PHASE47] Streaming ResponseOrchestrator initialized")
+        ai_available = True
+    except Exception as e:
+        logger.error(f"[STARTUP] Failed to initialize LLM: {e}")
+else:
+    logger.warning(
+        "[STARTUP] No OpenAI API key configured — running WITHOUT AI.\n"
+        "  Chat, RAG retrieval, and LLM features are disabled.\n"
+        "  Configure the API key via Admin UI > Cloud Credentials to enable AI."
+    )
 
 
 def _reload_llm(new_api_key: str):
-    """Recreate LLM instances and orchestrators with a new OpenAI API key."""
-    global llm, llm_streaming, response_orchestrator, response_orchestrator_streaming, OPENAI_API_KEY
+    """Recreate LLM instances and orchestrators with a new OpenAI API key.
+
+    Also re-initializes the document manager's embeddings if they were
+    previously unavailable (no-key startup scenario), and attempts to load
+    the vector store so RAG becomes available dynamically.
+    """
+    global llm, llm_streaming, response_orchestrator, response_orchestrator_streaming
+    global OPENAI_API_KEY, ai_available, rag_available, doc_manager
     OPENAI_API_KEY = new_api_key
     llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0, openai_api_key=new_api_key)
     llm_streaming = ChatOpenAI(model_name="gpt-4o-mini", temperature=0, openai_api_key=new_api_key, streaming=True)
-    orch_config = {
-        "retrieval_top_k": RETRIEVAL_TOP_K,
-        "relevance_threshold": RELEVANCE_SCORE_THRESHOLD,
-        "min_grounding_terms": 1,
-        "semantic_threshold_high": 0.78,
-        "semantic_threshold_medium": 0.65,
-    }
-    response_orchestrator = ResponseOrchestrator(llm=llm, doc_manager=doc_manager, config=orch_config)
-    response_orchestrator_streaming = ResponseOrchestrator(llm=llm_streaming, doc_manager=doc_manager, config=orch_config)
+    response_orchestrator = ResponseOrchestrator(llm=llm, doc_manager=doc_manager, config=_ORCH_CONFIG)
+    response_orchestrator_streaming = ResponseOrchestrator(llm=llm_streaming, doc_manager=doc_manager, config=_ORCH_CONFIG)
+    ai_available = True
     logger.info("[CREDENTIALS] LLM instances recreated with new OpenAI API key")
+
+    # If embeddings were missing at startup, initialize them now and try
+    # loading the vector store so RAG comes online without a restart.
+    if doc_manager.embeddings is None:
+        doc_manager.api_key = new_api_key
+        doc_manager.embeddings = OpenAIEmbeddings(openai_api_key=new_api_key)
+        logger.info("[CREDENTIALS] Document manager embeddings initialized")
+        try:
+            doc_manager.load_vector_store()
+            if doc_manager.vector_store is not None:
+                rag_available = True
+                metadata_index.build_from_vector_store(doc_manager.vector_store)
+                metadata_index.save()
+                logger.info("[CREDENTIALS] Vector store loaded dynamically after API key update")
+        except Exception as e:
+            logger.warning(f"[CREDENTIALS] Could not load vector store: {e}")
 
 
 # Initialize query logger
@@ -816,6 +848,8 @@ async def health_check():
 
     return {
         "status": "healthy",
+        "ai_available": ai_available,
+        "rag_available": rag_available,
         "documents_loaded": num_documents,
         "active_sessions": num_sessions,
         "timestamp": datetime.now().isoformat()
@@ -839,6 +873,21 @@ async def chat(request: ChatRequest):
     Returns:
         Chat response with answer, sources, confidence, and mode
     """
+    # Guard: AI services must be available to process chat
+    if not ai_available:
+        return ChatResponse(
+            answer=(
+                "The AI service is not configured yet. "
+                "Please set the OpenAI API key in the admin settings "
+                "(Admin Panel → Cloud Credentials)."
+            ),
+            sources=[],
+            confidence="LOW",
+            mode="GENERAL_KNOWLEDGE",
+            session_id=request.session_id or "",
+            metadata_visible=False,
+        )
+
     # Get or create session
     session_id, session = get_or_create_session(request.session_id)
     memory = session["memory"]
@@ -1040,6 +1089,19 @@ async def chat_stream(request: StreamChatRequest):
     """
     import json
 
+    # Guard: AI services must be available for streaming chat
+    if not ai_available:
+        async def no_ai_generator():
+            msg = (
+                "The AI service is not configured yet. "
+                "Please set the OpenAI API key in the admin settings "
+                "(Admin Panel → Cloud Credentials)."
+            )
+            yield {"event": "metadata", "data": json.dumps({"mode": "GENERAL_KNOWLEDGE", "confidence": "LOW", "sources": []})}
+            yield {"event": "token", "data": json.dumps({"content": msg, "index": 1})}
+            yield {"event": "complete", "data": json.dumps({"status": "complete"})}
+        return EventSourceResponse(no_ai_generator())
+
     # Get or create session
     session_id, session = get_or_create_session(request.session_id)
     memory = session["memory"]
@@ -1159,7 +1221,7 @@ async def upload_rag_package(file: UploadFile = File(...)):
     Returns:
         Success response with document count
     """
-    global doc_manager, metadata_index
+    global doc_manager, metadata_index, rag_available
     import zipfile
     import tempfile
 
@@ -1274,7 +1336,10 @@ async def upload_rag_package(file: UploadFile = File(...)):
                 # Get document count from registry
                 doc_count = len(doc_manager.registry.documents) if doc_manager.registry.documents else 0
 
-                logger.info(f"[RAG_UPLOAD] Success! {doc_count} documents loaded")
+                # Transition: empty knowledge mode → active knowledge mode
+                rag_available = True
+
+                logger.info(f"[RAG_UPLOAD] Success! {doc_count} documents loaded (rag_available=True)")
 
                 return {
                     "success": True,
