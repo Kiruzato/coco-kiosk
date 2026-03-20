@@ -71,6 +71,54 @@ fi
 
 echo ""
 
+# ── Remove Chromium watchdog ──────────────────────────────────────────────
+
+echo "Removing Chromium watchdog..."
+
+# Stop and disable user service
+KIOSK_UID="$(id -u "$KIOSK_USER" 2>/dev/null || echo "")"
+if [ -n "$KIOSK_UID" ]; then
+    sudo -u "$KIOSK_USER" XDG_RUNTIME_DIR="/run/user/$KIOSK_UID" \
+        systemctl --user stop coco-chromium-watchdog.service 2>/dev/null || true
+    sudo -u "$KIOSK_USER" XDG_RUNTIME_DIR="/run/user/$KIOSK_UID" \
+        systemctl --user disable coco-chromium-watchdog.service 2>/dev/null || true
+fi
+
+WATCHDOG_SERVICE="$KIOSK_HOME/.config/systemd/user/coco-chromium-watchdog.service"
+if [ -f "$WATCHDOG_SERVICE" ]; then
+    rm "$WATCHDOG_SERVICE"
+    log "Watchdog user service removed"
+else
+    warn "Watchdog service not found (already removed)"
+fi
+
+WATCHDOG_SCRIPT="/usr/local/bin/coco-chromium-watchdog.sh"
+if [ -f "$WATCHDOG_SCRIPT" ]; then
+    rm "$WATCHDOG_SCRIPT"
+    log "Watchdog script removed"
+fi
+
+echo ""
+
+# ── Restore keyboard shortcuts ────────────────────────────────────────────
+
+echo "Restoring keyboard shortcuts..."
+
+OB_RC="$KIOSK_HOME/.config/openbox/lxde-pi-rc.xml"
+OB_BACKUP="$OB_RC.bak.pre-kiosk"
+
+if [ -f "$OB_BACKUP" ]; then
+    mv "$OB_BACKUP" "$OB_RC"
+    log "Restored original openbox config from backup"
+elif [ -f "$OB_RC" ]; then
+    rm "$OB_RC"
+    log "Removed kiosk openbox config (system defaults will apply)"
+else
+    warn "No openbox kiosk config found (already removed)"
+fi
+
+echo ""
+
 # ── Remove screen blanking overrides ─────────────────────────────────────
 
 echo "Removing screen blanking overrides..."
@@ -93,8 +141,8 @@ echo "=============================================="
 echo -e "${GREEN}  Uninstall Complete${NC}"
 echo "=============================================="
 echo ""
-echo "  The kiosk service and autostart have been removed."
-echo "  Python packages and project files were NOT removed."
+echo "  The kiosk service, watchdog, autostart, and keyboard lockdown"
+echo "  have been removed. Python packages and project files were NOT removed."
 echo ""
 echo "  To reinstall: sudo ./WEB_APP/deploy/install_kiosk.sh"
 echo ""

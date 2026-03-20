@@ -72,7 +72,7 @@ fix_hostname
 # ── Step 1: System packages ───────────────────────────────────────────────
 
 install_system_packages() {
-    echo -e "${YELLOW}[1/9] Installing system packages...${NC}"
+    echo -e "${YELLOW}[1/11] Installing system packages...${NC}"
 
     # Clean cached packages to avoid corrupt .deb files from prior downloads
     apt-get clean
@@ -165,7 +165,7 @@ configure_wifi_permissions
 # The venv is created once during install (not recreated on boot).
 
 install_python_deps() {
-    echo -e "${YELLOW}[2/9] Setting up Python environment...${NC}"
+    echo -e "${YELLOW}[2/11] Setting up Python environment...${NC}"
 
     local REQUIREMENTS="$WEB_APP_DIR/requirements_rpi.txt"
 
@@ -206,7 +206,7 @@ install_python_deps
 # ── Step 3: Download voice models ────────────────────────────────────────
 
 download_voice_models() {
-    echo -e "${YELLOW}[3/9] Downloading voice models...${NC}"
+    echo -e "${YELLOW}[3/11] Downloading voice models...${NC}"
 
     local PIPER_MODEL_DIR="$WEB_APP_DIR/modules/voice/models/piper"
     local PIPER_ONNX="$PIPER_MODEL_DIR/en_US-amy-medium.onnx"
@@ -264,7 +264,7 @@ download_voice_models
 # ── Step 4: Setup .env file ──────────────────────────────────────────────
 
 setup_env_file() {
-    echo -e "${YELLOW}[4/9] Setting up environment file...${NC}"
+    echo -e "${YELLOW}[4/11] Setting up environment file...${NC}"
 
     local ENV_FILE="$WEB_APP_DIR/.env"
     local ENV_EXAMPLE="$WEB_APP_DIR/.env.example"
@@ -328,7 +328,7 @@ setup_env_file
 # ── Step 5: Verify vector store ───────────────────────────────────────────
 
 verify_vector_store() {
-    echo -e "${YELLOW}[5/9] Verifying vector store...${NC}"
+    echo -e "${YELLOW}[5/11] Verifying vector store...${NC}"
 
     local VECTOR_DIR="$WEB_APP_DIR/modules/vector_store"
 
@@ -351,7 +351,7 @@ verify_vector_store
 # ── Step 6: Install systemd service ──────────────────────────────────────
 
 install_systemd_service() {
-    echo -e "${YELLOW}[6/9] Installing systemd service...${NC}"
+    echo -e "${YELLOW}[6/11] Installing systemd service...${NC}"
 
     local SERVICE_SRC="$DEPLOY_DIR/coco-kiosk.service"
     local SERVICE_DST="/etc/systemd/system/coco-kiosk.service"
@@ -405,6 +405,7 @@ install_systemd_service
 _write_chromium_desktop() {
     # Write/overwrite the Chromium autostart desktop file.
     # Separated so it can be called from both fresh install and reconfigure paths.
+    # NOTE: Initial launch only — the watchdog handles restarts after crashes.
     local CHROMIUM_BIN="$1"
     local AUTOSTART_DIR="$2"
 
@@ -412,8 +413,8 @@ _write_chromium_desktop() {
 [Desktop Entry]
 Type=Application
 Name=CoCo Kiosk Browser
-Comment=Launch CoCo campus kiosk in fullscreen Chromium
-Exec=bash -c 'sleep 8 && $CHROMIUM_BIN --start-fullscreen --noerrdialogs --disable-infobars --disable-session-crashed-bubble --disable-translate --no-first-run --enable-features=VirtualKeyboard http://localhost:8000'
+Comment=Launch CoCo campus kiosk in true kiosk mode
+Exec=bash -c 'sleep 8 && $CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --disable-session-crashed-bubble --disable-translate --no-first-run --check-for-update-interval=31536000 --disable-pinch --disable-features=TranslateUI --autoplay-policy=no-user-gesture-required http://localhost:8000'
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
@@ -423,7 +424,7 @@ DESKTOPEOF
 }
 
 configure_chromium_autostart() {
-    echo -e "${YELLOW}[7/9] Configuring Chromium autostart...${NC}"
+    echo -e "${YELLOW}[7/11] Configuring Chromium autostart...${NC}"
 
     # Detect Chromium binary name
     local CHROMIUM_BIN="chromium-browser"
@@ -460,10 +461,172 @@ configure_chromium_autostart() {
 
 configure_chromium_autostart
 
-# ── Step 8: Disable screen blanking & power saving ───────────────────────
+# ── Step 8: Install Chromium watchdog ─────────────────────────────────────
+# Auto-restarts Chromium if it crashes or is killed.
+# Runs as a systemd user service (needs access to X display).
+
+install_chromium_watchdog() {
+    echo -e "${YELLOW}[8/11] Installing Chromium watchdog...${NC}"
+
+    # Detect Chromium binary name
+    local CHROMIUM_BIN="chromium-browser"
+    if command -v chromium > /dev/null 2>&1 && ! command -v chromium-browser > /dev/null 2>&1; then
+        CHROMIUM_BIN="chromium"
+    fi
+
+    # Install watchdog script
+    local WATCHDOG_SRC="$DEPLOY_DIR/coco-chromium-watchdog.sh"
+    local WATCHDOG_DST="/usr/local/bin/coco-chromium-watchdog.sh"
+
+    if [ ! -f "$WATCHDOG_SRC" ]; then
+        warn "Watchdog script not found: $WATCHDOG_SRC — skipping"
+        echo ""
+        return
+    fi
+
+    cp "$WATCHDOG_SRC" "$WATCHDOG_DST"
+    chmod +x "$WATCHDOG_DST"
+
+    # Replace placeholder with actual Chromium binary name
+    sed -i "s|@@CHROMIUM_BIN@@|$CHROMIUM_BIN|g" "$WATCHDOG_DST"
+
+    # Create systemd user service directory
+    local USER_SERVICE_DIR="$KIOSK_HOME/.config/systemd/user"
+    sudo -u "$KIOSK_USER" mkdir -p "$USER_SERVICE_DIR"
+
+    # Write the watchdog service
+    cat > "$USER_SERVICE_DIR/coco-chromium-watchdog.service" << WDEOF
+[Unit]
+Description=CoCo Chromium Kiosk Watchdog
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/coco-chromium-watchdog.sh
+Restart=always
+RestartSec=5
+Environment=DISPLAY=:0
+
+[Install]
+WantedBy=default.target
+WDEOF
+
+    chown -R "$KIOSK_USER:$KIOSK_USER" "$KIOSK_HOME/.config/systemd"
+
+    # Enable the user service (runs on login)
+    # Enable lingering so the user service starts at boot (even without login on some configs)
+    loginctl enable-linger "$KIOSK_USER" 2>/dev/null || true
+    sudo -u "$KIOSK_USER" XDG_RUNTIME_DIR="/run/user/$(id -u "$KIOSK_USER")" \
+        systemctl --user enable coco-chromium-watchdog.service > /dev/null 2>&1 || true
+
+    log "Chromium watchdog installed (auto-restarts on crash)"
+    echo ""
+}
+
+install_chromium_watchdog
+
+# ── Step 9: Lock down keyboard shortcuts ──────────────────────────────────
+# Prevents users from escaping kiosk via Alt+Tab, Alt+F4, Ctrl+W, etc.
+# LXDE uses openbox as its window manager; we override its keybindings.
+
+lockdown_keyboard_shortcuts() {
+    echo -e "${YELLOW}[9/11] Locking down keyboard shortcuts...${NC}"
+
+    # Openbox config directory for LXDE-pi
+    local OB_DIR="$KIOSK_HOME/.config/openbox"
+    local OB_RC="$OB_DIR/lxde-pi-rc.xml"
+    local OB_SYSTEM="/etc/xdg/openbox/lxde-pi-rc.xml"
+
+    sudo -u "$KIOSK_USER" mkdir -p "$OB_DIR"
+
+    # Back up existing config if present (and not already backed up)
+    if [ -f "$OB_RC" ] && [ ! -f "$OB_RC.bak.pre-kiosk" ]; then
+        cp "$OB_RC" "$OB_RC.bak.pre-kiosk"
+        log "Backed up existing openbox config to lxde-pi-rc.xml.bak.pre-kiosk"
+    elif [ -f "$OB_SYSTEM" ] && [ ! -f "$OB_RC.bak.pre-kiosk" ]; then
+        cp "$OB_SYSTEM" "$OB_RC.bak.pre-kiosk"
+        log "Backed up system openbox config"
+    fi
+
+    # Write a minimal openbox config with ALL keybindings removed.
+    # This prevents Alt+Tab, Alt+F4, Ctrl+W, Super key, etc.
+    # The <applications> block forces all windows to be maximized and undecorated.
+    cat > "$OB_RC" << 'OBEOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_config xmlns="http://openbox.org/3.4/rc"
+                xmlns:xi="http://www.w3.org/2001/XInclude">
+
+  <!-- CoCo Kiosk: Minimal openbox config with all keybindings removed -->
+
+  <resistance>
+    <strength>10</strength>
+    <screen_edge_strength>20</screen_edge_strength>
+  </resistance>
+
+  <focus>
+    <focusNew>yes</focusNew>
+    <followMouse>no</followMouse>
+    <focusLast>yes</focusLast>
+    <underMouse>no</underMouse>
+    <focusDelay>200</focusDelay>
+    <raiseOnFocus>no</raiseOnFocus>
+  </focus>
+
+  <placement>
+    <policy>Smart</policy>
+    <center>yes</center>
+    <monitor>Primary</monitor>
+    <primaryMonitor>1</primaryMonitor>
+  </placement>
+
+  <theme>
+    <name>PiXflat</name>
+    <titleLayout>NLIMC</titleLayout>
+    <keepBorder>no</keepBorder>
+  </theme>
+
+  <desktops>
+    <number>1</number>
+    <firstdesk>1</firstdesk>
+    <popupTime>0</popupTime>
+  </desktops>
+
+  <!-- NO keybindings — all keyboard shortcuts are disabled for kiosk lockdown -->
+  <keyboard>
+    <chainQuitKey>C-g</chainQuitKey>
+  </keyboard>
+
+  <!-- NO mouse bindings for desktop/root window actions -->
+  <mouse>
+    <dragThreshold>1</dragThreshold>
+    <doubleClickTime>500</doubleClickTime>
+    <screenEdgeWarpTime>400</screenEdgeWarpTime>
+    <screenEdgeWarpMouse>false</screenEdgeWarpMouse>
+  </mouse>
+
+  <!-- Force all windows maximized and undecorated (no title bar) -->
+  <applications>
+    <application class="*">
+      <maximized>yes</maximized>
+      <decor>no</decor>
+    </application>
+  </applications>
+
+</openbox_config>
+OBEOF
+
+    chown "$KIOSK_USER:$KIOSK_USER" "$OB_RC"
+
+    log "Keyboard shortcuts locked down (openbox keybindings removed)"
+    echo ""
+}
+
+lockdown_keyboard_shortcuts
+
+# ── Step 10: Disable screen blanking & power saving ───────────────────────
 
 disable_screen_blanking() {
-    echo -e "${YELLOW}[8/9] Disabling screen blanking / power saving...${NC}"
+    echo -e "${YELLOW}[10/11] Disabling screen blanking / power saving...${NC}"
 
     # ── Method 1: LXDE autostart (append xset + unclutter) ──
     # IMPORTANT: We do NOT create our own LXDE autostart file.
@@ -529,10 +692,10 @@ AUTOSTART
 
 disable_screen_blanking
 
-# ── Step 9: Start the service ────────────────────────────────────────────
+# ── Step 11: Start the service ───────────────────────────────────────────
 
 start_and_verify() {
-    echo -e "${YELLOW}[9/9] Starting CoCo kiosk service...${NC}"
+    echo -e "${YELLOW}[11/11] Starting CoCo kiosk service...${NC}"
 
     systemctl restart coco-kiosk.service
 
@@ -581,9 +744,14 @@ echo "  Web interface  : http://localhost:8000/"
 echo ""
 echo "  On next reboot, the kiosk will start automatically:"
 echo "    1. systemd starts the backend server"
-echo "    2. Chromium opens fullscreen to http://localhost:8000"
-echo "    3. Screen blanking is disabled"
-echo "    4. Mouse cursor hides after 3 seconds"
+echo "    2. Chromium opens in true kiosk mode (--kiosk)"
+echo "    3. Watchdog auto-restarts Chromium if it crashes"
+echo "    4. Keyboard shortcuts are locked down (no Alt+Tab, Alt+F4)"
+echo "    5. Screen blanking is disabled"
+echo "    6. Mouse cursor hides after 3 seconds"
+echo ""
+echo "  Admin access: connect from another device via WiFi to"
+echo "    http://<rpi-ip>:8000/admin"
 echo ""
 echo "  To update later:  sudo $DEPLOY_DIR/update_kiosk.sh"
 echo "  To uninstall:     sudo $DEPLOY_DIR/uninstall_kiosk.sh"
