@@ -13,6 +13,7 @@
 let sessionId = sessionStorage.getItem('chatSessionId') || null;
 let lastQueryId = null;
 let isWaiting = false;
+let backendReady = false;
 
 // Phase 48: Advertisement slideshow state
 let advertisements = [];
@@ -635,6 +636,63 @@ function startConnectivityMonitor() {
 }
 
 // ============================================================================
+// BACKEND READINESS
+// ============================================================================
+
+const READINESS_POLL_MS = 2000; // 2 seconds between polls
+
+/**
+ * Poll the backend /health endpoint until it responds successfully.
+ * Keeps all inputs disabled until ready, then enables the UI and runs
+ * post-ready initialization (connectivity monitor, voice init, etc.).
+ */
+async function waitForBackend() {
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const voiceBtn = document.getElementById('voiceBtn');
+
+    async function checkHealth() {
+        try {
+            const response = await fetch('/health', { cache: 'no-store' });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.status === 'healthy') {
+                    return true;
+                }
+            }
+        } catch (_) {
+            // Backend not up yet
+        }
+        return false;
+    }
+
+    // Poll until ready
+    while (true) {
+        const ready = await checkHealth();
+        if (ready) {
+            console.log('[Readiness] Backend is ready');
+            backendReady = true;
+
+            // Enable inputs (connectivity monitor will take over state management)
+            if (userInput) {
+                userInput.disabled = false;
+                userInput.placeholder = 'Type your question here...';
+            }
+            if (sendBtn) sendBtn.disabled = false;
+
+            // Post-ready initialization
+            startConnectivityMonitor();
+            initVoice();
+
+            return;
+        }
+
+        console.log('[Readiness] Backend not ready, retrying in', READINESS_POLL_MS, 'ms...');
+        await new Promise(resolve => setTimeout(resolve, READINESS_POLL_MS));
+    }
+}
+
+// ============================================================================
 // DOM ELEMENTS
 // ============================================================================
 
@@ -735,8 +793,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize FAQ section
     initFAQSection();
 
-    // Start real-time connectivity monitoring
-    startConnectivityMonitor();
+    // Wait for backend readiness before enabling inputs.
+    // Connectivity monitor and voice init are started inside waitForBackend
+    // once the backend responds healthy.
+    waitForBackend();
 });
 
 // ============================================================================
@@ -2128,7 +2188,7 @@ async function resetConversation() {
 async function handleSubmit(event) {
     event.preventDefault();
 
-    if (isWaiting || !isOnline) {
+    if (isWaiting || !isOnline || !backendReady) {
         return;
     }
 
@@ -3165,10 +3225,8 @@ async function initVoice() {
     }
 }
 
-// Initialize voice on page load
+// Set up voice event listeners on page load (initVoice called by waitForBackend)
 document.addEventListener('DOMContentLoaded', () => {
-    initVoice();
-
     // Set up voice button click handler
     if (voiceBtn) {
         voiceBtn.addEventListener('click', handleVoiceClick);
@@ -3319,7 +3377,7 @@ function setVoiceState(newState, message = null) {
  * Handle voice button click - toggle recording
  */
 async function handleVoiceClick() {
-    if (!isOnline) return;
+    if (!isOnline || !backendReady) return;
 
     if (voiceState === VoiceState.LISTENING) {
         // Stop recording
