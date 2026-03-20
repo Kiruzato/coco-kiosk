@@ -5,15 +5,25 @@ Google Cloud Speech-to-Text Engine
 Phase 38: Google Cloud STT Integration
 
 Cloud-based speech-to-text using Google Cloud Speech-to-Text V1.
-Designed for the 60-minute monthly free tier with data logging.
+Configured for privacy-safe operation (without data logging).
 
 Requirements:
 - GOOGLE_APPLICATION_CREDENTIALS environment variable (path to service account JSON)
 - google-cloud-speech Python package
 
 Configuration:
-- Uses "default" model with data logging for free tier eligibility
-- Standard recognition (not enhanced) for maximum free tier coverage
+- Uses "default" model with standard recognition
+- Data logging must be DISABLED in Google Cloud Console for privacy compliance
+
+Privacy Note:
+    Data logging is a PROJECT-LEVEL setting in Google Cloud Console, not an API
+    parameter. To ensure audio is not retained or used for model training:
+
+    1. Go to Google Cloud Console → APIs & Services → Cloud Speech API
+    2. Click the "Data logging" tab
+    3. Ensure data logging is DISABLED
+
+    See: https://cloud.google.com/speech-to-text/docs/data-logging
 
 Usage:
     engine = GoogleCloudSTTEngine(config)
@@ -38,11 +48,11 @@ class GoogleCloudSTTEngine(STTEngine):
     """
     Google Cloud Speech-to-Text V1 engine.
 
-    Uses the Standard model with data logging to maximize free tier usage.
-    Free tier: 60 minutes/month of Standard model with data logging.
+    Uses the Standard model with privacy-safe configuration (no data logging).
+    Free tier: 60 minutes/month of standard recognition.
 
-    Note: Data logging means audio may be used by Google to improve their
-    service. This is required for the free tier.
+    Data logging is controlled at the project level in Google Cloud Console,
+    not via API parameters. Ensure it is DISABLED for privacy compliance.
     """
 
     def __init__(self, config: Dict[str, Any]):
@@ -53,13 +63,13 @@ class GoogleCloudSTTEngine(STTEngine):
             config: Configuration dict with:
                 - credentials_path: Path to service account JSON (optional, uses env var if not set)
                 - language_code: Language code (default 'en-US')
-                - model: Model name (default 'default' for free tier)
+                - model: Model name (default 'default')
                 - enable_automatic_punctuation: Add punctuation (default True)
                 - enabled: Whether engine is enabled (default True)
         """
         self.config = config
         self.language_code = config.get('language_code', 'en-US')
-        self.model = config.get('model', 'default')  # 'default' uses data logging = free tier
+        self.model = config.get('model', 'default')
         self.enable_punctuation = config.get('enable_automatic_punctuation', True)
         self.enabled = config.get('enabled', True)
 
@@ -77,6 +87,7 @@ class GoogleCloudSTTEngine(STTEngine):
 
         if self.is_available():
             logger.info(f"[GOOGLE-STT] Initialized with model: {self.model}, language: {self.language_code}")
+            logger.info("[GOOGLE-STT] Data logging: DISABLED (ensure this matches Google Cloud Console project setting)")
         else:
             reasons = []
             if not self.enabled:
@@ -222,10 +233,8 @@ class GoogleCloudSTTEngine(STTEngine):
                 sample_rate_hertz=sample_rate,
                 language_code=lang_code,
                 model=self.model,
-                use_enhanced=False,  # Standard model for free tier
+                use_enhanced=False,
                 enable_automatic_punctuation=self.enable_punctuation,
-                # Enable data logging for free tier
-                # Note: This is implicit with 'default' model
             )
 
             # Run synchronous API call in thread pool

@@ -91,7 +91,7 @@ STT_PROVIDERS = [
         "status_label": None,
         "can_be_fallback": True,  # Can be fallback if model available
     },
-    # Phase 38: Google Cloud STT
+    # Phase 38: Google Cloud STT (privacy-safe — data logging disabled)
     {
         "id": "google-cloud-stt",
         "name": "Google Cloud STT",
@@ -99,12 +99,12 @@ STT_PROVIDERS = [
         "requires_model": False,
         "requires_credentials": "GOOGLE_APPLICATION_CREDENTIALS",
         # Phase 37/38 fields
-        "is_selectable": True,  # CAN be selected - has free tier
-        "pricing_tier": "free-tier",  # Quota-limited free (60 min/month)
+        "is_selectable": True,
+        "pricing_tier": "free-tier",  # Quota-limited (60 min/month)
         "status_label": None,
-        "can_be_fallback": True,  # Can be fallback within quota
+        "can_be_fallback": True,
         # Phase 38: Quota tracking
-        "monthly_quota_seconds": 3600,  # 60 minutes free tier
+        "monthly_quota_seconds": 3600,  # 60 minutes
         "has_usage_tracking": True,
     }
 ]

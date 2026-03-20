@@ -103,11 +103,14 @@ VOICE_CONFIG: Dict[str, Any] = {
     # Phase 38: Google Cloud STT configuration
     "google_cloud_stt": {
         "credentials_path": os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
-        "model": "default",  # 'default' uses data logging = free tier
+        "model": "default",
         "language_code": "en-US",
         "sample_rate_hertz": 16000,
         "enable_automatic_punctuation": True,
         "enabled": _get_bool_env("GOOGLE_STT_ENABLED", True),
+        # Privacy: data logging must be DISABLED in Google Cloud Console.
+        # This flag documents the expected project setting — it is NOT an API parameter.
+        "enable_data_logging": False,
     },
 
     # Phase 38: Usage tracking configuration
