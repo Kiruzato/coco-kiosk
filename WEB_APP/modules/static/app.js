@@ -1750,7 +1750,9 @@ async function sendMessageStreaming(message) {
                         // Finalize the message
                         finalizeStreamingMessage(messageDiv, metadata, data, fullAnswer);
                     } else if (currentEvent === 'error') {
-                        throw new Error(data.message);
+                        const err = new Error(data.message);
+                        if (data.code === 'network_error') err.isNetworkError = true;
+                        throw err;
                     }
 
                     currentEvent = null;  // Reset for next event
@@ -1762,7 +1764,11 @@ async function sendMessageStreaming(message) {
 
     } catch (error) {
         console.error('Streaming error:', error);
-        contentDiv.innerHTML = `<span class="error-text">Error: ${escapeHtml(error.message)}</span>`;
+        // For network errors, show the server's message directly (it's user-friendly)
+        const displayMsg = error.isNetworkError
+            ? escapeHtml(error.message)
+            : `Error: ${escapeHtml(error.message)}`;
+        contentDiv.innerHTML = `<span class="error-text">${displayMsg}</span>`;
         messageDiv.classList.remove('streaming');
         throw error;
     }
@@ -2081,8 +2087,12 @@ async function handleSubmit(event) {
         // Hide thinking animation
         stopThinkingAnimation();
 
-        // Show error message
-        addErrorMessage('Sorry, I encountered an error processing your request. Please try again.');
+        // Network-aware error message
+        if (error.isNetworkError || !navigator.onLine) {
+            addErrorMessage("It looks like there's no internet connection. I'm unable to process your request right now.");
+        } else {
+            addErrorMessage('Sorry, I encountered an error processing your request. Please try again.');
+        }
     } finally {
         // Re-enable input
         isWaiting = false;
@@ -3337,14 +3347,17 @@ async function processVoiceInput(audioBlob) {
             addUserMessage(data.transcribed_text);
         }
 
+        // If STT/chat failed with an error_message but no answer, surface it as the answer
+        const displayAnswer = data.answer || data.error_message || '';
+
         // Build response object for addAssistantMessage
-        const chatResponse = data.answer ? {
-            answer: data.answer,
-            mode: data.mode || 'campus',
-            confidence_level: data.confidence || 'Medium',
-            confidence_score: Math.round(data.transcription_confidence * 100) || 50,
+        const chatResponse = displayAnswer ? {
+            answer: displayAnswer,
+            mode: data.answer ? (data.mode || 'campus') : 'error',
+            confidence_level: data.confidence || 'Low',
+            confidence_score: data.answer ? (Math.round(data.transcription_confidence * 100) || 50) : 0,
             sources: data.sources || [],
-            rejected: data.rejected || false,
+            rejected: !data.answer,
             structured_answer: data.structured_answer || null,
             debug_info: data.debug_info || null,
             metadata_visible: data.metadata_visible,

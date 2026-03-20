@@ -27,6 +27,15 @@ except ImportError:
     def preprocess_input(text, source="text"):
         return text
 
+# Unified offline error handling
+try:
+    from WEB_APP.modules.response_orchestrator import OFFLINE_MESSAGE, is_network_error
+except ImportError:
+    OFFLINE_MESSAGE = "It looks like there's no internet connection. I'm unable to process your request right now."
+    def is_network_error(exc):
+        msg = str(exc).lower()
+        return any(kw in msg for kw in ("connection", "timeout", "timed out", "network", "unreachable"))
+
 logger = logging.getLogger(__name__)
 
 
@@ -217,7 +226,11 @@ class VoiceOrchestrator:
 
         except Exception as e:
             logger.error(f"[VOICE] STT failed: {e}")
-            result.error_message = f"Could not understand audio: {str(e)}"
+            if is_network_error(e):
+                logger.warning("[VOICE] Network error during STT — returning offline message")
+                result.error_message = OFFLINE_MESSAGE
+            else:
+                result.error_message = f"Could not understand audio: {str(e)}"
             result.stt_latency_ms = (time.time() - stt_start) * 1000
             result.total_latency_ms = (time.time() - start_time) * 1000
             self._log_voice_event(result, session_id)
@@ -260,7 +273,11 @@ class VoiceOrchestrator:
 
         except Exception as e:
             logger.error(f"[VOICE] Chat failed: {e}")
-            result.error_message = f"Could not process question: {str(e)}"
+            if is_network_error(e):
+                logger.warning("[VOICE] Network error during chat — returning offline message")
+                result.error_message = OFFLINE_MESSAGE
+            else:
+                result.error_message = f"Could not process question: {str(e)}"
             result.chat_latency_ms = (time.time() - chat_start) * 1000
             result.total_latency_ms = (time.time() - start_time) * 1000
             self._log_voice_event(result, session_id)

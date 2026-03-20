@@ -1695,3 +1695,5 @@
 {"query_id": "20260321_012958_923149", "timestamp": "2026-03-21T01:29:58.923149", "query": "Good evening.", "answer": "Good evening! How can I assist you with campus information today?", "feedback": null}
 {"query_id": "20260321_013107_754426", "timestamp": "2026-03-21T01:31:07.754426", "query": "Hello there.", "answer": "Hi! Welcome to the campus information kiosk! How can I help you today?", "feedback": null}
 {"query_id": "20260321_013158_763496", "timestamp": "2026-03-21T01:31:58.763496", "query": "Hi", "answer": "I apologize, but I encountered an error processing your question. Please try again.", "feedback": null}
+{"query_id": "20260321_015914_896438", "timestamp": "2026-03-21T01:59:14.896438", "query": "Hi", "answer": "It looks like there's no internet connection. I'm unable to process your request right now.", "feedback": null}
+{"query_id": "20260321_020157_624313", "timestamp": "2026-03-21T02:01:57.624313", "query": "I have.", "answer": "It seems like your question might be incomplete. Could you provide a bit more detail or clarify what you need help with? I'm here to assist!", "feedback": null}

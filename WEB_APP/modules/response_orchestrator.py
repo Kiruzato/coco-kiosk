@@ -69,6 +69,43 @@ logger = logging.getLogger(__name__)
 
 
 # =============================================================================
+# OFFLINE / NETWORK ERROR HANDLING
+# =============================================================================
+
+OFFLINE_MESSAGE = (
+    "It looks like there's no internet connection. "
+    "I'm unable to process your request right now."
+)
+
+
+def is_network_error(exc: Exception) -> bool:
+    """
+    Check if an exception indicates a network/connectivity issue.
+
+    Covers OpenAI API connection errors, gRPC transport errors,
+    and standard Python network exceptions.
+    """
+    # OpenAI-specific connection/timeout errors
+    try:
+        import openai
+        if isinstance(exc, (openai.APIConnectionError, openai.APITimeoutError)):
+            return True
+    except ImportError:
+        pass
+
+    # Standard Python network errors
+    if isinstance(exc, (ConnectionError, TimeoutError, OSError)):
+        return True
+
+    # Check the error message for network-related keywords (covers gRPC,
+    # httpx, and other transport errors that don't use standard base classes).
+    msg = str(exc).lower()
+    network_keywords = ("connection", "timeout", "timed out", "network",
+                        "unreachable", "refused", "name resolution")
+    return any(kw in msg for kw in network_keywords)
+
+
+# =============================================================================
 # ENUMS AND DATA CLASSES
 # =============================================================================
 
@@ -507,10 +544,17 @@ class ResponseOrchestrator:
                     }
         except Exception as e:
             logger.error(f"[ORCHESTRATOR] Streaming error: {e}")
-            yield {
-                "event": "error",
-                "data": {"message": str(e), "code": "llm_error"}
-            }
+            if is_network_error(e):
+                logger.warning("[ORCHESTRATOR] Network error detected in stream — returning offline message")
+                yield {
+                    "event": "error",
+                    "data": {"message": OFFLINE_MESSAGE, "code": "network_error"}
+                }
+            else:
+                yield {
+                    "event": "error",
+                    "data": {"message": str(e), "code": "llm_error"}
+                }
             return
 
         llm_ms = (time.perf_counter() - llm_start) * 1000
@@ -947,7 +991,11 @@ class ResponseOrchestrator:
 
         except Exception as e:
             logger.error(f"[ORCHESTRATOR] LLM error: {e}")
-            answer = "I apologize, but I encountered an error processing your question. Please try again."
+            if is_network_error(e):
+                logger.warning("[ORCHESTRATOR] Network error detected — returning offline message")
+                answer = OFFLINE_MESSAGE
+            else:
+                answer = "I apologize, but I encountered an error processing your question. Please try again."
 
         # Build sources list
         sources = []
