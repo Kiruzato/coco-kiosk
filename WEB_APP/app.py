@@ -27,7 +27,7 @@ import httpx  # Phase 42: Async HTTP client for internal API calls
 logger = logging.getLogger(__name__)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
 import shutil
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -1778,100 +1778,115 @@ async def export_conversations(
     document contains ALL matching entries (no pagination) in a Word table
     that mirrors the admin UI layout.
     """
-    from docx import Document as DocxDocument
-    from docx.shared import Inches, Pt, RGBColor
-    from docx.enum.table import WD_TABLE_ALIGNMENT
-    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    try:
+        from docx import Document as DocxDocument
+        from docx.shared import Inches, Pt, RGBColor
+        from docx.enum.table import WD_TABLE_ALIGNMENT
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
+    except ImportError:
+        logger.error("[EXPORT] python-docx is not installed. Install with: pip install python-docx")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Export unavailable — python-docx library is not installed on the server."},
+        )
+
     import io
 
-    entries = _load_filtered_conversations(month, search, feedback)
+    try:
+        entries = _load_filtered_conversations(month, search, feedback)
 
-    doc = DocxDocument()
+        doc = DocxDocument()
 
-    # --- Title ---
-    title = doc.add_heading("CoCo Conversation Logs", level=1)
-    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        # --- Title ---
+        title = doc.add_heading("CoCo Conversation Logs", level=1)
+        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    # --- Filter summary ---
-    filter_parts = []
-    if month:
-        filter_parts.append(f"Month: {month}")
-    if search:
-        filter_parts.append(f"Search: \"{search}\"")
-    if feedback:
-        filter_parts.append(f"Feedback: {feedback}")
-    filter_text = " | ".join(filter_parts) if filter_parts else "No filters applied"
-    meta = doc.add_paragraph()
-    meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = meta.add_run(f"Filters: {filter_text}  —  Total: {len(entries)} entries")
-    run.font.size = Pt(9)
-    run.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+        # --- Filter summary ---
+        filter_parts = []
+        if month:
+            filter_parts.append(f"Month: {month}")
+        if search:
+            filter_parts.append(f"Search: \"{search}\"")
+        if feedback:
+            filter_parts.append(f"Feedback: {feedback}")
+        filter_text = " | ".join(filter_parts) if filter_parts else "No filters applied"
+        meta = doc.add_paragraph()
+        meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = meta.add_run(f"Filters: {filter_text}  —  Total: {len(entries)} entries")
+        run.font.size = Pt(9)
+        run.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
 
-    exported_at = meta.add_run(f"\nExported: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    exported_at.font.size = Pt(9)
-    exported_at.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+        exported_at = meta.add_run(f"\nExported: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        exported_at.font.size = Pt(9)
+        exported_at.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
 
-    # --- Empty state ---
-    if not entries:
-        doc.add_paragraph("No conversation logs found for the selected filters.")
-    else:
-        # --- Table ---
-        table = doc.add_table(rows=1, cols=4)
-        table.style = "Table Grid"
-        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        # --- Empty state ---
+        if not entries:
+            doc.add_paragraph("No conversation logs found for the selected filters.")
+        else:
+            # --- Table ---
+            table = doc.add_table(rows=1, cols=4)
+            table.style = "Table Grid"
+            table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
-        # Header row
-        headers = ["Timestamp", "Query", "Response", "Feedback"]
-        for i, text in enumerate(headers):
-            cell = table.rows[0].cells[i]
-            cell.text = ""
-            run = cell.paragraphs[0].add_run(text)
-            run.bold = True
-            run.font.size = Pt(9)
-
-        # Data rows
-        for entry in entries:
-            row = table.add_row()
-
-            # Timestamp — format as readable date/time
-            ts_raw = entry.get("timestamp", "")
-            try:
-                ts_dt = datetime.fromisoformat(ts_raw[:19])
-                ts_display = ts_dt.strftime("%Y-%m-%d %H:%M:%S")
-            except (ValueError, TypeError):
-                ts_display = ts_raw
-
-            values = [
-                ts_display,
-                entry.get("query", ""),
-                entry.get("answer", ""),
-                entry.get("_feedback", "unrated"),
-            ]
-            for i, val in enumerate(values):
-                cell = row.cells[i]
+            # Header row
+            headers = ["Timestamp", "Query", "Response", "Feedback"]
+            for i, text in enumerate(headers):
+                cell = table.rows[0].cells[i]
                 cell.text = ""
-                run = cell.paragraphs[0].add_run(str(val))
-                run.font.size = Pt(8)
+                run = cell.paragraphs[0].add_run(text)
+                run.bold = True
+                run.font.size = Pt(9)
 
-        # Column widths (approximate proportions)
-        for row in table.rows:
-            row.cells[0].width = Inches(1.3)
-            row.cells[1].width = Inches(2.2)
-            row.cells[2].width = Inches(3.5)
-            row.cells[3].width = Inches(0.8)
+            # Data rows
+            for entry in entries:
+                row = table.add_row()
 
-    # Serialize to bytes
-    buffer = io.BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
+                # Timestamp — format as readable date/time
+                ts_raw = entry.get("timestamp", "")
+                try:
+                    ts_dt = datetime.fromisoformat(ts_raw[:19])
+                    ts_display = ts_dt.strftime("%Y-%m-%d %H:%M:%S")
+                except (ValueError, TypeError):
+                    ts_display = ts_raw
 
-    filename = f"conversation_logs_{datetime.now().strftime('%Y%m%d_%H%M')}.docx"
+                values = [
+                    ts_display,
+                    entry.get("query", ""),
+                    entry.get("answer", ""),
+                    entry.get("_feedback", "unrated"),
+                ]
+                for i, val in enumerate(values):
+                    cell = row.cells[i]
+                    cell.text = ""
+                    run = cell.paragraphs[0].add_run(str(val))
+                    run.font.size = Pt(8)
 
-    return StreamingResponse(
-        buffer,
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
-    )
+            # Column widths (approximate proportions)
+            for row in table.rows:
+                row.cells[0].width = Inches(1.3)
+                row.cells[1].width = Inches(2.2)
+                row.cells[2].width = Inches(3.5)
+                row.cells[3].width = Inches(0.8)
+
+        # Serialize to bytes
+        buffer = io.BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+
+        filename = f"conversation_logs_{datetime.now().strftime('%Y%m%d_%H%M')}.docx"
+
+        return StreamingResponse(
+            buffer,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+    except Exception as e:
+        logger.error(f"[EXPORT] Failed to generate .docx export: {e}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Export failed: {str(e)}"},
+        )
 
 
 # ==============================================================================

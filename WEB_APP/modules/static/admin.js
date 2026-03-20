@@ -3600,7 +3600,14 @@ const ConversationViewer = (function () {
                     const resp = await fetch(`/admin/analytics/conversations/export?${params}`, {
                         credentials: 'same-origin'
                     });
-                    if (!resp.ok) throw new Error(`Export failed: ${resp.status}`);
+                    if (!resp.ok) {
+                        let msg = `Export failed (HTTP ${resp.status})`;
+                        try {
+                            const errBody = await resp.json();
+                            if (errBody.detail) msg = errBody.detail;
+                        } catch (_) { /* response wasn't JSON */ }
+                        throw new Error(msg);
+                    }
                     const blob = await resp.blob();
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -3615,7 +3622,7 @@ const ConversationViewer = (function () {
                     URL.revokeObjectURL(url);
                 } catch (err) {
                     console.error('[CONV] Export error:', err);
-                    alert('Failed to export conversations. Please try again.');
+                    alert(err.message || 'Failed to export conversations. Please try again.');
                 } finally {
                     exportBtn.disabled = false;
                     exportBtn.textContent = '⬇ Export';
