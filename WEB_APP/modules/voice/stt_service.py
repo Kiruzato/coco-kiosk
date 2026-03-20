@@ -19,6 +19,7 @@ Supported Engines:
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional, Dict, Any
+import asyncio
 import logging
 import time
 
@@ -103,6 +104,8 @@ class STTService:
         self.fallback_engine: Optional[STTEngine] = None
         self.confidence_threshold = config.get('thresholds', {}).get('min_confidence', 0.7)
         self.max_duration = config.get('thresholds', {}).get('max_audio_duration_seconds', 30)
+        # Service-level timeout — outermost safety net around any engine call.
+        self.stt_timeout = config.get('thresholds', {}).get('stt_timeout_seconds', 25)
 
         self._init_engines()
 
@@ -247,10 +250,13 @@ class STTService:
         if self.primary_engine and self.primary_engine.is_available():
             try:
                 start_time = time.time()
-                result = await self.primary_engine.transcribe(
-                    normalized_audio,
-                    sample_rate=16000,
-                    language=language
+                result = await asyncio.wait_for(
+                    self.primary_engine.transcribe(
+                        normalized_audio,
+                        sample_rate=16000,
+                        language=language
+                    ),
+                    timeout=self.stt_timeout,
                 )
                 result.processing_time_ms = (time.time() - start_time) * 1000
 
@@ -281,6 +287,10 @@ class STTService:
 
                 return result
 
+            except asyncio.TimeoutError:
+                logger.error(f"[STT] Primary engine timed out after {self.stt_timeout}s")
+                # Fall through to try fallback
+
             except Exception as e:
                 logger.error(f"[STT] Primary engine failed: {e}")
                 # Fall through to try fallback
@@ -310,10 +320,13 @@ class STTService:
         """Try transcription with fallback engine."""
         try:
             start_time = time.time()
-            result = await self.fallback_engine.transcribe(
-                audio_data,
-                sample_rate=16000,
-                language=language
+            result = await asyncio.wait_for(
+                self.fallback_engine.transcribe(
+                    audio_data,
+                    sample_rate=16000,
+                    language=language
+                ),
+                timeout=self.stt_timeout,
             )
             result.processing_time_ms = (time.time() - start_time) * 1000
             result.is_fallback = True
@@ -325,6 +338,10 @@ class STTService:
                 f"time={result.processing_time_ms:.0f}ms"
             )
             return result
+
+        except asyncio.TimeoutError:
+            logger.error(f"[STT] Fallback engine timed out after {self.stt_timeout}s")
+            return None
 
         except Exception as e:
             logger.error(f"[STT] Fallback engine failed: {e}")

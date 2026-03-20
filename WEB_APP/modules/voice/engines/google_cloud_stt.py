@@ -73,6 +73,12 @@ class GoogleCloudSTTEngine(STTEngine):
         self.enable_punctuation = config.get('enable_automatic_punctuation', True)
         self.enabled = config.get('enabled', True)
 
+        # Timeout for gRPC recognize() call (seconds).
+        # Prevents indefinite hang when network is unavailable.
+        self._grpc_timeout = config.get('grpc_timeout', 15)
+        # Outer asyncio safety-net timeout (must be > grpc_timeout).
+        self._async_timeout = config.get('async_timeout', 20)
+
         # Get credentials path from config or environment
         self._credentials_path = config.get('credentials_path') or os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 
@@ -237,14 +243,33 @@ class GoogleCloudSTTEngine(STTEngine):
                 enable_automatic_punctuation=self.enable_punctuation,
             )
 
-            # Run synchronous API call in thread pool
+            # Run synchronous API call in thread pool with strict timeouts.
+            # Layer 1: gRPC-level timeout on client.recognize()
+            # Layer 2: asyncio.wait_for() safety net in case gRPC timeout fails
             loop = asyncio.get_event_loop()
             client = self._get_client()
 
-            response = await loop.run_in_executor(
-                None,
-                lambda: client.recognize(config=config, audio=audio)
-            )
+            logger.info(f"[GOOGLE-STT] Starting recognition (grpc_timeout={self._grpc_timeout}s, async_timeout={self._async_timeout}s)")
+
+            try:
+                response = await asyncio.wait_for(
+                    loop.run_in_executor(
+                        None,
+                        lambda: client.recognize(config=config, audio=audio, timeout=self._grpc_timeout)
+                    ),
+                    timeout=self._async_timeout,
+                )
+            except asyncio.TimeoutError:
+                # asyncio safety net fired — gRPC call did not complete in time.
+                # Reset client so the next request gets a fresh connection.
+                self._client = None
+                logger.error(
+                    f"[GOOGLE-STT] TIMEOUT after {self._async_timeout}s — "
+                    "network may be unavailable. Client reset for auto-recovery."
+                )
+                raise RuntimeError(
+                    "Speech recognition timed out. Please check your internet connection and try again."
+                )
 
             # Process response
             text = ""
@@ -283,8 +308,13 @@ class GoogleCloudSTTEngine(STTEngine):
                 raw_segments=segments if segments else None
             )
 
+        except RuntimeError:
+            # Re-raise RuntimeError (timeout messages) without wrapping
+            raise
         except Exception as e:
-            logger.error(f"[GOOGLE-STT] Transcription failed: {e}")
+            # Network/gRPC errors — reset client for auto-recovery
+            self._client = None
+            logger.error(f"[GOOGLE-STT] Transcription failed (client reset for recovery): {e}")
             raise
 
     def _map_language_code(self, lang: str) -> str:

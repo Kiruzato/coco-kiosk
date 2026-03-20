@@ -3305,11 +3305,20 @@ async function processVoiceInput(audioBlob) {
         formData.append('session_id', sessionId || '');
         formData.append('skip_tts', ttsEnabled ? 'false' : 'true');
 
-        // Send to voice chat endpoint
-        const response = await fetch('/voice/chat', {
-            method: 'POST',
-            body: formData
-        });
+        // Send to voice chat endpoint with timeout to prevent indefinite hang
+        const voiceChatController = new AbortController();
+        const voiceChatTimeout = setTimeout(() => voiceChatController.abort(), 30000);
+
+        let response;
+        try {
+            response = await fetch('/voice/chat', {
+                method: 'POST',
+                body: formData,
+                signal: voiceChatController.signal
+            });
+        } finally {
+            clearTimeout(voiceChatTimeout);
+        }
 
         if (!response.ok) {
             const error = await response.json();
@@ -3373,10 +3382,19 @@ async function processVoiceInput(audioBlob) {
 
     } catch (error) {
         console.error('Voice processing error:', error);
-        setVoiceState(VoiceState.ERROR, error.message || 'Voice processing failed');
 
-        // Show error in chat
-        addErrorMessage('Voice processing failed. Please try again or type your question.');
+        // Detect timeout/network errors and show a clear message
+        let userMessage;
+        if (error.name === 'AbortError') {
+            userMessage = 'Voice request timed out. Please check your internet connection and try again.';
+        } else if (!navigator.onLine) {
+            userMessage = 'No internet connection. Please reconnect and try again.';
+        } else {
+            userMessage = 'Voice processing failed. Please try again or type your question.';
+        }
+
+        setVoiceState(VoiceState.ERROR, error.message || 'Voice processing failed');
+        addErrorMessage(userMessage);
     }
 }
 
