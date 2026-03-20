@@ -1585,8 +1585,8 @@ function addAssistantMessage(data) {
         `;
     }
 
-    // Feedback buttons (only for non-rejected answers) - Modern thumbs icons
-    if (!data.rejected) {
+    // Feedback buttons (only for non-rejected AI answers, not system errors)
+    if (!data.rejected && data.mode !== 'system_error') {
         const feedbackId = `feedback-${Date.now()}`;
         const queryId = data.timestamp || '';
         html += `
@@ -3349,20 +3349,22 @@ async function processVoiceInput(audioBlob) {
 
         // If STT/chat failed with an error_message but no answer, surface it as the answer
         const displayAnswer = data.answer || data.error_message || '';
+        const isSystemError = !data.answer && !!data.error_message;
 
         // Build response object for addAssistantMessage
+        // System errors: hide all metadata (confidence, score, fusion, warnings)
         const chatResponse = displayAnswer ? {
             answer: displayAnswer,
-            mode: data.answer ? (data.mode || 'campus') : 'error',
-            confidence_level: data.confidence || 'Low',
-            confidence_score: data.answer ? (Math.round(data.transcription_confidence * 100) || 50) : 0,
-            sources: data.sources || [],
-            rejected: !data.answer,
-            structured_answer: data.structured_answer || null,
-            debug_info: data.debug_info || null,
-            metadata_visible: data.metadata_visible,
-            fusion_mode: data.fusion_mode,
-            fusion_label_visible: data.fusion_label_visible,
+            mode: isSystemError ? 'system_error' : (data.mode || 'campus'),
+            confidence_level: isSystemError ? '' : (data.confidence || 'Low'),
+            confidence_score: isSystemError ? 0 : (Math.round(data.transcription_confidence * 100) || 50),
+            sources: isSystemError ? [] : (data.sources || []),
+            rejected: false,
+            structured_answer: isSystemError ? null : (data.structured_answer || null),
+            debug_info: isSystemError ? null : (data.debug_info || null),
+            metadata_visible: isSystemError ? false : data.metadata_visible,
+            fusion_mode: isSystemError ? null : data.fusion_mode,
+            fusion_label_visible: isSystemError ? false : data.fusion_label_visible,
             timestamp: data.timestamp
         } : null;
 
@@ -3381,6 +3383,15 @@ async function processVoiceInput(audioBlob) {
 
             if (audioBlob) {
                 playAudioBlob(audioBlob);
+            } else {
+                setVoiceState(VoiceState.IDLE);
+            }
+        } else if (isSystemError && chatResponse && ttsEnabled) {
+            // System error with no server-side audio — synthesize locally via Piper TTS
+            addAssistantMessage(chatResponse);
+            const ttsResult = await synthesizeTTSOnly(displayAnswer);
+            if (ttsResult) {
+                playAudioBlob(ttsResult.blob);
             } else {
                 setVoiceState(VoiceState.IDLE);
             }
