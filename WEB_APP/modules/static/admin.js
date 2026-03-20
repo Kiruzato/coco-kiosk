@@ -3584,6 +3584,44 @@ const ConversationViewer = (function () {
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => fetchPage(currentPage));
         }
+
+        // Export button — downloads filtered conversations as .docx
+        const exportBtn = document.getElementById('convExportBtn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', async () => {
+                const params = new URLSearchParams();
+                if (monthInput && monthInput.value)         params.set('month', monthInput.value);
+                if (searchInput && searchInput.value.trim()) params.set('search', searchInput.value.trim());
+                if (feedbackFilter && feedbackFilter.value)  params.set('feedback', feedbackFilter.value);
+
+                exportBtn.disabled = true;
+                exportBtn.textContent = 'Exporting…';
+                try {
+                    const resp = await fetch(`/admin/analytics/conversations/export?${params}`, {
+                        credentials: 'same-origin'
+                    });
+                    if (!resp.ok) throw new Error(`Export failed: ${resp.status}`);
+                    const blob = await resp.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    // Extract filename from Content-Disposition or use default
+                    const cd = resp.headers.get('Content-Disposition') || '';
+                    const match = cd.match(/filename=([^\s;]+)/);
+                    a.download = match ? match[1] : 'conversation_logs.docx';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                } catch (err) {
+                    console.error('[CONV] Export error:', err);
+                    alert('Failed to export conversations. Please try again.');
+                } finally {
+                    exportBtn.disabled = false;
+                    exportBtn.textContent = '⬇ Export';
+                }
+            });
+        }
     }
 
     // ── Init (idempotent) ─────────────────────────────────────────────────────

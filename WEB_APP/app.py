@@ -27,7 +27,7 @@ import httpx  # Phase 42: Async HTTP client for internal API calls
 logger = logging.getLogger(__name__)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 import shutil
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -1634,33 +1634,23 @@ async def get_recent_events(limit: int = 100):
     }
 
 
-@app.get("/admin/analytics/conversations", dependencies=[Depends(verify_admin_session)])
-async def get_conversations(
-    page: int = 1,
-    per_page: int = 20,
+def _load_filtered_conversations(
     month: Optional[str] = None,
     search: Optional[str] = None,
     feedback: Optional[str] = None,
-):
-    """
-    Paginated conversation log viewer for admin.
+) -> list:
+    """Load conversation entries from JSONL, applying filters.
 
-    Reads from the unified conversations.jsonl (newest-first).
-    Supports optional filtering by calendar month (YYYY-MM), keyword search,
-    and feedback status (liked / disliked / unrated).
-    """
-    per_page = max(1, min(per_page, 100))
-    page = max(1, page)
+    Returns a list of dicts sorted newest-first.  Each dict has the standard
+    fields (query_id, timestamp, query, answer) plus a derived ``_feedback``
+    field ("liked" / "disliked" / "unrated").
 
+    This is the **single source of truth** for conversation filtering — used
+    by both the paginated viewer and the DOCX export endpoint.
+    """
     log_path = LOG_DIR / "conversations.jsonl"
     if not log_path.exists():
-        return {
-            "conversations": [],
-            "total": 0,
-            "page": page,
-            "per_page": per_page,
-            "total_pages": 0,
-        }
+        return []
 
     # Parse month filter
     filter_year: Optional[int] = None
@@ -1677,7 +1667,6 @@ async def get_conversations(
     if feedback_filter not in ("liked", "disliked", "unrated"):
         feedback_filter = None
 
-    # Read and filter entries (bounded by 2-month retention)
     entries: list = []
     try:
         with open(log_path, "r", encoding="utf-8") as f:
@@ -1707,7 +1696,7 @@ async def get_conversations(
                     if search_lower not in query_text and search_lower not in answer_text:
                         continue
 
-                # Derive feedback status from inline field
+                # Derive feedback status
                 fb_val = entry.get("feedback")
                 if fb_val is True:
                     fb_status = "liked"
@@ -1716,7 +1705,6 @@ async def get_conversations(
                 else:
                     fb_status = "unrated"
 
-                # Feedback filter
                 if feedback_filter and fb_status != feedback_filter:
                     continue
 
@@ -1726,8 +1714,29 @@ async def get_conversations(
     except OSError as e:
         logger.error(f"[Conversations] Could not read conversations.jsonl: {e}")
 
-    # Sort newest-first
     entries.sort(key=lambda e: e.get("timestamp", ""), reverse=True)
+    return entries
+
+
+@app.get("/admin/analytics/conversations", dependencies=[Depends(verify_admin_session)])
+async def get_conversations(
+    page: int = 1,
+    per_page: int = 20,
+    month: Optional[str] = None,
+    search: Optional[str] = None,
+    feedback: Optional[str] = None,
+):
+    """
+    Paginated conversation log viewer for admin.
+
+    Reads from the unified conversations.jsonl (newest-first).
+    Supports optional filtering by calendar month (YYYY-MM), keyword search,
+    and feedback status (liked / disliked / unrated).
+    """
+    per_page = max(1, min(per_page, 100))
+    page = max(1, page)
+
+    entries = _load_filtered_conversations(month, search, feedback)
 
     total = len(entries)
     total_pages = max(1, (total + per_page - 1) // per_page)
@@ -1754,6 +1763,115 @@ async def get_conversations(
         "per_page":      per_page,
         "total_pages":   total_pages,
     }
+
+
+@app.get("/admin/analytics/conversations/export", dependencies=[Depends(verify_admin_session)])
+async def export_conversations(
+    month: Optional[str] = None,
+    search: Optional[str] = None,
+    feedback: Optional[str] = None,
+):
+    """
+    Export filtered conversation logs as a .docx file.
+
+    Accepts the same filter parameters as the paginated viewer.  The exported
+    document contains ALL matching entries (no pagination) in a Word table
+    that mirrors the admin UI layout.
+    """
+    from docx import Document as DocxDocument
+    from docx.shared import Inches, Pt, RGBColor
+    from docx.enum.table import WD_TABLE_ALIGNMENT
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    import io
+
+    entries = _load_filtered_conversations(month, search, feedback)
+
+    doc = DocxDocument()
+
+    # --- Title ---
+    title = doc.add_heading("CoCo Conversation Logs", level=1)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    # --- Filter summary ---
+    filter_parts = []
+    if month:
+        filter_parts.append(f"Month: {month}")
+    if search:
+        filter_parts.append(f"Search: \"{search}\"")
+    if feedback:
+        filter_parts.append(f"Feedback: {feedback}")
+    filter_text = " | ".join(filter_parts) if filter_parts else "No filters applied"
+    meta = doc.add_paragraph()
+    meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = meta.add_run(f"Filters: {filter_text}  —  Total: {len(entries)} entries")
+    run.font.size = Pt(9)
+    run.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+
+    exported_at = meta.add_run(f"\nExported: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    exported_at.font.size = Pt(9)
+    exported_at.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+
+    # --- Empty state ---
+    if not entries:
+        doc.add_paragraph("No conversation logs found for the selected filters.")
+    else:
+        # --- Table ---
+        table = doc.add_table(rows=1, cols=4)
+        table.style = "Table Grid"
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+        # Header row
+        headers = ["Timestamp", "Query", "Response", "Feedback"]
+        for i, text in enumerate(headers):
+            cell = table.rows[0].cells[i]
+            cell.text = ""
+            run = cell.paragraphs[0].add_run(text)
+            run.bold = True
+            run.font.size = Pt(9)
+
+        # Data rows
+        for entry in entries:
+            row = table.add_row()
+
+            # Timestamp — format as readable date/time
+            ts_raw = entry.get("timestamp", "")
+            try:
+                ts_dt = datetime.fromisoformat(ts_raw[:19])
+                ts_display = ts_dt.strftime("%Y-%m-%d %H:%M:%S")
+            except (ValueError, TypeError):
+                ts_display = ts_raw
+
+            values = [
+                ts_display,
+                entry.get("query", ""),
+                entry.get("answer", ""),
+                entry.get("_feedback", "unrated"),
+            ]
+            for i, val in enumerate(values):
+                cell = row.cells[i]
+                cell.text = ""
+                run = cell.paragraphs[0].add_run(str(val))
+                run.font.size = Pt(8)
+
+        # Column widths (approximate proportions)
+        for row in table.rows:
+            row.cells[0].width = Inches(1.3)
+            row.cells[1].width = Inches(2.2)
+            row.cells[2].width = Inches(3.5)
+            row.cells[3].width = Inches(0.8)
+
+    # Serialize to bytes
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+
+    filename = f"conversation_logs_{datetime.now().strftime('%Y%m%d_%H%M')}.docx"
+
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 
 # ==============================================================================
