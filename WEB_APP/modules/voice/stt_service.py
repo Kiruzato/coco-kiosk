@@ -246,6 +246,10 @@ class STTService:
                 is_fallback=False,
             )
 
+        # Track last exception so we can re-raise on total failure
+        # (distinguishes "network down" from "no speech detected")
+        last_exception = None
+
         # Try primary engine
         if self.primary_engine and self.primary_engine.is_available():
             try:
@@ -289,10 +293,15 @@ class STTService:
 
             except asyncio.TimeoutError:
                 logger.error(f"[STT] Primary engine timed out after {self.stt_timeout}s")
+                last_exception = RuntimeError(
+                    f"Speech recognition timed out after {self.stt_timeout}s. "
+                    "Please check your internet connection and try again."
+                )
                 # Fall through to try fallback
 
             except Exception as e:
                 logger.error(f"[STT] Primary engine failed: {e}")
+                last_exception = e
                 # Fall through to try fallback
 
         # Try fallback on primary failure
@@ -301,8 +310,14 @@ class STTService:
             if fallback_result:
                 return fallback_result
 
-        # No engines available or all failed
-        logger.error("[STT] All engines failed or unavailable")
+        # All engines failed or unavailable — re-raise if we have an exception
+        # so the caller (voice_orchestrator) can classify it as a network error
+        if last_exception is not None:
+            logger.error(f"[STT] All engines failed — re-raising: {last_exception}")
+            raise last_exception
+
+        # No engines were available at all (not an error, just unconfigured)
+        logger.error("[STT] No STT engines available")
         return TranscriptionResult(
             text="",
             confidence=0.0,

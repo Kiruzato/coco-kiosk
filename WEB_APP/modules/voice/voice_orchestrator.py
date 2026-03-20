@@ -216,10 +216,10 @@ class VoiceOrchestrator:
                 result.requires_text_fallback = True
                 # Still continue - let frontend decide whether to prompt for confirmation
 
-            # Check for empty transcription
+            # Empty transcription (no speech / silence) — return silently
+            # No error message shown; frontend resets to idle state
             if transcription.is_empty():
-                logger.warning("[VOICE] Empty transcription - no speech detected")
-                result.error_message = "No speech detected. Please try again."
+                logger.info("[VOICE] Empty transcription — silent reset (no error shown)")
                 result.total_latency_ms = (time.time() - start_time) * 1000
                 self._log_voice_event(result, session_id)
                 return result

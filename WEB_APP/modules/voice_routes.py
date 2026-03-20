@@ -746,14 +746,8 @@ async def transcribe_audio(
     try:
         result = await stt.transcribe(audio_data, language=language)
 
-        # Check for empty transcription
-        if result.is_empty():
-            _request_metrics["transcribe_errors"] += 1
-            raise VoiceError(
-                422,
-                VoiceErrorCode.NO_SPEECH_DETECTED,
-                "No speech detected in audio"
-            )
+        # Empty transcription (no speech / silence) — return empty result silently
+        # No error raised; caller decides how to handle
 
         # Phase 41: Record Google STT usage for quota tracking
         _record_google_stt_usage(result.engine_used, result.duration_seconds)

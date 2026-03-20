@@ -1,8 +1,8 @@
 {
   "current_month": "2026-03",
-  "used_seconds": 10,
+  "used_seconds": 15,
   "quota_seconds": 3600,
-  "transcription_count": 4,
-  "last_updated": "2026-03-20T18:02:07.698954Z",
+  "transcription_count": 6,
+  "last_updated": "2026-03-20T18:19:59.499488Z",
   "monthly_history": []
 }
