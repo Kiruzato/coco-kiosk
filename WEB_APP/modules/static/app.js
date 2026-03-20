@@ -29,6 +29,15 @@ const BUTTON_COOLDOWN_MS = 5000; // 5 seconds
 let resetButtonCooldown = false;
 let refreshAdButtonCooldown = false;
 
+// Connectivity state
+let isOnline = true;
+let connectivityCheckInterval = null;
+let consecutiveFailures = 0;
+const CONNECTIVITY_CHECK_URL = 'https://connectivitycheck.gstatic.com/generate_204';
+const CONNECTIVITY_POLL_MS = 10000;      // 10 seconds
+const CONNECTIVITY_TIMEOUT_MS = 5000;    // 5 second fetch timeout
+const CONNECTIVITY_FAIL_THRESHOLD = 2;   // require 2 consecutive failures before offline
+
 // Phase 50: Metadata visibility setting (loaded from server)
 let metadataVisible = true; // Default: show metadata
 
@@ -518,6 +527,114 @@ function updateSessionId(newId) {
 }
 
 // ============================================================================
+// CONNECTIVITY SERVICE
+// ============================================================================
+
+/**
+ * Check actual internet connectivity by pinging a lightweight external endpoint.
+ * Uses no-cors mode so the fetch succeeds (opaque response) when online.
+ * Debounces: requires CONNECTIVITY_FAIL_THRESHOLD consecutive failures before
+ * reporting offline, but a single success restores online immediately.
+ */
+async function checkConnectivity() {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), CONNECTIVITY_TIMEOUT_MS);
+
+    try {
+        await fetch(CONNECTIVITY_CHECK_URL, {
+            mode: 'no-cors',
+            cache: 'no-store',
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        // Success — reset failures and go online
+        consecutiveFailures = 0;
+        if (!isOnline) {
+            console.log('[Connectivity] Internet restored');
+            setOnlineState(true);
+        }
+    } catch (_) {
+        clearTimeout(timeoutId);
+        consecutiveFailures++;
+
+        if (isOnline && consecutiveFailures >= CONNECTIVITY_FAIL_THRESHOLD) {
+            console.log('[Connectivity] Internet lost (after', consecutiveFailures, 'failures)');
+            setOnlineState(false);
+        }
+    }
+}
+
+/**
+ * Update the centralized online state and refresh UI controls.
+ */
+function setOnlineState(online) {
+    isOnline = online;
+    updateConnectivityUI();
+}
+
+/**
+ * Enable/disable UI controls based on connectivity state.
+ * Respects isWaiting — does not re-enable inputs during an active query.
+ */
+function updateConnectivityUI() {
+    const voiceBtn = document.getElementById('voiceBtn');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    if (!isOnline) {
+        // Offline — disable all input controls
+        if (userInput) {
+            userInput.disabled = true;
+            userInput.placeholder = 'No internet connection\u2026';
+        }
+        if (sendBtn) sendBtn.disabled = true;
+        if (voiceBtn) {
+            voiceBtn.disabled = true;
+            voiceBtn.classList.add('disabled');
+        }
+    } else {
+        // Online — re-enable controls (only if not mid-query)
+        if (!isWaiting) {
+            if (userInput) {
+                userInput.disabled = false;
+                userInput.placeholder = 'Type your question here...';
+            }
+            if (sendBtn) sendBtn.disabled = false;
+        }
+        // Voice button depends on voiceEnabled (set by initVoice)
+        if (voiceBtn && typeof voiceEnabled !== 'undefined' && voiceEnabled && !isWaiting) {
+            voiceBtn.disabled = false;
+            voiceBtn.classList.remove('disabled');
+        }
+    }
+}
+
+/**
+ * Start the connectivity monitor. Runs an immediate check then polls every
+ * CONNECTIVITY_POLL_MS. Also listens for browser online/offline events for
+ * faster detection.
+ */
+function startConnectivityMonitor() {
+    // Immediate check on startup
+    checkConnectivity();
+
+    // Periodic polling
+    connectivityCheckInterval = setInterval(checkConnectivity, CONNECTIVITY_POLL_MS);
+
+    // Browser events for fast detection (supplement to polling)
+    window.addEventListener('online', () => {
+        console.log('[Connectivity] Browser online event');
+        consecutiveFailures = 0;
+        setOnlineState(true);
+    });
+    window.addEventListener('offline', () => {
+        console.log('[Connectivity] Browser offline event');
+        setOnlineState(false);
+    });
+}
+
+// ============================================================================
 // DOM ELEMENTS
 // ============================================================================
 
@@ -617,6 +734,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize FAQ section
     initFAQSection();
+
+    // Start real-time connectivity monitoring
+    startConnectivityMonitor();
 });
 
 // ============================================================================
@@ -2008,7 +2128,7 @@ async function resetConversation() {
 async function handleSubmit(event) {
     event.preventDefault();
 
-    if (isWaiting) {
+    if (isWaiting || !isOnline) {
         return;
     }
 
@@ -2094,10 +2214,12 @@ async function handleSubmit(event) {
             addErrorMessage('Sorry, I encountered an error processing your request. Please try again.');
         }
     } finally {
-        // Re-enable input
+        // Re-enable input (respects connectivity state)
         isWaiting = false;
-        userInput.disabled = false;
-        sendBtn.disabled = false;
+        if (isOnline) {
+            userInput.disabled = false;
+            sendBtn.disabled = false;
+        }
         // Note: Auto-focus disabled to prevent virtual keyboard from obstructing view on RPi
     }
 }
@@ -3130,10 +3252,10 @@ function setVoiceState(newState, message = null) {
 
     switch (newState) {
         case VoiceState.IDLE:
-            voiceBtn.disabled = !voiceEnabled;
+            voiceBtn.disabled = !voiceEnabled || !isOnline;
             stopThinkingAnimation();
-            // Re-enable typed input when voice returns to idle (unless waiting for chat response)
-            if (!isWaiting) {
+            // Re-enable typed input when voice returns to idle (respects connectivity)
+            if (!isWaiting && isOnline) {
                 userInput.disabled = false;
                 sendBtn.disabled = false;
             }
@@ -3156,23 +3278,25 @@ function setVoiceState(newState, message = null) {
         case VoiceState.RESPONDING:
             // Phase 40: Silent TTS - no visual indicator, audio plays in background
             // Keep UI in normal state so user can read response while listening
-            voiceBtn.disabled = !voiceEnabled;
+            voiceBtn.disabled = !voiceEnabled || !isOnline;
             stopThinkingAnimation();
             // Phase 41 fix: Re-enable inputs during RESPONDING so user can interact
-            // while TTS plays (this is the "silent TTS" UX - user can type new query)
-            userInput.disabled = false;
-            sendBtn.disabled = false;
+            // while TTS plays (respects connectivity state)
+            if (isOnline) {
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+            }
             break;
 
         case VoiceState.ERROR:
             stopThinkingAnimation();
             voiceBtn.classList.add('error');
-            voiceBtn.disabled = false;
+            voiceBtn.disabled = !isOnline;
             voiceStatus.style.display = 'flex';
             voiceStatus.classList.add('error');
             if (voiceStatusText) voiceStatusText.textContent = message || 'Error occurred';
-            // Re-enable typed input on error so user can fall back to typing
-            if (!isWaiting) {
+            // Re-enable typed input on error so user can fall back to typing (respects connectivity)
+            if (!isWaiting && isOnline) {
                 userInput.disabled = false;
                 sendBtn.disabled = false;
             }
@@ -3195,6 +3319,8 @@ function setVoiceState(newState, message = null) {
  * Handle voice button click - toggle recording
  */
 async function handleVoiceClick() {
+    if (!isOnline) return;
+
     if (voiceState === VoiceState.LISTENING) {
         // Stop recording
         stopRecording();
