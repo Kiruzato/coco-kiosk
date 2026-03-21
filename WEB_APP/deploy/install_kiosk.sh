@@ -277,46 +277,8 @@ setup_env_file() {
         chmod 600 "$ENV_FILE"
         log ".env file created from .env.example"
     else
-        # Generate minimal .env template
-        cat > "$ENV_FILE" << 'ENVEOF'
-OPENAI_API_KEY=your-api-key-here
-ADMIN_API_KEY=change-me
-ADMIN_PASSWORD=change-me
-ENVEOF
-        chown "$KIOSK_USER:$KIOSK_USER" "$ENV_FILE"
-        chmod 600 "$ENV_FILE"
-        warn ".env.example not found — created minimal .env template"
-    fi
-
-    # Validate critical keys are configured (not still placeholder values)
-    local NEEDS_CONFIG=false
-    if grep -q "your-api-key-here\|your-.*-here\|change-me" "$ENV_FILE" 2>/dev/null; then
-        NEEDS_CONFIG=true
-    fi
-
-    if [ "$NEEDS_CONFIG" = true ]; then
-        echo ""
-        echo "  =============================================="
-        echo -e "  ${YELLOW}IMPORTANT: Configure your API keys${NC}"
-        echo "  =============================================="
-        echo ""
-        echo "  Edit the .env file:"
-        echo "    sudo -u $KIOSK_USER nano $ENV_FILE"
-        echo ""
-        echo "  Required settings:"
-        echo "    OPENAI_API_KEY=sk-your-actual-key"
-        echo "    ADMIN_PASSWORD=your-secure-password"
-        echo ""
-        read -p "  Press Enter when you have configured .env (or Ctrl+C to abort)..."
-        echo ""
-
-        # Re-check after user edits
-        if grep -q "your-api-key-here" "$ENV_FILE" 2>/dev/null; then
-            err "OPENAI_API_KEY is still set to placeholder value."
-            err "The backend WILL NOT START without a valid API key."
-            echo "  Edit: nano $ENV_FILE"
-            exit 1
-        fi
+        err ".env.example not found at $ENV_EXAMPLE"
+        exit 1
     fi
 
     log ".env file ready"
@@ -435,26 +397,9 @@ configure_chromium_autostart() {
     local AUTOSTART_DIR="$KIOSK_HOME/.config/autostart"
     sudo -u "$KIOSK_USER" mkdir -p "$AUTOSTART_DIR"
 
-    local DESKTOP_FILE="$AUTOSTART_DIR/coco-chromium.desktop"
-
-    if [ -f "$DESKTOP_FILE" ]; then
-        # Config exists — always ask user whether to reconfigure
-        echo ""
-        echo -e "  ${YELLOW}Chromium autostart configuration already exists.${NC}"
-        echo ""
-        read -p "  Do you want to reconfigure Chromium autostart? (Y/N): " RECONFIGURE
-        echo ""
-        if [[ "${RECONFIGURE^^}" == "Y" ]]; then
-            _write_chromium_desktop "$CHROMIUM_BIN" "$AUTOSTART_DIR"
-            log "Chromium autostart reconfigured"
-        else
-            log "Skipped Chromium autostart reconfiguration"
-        fi
-    else
-        # Fresh install — write config automatically
-        _write_chromium_desktop "$CHROMIUM_BIN" "$AUTOSTART_DIR"
-        log "Chromium autostart configured (binary: $CHROMIUM_BIN, delay: 8s)"
-    fi
+    # Always write/overwrite autostart config (idempotent)
+    _write_chromium_desktop "$CHROMIUM_BIN" "$AUTOSTART_DIR"
+    log "Chromium autostart configured (binary: $CHROMIUM_BIN, delay: 8s)"
 
     echo ""
 }
@@ -753,6 +698,4 @@ echo ""
 echo "  Admin access: connect from another device via WiFi to"
 echo "    http://<rpi-ip>:8000/admin"
 echo ""
-echo "  To update later:  sudo $DEPLOY_DIR/update_kiosk.sh"
-echo "  To uninstall:     sudo $DEPLOY_DIR/uninstall_kiosk.sh"
 echo ""
