@@ -9463,3 +9463,16 @@
 {"event_type": "routing_general_fallback", "timestamp": "2026-03-21T08:26:48.424724", "session_id": "voice-4afe922a", "metadata": {"confidence": 0.0, "grounded": false}}
 {"event_type": "routing_general_fallback", "timestamp": "2026-03-21T08:27:52.892450", "session_id": "voice-4afe922a", "metadata": {"confidence": 0.0, "grounded": false}}
 {"event_type": "routing_general_fallback", "timestamp": "2026-03-21T08:28:00.404624", "session_id": "voice-4afe922a", "metadata": {"confidence": 0.0, "grounded": false}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-21T08:44:32.273202", "session_id": "voice-4afe922a", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-21T08:44:47.654415", "session_id": "voice-4afe922a", "metadata": {"extractor": "deans"}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-21T08:45:07.521249", "session_id": "voice-4afe922a", "metadata": {}}
+{"event_type": "voice_interaction", "timestamp": "2026-03-21T08:45:08.673199", "session_id": "voice-4afe922a", "metadata": {"stt_success": true, "stt_confidence": 0.9569619297981262, "stt_engine": "google-cloud-stt", "chat_success": true, "chat_mode": "general", "tts_success": true, "total_latency_ms": 7288.811445236206, "requires_text_fallback": false, "has_error": false}}
+{"event_type": "routing_general_fallback", "timestamp": "2026-03-21T08:45:41.174426", "session_id": "voice-4afe922a", "metadata": {"confidence": 0.0, "grounded": false}}
+{"event_type": "voice_interaction", "timestamp": "2026-03-21T08:45:49.574364", "session_id": "voice-4afe922a", "metadata": {"stt_success": false, "stt_confidence": null, "stt_engine": null, "chat_success": false, "chat_mode": null, "tts_success": false, "total_latency_ms": 128.63492965698242, "requires_text_fallback": false, "has_error": true}}
+{"event_type": "routing_general_fallback", "timestamp": "2026-03-21T08:46:54.585003", "session_id": "voice-4afe922a", "metadata": {"confidence": 0.0, "grounded": false}}
+{"event_type": "routing_general_fallback", "timestamp": "2026-03-21T08:47:03.681483", "session_id": "voice-4afe922a", "metadata": {"confidence": 0.0, "grounded": false}}
+{"event_type": "voice_interaction", "timestamp": "2026-03-21T08:47:08.416555", "session_id": "voice-4afe922a", "metadata": {"stt_success": false, "stt_confidence": null, "stt_engine": null, "chat_success": false, "chat_mode": null, "tts_success": false, "total_latency_ms": 152.9097557067871, "requires_text_fallback": false, "has_error": true}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-21T08:47:34.561416", "session_id": "voice-4afe922a", "metadata": {}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-21T08:47:46.372007", "session_id": "voice-4afe922a", "metadata": {}}
+{"event_type": "voice_interaction", "timestamp": "2026-03-21T08:47:47.274475", "session_id": "voice-4afe922a", "metadata": {"stt_success": true, "stt_confidence": 0.9671418070793152, "stt_engine": "google-cloud-stt", "chat_success": true, "chat_mode": "general", "tts_success": true, "total_latency_ms": 4090.7628536224365, "requires_text_fallback": false, "has_error": false}}
+{"event_type": "routing_document_success", "timestamp": "2026-03-21T08:47:58.782165", "session_id": "voice-4afe922a", "metadata": {"extractor": "deans"}}

@@ -91,6 +91,16 @@ if OPENAI_API_KEY:
 else:
     logger.info("[STARTUP] No OpenAI API key in encrypted storage — AI disabled until configured via admin")
 
+# One-time migration: if .env has OPENAI_API_KEY but encrypted storage doesn't,
+# auto-save it to encrypted storage. Bridges transition from .env-based to
+# admin-panel-based credential management.
+if not OPENAI_API_KEY:
+    _env_key = os.getenv("OPENAI_API_KEY")
+    if _env_key and _cred_manager and _cred_manager.is_available():
+        _cred_manager.save_credential("openai_api_key", _env_key, "api_key")
+        OPENAI_API_KEY = _env_key
+        logger.info("[STARTUP] Migrated OpenAI API key from .env to encrypted storage (one-time)")
+
 ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
 if not ADMIN_API_KEY:
     raise ValueError("ADMIN_API_KEY environment variable not set. Please add it to .env file.")
@@ -311,9 +321,8 @@ else:
 def _reload_llm(new_api_key: str):
     """Recreate LLM instances and orchestrators with a new OpenAI API key.
 
-    Also re-initializes the document manager's embeddings if they were
-    previously unavailable (no-key startup scenario), and attempts to load
-    the vector store so RAG becomes available dynamically.
+    Always updates embeddings and attempts to (re)load the vector store,
+    ensuring RAG works after key changes, rotations, or first-time setup.
     """
     global llm, llm_streaming, response_orchestrator, response_orchestrator_streaming
     global OPENAI_API_KEY, ai_available, rag_available, doc_manager
@@ -325,21 +334,22 @@ def _reload_llm(new_api_key: str):
     ai_available = True
     logger.info("[CREDENTIALS] LLM instances recreated with new OpenAI API key")
 
-    # If embeddings were missing at startup, initialize them now and try
-    # loading the vector store so RAG comes online without a restart.
-    if doc_manager.embeddings is None:
-        doc_manager.api_key = new_api_key
-        doc_manager.embeddings = OpenAIEmbeddings(openai_api_key=new_api_key)
-        logger.info("[CREDENTIALS] Document manager embeddings initialized")
-        try:
-            doc_manager.load_vector_store()
-            if doc_manager.vector_store is not None:
-                rag_available = True
-                metadata_index.build_from_vector_store(doc_manager.vector_store)
-                metadata_index.save()
-                logger.info("[CREDENTIALS] Vector store loaded dynamically after API key update")
-        except Exception as e:
-            logger.warning(f"[CREDENTIALS] Could not load vector store: {e}")
+    # Always update embeddings with the current API key
+    doc_manager.api_key = new_api_key
+    doc_manager.embeddings = OpenAIEmbeddings(openai_api_key=new_api_key)
+
+    # (Re)load vector store with current embeddings
+    try:
+        doc_manager.load_vector_store()
+        if doc_manager.vector_store is not None:
+            rag_available = True
+            metadata_index.build_from_vector_store(doc_manager.vector_store)
+            metadata_index.save()
+            logger.info("[CREDENTIALS] Vector store loaded — RAG is now available")
+        else:
+            logger.info("[CREDENTIALS] No vector store on disk — upload RAG package to enable")
+    except Exception as e:
+        logger.warning(f"[CREDENTIALS] Could not load vector store: {e}")
 
 
 # Initialize query logger

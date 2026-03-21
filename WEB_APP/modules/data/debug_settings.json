@@ -1,8 +1,8 @@
 {
   "debug_enabled": false,
-  "updated_at": "2026-03-12T01:33:18.368889Z",
+  "updated_at": "2026-03-21T00:48:48.831614Z",
   "metadata_visible": false,
-  "dev_section_visible": true,
+  "dev_section_visible": false,
   "fusion_method": "linear",
   "rrf_k": 60,
   "fusion_label_visible": false,
