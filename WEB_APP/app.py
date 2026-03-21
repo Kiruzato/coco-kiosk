@@ -67,22 +67,29 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 if not ADMIN_PASSWORD:
     raise ValueError("ADMIN_PASSWORD environment variable not set. Please add it to .env file.")
 
-# Phase 39A: Initialize credential manager and apply encrypted credentials to os.environ
-# This MUST happen before validating OPENAI_API_KEY so that keys stored via
-# the admin UI are available even when .env doesn't contain them.
+# Phase 39A: Initialize credential manager — the SOLE source of truth for
+# OpenAI and Google Cloud credentials.  .env is NOT used for these keys.
+_cred_manager = None
 try:
     _cred_manager = init_credential_manager(ADMIN_PASSWORD, Path(__file__).parent)
     if _cred_manager.is_available():
+        # Apply Google Cloud credentials to os.environ (required by Google SDK)
         _applied = _cred_manager.apply_to_environment()
         if _applied > 0:
             logger.info(f"[STARTUP] Applied {_applied} credentials from encrypted storage")
 except Exception as e:
     logger.warning(f"[STARTUP] Credential manager init failed: {e}")
 
-# Load OpenAI API key (may come from .env OR encrypted storage).
-# If missing, the server still starts — AI features are disabled until the key
-# is configured via the admin panel.
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") or None
+# Load OpenAI API key ONLY from admin-configured encrypted storage.
+# .env is NOT consulted — admin panel is the single source of truth.
+# If no key is configured, AI features are disabled until set via admin UI.
+OPENAI_API_KEY = None
+if _cred_manager and _cred_manager.is_available():
+    OPENAI_API_KEY = _cred_manager.get_credential_value("openai_api_key")
+if OPENAI_API_KEY:
+    logger.info("[STARTUP] OpenAI API key loaded from encrypted storage")
+else:
+    logger.info("[STARTUP] No OpenAI API key in encrypted storage — AI disabled until configured via admin")
 
 ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
 if not ADMIN_API_KEY:
@@ -218,7 +225,8 @@ load_debug_settings()
 # Initialize document manager
 doc_manager = DocumentManager(
     registry_path=REGISTRY_PATH,
-    vector_store_path=VECTOR_STORE_PATH
+    vector_store_path=VECTOR_STORE_PATH,
+    openai_api_key=OPENAI_API_KEY
 )
 
 # Load vector store safely — corrupted files must not crash the server.
@@ -2137,8 +2145,8 @@ async def get_credentials_status():
         except Exception:
             google_valid = False
 
-    # Check OpenAI credentials
-    openai_key = os.getenv("OPENAI_API_KEY")
+    # Check OpenAI credentials (from encrypted storage only, not .env)
+    openai_key = cred_manager.get_credential_value("openai_api_key") if cred_manager else None
     openai_configured = bool(openai_key)
     # Basic validation: starts with sk-
     openai_valid = openai_configured and openai_key.startswith('sk-')
@@ -2429,8 +2437,7 @@ async def update_credentials(request: CredentialUpdateRequest):
             if persisted:
                 logger.info("[ADMIN] OpenAI API key saved to encrypted storage")
 
-        # Update environment variable and reload LLM instances
-        os.environ["OPENAI_API_KEY"] = request.api_key
+        # Reload LLM instances with the new key (no os.environ — admin storage is sole source)
         _reload_llm(request.api_key)
         logger.info("[ADMIN] OpenAI API key updated and LLM reloaded")
 

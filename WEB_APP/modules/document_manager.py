@@ -89,7 +89,6 @@ from WEB_APP.modules.text_normalizer import normalize_text
 # CONFIGURATION
 # ==============================================================================
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 SUPPORTED_FORMATS = ['.txt', '.pdf', '.docx']
 
 
@@ -1311,11 +1310,11 @@ class DocumentManager:
         Args:
             registry_path: Path to the document registry JSON file
             vector_store_path: Path to the vector store directory
-            openai_api_key: OpenAI API key (uses env var if not provided)
+            openai_api_key: OpenAI API key from admin credential manager
         """
         self.registry = DocumentRegistry(registry_path)
         self.vector_store_path = vector_store_path
-        self.api_key = openai_api_key or OPENAI_API_KEY
+        self.api_key = openai_api_key
         self.vector_store = None
 
         if self.api_key:

@@ -376,13 +376,30 @@ class CredentialManager:
             for cred_id, entry in credentials.items()
         }
 
+    def get_credential_value(self, credential_id: str) -> Optional[str]:
+        """
+        Get the decrypted value of a credential directly.
+
+        Use this instead of apply_to_environment() + os.getenv() when you
+        need programmatic access without side-effecting os.environ.
+
+        Args:
+            credential_id: Unique identifier (e.g., 'openai_api_key')
+
+        Returns:
+            Decrypted credential value, or None if not found
+        """
+        credentials = self._load_all()
+        entry = credentials.get(credential_id)
+        return entry.value if entry else None
+
     def apply_to_environment(self) -> int:
         """
-        Load all credentials into os.environ.
+        Apply credentials that require os.environ to function.
 
-        Maps credential IDs to environment variable names:
-        - openai_api_key -> OPENAI_API_KEY
-        - google_cloud_credentials -> GOOGLE_APPLICATION_CREDENTIALS (writes to temp file)
+        Only Google Cloud credentials need this (the SDK reads
+        GOOGLE_APPLICATION_CREDENTIALS from the environment).
+        OpenAI keys are accessed directly via get_credential_value().
 
         Returns:
             Number of credentials applied
@@ -392,12 +409,7 @@ class CredentialManager:
 
         for cred_id, entry in credentials.items():
             try:
-                if cred_id == 'openai_api_key':
-                    os.environ['OPENAI_API_KEY'] = entry.value
-                    logger.info("[CREDENTIALS] Applied OPENAI_API_KEY from encrypted storage")
-                    applied += 1
-
-                elif cred_id == 'google_cloud_credentials':
+                if cred_id == 'google_cloud_credentials':
                     # For Google Cloud, we need to write the JSON to a temp file
                     # and set GOOGLE_APPLICATION_CREDENTIALS to that path
                     if entry.credential_type == 'service_account_json':

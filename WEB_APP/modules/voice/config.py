@@ -101,8 +101,9 @@ VOICE_CONFIG: Dict[str, Any] = {
     },
 
     # Phase 38: Google Cloud STT configuration
+    # credentials_path is set at runtime by credential_manager.apply_to_environment()
     "google_cloud_stt": {
-        "credentials_path": os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
+        "credentials_path": None,
         "model": "default",
         "language_code": "en-US",
         "sample_rate_hertz": 16000,

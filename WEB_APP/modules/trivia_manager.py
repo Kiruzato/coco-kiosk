@@ -135,7 +135,13 @@ def generate_monthly_content(test_date: Optional[date] = None) -> Optional[Dict[
     logger.info(f"[TRIVIA] Generating content for {month_name} {year} (seed: {seed})")
 
     try:
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        from WEB_APP.modules.credential_manager import get_credential_manager
+        _cm = get_credential_manager()
+        _api_key = _cm.get_credential_value("openai_api_key") if _cm else None
+        if not _api_key:
+            logger.warning("[TRIVIA] No OpenAI API key configured — cannot generate trivia")
+            return None
+        client = OpenAI(api_key=_api_key)
 
         # Generate trivia for each day
         trivia = _generate_daily_trivia(client, days_in_month, month_name, year, seed)
