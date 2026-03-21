@@ -9476,3 +9476,4 @@
 {"event_type": "routing_document_success", "timestamp": "2026-03-21T08:47:46.372007", "session_id": "voice-4afe922a", "metadata": {}}
 {"event_type": "voice_interaction", "timestamp": "2026-03-21T08:47:47.274475", "session_id": "voice-4afe922a", "metadata": {"stt_success": true, "stt_confidence": 0.9671418070793152, "stt_engine": "google-cloud-stt", "chat_success": true, "chat_mode": "general", "tts_success": true, "total_latency_ms": 4090.7628536224365, "requires_text_fallback": false, "has_error": false}}
 {"event_type": "routing_document_success", "timestamp": "2026-03-21T08:47:58.782165", "session_id": "voice-4afe922a", "metadata": {"extractor": "deans"}}
+{"event_type": "routing_general_fallback", "timestamp": "2026-03-21T11:44:04.346438", "session_id": "voice-4afe922a", "metadata": {"confidence": 70.0, "grounded": false}}
